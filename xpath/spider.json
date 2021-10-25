@@ -1011,6 +1011,20 @@
         "欧美片"
       ]
     },
+        {
+      "key": "博天堂",
+      "name": "博天堂",
+      "type": 0,
+      "api": "http://bttcj.com/inc/api.php",
+      "playUrl": "",
+      "categories": [
+        "香港伦理",
+        "国产伦理",
+        "日本伦理",
+        "韩国伦理",
+        "欧美伦理"
+      ]
+    },
     {
       "key": "39影视",
       "name": "39影视",
@@ -1072,7 +1086,8 @@
     "name": "Json轮询",
     "type": 2,
     "url": "Sequence"
-  } 
+  }
+ 
 ],
   "lives": [
     {
