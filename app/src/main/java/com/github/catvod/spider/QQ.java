@@ -16,7 +16,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -206,7 +205,8 @@ public class QQ extends Spider {
                     JSONArray results = new JSONObject(srr.content.substring(13, srr.content.length() - 1)).getJSONArray("results");
                     for (int j = 0; j < results.length(); j++) {
                         JSONObject data = results.getJSONObject(j).getJSONObject("fields");
-                        plays.add(data.optString("title").replace(dataObject.optString("title")+"_","") + "$" + ids.get(0) + "/" + data.optString("vid"));
+                        if(!data.optString("title").contains("预告"))
+                            plays.add(data.optString("title").replace(dataObject.optString("title")+"_","") + "$" + ids.get(0) + "/" + data.optString("vid"));
                     }
                     playFlags.clear();
                 }
@@ -284,7 +284,7 @@ public class QQ extends Spider {
                 JSONObject vObj = jsonArray.getJSONObject(i).getJSONArray("data").getJSONObject(0);
                 JSONObject v = new JSONObject();
                 v.put("vod_id", vObj.optString("id"));
-                v.put("vod_name", vObj.optString("title").replace("\\u0005","").replace("\\u0005",""));
+                v.put("vod_name", vObj.optString("title"));
                 v.put("vod_pic", vObj.optString("posterPic"));
                 v.put("vod_remarks", vObj.optString("publishDate"));
                 videos.put(v);
