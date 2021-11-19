@@ -1,7 +1,7 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
-import android.text.TextUtils;
+import android.net.Uri;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
@@ -18,16 +18,11 @@ import org.jsoup.select.Elements;
 
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
 
 import rxhttp.wrapper.annotations.NonNull;
 
@@ -87,7 +82,8 @@ public class QQ extends Spider {
                     Element vod = list.get(i);
                     String title = vod.selectFirst("a").attr("title");
                     String cover = vod.selectFirst("img").attr("src");
-                    String remark = vod.selectFirst(".figure_caption").text() + " " + vod.selectFirst(".figure_score").text();
+                    cover=fixUrl(url,cover);
+                    String remark = vod.selectFirst(".figure_caption").text();
                     String id = vod.selectFirst("a").attr("data-float");
                     JSONObject v = new JSONObject();
                     v.put("vod_id", id);
@@ -154,7 +150,8 @@ public class QQ extends Spider {
                     Element vod = list.get(i);
                     String title = vod.selectFirst("a").attr("title");
                     String cover = vod.selectFirst("img").attr("src");
-                    String remark = vod.selectFirst(".figure_caption").text() + " " + vod.selectFirst(".figure_score").text();
+                    cover = fixUrl(url,cover);
+                    String remark = vod.selectFirst(".figure_caption").text();
                     String id = vod.selectFirst("a").attr("data-float");
                     JSONObject v = new JSONObject();
                     v.put("vod_id", id);
@@ -189,12 +186,12 @@ public class QQ extends Spider {
             JSONObject vodList = new JSONObject();
             vodList.put("vod_id", ids.get(0));
             vodList.put("vod_name", dataObject.getString("title"));
-            vodList.put("vod_pic", dataObject.getString("pic"));
+            vodList.put("vod_pic", fixUrl(url,dataObject.getString("pic")));
             vodList.put("type_name", jsonObject.get("typ").toString());
             vodList.put("vod_year", dataObject.getString("year"));
 //            vodList.put("vod_area", dataObject.getString("vod_area"));
 //            vodList.put("vod_remarks", dataObject.getString("vod_remarks"));
-//            vodList.put("vod_actor", dataObject.getString("vod_actor"));
+            vodList.put("vod_actor", jsonObject.optString("nam"));
 //            vodList.put("vod_director", dataObject.getString("vod_director"));
             vodList.put("vod_content", dataObject.getString("description"));
             JSONArray playerList = dataObject.getJSONArray("video_ids");
@@ -273,19 +270,19 @@ public class QQ extends Spider {
         if (quick)
             return "";
         try {
-            String url = siteUrl + "/api.php/app/search?text=" + URLEncoder.encode(key) + "&pg=1";
+            String url = "http://node.video.qq.com/x/api/msearch?keyWord=" + key;
             SpiderUrl su = new SpiderUrl(url, getHeaders(url));
             SpiderReqResult srr = SpiderReq.get(su);
             JSONObject dataObject = new JSONObject(srr.content);
-            JSONArray jsonArray = dataObject.getJSONArray("list");
+            JSONArray jsonArray = dataObject.getJSONArray("uiData");
             JSONArray videos = new JSONArray();
             for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject vObj = jsonArray.getJSONObject(i);
+                JSONObject vObj = jsonArray.getJSONObject(i).getJSONArray("data").getJSONObject(0);
                 JSONObject v = new JSONObject();
-                v.put("vod_id", vObj.getString("vod_id"));
-                v.put("vod_name", vObj.getString("vod_name"));
-                v.put("vod_pic", vObj.getString("vod_pic"));
-                v.put("vod_remarks", vObj.getString("vod_remarks"));
+                v.put("vod_id", vObj.optString("id"));
+                v.put("vod_name", vObj.optString("title").replace("\\u0005","").replace("\\u0005",""));
+                v.put("vod_pic", vObj.optString("posterPic"));
+                v.put("vod_remarks", vObj.optString("publishDate"));
                 videos.put(v);
             }
             JSONObject result = new JSONObject();
@@ -295,5 +292,20 @@ public class QQ extends Spider {
             SpiderDebug.log(e);
         }
         return "";
+    }
+
+    private String fixUrl(String base, String src) {
+        try {
+            if (src.startsWith("//")) {
+                Uri parse = Uri.parse(base);
+                src = parse.getScheme() + ":" + src;
+            } else if (!src.contains("://")) {
+                Uri parse = Uri.parse(base);
+                src = parse.getScheme() + "://" + parse.getHost() + src;
+            }
+        } catch (Exception e) {
+            SpiderDebug.log(e);
+        }
+        return src;
     }
 }
