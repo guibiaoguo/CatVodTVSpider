@@ -118,10 +118,10 @@ public class QQ extends Spider {
                 for (int j = 0; j < videoList.length() && j < 6; j++) {
                     JSONObject vObj = videoList.getJSONObject(j);
                     JSONObject v = new JSONObject();
-                    v.put("vod_id", vObj.getString("vod_id"));
-                    v.put("vod_name", vObj.getString("vod_name"));
-                    v.put("vod_pic", vObj.getString("vod_pic"));
-                    v.put("vod_remarks", vObj.getString("vod_remarks"));
+                    v.put("vod_id", vObj.optString("vod_id"));
+                    v.put("vod_name", vObj.optString("vod_name"));
+                    v.put("vod_pic", vObj.optString("vod_pic"));
+                    v.put("vod_remarks", vObj.optString("vod_remarks"));
                     videos.put(v);
                 }
             }
@@ -151,7 +151,7 @@ public class QQ extends Spider {
                     String title = vod.selectFirst("a").attr("title");
                     String cover = vod.selectFirst("img").attr("src");
                     cover = fixUrl(url,cover);
-                    String remark = vod.selectFirst(".figure_caption").text();
+                    String remark = vod.selectFirst(".figure_caption")==null?"":vod.selectFirst(".figure_caption").text();
                     String id = vod.selectFirst("a").attr("data-float");
                     JSONObject v = new JSONObject();
                     v.put("vod_id", id);
@@ -185,31 +185,35 @@ public class QQ extends Spider {
             JSONObject dataObject = jsonObject.getJSONObject("c");
             JSONObject vodList = new JSONObject();
             vodList.put("vod_id", ids.get(0));
-            vodList.put("vod_name", dataObject.getString("title"));
-            vodList.put("vod_pic", fixUrl(url,dataObject.getString("pic")));
+            vodList.put("vod_name", dataObject.optString("title"));
+            vodList.put("vod_pic", fixUrl(url,dataObject.optString("pic")));
             vodList.put("type_name", jsonObject.get("typ").toString());
-            vodList.put("vod_year", dataObject.getString("year"));
+            vodList.put("vod_year", dataObject.optString("year"));
 //            vodList.put("vod_area", dataObject.getString("vod_area"));
 //            vodList.put("vod_remarks", dataObject.getString("vod_remarks"));
             vodList.put("vod_actor", jsonObject.optString("nam"));
 //            vodList.put("vod_director", dataObject.getString("vod_director"));
-            vodList.put("vod_content", dataObject.getString("description"));
+            vodList.put("vod_content", dataObject.optString("description"));
             JSONArray playerList = dataObject.getJSONArray("video_ids");
             List<String> playFlags = new ArrayList<>();
-            for (int i = 0; i < playerList.length(); i++) {
-                playFlags.add(playerList.getString(i));
-            }
-            url = "https://union.video.qq.com/fcgi-bin/data?otype=json&tid=682&appid=20001238&appkey=6c03bbe9658448a4&union_platform=1&idlist=" + join(",", playFlags);
-            su = new SpiderUrl(url, getHeaders(url));
-            srr = SpiderReq.get(su);
-            JSONArray results = new JSONObject(srr.content.substring(13, srr.content.length() - 1)).getJSONArray("results");
             List<String> plays = new ArrayList<>();
-            for (int i = 0; i < results.length(); i++) {
-                JSONObject data = results.getJSONObject(i).getJSONObject("fields");
-                plays.add(data.getString("title") + "$" + ids.get(0) + "/" + data.getString("vid"));
+            for (int i = 1; i <= playerList.length(); i++) {
+                playFlags.add(playerList.optString(i-1));
+                if(i%30==0||i==playerList.length()) {
+                    url = "https://union.video.qq.com/fcgi-bin/data?otype=json&tid=682&appid=20001238&appkey=6c03bbe9658448a4&union_platform=1&idlist=" + join(",", playFlags);
+                    su = new SpiderUrl(url, getHeaders(url));
+                    srr = SpiderReq.get(su);
+                    JSONArray results = new JSONObject(srr.content.substring(13, srr.content.length() - 1)).getJSONArray("results");
+                    for (int j = 0; j < results.length(); j++) {
+                        JSONObject data = results.getJSONObject(j).getJSONObject("fields");
+                        plays.add(data.optString("title").replace(dataObject.optString("title")+"_","") + "$" + ids.get(0) + "/" + data.optString("vid"));
+                    }
+                    playFlags.clear();
+                }
             }
+
             vodList.put("vod_play_from", "qq");
-            vodList.put("vod_play_url", join("$$$", plays));
+            vodList.put("vod_play_url", join("#", plays));
             JSONObject result = new JSONObject();
             JSONArray list = new JSONArray();
             list.put(vodList);
