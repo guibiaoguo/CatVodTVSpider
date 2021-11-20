@@ -8,7 +8,6 @@ import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.crawler.SpiderReq;
 import com.github.catvod.crawler.SpiderReqResult;
 import com.github.catvod.crawler.SpiderUrl;
-import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -83,7 +82,7 @@ public class IQIYI extends Spider {
                         if (vod.optInt("sourceId")!=0){
                             id = "/video/video/baseinfo/"+vod.optString("tvId")+"?userInfo=verify&jsonpCbName=videoInfo39";
                         } else {
-                            id = "/albums/album/avlistinfo?id="+vod.optString("albumId")+"&size=5000&page=1&url=" + id;
+                            id = "/albums/album/avlistinfo?aid="+vod.optString("albumId")+"&size=5000&page=1&url=" + id;
                         }
                     } else {
                         if (vod.optLong("tvId") != 0) {
