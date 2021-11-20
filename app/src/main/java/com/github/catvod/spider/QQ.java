@@ -10,12 +10,14 @@ import com.github.catvod.crawler.SpiderReqResult;
 import com.github.catvod.crawler.SpiderUrl;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -35,17 +37,9 @@ public class QQ extends Spider {
 
     protected JSONObject playerConfig = new JSONObject();
 
-    protected HashMap<String, String> classifyMap = new HashMap<>();
-
     @Override
     public void init(Context context) {
         super.init(context);
-        classifyMap.put("movie", "电影");
-        classifyMap.put("tv", "连续剧");
-        classifyMap.put("child", "少儿");
-        classifyMap.put("doco", "纪录片");
-        classifyMap.put("variety", "综艺");
-        classifyMap.put("cartoon", "动漫");
     }
 
     protected HashMap<String, String> getHeaders(String url) {
@@ -54,26 +48,67 @@ public class QQ extends Spider {
         return headers;
     }
 
+    /**
+     * 获取分类数据 + 首页最近更新视频列表数据
+     *
+     * @param filter 是否开启筛选 关联的是 软件设置中 首页数据源里的筛选开关
+     * @return
+     */
     @Override
     public String homeContent(boolean filter) {
         try {
-            String url = siteUrl + "/x/bu/pagesheet/list?_all=1&append=1&channel=";
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
+            String url = "https://v.qq.com/channel/tv?listpage=1&channel=tv&sort=18&_all=1";
+            SpiderUrl su = new SpiderUrl(url, null);
             SpiderReqResult srr = SpiderReq.get(su);
+            Document doc = Jsoup.parse(srr.content);
             JSONArray classes = new JSONArray();
-            if (classifyMap.size() > 0) {
-                Set<String> keys = classifyMap.keySet();
-                for (String k : keys) {
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.put("type_name", classifyMap.get(k));
-                    jsonObject.put("type_id", k);
-                    classes.put(jsonObject);
+            for (Element cls:doc.select(".nav_cell")) {
+                JSONObject c = new JSONObject();
+                String id = cls.selectFirst("a").attr("href");
+                if(id.contains("/channel/")) {
+                    c.put("type_name",cls.selectFirst("a").text());
+                    c.put("type_id",id.split("/channel/")[1]);
+                    classes.put(c);
                 }
             }
+            System.out.println(classes.toString(4));
+            JSONObject filters = new JSONObject();
+            for (int i=0;i<classes.length();i++) {
+                String type_id = classes.optJSONObject(i).optString("type_id");
+                url = "https://v.qq.com/channel/"+type_id+"?listpage=1&channel="+type_id+"&sort=18&_all=1";
+                su = new SpiderUrl(url, null);
+                srr = SpiderReq.get(su);
+                doc = Jsoup.parse(srr.content);
+                Elements elements = doc.select(".filter_line");
+                JSONArray jsonArray = new JSONArray();
+                for (Element element : elements) {
+                    JSONObject t1 = new JSONObject();
+                    JSONArray t2 = new JSONArray();
+
+                    for(Element data:element.select("a") ){
+                        JSONObject t3 = new JSONObject();
+                        String v = data.text();
+                        String n = data.attr("data-value");
+                        t3.put("v",n);
+                        t3.put("n",v);
+                        t2.put(t3);
+                    }
+                    t1.put("name",element.selectFirst("span").text());
+                    t1.put("value",t2);
+                    jsonArray.put(t1);
+                }
+                filters.put(type_id,jsonArray);
+            }
+            url = siteUrl + "/x/bu/pagesheet/list?_all=1&append=1&channel=choice";
+            su = new SpiderUrl(url, getHeaders(url));
+            srr = SpiderReq.get(su);
             JSONObject result = new JSONObject();
+            if (filter) {
+                result.put("filters", filters);
+            }
             result.put("class", classes);
             try {
-                Document doc = Jsoup.parse(srr.content);
+                doc = Jsoup.parse(srr.content);
                 // 取首页推荐视频列表
                 Elements list = doc.select(".list_item");
                 JSONArray videos = new JSONArray();
@@ -133,10 +168,28 @@ public class QQ extends Spider {
         return "";
     }
 
+    /**
+     * 获取分类信息数据
+     *
+     * @param tid    分类id
+     * @param pg     页数
+     * @param filter 同homeContent方法中的filter
+     * @param extend 筛选参数{k:v, k1:v1}
+     * @return
+     */
     @Override
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) {
         try {
             String url = siteUrl + "/x/bu/pagesheet/list?_all=1&append=1&channel=" + tid + "&listpage=1&offset=" + (Integer.parseInt(pg) - 1) * 21 + "&pagesize=21&sort=18";
+            if(extend != null) {
+                Set<String> keys = extend.keySet();
+                for (String key : keys) {
+                    String val = extend.get(key).trim();
+                    if (val.length() == 0)
+                        continue;
+                    url += "&" + key + "=" + URLEncoder.encode(val);
+                }
+            }
             SpiderUrl su = new SpiderUrl(url, getHeaders(url));
             SpiderReqResult srr = SpiderReq.get(su);
             JSONObject result = new JSONObject();
