@@ -285,7 +285,7 @@ public class MGTV extends Spider {
                 for (int j=0;j<sourceList.length();j++) {
                     JSONObject source = sourceList.optJSONObject(j);
                     if (source.optString("source").equals("")||source.optString("source").equals("imgo")) {
-                        v.put("vod_id", source.optString("vid"));
+                        v.put("vod_id", "https://pcweb.api.mgtv.com/episode/list?size=5000&video_id="+source.optString("vid"));
                         v.put("vod_name", vObj.optString("title"));
                         v.put("vod_pic", vObj.optString("pic"));
                         v.put("vod_remarks", vObj.optString("score"));
