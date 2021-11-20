@@ -265,20 +265,33 @@ public class MGTV extends Spider {
         if (quick)
             return "";
         try {
-            String url = "https://mobileso.bz.mgtv1.com/pc/search/v1?q="+key+"&pn=fypage&pc=10";
+            String url = "https://mobileso.bz.mgtv.com/pc/search/v1?q="+key+"&pn=fypage&pc=10";
             SpiderUrl su = new SpiderUrl(url, getHeaders(url));
             SpiderReqResult srr = SpiderReq.get(su);
             JSONObject dataObject = new JSONObject(srr.content);
-            JSONArray jsonArray = dataObject.getJSONArray("docinfos");
+            JSONArray jsonArray = dataObject.optJSONObject("data").getJSONArray("contents");
             JSONArray videos = new JSONArray();
             for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject vObj = jsonArray.getJSONObject(i).optJSONObject("albumDocInfo");
+                JSONObject vObj = jsonArray.getJSONObject(i).optJSONObject("data");
                 JSONObject v = new JSONObject();
-                v.put("vod_id", vObj.optString("id"));
-                v.put("vod_name", vObj.optString("albumTitle"));
-                v.put("vod_pic", vObj.optString("albumImg"));
-                v.put("vod_remarks", vObj.optString("score"));
-                videos.put(v);
+                JSONArray sourceList = vObj.optJSONArray("sourceList");
+                JSONArray yearList = vObj.optJSONArray("yearList");
+                if(sourceList != null||yearList!=null) {
+                    sourceList = sourceList == null?vObj.optJSONArray("yearList").optJSONObject(0).optJSONArray("sourceList"):sourceList;
+                } else {
+                    sourceList = new JSONArray();
+                    sourceList.put(vObj);
+                }
+                for (int j=0;j<sourceList.length();j++) {
+                    JSONObject source = sourceList.optJSONObject(j);
+                    if (source.optString("source").equals("")||source.optString("source").equals("imgo")) {
+                        v.put("vod_id", source.optString("vid"));
+                        v.put("vod_name", vObj.optString("title"));
+                        v.put("vod_pic", vObj.optString("pic"));
+                        v.put("vod_remarks", vObj.optString("score"));
+                        videos.put(v);
+                    }
+                }
             }
             JSONObject result = new JSONObject();
             result.put("list", videos);
