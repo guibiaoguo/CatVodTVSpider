@@ -285,19 +285,29 @@ public class IQIYI extends Spider {
         if (quick)
             return "";
         try {
-            String url = "https://search.video.iqiyi.com/o?if=html5&key="+key+"&pageNum=fypage&pos=1&pageSize=24&site=iqiyi";
+            String url = "https://search.video.iqiyi.com/o?if=html5&key="+key+"&pageNum=1&pos=1&pageSize=20";
             SpiderUrl su = new SpiderUrl(url, getHeaders(url));
             SpiderReqResult srr = SpiderReq.get(su);
             JSONObject dataObject = new JSONObject(srr.content);
-            JSONArray jsonArray = dataObject.getJSONArray("docinfos");
+            JSONArray jsonArray = dataObject.optJSONObject("data").optJSONArray("docinfos");
             JSONArray videos = new JSONArray();
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject vObj = jsonArray.getJSONObject(i).optJSONObject("albumDocInfo");
                 JSONObject v = new JSONObject();
-                v.put("vod_id", vObj.optString("id"));
+                String id = vObj.optString("albumLink");
+                if(!vObj.optString("album_type").equals("")) {
+                    if (vObj.optInt("album_type")==1){
+                        id = "/albums/album/avlistinfo?aid="+vObj.optString("albumId")+"&size=5000&page=1&url=" + id;
+                    } else {
+                        id = "/albums/album/avlistinfo?aid="+vObj.optString("albumId")+"&size=5000&page=1&url=" + id;
+                    }
+                } else {
+                    id = "/albums/album/avlistinfo?aid="+vObj.optString("albumId")+"&size=5000&page=1&url=" + id;
+                }
+                v.put("vod_id", id);
                 v.put("vod_name", vObj.optString("albumTitle"));
                 v.put("vod_pic", vObj.optString("albumImg"));
-                v.put("vod_remarks", vObj.optString("score"));
+                v.put("vod_remarks", vObj.optString("releaseDate"));
                 videos.put(v);
             }
             JSONObject result = new JSONObject();
