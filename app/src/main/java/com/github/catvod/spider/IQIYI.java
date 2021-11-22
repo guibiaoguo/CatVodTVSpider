@@ -219,12 +219,32 @@ public class IQIYI extends Spider {
              vodList.put("vod_id", ids.get(0));
             vodList.put("vod_name",vod.optString("name").replaceAll("第\\d+(?:集|期)",""));
             vodList.put("vod_pic", fixUrl(url,vod.optString("imageUrl")));
+            JSONObject people = vod.optJSONObject("people");
+            JSONArray main_charactor = people.optJSONArray("main_charactor");
+            main_charactor = main_charactor ==null?people.optJSONArray("producer"):main_charactor;
+            main_charactor = main_charactor == null?people.optJSONArray("guest"):main_charactor;
+            main_charactor = main_charactor == null?people.optJSONArray("singer"):main_charactor;
+            List charactors = new ArrayList();
+            if (main_charactor !=null) {
+                for (int i = 0; i < main_charactor.length(); i++) {
+                    charactors.add(main_charactor.optJSONObject(i).optString("name"));
+                }
+            }
+            JSONArray director = people.optJSONArray("director");
+            director = director == null?people.optJSONArray("screen_writer"):director;
+            director = director == null?people.optJSONArray("host"):director;
+            List directors = new ArrayList();
+            if (director !=null) {
+                for (int i = 0; i < director.length(); i++) {
+                    directors.add(director.optJSONObject(i).optString("name"));
+                }
+            }
 //            vodList.put("type_name", jsonObject.get("typ").toString());
 //            vodList.put("vod_year", dataObject.optString("year"));
 //            vodList.put("vod_area", dataObject.getString("vod_area"));
-//            vodList.put("vod_remarks", dataObject.getString("vod_remarks"));
-//            vodList.put("vod_actor", jsonObject.optString("nam"));
-//            vodList.put("vod_director", dataObject.getString("vod_director"));
+            vodList.put("vod_remarks", vod.optString("duration"));
+            vodList.put("vod_actor", join(",",charactors));
+            vodList.put("vod_director", join(",",directors));
             vodList.put("vod_content", vod.optString("description"));
             JSONArray playerList = dataObject.optJSONArray("epsodelist");
             if (playerList == null) {
