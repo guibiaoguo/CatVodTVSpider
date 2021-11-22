@@ -235,7 +235,7 @@ public class QQ extends Spider {
             }
 //            vodList.put("vod_area", dataObject.getString("vod_area"));
 //            vodList.put("vod_remarks", dataObject.getString("vod_remarks"));
-            vodList.put("vod_actor", main_charactor);
+            vodList.put("vod_actor", join(",",charactors));
 //            vodList.put("vod_director", dataObject.getString("vod_director"));
             vodList.put("vod_content", dataObject.optString("description"));
             JSONArray playerList = dataObject.getJSONArray("video_ids");
