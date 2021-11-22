@@ -12,6 +12,8 @@ import com.github.catvod.crawler.SpiderUrl;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -142,6 +144,15 @@ public class MGTV extends Spider {
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) {
         try {
             String url = "https://pianku.api.mgtv.com/rider/list/msite/v2?platform=msite&channelId="+tid+"&pn="+pg+"&chargeInfo=&sort=c2";
+            if(extend != null) {
+                Set<String> keys = extend.keySet();
+                for (String key : keys) {
+                    String val = extend.get(key).trim();
+                    if (val.length() == 0)
+                        continue;
+                    url += "&" + key + "=" + URLEncoder.encode(val);
+                }
+            }
             SpiderUrl su = new SpiderUrl(url, getHeaders(url));
             SpiderReqResult srr = SpiderReq.get(su);
             JSONObject result = new JSONObject();
