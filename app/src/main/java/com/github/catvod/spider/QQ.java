@@ -223,11 +223,19 @@ public class QQ extends Spider {
             vodList.put("vod_id", ids.get(0));
             vodList.put("vod_name", dataObject.optString("title"));
             vodList.put("vod_pic", fixUrl(url,dataObject.optString("pic")));
-            vodList.put("type_name", jsonObject.get("typ").toString());
+            vodList.put("type_name", jsonObject.optJSONArray("typ").opt(0));
             vodList.put("vod_year", dataObject.optString("year"));
+            JSONObject people = jsonObject.optJSONObject("people");
+            JSONArray main_charactor = jsonObject.optJSONArray("nam").optJSONArray(0);
+            List charactors = new ArrayList();
+            if (main_charactor !=null) {
+                for (int i = 0; i < main_charactor.length(); i++) {
+                    charactors.add(main_charactor.opt(i));
+                }
+            }
 //            vodList.put("vod_area", dataObject.getString("vod_area"));
 //            vodList.put("vod_remarks", dataObject.getString("vod_remarks"));
-            vodList.put("vod_actor", jsonObject.optString("nam"));
+            vodList.put("vod_actor", main_charactor);
 //            vodList.put("vod_director", dataObject.getString("vod_director"));
             vodList.put("vod_content", dataObject.optString("description"));
             JSONArray playerList = dataObject.getJSONArray("video_ids");
