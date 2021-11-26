@@ -25,7 +25,6 @@ import rxhttp.wrapper.annotations.NonNull;
 
 /**
  * bill
- * 2021-11-20
  */
 public class IQIYI extends Spider {
 
@@ -331,9 +330,9 @@ public class IQIYI extends Spider {
                 String id = vObj.optString("albumLink");
                 if(!vObj.optString("album_type").equals("")) {
                     if (vObj.optInt("album_type")==1){
-                        id = "/albums/album/avlistinfo?aid="+vObj.optString("albumId")+"&size=5000&page=1&url=" + id;
+                        id = "/albums/source/svlistinfo?sourceid="+vObj.optString("data.qipu_id")+"&size=5000&page=1&url=" + id;
                     } else {
-                        id = "/albums/album/avlistinfo?aid="+vObj.optString("albumId")+"&size=5000&page=1&url=" + id;
+                        id = "/albums/album/avlistinfo?aid="+vObj.optString("qipu_id")+"&size=5000&page=1&url=" + id;
                     }
                 } else {
                     id = "/albums/album/avlistinfo?aid="+vObj.optString("albumId")+"&size=5000&page=1&url=" + id;
