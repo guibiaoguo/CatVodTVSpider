@@ -75,18 +75,18 @@ public class IQIYI extends Spider {
                     JSONObject vod = list.optJSONObject(i);
                     String title = vod.optString("name");
                     String cover = vod.optString("imageUrl");
-                    cover=fixUrl(url,cover);
+                    cover = fixUrl(url, cover);
                     String remark = vod.optString("score");
                     String id = vod.optString("playUrl");
-                    if(!vod.optString("albumId").equals("")) {
-                        if (vod.optInt("sourceId")!=0){
-                            id = "/video/video/baseinfo/"+vod.optString("tvId")+"?userInfo=verify&jsonpCbName=videoInfo39";
+                    if (!vod.optString("albumId").equals("")) {
+                        if (vod.optInt("sourceId") != 0) {
+                            id = "/video/video/baseinfo/" + vod.optString("tvId") + "?userInfo=verify&jsonpCbName=videoInfo39";
                         } else {
-                            id = "/albums/album/avlistinfo?aid="+vod.optString("albumId")+"&size=5000&page=1&url=" + id;
+                            id = "/albums/album/avlistinfo?aid=" + vod.optString("albumId") + "&size=5000&page=1&url=" + id;
                         }
                     } else {
                         if (vod.optLong("tvId") != 0) {
-                            id = "/video/video/baseinfo/"+vod.optString("tvId")+"?userInfo=verify&jsonpCbName=videoInfo39";
+                            id = "/video/video/baseinfo/" + vod.optString("tvId") + "?userInfo=verify&jsonpCbName=videoInfo39";
                         }
                     }
                     JSONObject v = new JSONObject();
@@ -141,19 +141,19 @@ public class IQIYI extends Spider {
     @Override
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) {
         try {
-            String url = siteUrl + "/search/video/videolists?channel_id="+tid+"&is_purchase=&mode=24&pageNum="+pg+"&pageSize=24";
-            if(extend != null) {
+            String url = siteUrl + "/search/video/videolists?channel_id=" + tid + "&is_purchase=&mode=24&pageNum=" + pg + "&pageSize=24";
+            if (extend != null) {
                 Set<String> keys = extend.keySet();
                 List<String> three_category_id = new ArrayList<>();
                 for (String key : keys) {
                     String val = extend.get(key).trim();
                     if (key.matches("\\d+")) {
-                        three_category_id.add(val+";must");
+                        three_category_id.add(val + ";must");
                     } else {
-                        url+="&"+key+"="+val;
+                        url += "&" + key + "=" + val;
                     }
                 }
-                url += "&three_category_id="+join(",",three_category_id);
+                url += "&three_category_id=" + join(",", three_category_id);
             }
             SpiderUrl su = new SpiderUrl(url, getHeaders(url));
             SpiderReqResult srr = SpiderReq.get(su);
@@ -167,18 +167,18 @@ public class IQIYI extends Spider {
                     JSONObject vod = list.optJSONObject(i);
                     String title = vod.optString("name");
                     String cover = vod.optString("imageUrl");
-                    cover=fixUrl(url,cover);
+                    cover = fixUrl(url, cover);
                     String remark = vod.optString("score");
                     String id = vod.optString("playUrl");
-                    if(!vod.optString("albumId").equals("")) {
-                        if (vod.optInt("sourceId")!=0){
-                            id = "/video/video/baseinfo/"+vod.optString("tvId")+"?userInfo=verify&jsonpCbName=videoInfo39";
+                    if (!vod.optString("albumId").equals("")) {
+                        if (vod.optInt("sourceId") != 0) {
+                            id = "/video/video/baseinfo/" + vod.optString("tvId") + "?userInfo=verify&jsonpCbName=videoInfo39";
                         } else {
-                            id = "/albums/album/avlistinfo?aid="+vod.optString("albumId")+"&size=5000&page=1&url=" + id;
+                            id = "/albums/album/avlistinfo?aid=" + vod.optString("albumId") + "&size=5000&page=1&url=" + id;
                         }
                     } else {
                         if (vod.optLong("tvId") != 0) {
-                            id = "/video/video/baseinfo/"+vod.optString("tvId")+"?userInfo=verify&jsonpCbName=videoInfo39";
+                            id = "/video/video/baseinfo/" + vod.optString("tvId") + "?userInfo=verify&jsonpCbName=videoInfo39";
                         }
                     }
                     JSONObject v = new JSONObject();
@@ -213,28 +213,28 @@ public class IQIYI extends Spider {
             JSONObject dataObject = jsonObject.getJSONObject("data");
             JSONObject vodList = new JSONObject();
             JSONObject vod = dataObject;
-            if(dataObject.optJSONArray("epsodelist")!=null){
+            if (dataObject.optJSONArray("epsodelist") != null) {
                 vod = dataObject.optJSONArray("epsodelist").optJSONObject(0);
             }
-             vodList.put("vod_id", ids.get(0));
-            vodList.put("vod_name",vod.optString("name").replaceAll("第\\d+(?:集|期)",""));
-            vodList.put("vod_pic", fixUrl(url,vod.optString("imageUrl")));
+            vodList.put("vod_id", ids.get(0));
+            vodList.put("vod_name", vod.optString("name").replaceAll("第\\d+(?:集|期)", ""));
+            vodList.put("vod_pic", fixUrl(url, vod.optString("imageUrl")));
             JSONObject people = vod.optJSONObject("people");
             JSONArray main_charactor = people.optJSONArray("main_charactor");
-            main_charactor = main_charactor ==null?people.optJSONArray("producer"):main_charactor;
-            main_charactor = main_charactor == null?people.optJSONArray("guest"):main_charactor;
-            main_charactor = main_charactor == null?people.optJSONArray("singer"):main_charactor;
+            main_charactor = main_charactor == null ? people.optJSONArray("producer") : main_charactor;
+            main_charactor = main_charactor == null ? people.optJSONArray("guest") : main_charactor;
+            main_charactor = main_charactor == null ? people.optJSONArray("singer") : main_charactor;
             List charactors = new ArrayList();
-            if (main_charactor !=null) {
+            if (main_charactor != null) {
                 for (int i = 0; i < main_charactor.length(); i++) {
                     charactors.add(main_charactor.optJSONObject(i).optString("name"));
                 }
             }
             JSONArray director = people.optJSONArray("director");
-            director = director == null?people.optJSONArray("screen_writer"):director;
-            director = director == null?people.optJSONArray("host"):director;
+            director = director == null ? people.optJSONArray("screen_writer") : director;
+            director = director == null ? people.optJSONArray("host") : director;
             List directors = new ArrayList();
-            if (director !=null) {
+            if (director != null) {
                 for (int i = 0; i < director.length(); i++) {
                     directors.add(director.optJSONObject(i).optString("name"));
                 }
@@ -243,8 +243,8 @@ public class IQIYI extends Spider {
 //            vodList.put("vod_year", dataObject.optString("year"));
 //            vodList.put("vod_area", dataObject.getString("vod_area"));
             vodList.put("vod_remarks", vod.optString("duration"));
-            vodList.put("vod_actor", join(",",charactors));
-            vodList.put("vod_director", join(",",directors));
+            vodList.put("vod_actor", join(",", charactors));
+            vodList.put("vod_director", join(",", directors));
             vodList.put("vod_content", vod.optString("description"));
             JSONArray playerList = dataObject.optJSONArray("epsodelist");
             if (playerList == null) {
@@ -254,7 +254,7 @@ public class IQIYI extends Spider {
             List<String> plays = new ArrayList<>();
             for (int i = 0; i < playerList.length(); i++) {
                 JSONObject epsode = playerList.optJSONObject(i);
-                plays.add(epsode.optString("order")+"$"+epsode.optString("playUrl"));
+                plays.add(epsode.optString("order") + " " + epsode.optString("subtitle") + "$" + epsode.optString("playUrl"));
             }
             vodList.put("vod_play_from", "iqiyi");
             vodList.put("vod_play_url", join("#", plays));
@@ -318,7 +318,7 @@ public class IQIYI extends Spider {
         if (quick)
             return "";
         try {
-            String url = "https://search.video.iqiyi.com/o?if=html5&key="+key+"&pageNum=1&pos=1&pageSize=20";
+            String url = "https://search.video.iqiyi.com/o?if=html5&key=" + key + "&pageNum=1&pos=1&pageSize=400";
             SpiderUrl su = new SpiderUrl(url, getHeaders(url));
             SpiderReqResult srr = SpiderReq.get(su);
             JSONObject dataObject = new JSONObject(srr.content);
@@ -328,14 +328,10 @@ public class IQIYI extends Spider {
                 JSONObject vObj = jsonArray.getJSONObject(i).optJSONObject("albumDocInfo");
                 JSONObject v = new JSONObject();
                 String id = vObj.optString("albumLink");
-                if(!vObj.optString("album_type").equals("")) {
-                    if (vObj.optInt("album_type")==1){
-                        id = "/albums/source/svlistinfo?sourceid="+vObj.optString("data.qipu_id")+"&size=5000&page=1&url=" + id;
-                    } else {
-                        id = "/albums/album/avlistinfo?aid="+vObj.optString("qipu_id")+"&size=5000&page=1&url=" + id;
-                    }
+                if (vObj.optInt("album_type") == 0) {
+                    id = "/albums/album/avlistinfo?aid=" + vObj.optString("qipu_id") + "&size=5000&page=1&url=" + id;
                 } else {
-                    id = "/albums/album/avlistinfo?aid="+vObj.optString("albumId")+"&size=5000&page=1&url=" + id;
+                    continue;
                 }
                 v.put("vod_id", id);
                 v.put("vod_name", vObj.optString("albumTitle"));

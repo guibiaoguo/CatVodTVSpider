@@ -287,7 +287,7 @@ public class MGTV extends Spider {
         if (quick)
             return "";
         try {
-            String url = "https://mobileso.bz.mgtv.com/pc/search/v1?q="+key+"&pn=fypage&pc=10";
+            String url = "https://mobileso.bz.mgtv.com/pc/search/v1?q="+key+"&pn=1&pc=5000&size=5000";
             SpiderUrl su = new SpiderUrl(url, getHeaders(url));
             SpiderReqResult srr = SpiderReq.get(su);
             JSONObject dataObject = new JSONObject(srr.content);
@@ -302,7 +302,6 @@ public class MGTV extends Spider {
                     sourceList = sourceList == null?vObj.optJSONArray("yearList").optJSONObject(0).optJSONArray("sourceList"):sourceList;
                 } else {
                     sourceList = new JSONArray();
-                    sourceList.put(vObj);
                 }
                 for (int j=0;j<sourceList.length();j++) {
                     JSONObject source = sourceList.optJSONObject(j);

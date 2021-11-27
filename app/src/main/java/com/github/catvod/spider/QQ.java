@@ -251,7 +251,7 @@ public class QQ extends Spider {
                     for (int j = 0; j < results.length(); j++) {
                         JSONObject data = results.getJSONObject(j).getJSONObject("fields");
                         if(!data.optString("title").contains("预告"))
-                            plays.add(data.optString("title").replace(dataObject.optString("title")+"_","") + "$" + ids.get(0) + "/" + data.optString("vid"));
+                            plays.add(data.optString("title").replace(dataObject.optString("title")+"_","") + "$" + "https://v.qq.com/x/cover/" +ids.get(0) + "/" + data.optString("vid")+".html");
                     }
                     playFlags.clear();
                 }
@@ -302,7 +302,7 @@ public class QQ extends Spider {
             try {
                 result.put("parse", 1);
                 result.put("playUrl", "");
-                result.put("url", "https://v.qq.com/x/cover/" + id + ".html");
+                result.put("url", id);
                 return result.toString();
             } catch (Exception ee) {
                 SpiderDebug.log(ee);
