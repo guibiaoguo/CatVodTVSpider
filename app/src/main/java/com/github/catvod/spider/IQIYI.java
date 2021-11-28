@@ -315,8 +315,6 @@ public class IQIYI extends Spider {
 
     @Override
     public String searchContent(String key, boolean quick) {
-        if (quick)
-            return "";
         try {
             String url = "https://search.video.iqiyi.com/o?if=html5&key=" + key + "&pageNum=1&pos=1&pageSize=400";
             SpiderUrl su = new SpiderUrl(url, getHeaders(url));

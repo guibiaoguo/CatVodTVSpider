@@ -316,8 +316,6 @@ public class QQ extends Spider {
 
     @Override
     public String searchContent(String key, boolean quick) {
-        if (quick)
-            return "";
         try {
             String url = "http://node.video.qq.com/x/api/msearch?keyWord=" + key;
             SpiderUrl su = new SpiderUrl(url, getHeaders(url));

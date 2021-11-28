@@ -284,8 +284,6 @@ public class MGTV extends Spider {
 
     @Override
     public String searchContent(String key, boolean quick) {
-        if (quick)
-            return "";
         try {
             String url = "https://mobileso.bz.mgtv.com/pc/search/v1?q="+key+"&pn=1&pc=5000&size=5000";
             SpiderUrl su = new SpiderUrl(url, getHeaders(url));
