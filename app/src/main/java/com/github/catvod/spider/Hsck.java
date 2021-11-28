@@ -121,7 +121,7 @@ public class Hsck extends Spider {
                     String remark = vod.selectFirst(".stui-vodlist__thumb").text();
                     String id = vod.selectFirst("h4>a").attr("href");
                     JSONObject v = new JSONObject();
-                    v.put("vod_id", id);
+                    v.put("vod_id", id+"#"+cover);
                     v.put("vod_name", title);
                     v.put("vod_pic", cover);
                     v.put("vod_remarks", remark);
@@ -273,7 +273,7 @@ public class Hsck extends Spider {
                 vodList.put("vod_director",key.equals("")?"国产自拍":getDirector(key.substring(0,2)));
                 vodList.put("vod_content", "");
             } else {
-                vodList.put("vod_pic", fixUrl(url,movie.selectFirst(".bigImage").attr("href")));
+                vodList.put("vod_pic", fixUrl(url,ext+movie.selectFirst(".bigImage").attr("href")));
                 Element info = movie.selectFirst(".info");
                 vodList.put("type_name", info.selectFirst("p.header~p").text());
                 vodList.put("vod_year", info.select("p").get(1).text());
