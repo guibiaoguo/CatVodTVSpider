@@ -170,7 +170,7 @@ public class MGTV extends Spider {
                     remark = remark.equals("")?vod.optString("subtitle"):remark;
                     String id = "https://pcweb.api.mgtv.com/episode/list?size=5000&video_id="+vod.optString("playPartId");
                     JSONObject v = new JSONObject();
-                    v.put("vod_id", id);
+                    v.put("vod_id", id+"#"+cover);
                     v.put("vod_name", title);
                     v.put("vod_pic", cover);
                     v.put("vod_remarks", remark);
@@ -195,7 +195,7 @@ public class MGTV extends Spider {
     @Override
     public String detailContent(List<String> ids) {
         try {
-            String url = ids.get(0);
+            String url = ids.get(0).split("#")[0];
             SpiderUrl su = new SpiderUrl(url, getHeaders(url));
             SpiderReqResult srr = SpiderReq.get(su);
             JSONObject jsonObject = new JSONObject(srr.content);
@@ -207,7 +207,7 @@ public class MGTV extends Spider {
 //            }
             vodList.put("vod_id", ids.get(0));
             vodList.put("vod_name",vod.optString("title"));
-//            vodList.put("vod_pic", fixUrl(url,vod.optString("imageUrl")));
+            vodList.put("vod_pic",fixUrl(url,ids.get(0).split("#")[1]));
 //            vodList.put("type_name", jsonObject.get("typ").toString());
 //            vodList.put("vod_year", dataObject.optString("year"));
 //            vodList.put("vod_area", dataObject.getString("vod_area"));
@@ -304,7 +304,7 @@ public class MGTV extends Spider {
                 for (int j=0;j<sourceList.length();j++) {
                     JSONObject source = sourceList.optJSONObject(j);
                     if (source.optString("source").equals("")||source.optString("source").equals("imgo")) {
-                        v.put("vod_id", "https://pcweb.api.mgtv.com/episode/list?size=5000&video_id="+source.optString("vid"));
+                        v.put("vod_id", "https://pcweb.api.mgtv.com/episode/list?size=5000&video_id="+source.optString("vid")+"#"+vObj.optString("pic"));
                         v.put("vod_name", vObj.optString("title"));
                         v.put("vod_pic", vObj.optString("pic"));
                         v.put("vod_remarks", vObj.optString("score"));
