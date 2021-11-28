@@ -64,17 +64,18 @@ public class Hsck extends Spider {
 
     protected String getDomain() {
         try {
-            String ext = "https://user.seven301.xyz:8899/?u="+siteUrl+"&p=/";
+            String ext = "https://user.seven301.xyz:8899/?u=" + siteUrl + "&p=/";
             //使用
             OkHttpClient client = new OkHttpClient.Builder()
                     .followRedirects(false)
                     .build();
-            SpiderReqResult spiderReqResult = SpiderReq.header(client,ext,"sp_req_default",getHeaders(ext));
+            SpiderReqResult spiderReqResult = SpiderReq.header(client, ext, "sp_req_default", getHeaders(ext));
             return spiderReqResult.headers.get("location").get(0);
         } catch (Exception e) {
             return siteUrl;
         }
     }
+
     protected HashMap<String, String> getHeaders(String url) {
         HashMap<String, String> headers = new HashMap<>();
         headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
@@ -95,14 +96,16 @@ public class Hsck extends Spider {
             SpiderReqResult srr = SpiderReq.get(su);
             Document doc = Jsoup.parse(srr.content);
             JSONArray classes = new JSONArray();
-            for (Element cls:doc.select("ul[class='stui-header__menu clearfix']>li:gt(0)")) {
+            for (Element cls : doc.select("ul[class='stui-header__menu clearfix']>li:gt(0)")) {
                 JSONObject c = new JSONObject();
                 String id = cls.selectFirst("a").attr("href");
-                id = id.substring(9,id.length()-5);
-                    c.put("type_name",cls.selectFirst("a").text());
-                    c.put("type_id",id);
+                Pattern pattern = Pattern.compile("/vodtype/(\\w+).html");
+                Matcher matcher = pattern.matcher(id);
+                if(matcher.find()) {
+                    c.put("type_name", cls.selectFirst("a").text());
+                    c.put("type_id", matcher.group(1));
                     classes.put(c);
-
+                }
             }
             JSONObject result = new JSONObject();
             if (filter) {
@@ -117,11 +120,11 @@ public class Hsck extends Spider {
                     Element vod = list.get(i);
                     String title = vod.selectFirst("h4>a").text();
                     String cover = vod.selectFirst("a").attr("data-original");
-                    cover=fixUrl(url,cover);
+                    cover = fixUrl(url, cover);
                     String remark = vod.selectFirst(".stui-vodlist__thumb").text();
                     String id = vod.selectFirst("h4>a").attr("href");
                     JSONObject v = new JSONObject();
-                    v.put("vod_id", id+"#"+cover);
+                    v.put("vod_id", id + "#" + cover);
                     v.put("vod_name", title);
                     v.put("vod_pic", cover);
                     v.put("vod_remarks", remark);
@@ -181,8 +184,8 @@ public class Hsck extends Spider {
     @Override
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) {
         try {
-            String url = domain + "/vodtype/"+tid+"-"+pg+".html";
-            if(extend != null) {
+            String url = domain + "/vodtype/" + tid + "-" + pg + ".html";
+            if (extend != null) {
                 Set<String> keys = extend.keySet();
                 for (String key : keys) {
                     String val = extend.get(key).trim();
@@ -203,11 +206,11 @@ public class Hsck extends Spider {
                     Element vod = list.get(i);
                     String title = vod.selectFirst("h4>a").text();
                     String cover = vod.selectFirst("a").attr("data-original");
-                    cover=fixUrl(url,cover);
+                    cover = fixUrl(url, cover);
                     String remark = vod.selectFirst(".stui-vodlist__thumb").text();
                     String id = vod.selectFirst("h4>a").attr("href");
                     JSONObject v = new JSONObject();
-                    v.put("vod_id", id+"#"+cover);
+                    v.put("vod_id", id + "#" + cover);
                     v.put("vod_name", title);
                     v.put("vod_pic", cover);
                     v.put("vod_remarks", remark);
@@ -229,19 +232,20 @@ public class Hsck extends Spider {
     }
 
     public String getDirector(String key) {
-        Map<String,String> director = new HashMap();
-        director.put("91","果冻传媒");
-        director.put("MD","麻豆传媒");
-        director.put("MM","麻豆传媒");
-        director.put("TZ","麻豆传媒");
-        director.put("OD","麻豆传媒");
-        director.put("LA","麻豆传媒");
-        director.put("XK","星空传媒");
-        director.put("PD","蜜桃传媒");
-        director.put("TM","天美影业");
-        director.put("JD","精东影业");
-        return director.get(key) == ""?"国产自拍":director.get(key);
+        Map<String, String> director = new HashMap();
+        director.put("91", "果冻传媒");
+        director.put("MD", "麻豆传媒");
+        director.put("MM", "麻豆传媒");
+        director.put("TZ", "麻豆传媒");
+        director.put("OD", "麻豆传媒");
+        director.put("LA", "麻豆传媒");
+        director.put("XK", "星空传媒");
+        director.put("PD", "蜜桃传媒");
+        director.put("TM", "天美影业");
+        director.put("JD", "精东影业");
+        return director.get(key) == "" ? "国产自拍" : director.get(key);
     }
+
     @Override
     public String detailContent(List<String> ids) {
         try {
@@ -253,33 +257,33 @@ public class Hsck extends Spider {
             Pattern pattern = Pattern.compile("([a-zA-z-0-9_]*)");
             Matcher matcher = pattern.matcher(title);
             String key = "";
-            if(matcher.find()) {
+            if (matcher.find()) {
                 key = matcher.group(1);
             }
-            SpiderUrl su_key = new SpiderUrl(ext+"/"+key,getHeaders(ext));
+            SpiderUrl su_key = new SpiderUrl(ext + "/" + key, getHeaders(ext));
             SpiderReqResult srr_key = SpiderReq.get(su_key);
             Document doc_key = Jsoup.parse(srr_key.content);
             Element movie = doc_key.selectFirst(".movie");
             JSONObject vodList = new JSONObject();
             vodList.put("vod_id", ids.get(0).split("#")[0]);
             vodList.put("vod_name", title);
-            if(movie == null) {
-                vodList.put("vod_pic",fixUrl(url,ids.get(0).split("#")[1]));
+            if (movie == null) {
+                vodList.put("vod_pic", fixUrl(url, ids.get(0).split("#")[1]));
                 vodList.put("type_name", "国产");
                 vodList.put("vod_year", "");
                 vodList.put("vod_area", "中国");
                 vodList.put("vod_remarks", "无码");
-                vodList.put("vod_actor","");
-                vodList.put("vod_director",key.equals("")?"国产自拍":getDirector(key.substring(0,2)));
+                vodList.put("vod_actor", "");
+                vodList.put("vod_director", key.equals("") ? "国产自拍" : getDirector(key.substring(0, 2)));
                 vodList.put("vod_content", "");
             } else {
-                vodList.put("vod_pic", fixUrl(url,ext+movie.selectFirst(".bigImage").attr("href")));
+                vodList.put("vod_pic", fixUrl(url, ext + movie.selectFirst(".bigImage").attr("href")));
                 Element info = movie.selectFirst(".info");
                 vodList.put("type_name", info.selectFirst("p.header~p").text());
                 vodList.put("vod_year", info.select("p").get(1).text());
                 vodList.put("vod_area", "日本");
                 vodList.put("vod_remarks", info.select("p").get(2).text());
-                vodList.put("vod_actor",info.selectFirst(".star-show~ul").text());
+                vodList.put("vod_actor", info.selectFirst(".star-show~ul").text());
                 vodList.put("vod_director", info.select("p").get(3).text());
                 vodList.put("vod_content", info.text());
             }
@@ -302,7 +306,7 @@ public class Hsck extends Spider {
                         videoUrlTmp = URLDecoder.decode(videoUrlTmp);
                     }
                 }
-                plays.add("1080P$"+videoUrlTmp);
+                plays.add("1080P$" + videoUrlTmp);
             }
             vodList.put("vod_play_from", "hsck");
             vodList.put("vod_play_url", join("#", plays));
@@ -364,7 +368,7 @@ public class Hsck extends Spider {
     @Override
     public String searchContent(String key, boolean quick) {
         try {
-            String url = domain+"/vodsearch/"+key+"----------1---.html";
+            String url = domain + "/vodsearch/" + key + "----------1---.html";
             SpiderUrl su = new SpiderUrl(url, getHeaders(url));
             SpiderReqResult srr = SpiderReq.get(su);
             Document doc = Jsoup.parse(srr.content);
@@ -372,16 +376,16 @@ public class Hsck extends Spider {
             JSONArray videos = new JSONArray();
             int i = 1;
             while (elements != null && elements.size() > 0) {
-                for(Element element:elements) {
+                for (Element element : elements) {
                     JSONObject v = new JSONObject();
-                    v.put("vod_id", element.selectFirst("a").attr("href")+"#"+element.selectFirst("a").attr("data-original"));
+                    v.put("vod_id", element.selectFirst("a").attr("href") + "#" + element.selectFirst("a").attr("data-original"));
                     v.put("vod_name", element.selectFirst("a").attr("title"));
                     v.put("vod_pic", element.selectFirst("a").attr("data-original"));
                     v.put("vod_remarks", element.selectFirst(".pic-text").text());
                     videos.put(v);
                 }
                 i++;
-                url = domain+"/vodsearch/"+key+"----------"+i+"---.html";
+                url = domain + "/vodsearch/" + key + "----------" + i + "---.html";
                 su = new SpiderUrl(url, getHeaders(url));
                 srr = SpiderReq.get(su);
                 doc = Jsoup.parse(srr.content);
