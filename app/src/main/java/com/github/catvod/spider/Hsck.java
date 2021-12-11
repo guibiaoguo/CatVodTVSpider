@@ -259,6 +259,7 @@ public class Hsck extends Spider {
             String key = "";
             if (matcher.find()) {
                 key = matcher.group(1);
+                key = key.replaceAll("_","-");
             }
             SpiderUrl su_key = new SpiderUrl(ext + "/" + key, getHeaders(ext));
             SpiderReqResult srr_key = SpiderReq.get(su_key);
@@ -280,11 +281,11 @@ public class Hsck extends Spider {
                 vodList.put("vod_pic", fixUrl(url, ext + movie.selectFirst(".bigImage").attr("href")));
                 Element info = movie.selectFirst(".info");
                 vodList.put("type_name", info.selectFirst("p.header~p").text());
-                vodList.put("vod_year", info.select("p").get(1).text());
+                vodList.put("vod_year", info.select("p").get(1).text().replace("發行日期:",""));
                 vodList.put("vod_area", "日本");
                 vodList.put("vod_remarks", info.select("p").get(2).text());
-                vodList.put("vod_actor", info.selectFirst(".star-show~ul").text());
-                vodList.put("vod_director", info.select("p").get(3).text());
+                vodList.put("vod_actor", info.selectFirst(".star-show~ul")!=null?info.selectFirst(".star-show~ul").text():"");
+                vodList.put("vod_director", info.select("p").get(3).text().replace("導演:",""));
                 vodList.put("vod_content", info.text());
             }
 
