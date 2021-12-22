@@ -9,6 +9,7 @@ import com.github.catvod.crawler.SpiderReqResult;
 import com.github.catvod.crawler.SpiderUrl;
 import com.github.catvod.utils.SpiderOKClient;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,6 +19,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -33,17 +35,8 @@ import rxhttp.wrapper.annotations.NonNull;
 public class XPathAli extends XPath {
 
     private static final String siteUrl = "https://www.alipanso.com";
-    protected String ext;
-
-    @Override
-    public void init(Context context) {
-        super.init(context);
-    }
-
-    public void init(Context context, String extend) {
-        super.init(context, extend);
-
-    }
+    private String accessTk = "";
+    private String aliTk;
 
     Pattern aliyun = Pattern.compile(".*?aliyundrive.com/s/(\\w+)[^\\w]?");
     Pattern aliyunShort = Pattern.compile(".*?alywp.net/(\\w+)[^\\w]?");
@@ -59,7 +52,6 @@ public class XPathAli extends XPath {
                     for (int i = 0; i < playUrl.length; i++) {
                         Map<String, String> vod_play = new LinkedHashMap<>();
                         updatePlaylist(playUrl[i].replaceAll(".*\\$", ""), vod_play);
-                        accessTk = "";
                         JSONObject vodAtom = new JSONObject();
                         if (vod_play.size() > 0) {
                             List vod_from = new ArrayList();
@@ -169,7 +161,15 @@ public class XPathAli extends XPath {
         return "";
     }
 
-    private String aliTk = "";
+    @Override
+    protected void loadRuleExt(String json) {
+        try {
+            JSONObject jsonObj = new JSONObject(json);
+            aliTk = jsonObj.optString("token").trim();
+        } catch (JSONException e) {
+            SpiderDebug.log(e);
+        }
+    }
 
     private void fetchAliTk() {
         if (aliTk.isEmpty()) {
@@ -183,8 +183,6 @@ public class XPathAli extends XPath {
             }
         }
     }
-
-    private String accessTk = "";
 
     private void refreshTk() {
         fetchAliTk();
@@ -239,7 +237,8 @@ public class XPathAli extends XPath {
                         String dirId = item.getString("file_id");
                         getFileList(shareTk, shareId, sharePwd, dirId, vodItems);
                     } else {
-                        if (item.getString("type").equals("file") && !item.getString("file_extension").equals("txt")) {
+                        String[] types = {"3G2","3GP","3GP2","3GPP","AMV","ASF","AVI","DIVX","DPG","DVR-MS","EVO","F4V","FLV","IFO","K3G","M1V","M2T","M2TS","M2V","M4B","M4P","M4V","MKV","MOV","MP2V","MP4","MPE","MPEG","MPG","MPV2","MTS","MXF","NSR","NSV","OGM","OGV","QT","RAM","RM","RMVB","RPM","SKM","TP","TPR","TRP","TS","VOB","WEBM","WM","WMP","WMV","WTV"};
+                        if (item.getString("type").equals("file") && Arrays.asList(types).contains(item.getString("file_extension").toUpperCase())) {
                             String fileId = item.getString("file_id");
                             String fileName = item.getString("name");
                             vodItems.add(fileName + "$" + shareId + "+" + fileId);
