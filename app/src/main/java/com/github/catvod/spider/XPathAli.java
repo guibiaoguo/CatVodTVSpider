@@ -114,6 +114,20 @@ public class XPathAli extends XPath {
         return sb.toString();
     }
 
+    protected String getDomain() {
+        try {
+            String ext = "https://user.seven301.xyz:8899/?u=https://hsck.us&p=/";
+            //使用
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .followRedirects(false)
+                    .build();
+            SpiderReqResult spiderReqResult = SpiderReq.header(client, ext, "sp_req_default", getHeaders(ext));
+            return spiderReqResult.headers.get("location").get(0);
+        } catch (Exception e) {
+            return siteUrl;
+        }
+    }
+
     @Override
     public String playerContent(String flag, String id, List<String> vipFlags) {
         try {
@@ -166,6 +180,7 @@ public class XPathAli extends XPath {
         }
         return "";
     }
+
 
     @Override
     protected void loadRuleExt(String json) {
@@ -267,5 +282,10 @@ public class XPathAli extends XPath {
         } catch (JSONException e) {
             SpiderDebug.log(e);
         }
+    }
+
+    public boolean manualVideoCheck() {
+        getDomain();
+        return true;
     }
 }
