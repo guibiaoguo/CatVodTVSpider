@@ -56,7 +56,7 @@ public class XPathAli extends XPath {
                         if (vod_play.size() > 0) {
                             List vod_from = new ArrayList();
                             List vod_plays = new ArrayList();
-                            for (Map.Entry<String, List<String>> entry:vod_play.entrySet()) {
+                            for (Map.Entry<String, List<String>> entry : vod_play.entrySet()) {
                                 vod_from.add(entry.getKey());
                                 vod_plays.add(join("#", entry.getValue()));
                             }
@@ -117,15 +117,42 @@ public class XPathAli extends XPath {
     @Override
     public String playerContent(String flag, String id, List<String> vipFlags) {
         try {
-            JSONObject headerObj = new JSONObject();
-            headerObj.put("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36 Edg/96.0.1054.62");
-            headerObj.put("referer", " https://www.aliyundrive.com/");
-            JSONObject result = new JSONObject();
-            result.put("parse", 0);
-            result.put("playUrl", "");
-            result.put("url", getPlayUrl(id));
-            result.put("header", headerObj.toString());
-            return result.toString();
+            String[] infos = id.split("\\+");
+            String shareTk = getShareTk(infos[0], "");
+            refreshTk();
+            if (!accessTk.isEmpty()) {
+                JSONObject json = new JSONObject();
+                json.put("share_id", infos[0]);
+                json.put("category", "live_transcoding");
+                json.put("file_id", infos[1]);
+                json.put("template_id", "");
+                HashMap<String, String> headers = new HashMap<>();
+                headers.put("x-share-token", shareTk);
+                headers.put("authorization", accessTk);
+                SpiderReqResult srr = SpiderReq.postBody("https://api.aliyundrive.com/v2/file/get_share_link_video_preview_play_info", RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json.toString()), headers);
+                JSONArray playList = new JSONObject(srr.content).getJSONObject("video_preview_play_info").getJSONArray("live_transcoding_task_list");
+                String videoUrl = "";
+                for (int i = 0; i < playList.length(); i++) {
+                    JSONObject obj = playList.getJSONObject(i);
+                    if (obj.optString("template_id").equals(infos[2])) {
+                        videoUrl = obj.getString("url");
+                        break;
+                    }
+                }
+
+                if (videoUrl.isEmpty() && playList.length() > 0) {
+                    videoUrl = playList.getJSONObject(0).getString("url");
+                }
+                JSONObject headerObj = new JSONObject();
+                headerObj.put("user-agent", " Dalvik/2.1.0 (Linux; U; Android 7.0; ZTE BA520 Build/MRA58K)");
+                headerObj.put("referer", " https://www.aliyundrive.com/");
+                JSONObject result = new JSONObject();
+                result.put("parse", 0);
+                result.put("playUrl", "");
+                result.put("url", getPlayUrl(videoUrl));
+                result.put("header", headerObj.toString());
+                return result.toString();
+            }
         } catch (Exception e) {
             SpiderDebug.log(e);
         }
@@ -141,12 +168,13 @@ public class XPathAli extends XPath {
             OkHttpClient client = new OkHttpClient.Builder()
                     .followRedirects(false)
                     .build();
-            SpiderReqResult spiderReqResult = SpiderReq.get(client, playUrl, "sp_req_default",headerObj);
+            SpiderReqResult spiderReqResult = SpiderReq.get(client, playUrl, "sp_req_default", headerObj);
             return spiderReqResult.headers.get("location").get(0);
         } catch (Exception e) {
             return siteUrl;
         }
     }
+
     @Override
     protected void loadRuleExt(String json) {
         try {
@@ -201,7 +229,7 @@ public class XPathAli extends XPath {
 
 
     private void getFileList(String shareTk, String shareId, String sharePwd, String
-            root, Map<String,List<String>> data) {
+            root, Map<String, List<String>> data) {
         try {
             // 取文件夹
             JSONObject json = new JSONObject();
@@ -228,35 +256,16 @@ public class XPathAli extends XPath {
                         if (item.getString("type").equals("file") && Arrays.asList(types).contains(item.getString("file_extension").toUpperCase())) {
                             String fileId = item.getString("file_id");
                             String fileName = item.getString("name");
-                            if (!accessTk.isEmpty()) {
-                                String pshareTk = getShareTk(shareId, "");
-                                JSONObject pjson = new JSONObject();
-                                pjson.put("share_id", shareId);
-                                pjson.put("category", "live_transcoding");
-                                pjson.put("file_id", fileId);
-                                pjson.put("template_id", "");
-                                HashMap<String, String> pheaders = new HashMap<>();
-                                pheaders.put("x-share-token", pshareTk);
-                                pheaders.put("authorization", accessTk);
-                                SpiderReqResult psrr = SpiderReq.postBody("https://api.aliyundrive.com/v2/file/get_share_link_video_preview_play_info", RequestBody.create(MediaType.parse("application/json; charset=utf-8"), pjson.toString()), pheaders);
-                                JSONArray playList = new JSONObject(psrr.content).getJSONObject("video_preview_play_info").getJSONArray("live_transcoding_task_list");
-                                String videoUrl = "";
-                                List<String> vodLists = null;
-                                for (int j = 0; j < playList.length(); j++) {
-                                    JSONObject obj = playList.getJSONObject(j);
-                                    videoUrl = obj.getString("url");
-                                    String templateId = obj.optString("template_id");
-                                    if(data.get(templateId) == null) {
-                                        vodLists = new ArrayList<>();
-                                        data.put(templateId,vodLists);
-                                    } else {
-                                        vodLists = data.get(templateId);
-                                    }
-                                    if (videoUrl.isEmpty() && playList.length() > 0) {
-                                        videoUrl = playList.getJSONObject(0).getString("url");
-                                    }
-                                    vodLists.add(fileName+"$"+videoUrl);
+                            String[] templateIds = {"FHD", "HD", "SD", "LD"};
+                            List<String> vodLists = new ArrayList<>();
+                            for (String templateId : templateIds) {
+                                if (data.get(templateId) == null) {
+                                    vodLists = new ArrayList<>();
+                                    data.put(templateId, vodLists);
+                                } else {
+                                    vodLists = data.get(templateId);
                                 }
+                                vodLists.add(fileName + "$" + shareId + "+" + fileId + "+" + templateId);
                             }
                         }
                     }
