@@ -130,49 +130,41 @@ public class XPathAli extends XPath {
                 headers.put("x-share-token", shareTk);
                 headers.put("authorization", accessTk);
                 SpiderReqResult srr = SpiderReq.postBody("https://api.aliyundrive.com/v2/file/get_share_link_video_preview_play_info", RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json.toString()), headers);
-                JSONArray playList = new JSONObject(srr.content).getJSONObject("video_preview_play_info").getJSONArray("live_transcoding_task_list");
-                String videoUrl = "";
-                for (int i = 0; i < playList.length(); i++) {
-                    JSONObject obj = playList.getJSONObject(i);
-                    if (obj.optString("template_id").equals(infos[2])) {
-                        videoUrl = obj.getString("url");
-                        break;
+                JSONObject object = new JSONObject(srr.content);
+                if (object.optString("code") == "AccessTokenInvalid") {
+                    accessTk = "";
+                    playerContent(flag, id, vipFlags);
+                } else if (object.optString("code") == "ShareLinkTokenInvalid") {
+                    playerContent(flag, id, vipFlags);
+                } else {
+                    JSONArray playList = object.getJSONObject("video_preview_play_info").getJSONArray("live_transcoding_task_list");
+                    String videoUrl = "";
+                    for (int i = 0; i < playList.length(); i++) {
+                        JSONObject obj = playList.getJSONObject(i);
+                        if (obj.optString("template_id").equals(infos[2])) {
+                            videoUrl = obj.getString("url");
+                            break;
+                        }
                     }
-                }
 
-                if (videoUrl.isEmpty() && playList.length() > 0) {
-                    videoUrl = playList.getJSONObject(0).getString("url");
+                    if (videoUrl.isEmpty() && playList.length() > 0) {
+                        videoUrl = playList.getJSONObject(0).getString("url");
+                    }
+                    JSONObject headerObj = new JSONObject();
+                    headerObj.put("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36 Edg/96.0.1054.62");
+                    headerObj.put("referer", " https://www.aliyundrive.com/");
+                    JSONObject result = new JSONObject();
+                    result.put("parse", 0);
+                    result.put("playUrl", "");
+                    result.put("url", videoUrl);
+                    result.put("header", headerObj.toString());
+                    return result.toString();
                 }
-                JSONObject headerObj = new JSONObject();
-                headerObj.put("user-agent", " Dalvik/2.1.0 (Linux; U; Android 7.0; ZTE BA520 Build/MRA58K)");
-                headerObj.put("referer", " https://www.aliyundrive.com/");
-                JSONObject result = new JSONObject();
-                result.put("parse", 0);
-                result.put("playUrl", "");
-                result.put("url", getPlayUrl(videoUrl));
-                result.put("header", headerObj.toString());
-                return result.toString();
             }
         } catch (Exception e) {
             SpiderDebug.log(e);
         }
         return "";
-    }
-
-    protected String getPlayUrl(String playUrl) {
-        try {
-            HashMap<String, String> headerObj = new HashMap<>();
-            headerObj.put("user-agent", " Dalvik/2.1.0 (Linux; U; Android 7.0; ZTE BA520 Build/MRA58K)");
-            headerObj.put("referer", " https://www.aliyundrive.com/");
-            //使用
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .followRedirects(false)
-                    .build();
-            SpiderReqResult spiderReqResult = SpiderReq.get(client, playUrl, "sp_req_default", headerObj);
-            return spiderReqResult.headers.get("location").get(0);
-        } catch (Exception e) {
-            return siteUrl;
-        }
     }
 
     @Override
