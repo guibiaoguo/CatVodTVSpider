@@ -149,9 +149,10 @@ public class XPathAli extends XPath {
                 headerObj.put("User-Agent","Mozilla/5.0 (Linux; Android 11; Mi 10 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Mobile Safari/537.36");
                 headerObj.put("referer", " https://www.aliyundrive.com/");
                 JSONObject result = new JSONObject();
-                result.put("parse", 0);
+                result.put("parse", 1);
                 result.put("playUrl", "");
                 result.put("url", videoUrl);
+                result.put("jx","1");
                 result.put("header", headerObj.toString());
                 return result.toString(4);
             }
