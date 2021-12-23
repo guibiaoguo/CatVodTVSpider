@@ -129,6 +129,7 @@ public class XPathAli extends XPath {
                 HashMap<String, String> headers = new HashMap<>();
                 headers.put("x-share-token", shareTk);
                 headers.put("authorization", accessTk);
+                headers.put("User-Agent","Mozilla/5.0 (Linux; Android 11; Mi 10 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Mobile Safari/537.36");
                 SpiderReqResult srr = SpiderReq.postBody("https://api.aliyundrive.com/v2/file/get_share_link_video_preview_play_info", RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json.toString()), headers);
                 JSONObject object = new JSONObject(srr.content);
                 JSONArray playList = object.getJSONObject("video_preview_play_info").getJSONArray("live_transcoding_task_list");
@@ -145,7 +146,7 @@ public class XPathAli extends XPath {
                     videoUrl = playList.getJSONObject(0).getString("url");
                 }
                 JSONObject headerObj = new JSONObject();
-                headerObj.put("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36 Edg/96.0.1054.62");
+                headerObj.put("User-Agent","Mozilla/5.0 (Linux; Android 11; Mi 10 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Mobile Safari/537.36");
                 headerObj.put("referer", " https://www.aliyundrive.com/");
                 JSONObject result = new JSONObject();
                 result.put("parse", 0);
