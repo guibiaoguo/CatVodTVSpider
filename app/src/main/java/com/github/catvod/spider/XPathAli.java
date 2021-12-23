@@ -29,6 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import rxhttp.wrapper.annotations.NonNull;
 
@@ -116,21 +117,36 @@ public class XPathAli extends XPath {
     @Override
     public String playerContent(String flag, String id, List<String> vipFlags) {
         try {
-                JSONObject headerObj = new JSONObject();
-                headerObj.put("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36 Edg/96.0.1054.62");
-                headerObj.put("referer", " https://www.aliyundrive.com/");
-                JSONObject result = new JSONObject();
-                result.put("parse", 0);
-                result.put("playUrl", "");
-                result.put("url", id);
-                result.put("header", headerObj.toString());
-                return result.toString();
+            JSONObject headerObj = new JSONObject();
+            headerObj.put("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36 Edg/96.0.1054.62");
+            headerObj.put("referer", " https://www.aliyundrive.com/");
+            JSONObject result = new JSONObject();
+            result.put("parse", 0);
+            result.put("playUrl", "");
+            result.put("url", getPlayUrl(id));
+            result.put("header", headerObj.toString());
+            return result.toString();
         } catch (Exception e) {
             SpiderDebug.log(e);
         }
         return "";
     }
 
+    protected String getPlayUrl(String playUrl) {
+        try {
+            HashMap<String, String> headerObj = new HashMap<>();
+            headerObj.put("user-agent", " Dalvik/2.1.0 (Linux; U; Android 7.0; ZTE BA520 Build/MRA58K)");
+            headerObj.put("referer", " https://www.aliyundrive.com/");
+            //使用
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .followRedirects(false)
+                    .build();
+            SpiderReqResult spiderReqResult = SpiderReq.get(client, playUrl, "sp_req_default",headerObj);
+            return spiderReqResult.headers.get("location").get(0);
+        } catch (Exception e) {
+            return siteUrl;
+        }
+    }
     @Override
     protected void loadRuleExt(String json) {
         try {
