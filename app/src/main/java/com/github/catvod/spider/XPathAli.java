@@ -114,20 +114,6 @@ public class XPathAli extends XPath {
         return sb.toString();
     }
 
-    protected String getDomain() {
-        try {
-            String ext = "https://user.seven301.xyz:8899/?u=https://hsck.us&p=/";
-            //使用
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .followRedirects(false)
-                    .build();
-            SpiderReqResult spiderReqResult = SpiderReq.header(client, ext, "sp_req_default", getHeaders(ext));
-            return spiderReqResult.headers.get("location").get(0);
-        } catch (Exception e) {
-            return siteUrl;
-        }
-    }
-
     @Override
     public String playerContent(String flag, String id, List<String> vipFlags) {
         try {
@@ -156,7 +142,7 @@ public class XPathAli extends XPath {
                     for (int i = 0; i < playList.length(); i++) {
                         JSONObject obj = playList.getJSONObject(i);
                         if (obj.optString("template_id").equals(infos[2])) {
-                            videoUrl = obj.getString("url");
+                            videoUrl = "http://116.85.31.19:3000/apis/yun-play/" + infos[1] + '/' + infos[0] + '/' + accessTk + '/' + shareTk + '/' + infos[2] + "/index.m3u8";
                             break;
                         }
                     }
@@ -285,7 +271,6 @@ public class XPathAli extends XPath {
     }
 
     public boolean manualVideoCheck() {
-        getDomain();
         return true;
     }
 }
