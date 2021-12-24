@@ -1,6 +1,9 @@
 package com.github.catvod.spider;
 
+import android.content.Context;
+import android.text.TextUtils;
 
+import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.crawler.SpiderReq;
 import com.github.catvod.crawler.SpiderReqResult;
@@ -15,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -24,10 +28,30 @@ import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import rxhttp.wrapper.annotations.NonNull;
 
-public class XPathAli extends XPath {
+public class YydsAli2 extends YydsAli1 {
+    private static final String siteUrl = "https://cmn.yyds.fans";
+    private Spider spider;
+    protected String ext = null;
 
-    private String accessTk = "";
-    private String aliTk;
+    @Override
+    public void init(Context context) {
+        super.init(context);
+    }
+
+    public void init(Context context, String extend) {
+        super.init(context, extend);
+        this.ext = extend;
+        spider = new XPathAli();
+        spider.init(context,extend);
+    }
+
+    private HashMap<String, String> getHeaders(String url) {
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("accept", "application/json, text/plain, */*");
+        headers.put("origin", "https://yyds.fans");
+        headers.put("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36");
+        return headers;
+    }
 
     Pattern aliyun = Pattern.compile(".*?aliyundrive.com/s/(\\w+)[^\\w]?");
     Pattern aliyunShort = Pattern.compile(".*?alywp.net/(\\w+)[^\\w]?");
@@ -43,35 +67,97 @@ public class XPathAli extends XPath {
 
     @Override
     public String detailContent(List<String> ids) {
-        String result = super.detailContent(ids);
-        if (result.length() > 0) {
-            try {
-                JSONObject jsonObject = new JSONObject(result);
-                String playUrl[] = jsonObject.optJSONArray("list").getJSONObject(0).optString("vod_play_url").split("\\$\\$\\$");
-                if (playUrl.length > 0) {
-                    for (int i = 0; i < playUrl.length; i++) {
-                        Map<String, List<String>> vod_play = new HashMap<>();
-                        updatePlaylist(playUrl[i].replaceAll(".*\\$", ""), vod_play);
-                        if (vod_play.size() > 0) {
-                            List vod_from = new ArrayList();
-                            List vod_plays = new ArrayList();
-                            for (Map.Entry<String, List<String>> entry : vod_play.entrySet()) {
-                                vod_from.add(getName(entry.getKey()));
-                                vod_plays.add(join("#", entry.getValue()));
-                            }
-                            String vod_play_from = join("$$$", vod_from);
-                            String vod_play_url = join("$$$", vod_plays);
-                            jsonObject.optJSONArray("list").optJSONObject(i).put("vod_play_from", vod_play_from).put("vod_play_url", vod_play_url);
-                        }
-                    }
-
-                    result = jsonObject.toString(4);
-                }
-            } catch (Throwable th) {
-                SpiderDebug.log(th);
+        try {
+            String url = siteUrl + "/api/post-info";
+            HashMap<String, String> json = new HashMap<>();
+            json.put("id", ids.get(0));
+            SpiderReqResult srr = SpiderReq.postJson(url, json, getHeaders(url));
+            JSONObject dataObject = new JSONObject(srr.content);
+            JSONObject vObj = dataObject.getJSONObject("data");
+            if(vObj.length()==0) {
+                return "";
             }
+            JSONObject result = new JSONObject();
+            JSONArray list = new JSONArray();
+            JSONObject vodAtom = new JSONObject();
+            vodAtom.put("vod_id", vObj.optString("id"));
+            vodAtom.put("vod_name", vObj.optString("title"));
+            vodAtom.put("vod_pic", vObj.optString("cover"));
+            vodAtom.put("type_name", "");
+            vodAtom.put("vod_year", vObj.optString("year"));
+            vodAtom.put("vod_area", vObj.optString("region"));
+            String mark = vObj.optString("subtitle");
+            if (mark.equals("null"))
+                mark = "";
+            vodAtom.put("vod_remarks", mark);
+            vodAtom.put("vod_actor", vObj.optString("actors"));
+            vodAtom.put("vod_director", vObj.optString("director"));
+            String desc = vObj.optString("desc");
+            if (desc.equals("null"))
+                desc = "";
+            vodAtom.put("vod_content", desc);
+            JSONArray jsonArray = vObj.getJSONArray("links");
+            Map<String, List<String>> vod_play = new HashMap<>();
+            for (int i = 0; i < jsonArray.length(); i++) {
+                updatePlaylist(jsonArray.optJSONObject(i).optString("link"), vod_play);
+                if (vod_play.size() > 0) {
+                    break;
+                }
+            }
+            if (vod_play.size() == 0 && vObj.optString("content").length() > 0) {
+                updatePlaylist(vObj.optString("content"), vod_play);
+            }
+            if (vod_play.size() > 0) {
+                List vod_from = new ArrayList();
+                List vod_plays = new ArrayList();
+                for (Map.Entry<String, List<String>> entry : vod_play.entrySet()) {
+                    vod_from.add(getName(entry.getKey()));
+                    vod_plays.add(join("#", entry.getValue()));
+                }
+                String vod_play_from = join("$$$", vod_from);
+                String vod_play_url = join("$$$", vod_plays);
+                vodAtom.put("vod_play_from", vod_play_from);
+                vodAtom.put("vod_play_url", vod_play_url);
+            } else {
+                String category = spider.searchContent(vObj.optString("title"), false);
+                System.out.println(category);
+                JSONObject jsonObject = null;
+                List<String> aids = new ArrayList<>();
+
+                jsonObject = new JSONObject(category);
+                JSONArray categorys = jsonObject.optJSONArray("list");
+                aids.add(categorys.getJSONObject(0).optString("vod_id"));
+                System.out.println(aids);
+
+                String detail = spider.detailContent(aids);
+                System.out.println(detail);
+                jsonObject = new JSONObject(detail);
+                JSONArray details = jsonObject.optJSONArray("list");
+                vodAtom.put("vod_play_from", details.optJSONObject(0).optString("vod_play_from"));
+                vodAtom.put("vod_play_url", details.optJSONObject(0).optString("vod_play_url"));
+            }
+            list.put(vodAtom);
+            accessTk = "";
+            result.put("list", list);
+            return result.toString();
+        } catch (Exception e) {
+            SpiderDebug.log(e);
         }
-        return result;
+        return "";
+    }
+
+    public String join(@NonNull CharSequence delimiter, @NonNull Iterable tokens) {
+        final Iterator<?> it = tokens.iterator();
+        if (!it.hasNext()) {
+            return "";
+        }
+        final StringBuilder sb = new StringBuilder();
+        sb.append(it.next());
+        while (it.hasNext()) {
+            sb.append(delimiter);
+            sb.append(it.next());
+        }
+        return sb.toString();
     }
 
     private void updatePlaylist(String link, Map<String, List<String>> vod_play) {
@@ -97,20 +183,6 @@ public class XPathAli extends XPath {
             String shareToken = getShareTk(shareId, "");
             getFileList(shareToken, shareId, "", "root", vod_play);
         }
-    }
-
-    public String join(@NonNull CharSequence delimiter, @NonNull Iterable tokens) {
-        final Iterator<?> it = tokens.iterator();
-        if (!it.hasNext()) {
-            return "";
-        }
-        final StringBuilder sb = new StringBuilder();
-        sb.append(it.next());
-        while (it.hasNext()) {
-            sb.append(delimiter);
-            sb.append(it.next());
-        }
-        return sb.toString();
     }
 
     @Override
@@ -168,14 +240,43 @@ public class XPathAli extends XPath {
 
 
     @Override
-    protected void loadRuleExt(String json) {
+    public String searchContent(String key, boolean quick) {
         try {
-            JSONObject jsonObj = new JSONObject(json);
-            aliTk = jsonObj.optString("token").trim();
-        } catch (JSONException e) {
+            if (quick)
+                return "";
+            JSONArray videos = new JSONArray();
+            try {
+                String url = siteUrl + "/api/posts";
+                HashMap<String, String> json = new HashMap<>();
+                json.put("category_id", "-1");
+                json.put("skip", "0");
+                json.put("limit", "30");
+                json.put("keyword", key);
+                SpiderReqResult srr = SpiderReq.postJson(url, json, getHeaders(url));
+                JSONObject jsonObject = new JSONObject(srr.content);
+                JSONArray jsonArray = jsonObject.getJSONArray("data");
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject vObj = jsonArray.getJSONObject(i);
+                    JSONObject v = new JSONObject();
+                    v.put("vod_id", vObj.optString("id"));
+                    v.put("vod_name", vObj.optString("title"));
+                    v.put("vod_pic", vObj.optString("cover"));
+                    v.put("vod_remarks", vObj.optString("subtitle"));
+                    videos.put(v);
+                }
+            } catch (Exception e) {
+
+            }
+            JSONObject result = new JSONObject();
+            result.put("list", videos);
+            return result.toString();
+        } catch (Exception e) {
             SpiderDebug.log(e);
         }
+        return "";
     }
+
+    private String aliTk = "";
 
     private void fetchAliTk() {
         if (aliTk.isEmpty()) {
@@ -190,6 +291,8 @@ public class XPathAli extends XPath {
         }
     }
 
+    private String accessTk = "";
+
     private void refreshTk() {
         fetchAliTk();
         if (!aliTk.isEmpty() && accessTk.isEmpty()) {
@@ -198,7 +301,7 @@ public class XPathAli extends XPath {
                 json.put("refresh_token", aliTk);
                 SpiderReqResult srr = SpiderReq.postJson("https://api.aliyundrive.com/token/refresh", json, new HashMap<>());
                 JSONObject obj = new JSONObject(srr.content);
-                accessTk = obj.getString("access_token");
+                accessTk = obj.optString("token_type") + " " + obj.optString("access_token");
             } catch (JSONException e) {
                 SpiderDebug.log(e);
             }
@@ -239,14 +342,14 @@ public class XPathAli extends XPath {
             if (rootList != null && rootList.length() > 0) {
                 for (int i = 0; i < rootList.length(); i++) {
                     JSONObject item = rootList.getJSONObject(i);
-                    if (item.getString("type").equals("folder")) {
-                        String dirId = item.getString("file_id");
+                    if (item.optString("type").equals("folder")) {
+                        String dirId = item.optString("file_id");
                         getFileList(shareTk, shareId, sharePwd, dirId, data);
                     } else {
                         String[] types = {"3G2", "3GP", "3GP2", "3GPP", "AMV", "ASF", "AVI", "DIVX", "DPG", "DVR-MS", "EVO", "F4V", "FLV", "IFO", "K3G", "M1V", "M2T", "M2TS", "M2V", "M4B", "M4P", "M4V", "MKV", "MOV", "MP2V", "MP4", "MPE", "MPEG", "MPG", "MPV2", "MTS", "MXF", "NSR", "NSV", "OGM", "OGV", "QT", "RAM", "RM", "RMVB", "RPM", "SKM", "TP", "TPR", "TRP", "TS", "VOB", "WEBM", "WM", "WMP", "WMV", "WTV"};
-                        if (item.getString("type").equals("file") && Arrays.asList(types).contains(item.getString("file_extension").toUpperCase())) {
-                            String fileId = item.getString("file_id");
-                            String fileName = item.getString("name");
+                        if (item.optString("type").equals("file") && Arrays.asList(types).contains(item.optString("file_extension").toUpperCase())) {
+                            String fileId = item.optString("file_id");
+                            String fileName = item.optString("name");
                             String[] templateIds = {"FHD", "HD", "SD", "LD"};
                             List<String> vodLists = new ArrayList<>();
                             for (String templateId : templateIds) {
@@ -266,9 +369,5 @@ public class XPathAli extends XPath {
         } catch (JSONException e) {
             SpiderDebug.log(e);
         }
-    }
-
-    public boolean manualVideoCheck() {
-        return true;
     }
 }
