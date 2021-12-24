@@ -301,7 +301,7 @@ public class YydsAli2 extends YydsAli1 {
                 json.put("refresh_token", aliTk);
                 SpiderReqResult srr = SpiderReq.postJson("https://api.aliyundrive.com/token/refresh", json, new HashMap<>());
                 JSONObject obj = new JSONObject(srr.content);
-                accessTk = obj.optString("token_type") + " " + obj.optString("access_token");
+                accessTk = obj.optString("access_token");
             } catch (JSONException e) {
                 SpiderDebug.log(e);
             }

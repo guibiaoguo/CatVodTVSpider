@@ -47,24 +47,23 @@ public class XPathAli extends XPath {
         if (result.length() > 0) {
             try {
                 JSONObject jsonObject = new JSONObject(result);
-                String playUrl[] = jsonObject.optJSONArray("list").getJSONObject(0).optString("vod_play_url").split("\\$\\$\\$");
+                String playUrl[] = jsonObject.optJSONArray("list").getJSONObject(0).optString("vod_play_url").split("\\$\\$\\$")[0].split("#");
                 if (playUrl.length > 0) {
+                    Map<String, List<String>> vod_play = new HashMap<>();
                     for (int i = 0; i < playUrl.length; i++) {
-                        Map<String, List<String>> vod_play = new HashMap<>();
                         updatePlaylist(playUrl[i].replaceAll(".*\\$", ""), vod_play);
-                        if (vod_play.size() > 0) {
-                            List vod_from = new ArrayList();
-                            List vod_plays = new ArrayList();
-                            for (Map.Entry<String, List<String>> entry : vod_play.entrySet()) {
-                                vod_from.add(getName(entry.getKey()));
-                                vod_plays.add(join("#", entry.getValue()));
-                            }
-                            String vod_play_from = join("$$$", vod_from);
-                            String vod_play_url = join("$$$", vod_plays);
-                            jsonObject.optJSONArray("list").optJSONObject(i).put("vod_play_from", vod_play_from).put("vod_play_url", vod_play_url);
-                        }
                     }
-
+                    if (vod_play.size() > 0) {
+                        List vod_from = new ArrayList();
+                        List vod_plays = new ArrayList();
+                        for (Map.Entry<String, List<String>> entry : vod_play.entrySet()) {
+                            vod_from.add(getName(entry.getKey()));
+                            vod_plays.add(join("#", entry.getValue()));
+                        }
+                        String vod_play_from = join("$$$", vod_from);
+                        String vod_play_url = join("$$$", vod_plays);
+                        jsonObject.optJSONArray("list").optJSONObject(0).put("vod_play_from", vod_play_from).put("vod_play_url", vod_play_url);
+                    }
                     result = jsonObject.toString(4);
                 }
             } catch (Throwable th) {
@@ -139,16 +138,19 @@ public class XPathAli extends XPath {
                 } else {
                     JSONArray playList = object.getJSONObject("video_preview_play_info").getJSONArray("live_transcoding_task_list");
                     String videoUrl = "";
+                    String templateId = "";
                     for (int i = 0; i < playList.length(); i++) {
                         JSONObject obj = playList.getJSONObject(i);
                         if (obj.optString("template_id").equals(infos[2])) {
                             videoUrl = "http://116.85.31.19:3000/apis/yun-play/" + infos[1] + '/' + infos[0] + '/' + accessTk + '/' + shareTk + '/' + infos[2] + "/index.m3u8";
                             break;
+                        } else {
+                            templateId = obj.optString("template_id");
                         }
                     }
 
                     if (videoUrl.isEmpty() && playList.length() > 0) {
-                        videoUrl = playList.getJSONObject(0).getString("url");
+                        videoUrl = "http://116.85.31.19:3000/apis/yun-play/" + infos[1] + '/' + infos[0] + '/' + accessTk + '/' + shareTk + '/' + templateId + "/index.m3u8";
                     }
                     JSONObject headerObj = new JSONObject();
                     headerObj.put("User-Agent","Mozilla/5.0 (Linux; Android 11; Mi 10 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Mobile Safari/537.36");
