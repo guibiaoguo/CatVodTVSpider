@@ -1,4 +1,4 @@
-package com.github.catvod.parser;
+package com.github.catvod.spider;
 
 import android.util.Log;
 
@@ -6,6 +6,7 @@ import android.util.Log;
 import com.github.catvod.crawler.SpiderReq;
 import com.github.catvod.crawler.SpiderReqResult;
 import com.github.catvod.crawler.SpiderUrl;
+import com.github.catvod.utils.StringUtil;
 
 import org.apache.commons.lang3.StringUtils;
 

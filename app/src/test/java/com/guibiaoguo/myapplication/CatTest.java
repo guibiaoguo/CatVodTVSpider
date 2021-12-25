@@ -15,12 +15,7 @@ import com.github.catvod.spider.Juhi;
 import com.github.catvod.spider.MGTV;
 import com.github.catvod.spider.QQ;
 import com.github.catvod.spider.XPathAli;
-import com.github.catvod.spider.YydsAli1;
 import com.github.catvod.spider.YydsAli2;
-import com.jayway.jsonpath.DocumentContext;
-import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.ReadContext;
-import com.jayway.jsonpath.internal.JsonContext;
 
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
