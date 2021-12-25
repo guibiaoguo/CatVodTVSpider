@@ -6,15 +6,25 @@ import com.github.catvod.crawler.SpiderReqResult;
 import com.github.catvod.crawler.SpiderUrl;
 import com.github.catvod.spider.Aidi;
 
+import com.github.catvod.spider.Alipanso;
 import com.github.catvod.spider.Enlienli;
+import com.github.catvod.spider.GoIndex;
 import com.github.catvod.spider.Hsck;
 import com.github.catvod.spider.IQIYI;
 import com.github.catvod.spider.Juhi;
 import com.github.catvod.spider.MGTV;
 import com.github.catvod.spider.QQ;
+import com.github.catvod.spider.XPathAli;
+import com.github.catvod.spider.YydsAli1;
+import com.github.catvod.spider.YydsAli2;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.ReadContext;
+import com.jayway.jsonpath.internal.JsonContext;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
-import org.json.JSONException;
+
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -111,7 +121,7 @@ public class CatTest {
             String playurl = details.getJSONObject(0).optString("vod_play_url").split("#")[0].split("\\$")[1];
             System.out.println(playurl);
 
-            System.out.println(spider.playerContent(classes.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
+            System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
         }
     }
 
@@ -150,7 +160,7 @@ public class CatTest {
             String playurl = details.getJSONObject(0).optString("vod_play_url").split("#")[0].split("\\$")[1];
             System.out.println(playurl);
 
-            System.out.println(spider.playerContent(classes.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
+            System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
         }
     }
 
@@ -190,7 +200,7 @@ public class CatTest {
             String playurl = playurls.split("#")[0].split("\\$")[1];
             System.out.println(playurl);
 
-            System.out.println(spider.playerContent(classes.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
+            System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
         }
 
 
@@ -212,28 +222,28 @@ public class CatTest {
             SpiderReqResult srr = SpiderReq.get(su);
             Document doc = Jsoup.parse(srr.content);
             JSONArray classes = new JSONArray();
-            for (Element cls:doc.select(".nav_cell")) {
+            for (Element cls : doc.select(".nav_cell")) {
                 JSONObject c = new JSONObject();
                 String id = cls.selectFirst("a").attr("href");
-                if(id.contains("/art")||id.contains("feeds_hotspot")||id.contains("wwe")||id.contains("choice")||id.contains("sports_new")||id.contains("games")||id.contains("lols11")||id.contains("ent")||id.contains("news")||id.contains("fashion")||id.contains("tech")||id.contains("auto")||id.contains("house")||id.contains("finance")||id.contains("astro")||id.contains("nba")||id.contains("fun")||id.contains("baby")||id.contains("music")||id.contains("life")||id.contains("travel")) {
+                if (id.contains("/art") || id.contains("feeds_hotspot") || id.contains("wwe") || id.contains("choice") || id.contains("sports_new") || id.contains("games") || id.contains("lols11") || id.contains("ent") || id.contains("news") || id.contains("fashion") || id.contains("tech") || id.contains("auto") || id.contains("house") || id.contains("finance") || id.contains("astro") || id.contains("nba") || id.contains("fun") || id.contains("baby") || id.contains("music") || id.contains("life") || id.contains("travel")) {
                     continue;
                 }
-                if(id.contains("/channel/")) {
-                    c.put("type_name",cls.selectFirst("a").text());
-                    c.put("type_id",id.split("/channel/")[1]);
+                if (id.contains("/channel/")) {
+                    c.put("type_name", cls.selectFirst("a").text());
+                    c.put("type_id", id.split("/channel/")[1]);
                     classes.put(c);
                 }
             }
             System.out.println(classes.toString(4));
             JSONObject filter = new JSONObject();
-            for (int i=0;i<classes.length();i++) {
+            for (int i = 0; i < classes.length(); i++) {
                 String type_id = classes.optJSONObject(i).optString("type_id");
-                url = "https://v.qq.com/channel/"+type_id+"?listpage=1&channel="+type_id+"&sort=18&_all=1";
+                url = "https://v.qq.com/channel/" + type_id + "?listpage=1&channel=" + type_id + "&sort=18&_all=1";
                 su = new SpiderUrl(url, null);
                 srr = SpiderReq.get(su);
                 doc = Jsoup.parse(srr.content);
                 Elements elements = doc.select(".filter_line");
-                if (elements==null) {
+                if (elements == null) {
                     classes.remove(i);
                     continue;
                 }
@@ -242,20 +252,20 @@ public class CatTest {
                     JSONObject t1 = new JSONObject();
                     JSONArray t2 = new JSONArray();
 
-                    for(Element data:element.select("a") ){
+                    for (Element data : element.select("a")) {
                         JSONObject t3 = new JSONObject();
                         String v = data.text();
                         String n = data.attr("data-value");
-                        t3.put("v",n);
-                        t3.put("n",v);
+                        t3.put("v", n);
+                        t3.put("n", v);
                         t2.put(t3);
                     }
-                    t1.put("key",element.attr("data-key"));
-                    t1.put("name",element.selectFirst("span").text());
-                    t1.put("value",t2);
+                    t1.put("key", element.attr("data-key"));
+                    t1.put("name", element.selectFirst("span").text());
+                    t1.put("value", t2);
                     jsonArray.put(t1);
                 }
-                filter.put(type_id,jsonArray);
+                filter.put(type_id, jsonArray);
             }
             System.out.println(filter.toString());
         } catch (Exception e) {
@@ -276,8 +286,8 @@ public class CatTest {
         JSONObject filter = new JSONObject();
         for (int i = 1; i < 34; i++) {
             System.out.println(i);
-            String url = "https://pcw-api.iqiyi.com/search/category/categoryinfo?brand=IQIYI&channel_id="+i;
-            if (i==12) {
+            String url = "https://pcw-api.iqiyi.com/search/category/categoryinfo?brand=IQIYI&channel_id=" + i;
+            if (i == 12) {
                 url = "https://pcw-api.iqiyi.com/search/category/categoryinfo?brand=IQIYI&channel_id=12&include_knowledge_content_type=KNOWLEDGE_CONTENT_TYPE_KNOWLEDGE&locale=zh";
             }
             SpiderUrl su = new SpiderUrl(url, null);
@@ -296,17 +306,17 @@ public class CatTest {
                 for (int k = 0; k < child.length(); k++) {
                     JSONObject t3 = new JSONObject();
                     String v = child.optJSONObject(k).optString("cnName");
-                    v = v.equals("")?child.optJSONObject(k).optString("name"):v;
+                    v = v.equals("") ? child.optJSONObject(k).optString("name") : v;
                     String n = child.optJSONObject(k).optString("id");
-                    t3.put("v",n);
-                    t3.put("n",v);
+                    t3.put("v", n);
+                    t3.put("n", v);
                     t2.put(t3);
                 }
-                t1.put("key",data.optJSONObject(j).optString("id"));
+                t1.put("key", data.optJSONObject(j).optString("id"));
                 String n1 = data.optJSONObject(j).optString("cnName");
-                n1=n1.equals("")?data.optJSONObject(j).optString("name"):n1;
-                t1.put("name",n1);
-                t1.put("value",t2);
+                n1 = n1.equals("") ? data.optJSONObject(j).optString("name") : n1;
+                t1.put("name", n1);
+                t1.put("value", t2);
                 jsonArray.put(t1);
 
             }
@@ -316,7 +326,7 @@ public class CatTest {
 //            if (i==12) {
 //                jsonArray.put(new JSONObject("{\"name\":\"知识\",\"value\":[{\"v\":\"5\",\"n\":\"知识\"},{\"v\":\"6\",\"n\":\"教育\"}],\"key\":\"mode\"}"));
 //            }
-            filter.put(Integer.toString(i),jsonArray);
+            filter.put(Integer.toString(i), jsonArray);
         }
         System.out.println(filter.toString());
     }
@@ -332,20 +342,20 @@ public class CatTest {
         for (int i = 0; i < data.length(); i++) {
             JSONObject cate = data.optJSONObject(i);
             JSONObject c = new JSONObject();
-            c.put("type_name",cate.optString("channelName"));
-            c.put("type_id",cate.optString("channelId"));
+            c.put("type_name", cate.optString("channelName"));
+            c.put("type_id", cate.optString("channelId"));
             classes.put(c);
         }
         System.out.println(classes.toString());
         JSONObject filter = new JSONObject();
-        for (int i=0;i<classes.length();i++) {
+        for (int i = 0; i < classes.length(); i++) {
             String type_id = classes.optJSONObject(i).optString("type_id");
-            url = "https://pianku.api.mgtv.com/rider/config/channel/v1?channelId="+type_id+"&platform=msite&abroad=0&_support=10000000"+type_id+"?listpage=1&channel=";
+            url = "https://pianku.api.mgtv.com/rider/config/channel/v1?channelId=" + type_id + "&platform=msite&abroad=0&_support=10000000" + type_id + "?listpage=1&channel=";
             su = new SpiderUrl(url, null);
             srr = SpiderReq.get(su);
             jsonObject = new JSONObject(srr.content);
             data = jsonObject.optJSONObject("data").optJSONArray("listItems");
-            if (data==null) {
+            if (data == null) {
                 classes.remove(i);
                 continue;
             }
@@ -355,20 +365,20 @@ public class CatTest {
                 JSONArray t2 = new JSONArray();
                 JSONObject cate = data.optJSONObject(j);
                 JSONArray items = cate.optJSONArray("items");
-                for(int k = 0; k < items.length();k++) {
+                for (int k = 0; k < items.length(); k++) {
                     JSONObject t3 = new JSONObject();
                     String v = items.optJSONObject(k).optString("tagId");
                     String n = items.optJSONObject(k).optString("tagName");
-                    t3.put("v",v);
-                    t3.put("n",n);
+                    t3.put("v", v);
+                    t3.put("n", n);
                     t2.put(t3);
                 }
-                t1.put("key",cate.optString("eName"));
-                t1.put("name",cate.optString("typeName"));
-                t1.put("value",t2);
+                t1.put("key", cate.optString("eName"));
+                t1.put("name", cate.optString("typeName"));
+                t1.put("value", t2);
                 jsonArray.put(t1);
             }
-            filter.put(type_id,jsonArray);
+            filter.put(type_id, jsonArray);
         }
         System.out.println(filter.toString());
     }
@@ -380,7 +390,7 @@ public class CatTest {
         OkHttpClient client = new OkHttpClient.Builder()
                 .followRedirects(false)
                 .build();
-        SpiderReqResult spiderReqResult = SpiderReq.header(client,ext,"sp_req_default",getHeaders(ext));
+        SpiderReqResult spiderReqResult = SpiderReq.header(client, ext, "sp_req_default", getHeaders(ext));
         System.out.println(spiderReqResult.headers.get("location"));
 
     }
@@ -388,7 +398,7 @@ public class CatTest {
     @Test
     public void hsck() throws Exception {
         Spider spider = new Hsck();
-        spider.init(null,"https://www.buscdn.fun/");
+        spider.init(null, "https://www.buscdn.fun/");
         System.out.println(spider.searchContent("巨乳", false));
 //        System.out.println(spider.searchContent("小姨", false));
 //        System.out.println(spider.searchContent("百家", false));
@@ -421,10 +431,31 @@ public class CatTest {
             String playurl = playurls.split("#")[0].split("\\$")[1];
             System.out.println(playurl);
 
-            System.out.println(spider.playerContent(classes.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
+            System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
         }
+    }
 
+    @Test
+    public void alixz() throws Exception {
+        Spider spider = new Alipanso();
+        spider.init(null);
+        String category = spider.searchContent("熊出没", false);
 
+        List<String> ids = new ArrayList<>();
+        JSONObject jsonObject = new JSONObject(category);
+        JSONArray categorys = jsonObject.optJSONArray("list");
+        ids.add(categorys.getJSONObject(5).optString("vod_id"));
+        System.out.println(ids);
+        String detail = spider.detailContent(ids);
+        System.out.println(detail);
+        jsonObject = new JSONObject(detail);
+        JSONArray details = jsonObject.optJSONArray("list");
+        String playurls = details.getJSONObject(0).optString("vod_play_url");
+        if (!playurls.equals("")) {
+            String playurl = playurls.split("#")[0].split("\\$")[1];
+            System.out.println(playurl);
+            System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
+        }
     }
 
     protected HashMap<String, String> getHeaders(String url) {
@@ -432,5 +463,141 @@ public class CatTest {
         headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
         return headers;
     }
+
+    @Test
+    public void affhs() throws Exception {
+        List<String> keys = new ArrayList<>();
+//        keys.add("钢铁侠");
+        xpathAli("https://cat.guibiaoguo.tk/ahhfs.json",keys);
+    }
+
+    public void showCategory(Spider spider,String category) throws Exception {
+        JSONObject jsonObject = new JSONObject(category);
+        JSONArray categorys = jsonObject.optJSONArray("list");
+        List<String> ids = new ArrayList<>();
+        ids.add(categorys.getJSONObject(0).optString("vod_id"));
+        System.out.println(ids);
+
+        String detail = spider.detailContent(ids);
+        System.out.println(detail);
+        jsonObject = new JSONObject(detail);
+        JSONArray details = jsonObject.optJSONArray("list");
+        String playurls = details.getJSONObject(0).optString("vod_play_url");
+        if (!playurls.equals("")) {
+            String playurl = playurls.split("#")[0].split("\\$")[1];
+            System.out.println(playurl);
+            System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
+        }
+    }
+
+    public void xpathAli(String ext,List<String> keys) throws Exception {
+        Spider spider = new XPathAli();
+        if (StringUtils.isEmpty(ext))
+            ext = "https://cat.guibiaoguo.tk/qq.json";
+        spider.init(null, ext);
+        for(String key:keys) {
+            String category = spider.searchContent("钢铁侠", false);
+            System.out.println(category);
+            if(StringUtils.isNotEmpty(category))
+                showCategory(spider,category);
+        }
+        JSONObject jsonObject = null;
+//        System.out.println(spider.searchContent("小姨", false));
+//        System.out.println(spider.searchContent("百家", false));
+//        System.out.println(spider.searchContent("快乐大本营", false));
+        String homeContent = spider.homeContent(true);
+        System.out.println(homeContent);
+        jsonObject = new JSONObject(homeContent);
+        JSONArray classes = jsonObject.optJSONArray("class");
+        for (int i = 0; i < classes.length(); i++) {
+            String tid = classes.getJSONObject(i).optString("type_id");
+            System.out.println(tid);
+            //org.seimicrawler.xpath.core.function;
+            String category = spider.categoryContent(tid, "1", false, null);
+            System.out.println(category);
+            if(StringUtils.isNotEmpty(category))
+                showCategory(spider,category);
+        }
+    }
+
+    @Test
+    public void yydsAli() throws Exception {
+        Spider spider = new YydsAli2();
+        String ext = "https://cat.guibiaoguo.tk/qq.json";
+        spider.init(null, ext);
+        String category = spider.searchContent("雪中悍刀行", false);
+        System.out.println(category);
+        JSONObject jsonObject = null;
+//        System.out.println(spider.searchContent("小姨", false));
+//        System.out.println(spider.searchContent("百家", false));
+//        System.out.println(spider.searchContent("快乐大本营", false));
+//        String homeContent = spider.homeContent(true);
+//        System.out.println(homeContent);
+//        JSONObject jsonObject = new JSONObject(homeContent);
+//        JSONArray classes = jsonObject.optJSONArray("class");
+//        for (int i = 0; i < classes.length(); i++) {
+//            String tid = classes.getJSONObject(i).optString("type_id");
+//            System.out.println(tid);
+//            //org.seimicrawler.xpath.core.function;
+//            category = spider.categoryContent(tid, "1", false, null);
+//            System.out.println(category);
+        List<String> ids = new ArrayList<>();
+
+        jsonObject = new JSONObject(category);
+        JSONArray categorys = jsonObject.optJSONArray("list");
+        ids.add(categorys.getJSONObject(0).optString("vod_id"));
+        System.out.println(ids);
+
+        String detail = spider.detailContent(ids);
+        System.out.println(detail);
+        if (!detail.equals("")) {
+            jsonObject = new JSONObject(detail);
+            JSONArray details = jsonObject.optJSONArray("list");
+            String playurls = details.getJSONObject(0).optString("vod_play_url");
+            if (!playurls.equals("")) {
+                String playurl = playurls.split("#")[0].split("\\$")[1];
+                System.out.println(playurl);
+
+                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
+            }
+        }
+
+
+//        }
+    }
+
+    @Test
+    public void jsonpath() throws Exception {
+        String ext = "https://cat.guibiaoguo.tk/goindex.json";
+        SpiderUrl su = new SpiderUrl(ext, null);
+        String json = SpiderReq.get(su).content;
+        System.out.println(json);
+        Spider spider = new GoIndex();
+        spider.init(null,ext);
+        String category = spider.homeContent(false);
+        System.out.println(category);
+        JSONObject jsonObject = null;
+        List<String> ids = new ArrayList<>();
+
+        jsonObject = new JSONObject(category);
+        JSONArray categorys = jsonObject.optJSONArray("list");
+        ids.add(categorys.getJSONObject(0).optString("vod_id"));
+        System.out.println(ids);
+
+        String detail = spider.detailContent(ids);
+        System.out.println(detail);
+        if (!detail.equals("")) {
+            jsonObject = new JSONObject(detail);
+            JSONArray details = jsonObject.optJSONArray("list");
+            String playurls = details.getJSONObject(0).optString("vod_play_url");
+            if (!playurls.equals("")) {
+                String playurl = playurls.split("#")[0].split("\\$")[1];
+                System.out.println(playurl);
+
+                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
+            }
+        }
+    }
+
 }
 
