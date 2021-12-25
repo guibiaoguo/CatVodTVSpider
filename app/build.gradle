@@ -39,6 +39,7 @@ android {
 dependencies {
     implementation "org.jsoup:jsoup:$jsoup_version"
     implementation "cn.wanghaomiao:JsoupXpath:$jsoupxpath_version"
+    //noinspection DuplicatePlatformClasses
     implementation "com.jayway.jsonpath:json-path:$jsonpath_version"
     implementation "com.squareup.okhttp3:okhttp:$okhttp_version"
     implementation ("com.github.liujingxing.rxhttp:rxhttp:$rxhttp_version") {
@@ -47,6 +48,6 @@ dependencies {
     annotationProcessor "com.github.liujingxing.rxhttp:rxhttp-compiler:$rxhttp_version"
 	
     //无依赖单元测试用，打包删除
-	testImplementation 'junit:junit:4.12'
-    implementation group: 'org.json', name: 'json', version: '20190722'
+//	testImplementation 'junit:junit:4.12'
+//    implementation group: 'org.json', name: 'json', version: '20190722'
 }
