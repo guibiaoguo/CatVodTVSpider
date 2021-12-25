@@ -6,7 +6,7 @@ import com.github.catvod.crawler.SpiderReqResult;
 import com.github.catvod.crawler.SpiderUrl;
 import com.github.catvod.spider.Aidi;
 
-import com.github.catvod.spider.Alipanso;
+
 import com.github.catvod.spider.Enlienli;
 import com.github.catvod.spider.GoIndex;
 import com.github.catvod.spider.Hsck;
@@ -437,7 +437,7 @@ public class CatTest {
 
     @Test
     public void alixz() throws Exception {
-        Spider spider = new Alipanso();
+        Spider spider = new XPathAli();
         spider.init(null);
         String category = spider.searchContent("熊出没", false);
 

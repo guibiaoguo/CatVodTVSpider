@@ -7,20 +7,16 @@ import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.crawler.SpiderReq;
 import com.github.catvod.crawler.SpiderReqResult;
 import com.github.catvod.crawler.SpiderUrl;
-import com.github.catvod.parse.HttpParser;
-import com.github.catvod.utils.SpiderOKClient;
+import com.github.catvod.parser.HttpParser;
 import com.github.catvod.xpath.XPathRule;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.seimicrawler.xpath.JXDocument;
-import org.seimicrawler.xpath.JXNode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,11 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import okhttp3.MediaType;
-import okhttp3.RequestBody;
 import rxhttp.wrapper.annotations.NonNull;
 
 public class GoIndex extends Spider {

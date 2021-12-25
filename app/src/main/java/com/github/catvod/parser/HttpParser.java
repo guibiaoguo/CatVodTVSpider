@@ -1,4 +1,4 @@
-package com.github.catvod.parse;
+package com.github.catvod.parser;
 
 import android.util.Log;
 
@@ -6,19 +6,12 @@ import android.util.Log;
 import com.github.catvod.crawler.SpiderReq;
 import com.github.catvod.crawler.SpiderReqResult;
 import com.github.catvod.crawler.SpiderUrl;
-import com.github.catvod.utils.StringUtil;
 
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
-import rxhttp.wrapper.annotations.NonNull;
-import rxhttp.wrapper.annotations.Nullable;
 
 /**
  * 作者：By hdy

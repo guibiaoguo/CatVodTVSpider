@@ -1,4 +1,4 @@
-package com.github.catvod.utils;
+package com.github.catvod.parser;
 
 import android.text.TextUtils;
 import java.io.UnsupportedEncodingException;

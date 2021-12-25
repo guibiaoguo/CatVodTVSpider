@@ -2,7 +2,7 @@ package com.guibiaoguo.myapplication;
 
 import com.github.catvod.crawler.SpiderReq;
 import com.github.catvod.crawler.SpiderUrl;
-import com.github.catvod.spider.TestXpath;
+import com.github.catvod.spider.XPath;
 import com.github.catvod.spider.XPath;
 
 import org.json.JSONArray;
@@ -23,7 +23,7 @@ import java.util.List;
 public class ExampleUnitTest {
 
     public void echo(String json) throws Exception {
-        TestXpath aidi = new TestXpath();
+        XPath aidi = new XPath();
         aidi.init(null, json);
         String homeContent = aidi.homeContent(true);
         System.out.println(homeContent);
