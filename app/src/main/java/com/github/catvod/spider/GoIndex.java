@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -69,7 +70,7 @@ public class GoIndex extends Spider {
                 for (String k : keys) {
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("type_name", k);
-                    jsonObject.put("type_id", rule.getCateManual().get(k));
+                    jsonObject.put("type_id", URLEncoder.encode(rule.getCateManual().get(k),"utf-8"));
                     classes.put(jsonObject);
                 }
             }
@@ -85,7 +86,7 @@ public class GoIndex extends Spider {
                                 String name = getValue(navNode, rule.getCateName());
                                 name = rule.getCateNameR(name);
                                 String id = getValue(navNode, rule.getCateId());
-                                id = rule.getCateIdR(id);
+                                id = URLEncoder.encode(rule.getCateIdR(id),"utf-8");
                                 JSONObject jsonObject = new JSONObject();
                                 jsonObject.put("type_id", id);
                                 jsonObject.put("type_name", name);
@@ -101,7 +102,7 @@ public class GoIndex extends Spider {
                                     String name = getValue(vodNode, rule.getHomeVodName());
                                     name = rule.getHomeVodNameR(name);
                                     String id = getValue(vodNode, rule.getHomeVodId());
-                                    id = rule.getHomeVodIdR(id);
+                                    id = URLEncoder.encode(rule.getHomeVodIdR(id),"utf-8");
                                     String pic = getValue(vodNode, rule.getHomeVodImg());
                                     pic = rule.getHomeVodImgR(pic);
                                     String mark = "";
@@ -118,8 +119,6 @@ public class GoIndex extends Spider {
                                     v.put("vod_name", name);
                                     v.put("vod_pic", pic);
                                     v.put("vod_remarks", mark);
-                                    if(vodNode.optString("mimeType").equals("application/vnd.google-apps.folder"))
-                                        getNfo(v,url+id+"/",true);
                                     videos.put(v);
                                 }
                                 result.put("list", videos);
@@ -172,7 +171,7 @@ public class GoIndex extends Spider {
                                     String name = getValue(vodNode, rule.getCateVodName());
                                     name = rule.getCateVodNameR(name);
                                     String id = getValue(vodNode, rule.getCateVodId());
-                                    id = rule.getCateVodIdR(id);
+                                    id = URLEncoder.encode(rule.getCateVodIdR(id),"utf-8");
                                     String pic = getValue(vodNode, rule.getCateVodImg());
                                     pic = rule.getCateVodImgR(pic);
                                     String mark = "";
@@ -189,8 +188,6 @@ public class GoIndex extends Spider {
                                     v.put("vod_name", name);
                                     v.put("vod_pic", pic);
                                     v.put("vod_remarks", mark);
-                                    if(vodNode.optString("mimeType").equals("application/vnd.google-apps.folder"))
-                                        getNfo(v,url+id+"/"+id+".nfo",false);
                                     videos.put(v);
                                 }
                                 result.put("list", videos);
@@ -240,38 +237,25 @@ public class GoIndex extends Spider {
 
     }
 
-    public void getNfo(JSONObject vod, String weburl,boolean folder) {
-        if (folder) {
-            weburl +="/?page_index={catePg};post";
-        }
+    public void getNfo(JSONObject vod, String weburl) {
         HttpParser.parseSearchUrlForHtml(weburl, new HttpParser.OnSearchCallBack() {
             @Override
             public void onSuccess(String url, SpiderReqResult s) {
                 try {
-                    if(s.content.startsWith("{")) {
-                        JSONArray vodNodes = getVods(s.content,rule.getDetailUrlNode());
-                        for (int i = 0; i < vodNodes.length(); i++) {
-                            JSONObject vodNode = vodNodes.optJSONObject(i);
-                            if(vodNode.optString("mimeType").equals("text/xml") && StringUtils.contains(vodNode.optString(rule.getDetailUrlName()), ".nfo"))
-                                getNfo(vod,url+vodNode.optString(rule.getDetailUrlId()),false);
-                        }
-                    } else {
-                        Document document = Jsoup.parse(s.content);
-                        System.out.println(s.content);
-                        vod.put("vod_name", document.select("title").text());
-                        vod.put("vod_pic", document.select("thumb").text());
-                        vod.put("type_name", document.select("genre").text());
-                        vod.put("vod_year", document.select("year").text());
-                        vod.put("vod_area", document.select("country").text());
-                        vod.put("vod_remarks", document.select("title") == null?"":document.select("title").text());
-                        vod.put("vod_actor", document.select("actor>name").text());
-                        vod.put("vod_director", document.select("director").text());
-                        vod.put("vod_content", document.select("plot").text());
-                    }
+                    Document document = Jsoup.parse(s.content);
+                    System.out.println(s.content);
+                    vod.put("vod_name", document.select("title").text());
+                    vod.put("vod_pic", document.select("[aspect=\"poster\"]").text());
+                    vod.put("type_name", document.select("genre").text());
+                    vod.put("vod_year", document.select("year").text());
+                    vod.put("vod_area", document.select("country").text());
+                    vod.put("vod_remarks", document.select("title") == null ? "" : document.select("title").text());
+                    vod.put("vod_actor", document.select("actor>name").text());
+                    vod.put("vod_director", document.select("director").text());
+                    vod.put("vod_content", document.select("plot").text());
                 } catch (Exception e) {
                     SpiderDebug.log(e);
                 }
-
             }
 
             @Override
@@ -379,13 +363,13 @@ public class GoIndex extends Spider {
                             String name = getValue(urlNode, rule.getDetailUrlName());
                             name = rule.getDetailUrlNameR(name);
                             String id = getValue(urlNode, rule.getDetailUrlId());
-                            id = rule.getDetailUrlIdR(id);
+                            id = URLEncoder.encode(rule.getDetailUrlIdR(id),"utf-8");
                             if (urlNode.optString("mimeType").equals("application/vnd.google-apps.folder"))
                                 getFileList(id + "/?page_index={catePg};post", vod_play);
                             else if (urlNode.optString("mimeType").equals("video/x-matroska")) {
                                 vod_play.get("workerdev").add(name + "$" + url + id);
                             } else if (urlNode.optString("mimeType").equals("text/xml") && StringUtils.contains(name, ".nfo")) {
-                                getNfo(vod, url + id,false);
+                                getNfo(vod, url + id);
                             }
                         }
                         if (vod_play.size() > 0) {
@@ -429,7 +413,7 @@ public class GoIndex extends Spider {
             String webUrl = rule.getPlayUrl().isEmpty() ? id : rule.getPlayUrl().replace("{playUrl}", id);
             SpiderDebug.log(webUrl);
             JSONObject result = new JSONObject();
-            result.put("parse", 1);
+            result.put("parse", 0);
             result.put("playUrl", "");
             if (!rule.getPlayUa().isEmpty()) {
                 result.put("ua", rule.getPlayUa());
@@ -469,7 +453,7 @@ public class GoIndex extends Spider {
     }
 
     private void getFileList(String
-            root, Map<String, List<String>> data) {
+                                     root, Map<String, List<String>> data) {
         try {
             HttpParser.parseSearchUrlForHtml(root + "/?page_index={catePg};post", new HttpParser.OnSearchCallBack() {
                 @Override
