@@ -7,6 +7,7 @@ import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.crawler.SpiderReq;
 import com.github.catvod.crawler.SpiderReqResult;
 import com.github.catvod.crawler.SpiderUrl;
+import com.github.catvod.utils.Misc;
 import com.github.catvod.xpath.XPathRule;
 
 import org.apache.commons.lang3.StringUtils;
@@ -14,6 +15,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.seimicrawler.xpath.JXDocument;
+import org.seimicrawler.xpath.JXNode;
 
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -80,7 +83,7 @@ public class GoIndex extends Spider {
                 public void onSuccess(String url, SpiderReqResult s) {
                     try {
                         if (rule.getCateManual().size() == 0) {
-                            JSONArray navNodes = getVods(s.content, rule.getHomeVodNode());
+                            JSONArray navNodes = getVods(s.content, rule.getCateNode());
                             for (int i = 0; i < navNodes.length(); i++) {
                                 JSONObject navNode = navNodes.optJSONObject(i);
                                 String name = getValue(navNode, rule.getCateName());
@@ -452,8 +455,7 @@ public class GoIndex extends Spider {
         return headers;
     }
 
-    private void getFileList(String
-                                     root, Map<String, List<String>> data) {
+    private void getFileList(String root, Map<String, List<String>> data) {
         try {
             HttpParser.parseSearchUrlForHtml(root + "/?page_index={catePg};post", new HttpParser.OnSearchCallBack() {
                 @Override
@@ -501,4 +503,68 @@ public class GoIndex extends Spider {
             SpiderDebug.log(e);
         }
     }
+
+    @Override
+    public String searchContent(String key, boolean quick) {
+        try {
+            fetchRule();
+            if (rule.getSearchUrl().isEmpty()) {
+                return "";
+            }
+            String webUrl = rule.getSearchUrl().replace("{wd}", URLEncoder.encode(key,"utf-8"));
+            JSONObject result = new JSONObject();
+            HttpParser.parseSearchUrlForHtml(webUrl, new HttpParser.OnSearchCallBack() {
+                @Override
+                public void onSuccess(String url, SpiderReqResult s) {
+                    try {
+                        JSONArray videos = new JSONArray();
+                        // add maccms suggest search api support
+                        if (rule.getSearchVodNode().startsWith("json:")) {
+                            String[] node = rule.getSearchVodNode().substring(5).split(">");
+                            JSONObject data = new JSONObject(s.content);
+                            for (int i = 0; i < node.length; i++) {
+                                if (i == node.length - 1) {
+                                    JSONArray vodArray = data.getJSONArray(node[i]);
+                                    for (int j = 0; j < vodArray.length(); j++) {
+                                        JSONObject vod = vodArray.getJSONObject(j);
+                                        String name = vod.optString(rule.getSearchVodName()).trim();
+                                        name = rule.getSearchVodNameR(name);
+                                        String id = vod.optString(rule.getSearchVodId()).trim();
+                                        id = rule.getSearchVodIdR(id);
+                                        String pic = vod.optString(rule.getSearchVodImg()).trim();
+                                        pic = rule.getSearchVodImgR(pic);
+                                        pic = Misc.fixUrl(webUrl, pic);
+                                        String mark = vod.optString(rule.getSearchVodMark()).trim();
+                                        mark = rule.getSearchVodMarkR(mark);
+                                        JSONObject v = new JSONObject();
+                                        v.put("vod_id", id);
+                                        v.put("vod_name", name);
+                                        v.put("vod_pic", pic);
+                                        v.put("vod_remarks", mark);
+                                        videos.put(v);
+                                    }
+                                } else {
+                                    data = data.getJSONObject(node[i]);
+                                }
+                            }
+                            result.put("list", videos);
+                        }
+                    } catch (Exception e) {
+                        SpiderDebug.log(e);
+                    }
+                }
+
+                @Override
+                public void onFailure(int errorCode, String msg) {
+
+                }
+            });
+            return result.toString();
+        } catch (
+                Exception e) {
+            SpiderDebug.log(e);
+        }
+        return "";
+    }
+
 }

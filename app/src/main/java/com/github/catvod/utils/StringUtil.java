@@ -1,6 +1,9 @@
 package com.github.catvod.utils;
 
 import android.text.TextUtils;
+
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Random;
@@ -555,4 +558,17 @@ public class StringUtil {
             }
         }
     }
+
+    public static Boolean isJson(String content) {
+        if(content == null) {
+            return false;
+        }
+        content = content.trim();
+        if(content.startsWith("{") && content.endsWith("}"))
+            return true;
+        if(content.startsWith("[") && content.endsWith("]"))
+            return true;
+        return false;
+    }
+
 }
