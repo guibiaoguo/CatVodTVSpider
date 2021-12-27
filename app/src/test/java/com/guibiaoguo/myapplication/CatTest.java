@@ -1,5 +1,5 @@
 package com.guibiaoguo.myapplication;
-
+import com.github.catvod.analyzeRule.AnalyzeRule;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderReq;
 import com.github.catvod.crawler.SpiderReqResult;
@@ -10,8 +10,10 @@ import com.github.catvod.spider.Aidi;
 import com.github.catvod.spider.Enlienli;
 import com.github.catvod.spider.GoIndex;
 import com.github.catvod.spider.Hsck;
+import com.github.catvod.spider.HttpParser;
 import com.github.catvod.spider.IQIYI;
 import com.github.catvod.spider.Juhi;
+import com.github.catvod.spider.Legado;
 import com.github.catvod.spider.MGTV;
 import com.github.catvod.spider.QQ;
 import com.github.catvod.spider.XPathAli;
@@ -20,6 +22,7 @@ import com.github.catvod.spider.YydsAli2;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -466,22 +469,24 @@ public class CatTest {
         xpathAli("https://cat.guibiaoguo.tk/ahhfs.json",keys);
     }
 
-    public void showCategory(Spider spider,String category) throws Exception {
+    public void showCategory(Spider spider,String category,int index) throws Exception {
         JSONObject jsonObject = new JSONObject(category);
         JSONArray categorys = jsonObject.optJSONArray("list");
-        List<String> ids = new ArrayList<>();
-        ids.add(categorys.getJSONObject(0).optString("vod_id"));
-        System.out.println(ids);
+        if(categorys.length()>index) {
+            List<String> ids = new ArrayList<>();
+            ids.add(categorys.getJSONObject(index).optString("vod_id"));
+            System.out.println(ids);
 
-        String detail = spider.detailContent(ids);
-        System.out.println(detail);
-        jsonObject = new JSONObject(detail);
-        JSONArray details = jsonObject.optJSONArray("list");
-        String playurls = details.getJSONObject(0).optString("vod_play_url");
-        if (!playurls.equals("")) {
-            String playurl = playurls.split("#")[0].split("\\$")[1];
-            System.out.println(playurl);
-            System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
+            String detail = spider.detailContent(ids);
+            System.out.println(detail);
+            jsonObject = new JSONObject(detail);
+            JSONArray details = jsonObject.optJSONArray("list");
+            String playurls = details.getJSONObject(0).optString("vod_play_url");
+            if (!playurls.equals("")) {
+                String playurl = playurls.split("#")[0].split("\\$")[1];
+                System.out.println(playurl);
+                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
+            }
         }
     }
 
@@ -494,7 +499,7 @@ public class CatTest {
             String category = spider.searchContent("钢铁侠", false);
             System.out.println(category);
             if(StringUtils.isNotEmpty(category))
-                showCategory(spider,category);
+                showCategory(spider,category,0);
         }
         JSONObject jsonObject = null;
 //        System.out.println(spider.searchContent("小姨", false));
@@ -511,7 +516,7 @@ public class CatTest {
             String category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
             if(StringUtils.isNotEmpty(category))
-                showCategory(spider,category);
+                showCategory(spider,category,0);
         }
     }
 
@@ -564,13 +569,13 @@ public class CatTest {
     @Test
     public void jsonpath() throws Exception {
         String ext = "https://cat.guibiaoguo.tk/goindex.json";
-        SpiderUrl su = new SpiderUrl(ext, null);
-        String json = SpiderReq.get(su).content;
-        System.out.println(json);
         Spider spider = new GoIndex();
         spider.init(null,ext);
         String category = spider.homeContent(false);
         System.out.println(category);
+        showCategory(spider,category,0);
+        category = spider.searchContent("柯南",false);
+        showCategory(spider,category,0);
         JSONObject jsonObject = null;
         List<String> ids = new ArrayList<>();
 
@@ -594,5 +599,116 @@ public class CatTest {
         }
     }
 
+    @Test
+    public void analyze() {
+        String content = "下一站";
+        String rulestr = "##一站##一战";
+        AnalyzeRule analyzeRule = new AnalyzeRule();
+        analyzeRule.setContent(content,"");
+        Object object = analyzeRule.getElement(rulestr);
+        System.out.println(object);
+        String ext = "http://www.paper027.com/home/chapter/lists/id/77485.html";
+        SpiderUrl su = new SpiderUrl(ext, getHeaders(ext));
+        String json = SpiderReq.get(su).content;
+        analyzeRule.setContent(json,ext);
+        rulestr = ":class=\"text-muted number\"(?:[^\"]*\"){3}([^\"]*)\" title=\"([^\"]*)\">";
+        object = analyzeRule.getElement(rulestr);
+        System.out.println(object.toString());
+        analyzeRule = new AnalyzeRule();
+        analyzeRule.setContent(json);
+        System.out.println(analyzeRule.getElement("@css:.chapterTitle"));
+        ext = "https://cat.guibiaoguo.tk/jsonpath.json";
+        su = new SpiderUrl(ext,getHeaders(ext));
+        json = SpiderReq.get(su).content;
+        analyzeRule = new AnalyzeRule();
+        analyzeRule.setContent(json,ext);
+        System.out.println(analyzeRule.getElement("$.ua"));
+        String webUrl = analyzeRule.getElement("$.homeUrl").toString();
+        System.out.println(webUrl);
+        HttpParser.parseSearchUrlForHtml(webUrl, new HttpParser.OnSearchCallBack() {
+            @Override
+            public void onSuccess(String url, SpiderReqResult s) {
+                AnalyzeRule analyzeRule1 = new AnalyzeRule();
+                analyzeRule1.setContent(s.content,url);
+                Object nodes = analyzeRule1.getElement("$.data.files[*]");
+                if(nodes instanceof JSONArray) {
+                    for (int i = 0; i < ((JSONArray) nodes).length(); i++) {
+                        analyzeRule1.setContent(((JSONArray) nodes).opt(i).toString());
+                        System.out.println(analyzeRule1.getString("$.name"));
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(int errorCode, String msg) {
+
+            }
+        });
+    }
+
+    @Test
+    public void legado() throws Exception {
+        String ext = "https://cat.guibiaoguo.tk/jsonpath.json";
+        ext = "{\n" +
+                "  \"ua\": \"Mozilla/5.0 (Linux; Android 11; Mi 10 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Mobile Safari/537.36\",\n" +
+                "  \"videoName\":\"谷歌硬盘\",\n" +
+                "  \"homeUrl\": \"https://joes.shentong.workers.dev/0:/%E5%8A%A8%E6%BC%AB/2000-2019%E9%87%8C%E7%95%AA/?page_index=0;post\",\n" +
+                "  \"cateNode\": \"\",\n" +
+                "  \"cateName\": \"\",\n" +
+                "  \"cateId\": \"\",\n" +
+                "  \"cateIdR\": \"\",\n" +
+                "  \"cateManual\": {\"M01\":\"M01\",\"M02\":\"M02\",\"M03\":\"M03\",\"M04\":\"M04\",\"M05\":\"M05\",\"M06\":\"M06\",\"M07\":\"M07\",\"M08\":\"M08\",\"M09\":\"M09\",\"M10\":\"M10\",\"M11\":\"M11\"},\n" +
+                "  \"homeVodNode\": \"$.data.files[*]\",\n" +
+                "  \"homeVodName\": \"name\",\n" +
+                "  \"homeVodId\": \"$.name\",\n" +
+                "  \"homeVodIdR\": \"\",\n" +
+                "  \"homeVodImg\": \"name\",\n" +
+                "  \"homeVodImgR\": \"\",\n" +
+                "  \"homeVodMark\": \"name\",\n" +
+                "  \"cateUrl\": \"https://joes.shentong.workers.dev/0:/%E4%B8%A2%E4%B8%A2%E7%94%B5%E5%BD%B1/{cateId}/?page_index=0;post\",\n" +
+                "  \"cateVodNode\": \"$.data.files[*]\",\n" +
+                "  \"cateVodName\": \"name\",\n" +
+                "  \"cateVodId\": \"name\",\n" +
+                "  \"cateVodIdR\": \"\",\n" +
+                "  \"cateVodImg\": \"\",\n" +
+                "  \"cateVodImgR\": \"\",\n" +
+                "  \"cateVodMark\": \"\",\n" +
+                "  \"dtUrl\": \"{vid}/?page_index=0;post\",\n" +
+                "  \"dtNode\": \"$.data.files[*]\",\n" +
+                "  \"dtName\": \"name\",\n" +
+                "  \"dtNameR\": \"\",\n" +
+                "  \"dtImg\": \"\",\n" +
+                "  \"dtImgR\": \"\",\n" +
+                "  \"dtFromNode\": \"\",\n" +
+                "  \"dtFromName\": \"\",\n" +
+                "  \"dtFromNameR\": \"\",\n" +
+                "  \"dtUrlNode\": \"$.data.files[*]\",\n" +
+                "  \"dtUrlSubNode\": \"\",\n" +
+                "  \"dtUrlId\": \"$.name\",\n" +
+                "  \"dtUrlIdR\": \"\",\n" +
+                "  \"dtUrlName\": \"$.name\",\n" +
+                "  \"dtUrlNameR\": \"\",\n" +
+                "  \"playUrl\": \"{playUrl}\",\n" +
+                "  \"playUa\": \"\",\n" +
+                "  \"searchUrl\": \"https://joes.shentong.workers.dev/0.search?q=**;post\",\n" +
+                "  \"scVodNode\": \"json:data>files\",\n" +
+                "  \"scVodName\": \"name\",\n" +
+                "  \"scVodId\": \"name\",\n" +
+                "  \"scVodIdR\": \"\",\n" +
+                "  \"scVodImg\": \"\",\n" +
+                "  \"leaf\": \"mimeType\",\n" +
+                "  \"nodeValue\": \"application/vnd.google-apps.folder\",\n" +
+                "  \"defaultFrom\": \"workerdev\",\n" +
+                "  \"leafValue\": \"video/x-matroska,application/vnd.rn-realmedia\",\n" +
+                "  \"nodeUrl\": \"{$.name}/?page_index=0;post\",\n" +
+                "  \"scVodMark\": \"\"\n" +
+                "}";
+        ext = "https://cat.guibiaoguo.tk/jsonpath.json";
+        Spider spider = new Legado();
+        spider.init(null,ext);
+        String category = spider.homeContent(false);
+        System.out.println(category);
+        showCategory(spider,category,1);
+    }
 }
 
