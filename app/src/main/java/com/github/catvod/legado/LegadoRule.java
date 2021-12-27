@@ -528,7 +528,7 @@ public class LegadoRule {
     public String getSearchVodImg() {
         return scVodImg;
     }
-    
+
     public String getSearchVodMark() {
         return scVodMark;
     }
