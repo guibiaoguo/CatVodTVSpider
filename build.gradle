@@ -3,7 +3,7 @@ buildscript {
     ext {
         appVersionCode = 1
         appVersionName = "1.0.0"
-        ext.kotlin_version = '1.6.10'
+//        ext.kotlin_version = '1.6.10'
         miniSdkVersion = 16
         compileSdkVersion = 30
         targetSdkVersion = 26
@@ -27,7 +27,7 @@ buildscript {
     dependencies {
         classpath "com.android.tools.build:gradle:4.2.1"
         classpath "gradle.plugin.ru.cleverpumpkin.proguard-dictionaries-generator:plugin:1.0.8"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+//        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 

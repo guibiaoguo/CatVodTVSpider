@@ -1,7 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'ru.cleverpumpkin.proguard-dictionaries-generator'
-    id 'kotlin-android'
+//    id 'kotlin-android'
 }
 android {
     compileSdkVersion rootProject.compileSdkVersion

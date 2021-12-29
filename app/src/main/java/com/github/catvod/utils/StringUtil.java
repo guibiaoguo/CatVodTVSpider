@@ -5,11 +5,13 @@ import android.text.TextUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import rxhttp.wrapper.annotations.NonNull;
 import rxhttp.wrapper.annotations.Nullable;
 
 /**
@@ -571,4 +573,27 @@ public class StringUtil {
         return false;
     }
 
+    public static boolean isAbsUrl(String url) {
+        boolean isAbsUrl;
+        if (url != null) {
+            isAbsUrl = StringUtils.startsWith(url, "http://") || StringUtils.startsWith(url, "https://");
+        } else {
+            isAbsUrl = false;
+        }
+        return isAbsUrl;
+    }
+
+    public static String join(@NonNull CharSequence delimiter, @NonNull Iterable tokens) {
+        final Iterator<?> it = tokens.iterator();
+        if (!it.hasNext()) {
+            return "";
+        }
+        final StringBuilder sb = new StringBuilder();
+        sb.append(it.next());
+        while (it.hasNext()) {
+            sb.append(delimiter);
+            sb.append(it.next());
+        }
+        return sb.toString();
+    }
 }

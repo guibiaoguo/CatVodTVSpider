@@ -1,5 +1,10 @@
 package com.guibiaoguo.myapplication;
-import com.github.catvod.analyzeRule.AnalyzeRule;
+import com.github.catvod.analyzeRules.AnalyzeRule;
+import com.github.catvod.analyzeRules.RuleData;
+import com.github.catvod.analyzeRules.AnalyzeByJSonPath;
+import com.github.catvod.analyzeRules.AnalyzeByJSoup;
+import com.github.catvod.analyzeRules.AnalyzeByRegex;
+import com.github.catvod.analyzeRules.RuleAnalyzer;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderReq;
 import com.github.catvod.crawler.SpiderReqResult;
@@ -472,7 +477,7 @@ public class CatTest {
     public void showCategory(Spider spider,String category,int index) throws Exception {
         JSONObject jsonObject = new JSONObject(category);
         JSONArray categorys = jsonObject.optJSONArray("list");
-        if(categorys.length()>index) {
+        if(category !=null && categorys.length()>index) {
             List<String> ids = new ArrayList<>();
             ids.add(categorys.getJSONObject(index).optString("vod_id"));
             System.out.println(ids);
@@ -603,40 +608,59 @@ public class CatTest {
     public void analyze() {
         String content = "下一站";
         String rulestr = "##一站##一战";
-        AnalyzeRule analyzeRule = new AnalyzeRule();
+        AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
         analyzeRule.setContent(content,"");
         Object object = analyzeRule.getElement(rulestr);
         System.out.println(object);
         String ext = "http://www.paper027.com/home/chapter/lists/id/77485.html";
         SpiderUrl su = new SpiderUrl(ext, getHeaders(ext));
         String json = SpiderReq.get(su).content;
+        System.out.println(json);
         analyzeRule.setContent(json,ext);
         rulestr = ":class=\"text-muted number\"(?:[^\"]*\"){3}([^\"]*)\" title=\"([^\"]*)\">";
         object = analyzeRule.getElement(rulestr);
         System.out.println(object.toString());
-        analyzeRule = new AnalyzeRule();
+        System.out.println(analyzeRule.getElements(rulestr));
+        analyzeRule = new AnalyzeRule(new RuleData());
         analyzeRule.setContent(json);
         System.out.println(analyzeRule.getElement("@css:.chapterTitle"));
         ext = "https://cat.guibiaoguo.tk/jsonpath.json";
         su = new SpiderUrl(ext,getHeaders(ext));
         json = SpiderReq.get(su).content;
-        analyzeRule = new AnalyzeRule();
+        analyzeRule = new AnalyzeRule(new RuleData());
         analyzeRule.setContent(json,ext);
         System.out.println(analyzeRule.getElement("$.ua"));
-        String webUrl = analyzeRule.getElement("$.homeUrl").toString();
+        String webUrl = analyzeRule.getString("{$.homeUrl}");
         System.out.println(webUrl);
         HttpParser.parseSearchUrlForHtml(webUrl, new HttpParser.OnSearchCallBack() {
             @Override
             public void onSuccess(String url, SpiderReqResult s) {
-                AnalyzeRule analyzeRule1 = new AnalyzeRule();
+                AnalyzeRule analyzeRule1 = new AnalyzeRule(new RuleData());
                 analyzeRule1.setContent(s.content,url);
-                Object nodes = analyzeRule1.getElement("$.data.files[*]");
+                Object nodes = analyzeRule1.getStringList("$.data.files[1]%%$.data.files[3]");
+                System.out.println(nodes.toString());
                 if(nodes instanceof JSONArray) {
                     for (int i = 0; i < ((JSONArray) nodes).length(); i++) {
                         analyzeRule1.setContent(((JSONArray) nodes).opt(i).toString());
                         System.out.println(analyzeRule1.getString("$.name"));
                     }
                 }
+            }
+
+            @Override
+            public void onFailure(int errorCode, String msg) {
+
+            }
+        });
+        HttpParser.parseSearchUrlForHtml("https://www.zqystv.com/zqys/dydq.html", new HttpParser.OnSearchCallBack() {
+            @Override
+            public void onSuccess(String url, SpiderReqResult s) {
+                AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
+                analyzeRule.setContent(s.content,url);
+                analyzeRule.setRedirectUrl(url);
+                System.out.println(analyzeRule.getElements("@css:.stui-vodlist>li"));
+                System.out.println(analyzeRule.getElements("class.stui-vodlist@tag.li.1"));
+                System.out.println(analyzeRule.getElements("class.stui-vodlist@tag.li[2:5]"));
             }
 
             @Override
@@ -709,6 +733,145 @@ public class CatTest {
         String category = spider.homeContent(false);
         System.out.println(category);
         showCategory(spider,category,1);
+    }
+
+    @Test
+    public void test() {
+        String queue = "[test}";
+        System.out.println(queue.charAt(0));
+        RuleAnalyzer analyzer = new RuleAnalyzer("{$.name}||{$.id}",false);
+        analyzer.trim();
+        System.out.println(analyzer.splitRule("&&","||"));
+        analyzer = new RuleAnalyzer("$.store.book[0].title@$.name");
+        System.out.println(analyzer.splitRule("@","&&"));
+        String rulestr = "class=\"text-muted number\"(?:[^\"]*\"){3}([^\"]*)\" title=\"([^\"]*)\">";
+        String ext = "http://www.paper027.com/home/chapter/lists/id/77485.html";
+        SpiderUrl su = new SpiderUrl(ext, getHeaders(ext));
+        String json = SpiderReq.get(su).content;
+        System.out.println(json);
+        System.out.println(AnalyzeByRegex.getElement(json,StringUtils.split(rulestr,"&&"),0));
+        System.out.println(AnalyzeByRegex.getElements(json,StringUtils.split(rulestr,"&&"),0));
+        ext = "https://cat.guibiaoguo.tk/jsonpath.json";
+        su = new SpiderUrl(ext,getHeaders(ext));
+        json = SpiderReq.get(su).content;
+        System.out.println(new AnalyzeByJSonPath(json).getString("{$.homeUrl}/test"));
+        System.out.println(new AnalyzeByJSonPath(json).getString("$.ua"));
+        HttpParser.parseSearchUrlForHtml(new AnalyzeByJSonPath(json).getString("$.homeUrl"), new HttpParser.OnSearchCallBack() {
+            @Override
+            public void onSuccess(String url, SpiderReqResult s) {
+                System.out.println(new AnalyzeByJSonPath(s.content).getString("$.data.files[1]"));
+                System.out.println(new AnalyzeByJSonPath(s.content).getString("$.data.files[*]"));
+                System.out.println(new AnalyzeByJSonPath(s.content).getString("$.data.files[1]%%$.data.files[3]"));
+            }
+
+            @Override
+            public void onFailure(int errorCode, String msg) {
+
+            }
+        });
+
+        HttpParser.parseSearchUrlForHtml("http://www.paper027.com/home/chapter/lists/id/77485.html", new HttpParser.OnSearchCallBack() {
+            @Override
+            public void onSuccess(String url, SpiderReqResult s) {
+                System.out.println(new AnalyzeByJSoup(s.content).getElements("@css:.chapterTitle"));
+            }
+
+            @Override
+            public void onFailure(int errorCode, String msg) {
+
+            }
+        });
+        HttpParser.parseSearchUrlForHtml("https://www.zqystv.com/zqys/dydq.html", new HttpParser.OnSearchCallBack() {
+            @Override
+            public void onSuccess(String url, SpiderReqResult s) {
+                System.out.println(new AnalyzeByJSoup(s.content).getElements("@css:.stui-vodlist>li"));
+                System.out.println(new AnalyzeByJSoup(s.content).getElements("class.stui-vodlist@tag.li.1"));
+                System.out.println(new AnalyzeByJSoup(s.content).getElements("class.stui-vodlist@tag.li[2:5]"));
+            }
+
+            @Override
+            public void onFailure(int errorCode, String msg) {
+
+            }
+        });
+    }
+
+    @Test
+    public void testJsonPath() {
+        HttpParser.parseSearchUrlForHtml("https://cat.guibiaoguo.tk/jsonpath.json", new HttpParser.OnSearchCallBack() {
+            @Override
+            public void onSuccess(String url, SpiderReqResult s) {
+                System.out.println(new AnalyzeByJSonPath(s.content).getString("{$.homeUrl}/test"));
+            }
+
+            @Override
+            public void onFailure(int errorCode, String msg) {
+
+            }
+        });
+    }
+
+    @Test
+    public void testJsonPathKt() {
+        HttpParser.parseSearchUrlForHtml("https://cat.guibiaoguo.tk/jsonpath.json", new HttpParser.OnSearchCallBack() {
+            @Override
+            public void onSuccess(String url, SpiderReqResult s) {
+                System.out.println(new AnalyzeRule(new RuleData()).setContent(s.content,url).getString("{$.homeUrl}/test"));
+            }
+
+            @Override
+            public void onFailure(int errorCode, String msg) {
+
+            }
+        });
+    }
+
+    @Test
+    public void testJsoupKt() {
+        HttpParser.parseSearchUrlForHtml("http://www.paper027.com/home/chapter/lists/id/77485.html", new HttpParser.OnSearchCallBack() {
+            @Override
+            public void onSuccess(String url, SpiderReqResult s) {
+                AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
+                analyzeRule.setContent(s.content,url);
+                analyzeRule.setRedirectUrl(url);
+                System.out.println(analyzeRule.getElements("@css:.chapterTitle"));
+            }
+
+            @Override
+            public void onFailure(int errorCode, String msg) {
+
+            }
+        });
+    }
+
+    @Test
+    public void testXpathKt() {
+        HttpParser.parseSearchUrlForHtml("http://www.paper027.com/home/chapter/lists/id/77485.html", new HttpParser.OnSearchCallBack() {
+            @Override
+            public void onSuccess(String url, SpiderReqResult s) {
+                AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
+                analyzeRule.setContent(s.content,url);
+                analyzeRule.setRedirectUrl(url);
+                System.out.println(analyzeRule.getElements("//*[contains(@class,\"chapterTitle\")]"));
+            }
+
+            @Override
+            public void onFailure(int errorCode, String msg) {
+
+            }
+        });
+    }
+
+    @Test
+    public void testkt() {
+        String queue = "[test}";
+        System.out.println(queue.charAt(0));
+        RuleAnalyzer analyzer = new RuleAnalyzer("{$.name}||{$.id}",false);
+        analyzer.trim();
+        System.out.println(analyzer.splitRule("&&","||"));
+        analyzer = new RuleAnalyzer("$.store.book[0].title@$.name",false);
+        System.out.println(analyzer.splitRule("@","&&"));
+        String rulestr = ":class=\"text-muted number\"(?:[^\"]*\"){3}([^\"]*)\" title=\"([^\"]*)\">";
     }
 }
 

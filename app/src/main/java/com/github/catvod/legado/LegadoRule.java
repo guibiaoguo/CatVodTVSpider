@@ -2,6 +2,7 @@ package com.github.catvod.legado;
 
 import com.github.catvod.crawler.SpiderDebug;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 
 import java.util.Iterator;
@@ -221,6 +222,141 @@ public class LegadoRule {
 
     private String nodeUrl;
 
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String cateNameR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String cateIdR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String homeVodNameR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String homeVodIdR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String homeVodImgR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String homeVodMarkR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String cateVodNameR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String cateVodIdR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String cateVodImgR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String cateVodMarkR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String dtNameR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String dtImgR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String dtCateR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String dtYearR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String dtAreaR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String dtMarkR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String dtActorR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String dtDirectorR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String dtDescR;
+    /**
+     * 详情
+     */
+    private String dtFromNameR;
+    /**
+     * 详情
+     */
+    private String dtUrlIdR;
+    /**
+     * 详情
+     */
+    private String dtUrlNameR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String scVodNameR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String scVodIdR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String scVodImgR;
+    /**
+     * 正则对取到的数据进行二次处理
+     */
+    private String scVodMarkR;
+
+    private boolean decodePlayUrl;
+
+    private String decodePlay;
+
+    private String scPage;
+
+    public String getScPage() {
+        return scPage;
+    }
+
+    public void setScPage(String scPage) {
+        this.scPage = scPage;
+    }
+
+    public boolean isDecodePlayUrl() {
+        return decodePlayUrl;
+    }
+
+    public void setDecodePlayUrl(boolean decodePlayUrl) {
+        this.decodePlayUrl = decodePlayUrl;
+    }
+
+    public String getDecodePlay() {
+        return decodePlay;
+    }
+
+    public void setDecodePlay(String decodePlay) {
+        this.decodePlay = decodePlay;
+    }
+
     public String getNodeUrl() {
         return nodeUrl;
     }
@@ -261,39 +397,6 @@ public class LegadoRule {
         this.leafValue = leafValue;
     }
 
-    /**
-     * 正则对取到的数据进行二次处理
-     */
-    private Pattern scVodMarkR;
-
-    private static Pattern getPattern(JSONObject json, String key) {
-        String v = json.optString(key).trim();
-        if (v.isEmpty())
-            return null;
-        else {
-            try {
-                return Pattern.compile(v);
-            } catch (Exception e) {
-                SpiderDebug.log(e);
-            }
-        }
-        return null;
-    }
-
-    private static String doReplaceRegex(Pattern pattern, String src) {
-        if (pattern == null)
-            return src;
-        try {
-            Matcher matcher = pattern.matcher(src);
-            if (matcher.find()) {
-                return matcher.group(1).trim();
-            }
-        } catch (Exception e) {
-            SpiderDebug.log(e);
-        }
-        return src;
-    }
-
     public static LegadoRule fromJson(String json) {
         try {
             JSONObject jsonObj = new JSONObject(json);
@@ -302,7 +405,15 @@ public class LegadoRule {
             rule.homeUrl = jsonObj.optString("homeUrl").trim();
             rule.cateNode = jsonObj.optString("cateNode").trim();
             rule.cateName = jsonObj.optString("cateName").trim();
+            rule.cateNameR = jsonObj.optString("cateNameR").trim();
+            if(StringUtils.isNotEmpty(rule.cateNameR)) {
+                rule.cateName += "##"+rule.cateNameR+"##$1";
+            }
             rule.cateId = jsonObj.optString("cateId").trim();
+            rule.cateIdR = jsonObj.optString("cateIdR").trim();
+            if(StringUtils.isNotEmpty(rule.cateIdR)) {
+                rule.cateId += "##"+rule.cateIdR+"##$1";
+            }
             JSONObject navs = jsonObj.optJSONObject("cateManual");
             if (navs != null) {
                 Iterator<String> keys = navs.keys();
@@ -314,46 +425,144 @@ public class LegadoRule {
             rule.filter = jsonObj.optJSONObject("filter");
             rule.homeVodNode = jsonObj.optString("homeVodNode").trim();
             rule.homeVodName = jsonObj.optString("homeVodName").trim();
+            rule.homeVodNameR = jsonObj.optString("homeVodNameR").trim();
+            if(StringUtils.isNotEmpty(rule.homeVodName)) {
+                rule.homeVodName += "##"+rule.homeVodNameR+"##$1";
+            }
             rule.homeVodId = jsonObj.optString("homeVodId").trim();
+            rule.homeVodIdR = jsonObj.optString("homeVodIdR").trim();
+            if(StringUtils.isNotEmpty(rule.homeVodIdR)) {
+                rule.homeVodId += "##"+rule.homeVodIdR+"##$1";
+            }
             rule.homeVodImg = jsonObj.optString("homeVodImg").trim();
+            rule.homeVodImgR = jsonObj.optString("homeVodImgR").trim();
+            if(StringUtils.isNotEmpty(rule.homeVodImgR)) {
+                rule.homeVodImg += "##"+rule.homeVodImgR+"##$1";
+            }
             rule.homeVodMark = jsonObj.optString("homeVodMark").trim();
+            rule.homeVodMarkR = jsonObj.optString("homeVodMarkR").trim();
+            if(StringUtils.isNotEmpty(rule.homeVodMarkR)) {
+                rule.homeVodMark += "##"+rule.homeVodMarkR+"##$1";
+            }
             rule.cateUrl = jsonObj.optString("cateUrl").trim();
             rule.cateVodNode = jsonObj.optString("cateVodNode").trim();
             rule.cateVodName = jsonObj.optString("cateVodName").trim();
+            rule.cateVodNameR = jsonObj.optString("cateVodNameR").trim();
+            if(StringUtils.isNotEmpty(rule.cateVodNameR)) {
+                rule.cateVodName += "##"+rule.cateVodNameR+"##$1";
+            }
             rule.cateVodId = jsonObj.optString("cateVodId").trim();
+            rule.cateVodIdR = jsonObj.optString("cateVodIdR").trim();
+            if(StringUtils.isNotEmpty(rule.cateVodIdR)) {
+                rule.cateVodId += "##"+rule.cateVodIdR+"##$1";
+            }
             rule.cateVodImg = jsonObj.optString("cateVodImg").trim();
+            rule.cateVodImgR = jsonObj.optString("cateVodImgR").trim();
+            if(StringUtils.isNotEmpty(rule.cateVodImgR)) {
+                rule.cateVodImg += "##"+rule.cateVodImgR+"##$1";
+            }
             rule.cateVodMark = jsonObj.optString("cateVodMark").trim();
+            rule.cateVodMarkR = jsonObj.optString("cateVodMarkR").trim();
+            if(StringUtils.isNotEmpty(rule.cateVodMarkR)) {
+                rule.cateVodMark += "##"+rule.cateVodMarkR+"##$1";
+            }
             rule.dtUrl = jsonObj.optString("dtUrl");
             rule.dtNode = jsonObj.optString("dtNode");
             rule.dtName = jsonObj.optString("dtName");
+            rule.dtNameR = jsonObj.optString("dtNameR").trim();
+            if(StringUtils.isNotEmpty(rule.dtNameR)) {
+                rule.dtName += "##"+rule.dtNameR+"##$1";
+            }
             rule.dtImg = jsonObj.optString("dtImg");
+            rule.dtImgR = jsonObj.optString("dtImgR").trim();
+            if(StringUtils.isNotEmpty(rule.dtImgR)) {
+                rule.dtImg += "##"+rule.dtImgR+"##$1";
+            }
             rule.dtCate = jsonObj.optString("dtCate");
+            rule.dtCateR = jsonObj.optString("dtCateR").trim();
+            if(StringUtils.isNotEmpty(rule.dtCateR)) {
+                rule.dtCate += "##"+rule.dtCateR+"##$1";
+            }
             rule.dtYear = jsonObj.optString("dtYear");
+            rule.dtYearR = jsonObj.optString("dtYearR").trim();
+            if(StringUtils.isNotEmpty(rule.dtYearR)) {
+                rule.dtYear += "##"+rule.dtYearR+"##$1";
+            }
             rule.dtArea = jsonObj.optString("dtArea");
+            rule.dtAreaR = jsonObj.optString("dtAreaR").trim();
+            if(StringUtils.isNotEmpty(rule.dtAreaR)) {
+                rule.dtArea += "##"+rule.dtAreaR+"##$1";
+            }
             rule.dtMark = jsonObj.optString("dtMark");
+            rule.dtMarkR = jsonObj.optString("dtMarkR").trim();
+            if(StringUtils.isNotEmpty(rule.dtMarkR)) {
+                rule.dtMark += "##"+rule.dtMarkR+"##$1";
+            }
             rule.dtActor = jsonObj.optString("dtActor");
+            rule.dtActorR = jsonObj.optString("dtActorR").trim();
+            if(StringUtils.isNotEmpty(rule.dtActorR)) {
+                rule.dtActor += "##"+rule.dtActorR+"##$1";
+            }
             rule.dtDirector = jsonObj.optString("dtDirector");
+            rule.dtDirectorR = jsonObj.optString("dtDirectorR").trim();
+            if(StringUtils.isNotEmpty(rule.dtDirectorR)) {
+                rule.dtDirector += "##"+rule.dtDirectorR+"##$1";
+            }
             rule.dtDesc = jsonObj.optString("dtDesc");
+            rule.dtDescR = jsonObj.optString("dtDescR").trim();
+            if(StringUtils.isNotEmpty(rule.dtDescR)) {
+                rule.dtDesc += "##"+rule.dtDescR+"##$1";
+            }
             rule.dtFromNode = jsonObj.optString("dtFromNode");
             rule.dtFromName = jsonObj.optString("dtFromName");
+            rule.dtFromNameR = jsonObj.optString("dtFromNameR").trim();
+            if(StringUtils.isNotEmpty(rule.dtFromNameR)) {
+                rule.dtFromName += "##"+rule.dtFromNameR+"##$1";
+            }
             rule.dtUrlNode = jsonObj.optString("dtUrlNode");
             rule.dtUrlSubNode = jsonObj.optString("dtUrlSubNode");
             rule.dtUrlId = jsonObj.optString("dtUrlId");
+            rule.dtUrlIdR = jsonObj.optString("dtUrlIdR").trim();
+            if(StringUtils.isNotEmpty(rule.dtUrlIdR)) {
+                rule.dtUrlId += "##"+rule.dtUrlIdR+"##$1";
+            }
             rule.dtUrlName = jsonObj.optString("dtUrlName");
+            rule.dtUrlNameR = jsonObj.optString("dtUrlNameR").trim();
+            if(StringUtils.isNotEmpty(rule.dtUrlNameR)) {
+                rule.dtUrlName += "##"+rule.dtUrlNameR+"##$1";
+            }
             rule.playUrl = jsonObj.optString("playUrl");
             rule.playUa = jsonObj.optString("playUa");
             rule.searchUrl = jsonObj.optString("searchUrl");
             rule.scVodNode = jsonObj.optString("scVodNode").trim();
             rule.scVodName = jsonObj.optString("scVodName").trim();
+            rule.scVodNameR = jsonObj.optString("scVodNameR").trim();
+            if(StringUtils.isNotEmpty(rule.scVodNameR)) {
+                rule.scVodName += "##"+rule.scVodNameR+"##$1";
+            }
             rule.scVodId = jsonObj.optString("scVodId").trim();
+            rule.scVodIdR = jsonObj.optString("scVodIdR").trim();
+            if(StringUtils.isNotEmpty(rule.scVodIdR)) {
+                rule.scVodId += "##"+rule.scVodIdR+"##$1";
+            }
             rule.scVodImg = jsonObj.optString("scVodImg").trim();
+            rule.scVodImgR = jsonObj.optString("scVodImgR").trim();
+            if(StringUtils.isNotEmpty(rule.scVodImgR)) {
+                rule.scVodImg += "##"+rule.scVodImgR+"##$1";
+            }
             rule.scVodMark = jsonObj.optString("scVodMark").trim();
-            rule.scVodMarkR = getPattern(jsonObj, "scVodMarkR");
+            rule.scVodMarkR = jsonObj.optString("scVodMarkR").trim();
+            if(StringUtils.isNotEmpty(rule.scVodMarkR)) {
+                rule.scVodMark += "##"+rule.scVodMarkR+"##$1";
+            }
             rule.leaf = jsonObj.optString("leaf");
             rule.leafValue = jsonObj.optString("leafValue");
             rule.nodeValue = jsonObj.optString("nodeValue");
             rule.defaultFrom = jsonObj.optString("defaultFrom");
             rule.nodeUrl = jsonObj.optString("nodeUrl");
+            rule.decodePlayUrl = jsonObj.optBoolean("decodePlayUrl");
+            rule.decodePlay = jsonObj.optString("decodePlay");
+            rule.scPage = jsonObj.optString("scPage");
             return rule;
         } catch (Exception e) {
             SpiderDebug.log(e);
@@ -531,9 +740,5 @@ public class LegadoRule {
 
     public String getSearchVodMark() {
         return scVodMark;
-    }
-
-    public String getSearchVodMarkR(String src) {
-        return doReplaceRegex(scVodMarkR, src);
     }
 }
