@@ -46,6 +46,6 @@ dependencies {
     annotationProcessor "com.github.liujingxing.rxhttp:rxhttp-compiler:$rxhttp_version"
 	
     //无依赖单元测试用，打包删除
-	testImplementation 'junit:junit:4.12'
-    implementation group: 'org.json', name: 'json', version: '20190722'
+//	testImplementation 'junit:junit:4.12'
+//    implementation group: 'org.json', name: 'json', version: '20190722'
 }

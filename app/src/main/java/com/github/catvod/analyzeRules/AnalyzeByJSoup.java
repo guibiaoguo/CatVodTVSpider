@@ -306,7 +306,7 @@ public class AnalyzeByJSoup {
             } else {
                 lastIndexs = indexes.size() - 1;
             }
-            Set<Integer> indexSet = new HashSet();
+            List<Integer> indexSet = new ArrayList<>();
             if (indexes.isEmpty()) {
                 for (int ix = lastIndexs; ix >= 0; ix--) {
                     int it = indexDefault.get(ix);
@@ -361,7 +361,7 @@ public class AnalyzeByJSoup {
                                 indexSet.add(i);
                             }
                         } else {
-                            for (int i = end; i >= start; i--) {
+                            for (int i = start; i >= end; i =i - step) {
                                 indexSet.add(i);
                             }
                         }
@@ -407,7 +407,7 @@ public class AnalyzeByJSoup {
                     if (Arrays.asList("0,1,2,3,4,5,6,7,8,9".split(",")).contains(rl+"")) {
                         l = rl + l;
                     }
-                    if (rl == '-') curMinus = true;
+                    else if (rl == '-') curMinus = true;
                     else {
                         curInt = l.isEmpty()?null:curMinus?-Integer.parseInt(l):Integer.parseInt(l);
 
@@ -434,10 +434,11 @@ public class AnalyzeByJSoup {
                             }
                             if (rl != ',') break;
                         }
+                        l = "";
+                        curMinus = false;
                     }
-                    l = "";
-                    curMinus = false;
                 }
+
             } else {
                 while (len-- >= 0) {
                     char rl = rus.charAt(len);
@@ -445,7 +446,7 @@ public class AnalyzeByJSoup {
                     if (Arrays.asList("0,1,2,3,4,5,6,7,8,9".split(",")).contains(rl+"")) {
                         l = rl + l;
                     }
-                    if (rl == '-') curMinus = true;
+                    else if (rl == '-') curMinus = true;
                     else {
                         if (rl == '!' || rl == '.' || rl == ':') {
                             indexDefault.add(curMinus ? -Integer.parseInt(l) : Integer.parseInt(l));
