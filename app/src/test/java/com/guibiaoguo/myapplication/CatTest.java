@@ -441,7 +441,7 @@ public class CatTest {
     @Test
     public void alixz() throws Exception {
         Spider spider = new XPathAli();
-        spider.init(null);
+        spider.init(null,"https://mao.guibiaoguo.tk/qq.json");
         String category = spider.searchContent("熊出没", false);
 
         List<String> ids = new ArrayList<>();
@@ -471,7 +471,14 @@ public class CatTest {
     public void affhs() throws Exception {
         List<String> keys = new ArrayList<>();
 //        keys.add("钢铁侠");
-        xpathAli("https://cat.guibiaoguo.tk/ahhfs.json",keys);
+        xpathAli("https://mao.guibiaoguo.tk/ahhfs.json",keys);
+    }
+
+    @Test
+    public void alps() throws Exception {
+        List<String> keys = new ArrayList<>();
+//        keys.add("钢铁侠");
+        xpathAli("https://mao.guibiaoguo.tk/qq.json",keys);
     }
 
     public void showCategory(Spider spider,String category,int index) throws Exception {
@@ -498,7 +505,7 @@ public class CatTest {
     public void xpathAli(String ext,List<String> keys) throws Exception {
         Spider spider = new XPathAli();
         if (StringUtils.isEmpty(ext))
-            ext = "https://cat.guibiaoguo.tk/qq.json";
+            ext = "https://mao.guibiaoguo.tk/qq.json";
         spider.init(null, ext);
         for(String key:keys) {
             String category = spider.searchContent("钢铁侠", false);
@@ -528,7 +535,7 @@ public class CatTest {
     @Test
     public void yydsAli() throws Exception {
         Spider spider = new YydsAli2();
-        String ext = "https://cat.guibiaoguo.tk/qq.json";
+        String ext = "https://mao.guibiaoguo.tk/qq.json";
         spider.init(null, ext);
         String category = spider.searchContent("雪中悍刀行", false);
         System.out.println(category);
@@ -572,35 +579,41 @@ public class CatTest {
     }
 
     @Test
-    public void jsonpath() throws Exception {
-        String ext = "https://cat.guibiaoguo.tk/goindex.json";
+    public void goIndex() throws Exception {
+        String ext = "https://mao.guibiaoguo.tk/goindex.json";
         Spider spider = new GoIndex();
         spider.init(null,ext);
         String category = spider.homeContent(false);
         System.out.println(category);
         showCategory(spider,category,0);
-        category = spider.searchContent("柯南",false);
+        JSONObject jsonObject = new JSONObject(category);
+        JSONArray classes = jsonObject.optJSONArray("class");
+        for (int i = 0; i < classes.length(); i++) {
+            String tid = classes.getJSONObject(i).optString("type_id");
+            System.out.println(tid);
+            //org.seimicrawler.xpath.core.function;
+            category = spider.categoryContent(tid, "1", false, null);
+            System.out.println(category);
+            showCategory(spider,category,0);
+        }
+    }
+    @Test
+    public void jsonpath() throws Exception {
+        String ext = "https://mao.guibiaoguo.tk/jsonpath.json";
+        Spider spider = new Legado();
+        spider.init(null,ext);
+        String category = spider.homeContent(false);
+        System.out.println(category);
         showCategory(spider,category,0);
-        JSONObject jsonObject = null;
-        List<String> ids = new ArrayList<>();
-
-        jsonObject = new JSONObject(category);
-        JSONArray categorys = jsonObject.optJSONArray("list");
-        ids.add(categorys.getJSONObject(0).optString("vod_id"));
-        System.out.println(ids);
-
-        String detail = spider.detailContent(ids);
-        System.out.println(detail);
-        if (!detail.equals("")) {
-            jsonObject = new JSONObject(detail);
-            JSONArray details = jsonObject.optJSONArray("list");
-            String playurls = details.getJSONObject(0).optString("vod_play_url");
-            if (!playurls.equals("")) {
-                String playurl = playurls.split("#")[0].split("\\$")[1];
-                System.out.println(playurl);
-
-                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
-            }
+        JSONObject jsonObject = new JSONObject(category);
+        JSONArray classes = jsonObject.optJSONArray("class");
+        for (int i = 0; i < classes.length(); i++) {
+            String tid = classes.getJSONObject(i).optString("type_id");
+            System.out.println(tid);
+            //org.seimicrawler.xpath.core.function;
+            category = spider.categoryContent(tid, "1", false, null);
+            System.out.println(category);
+            showCategory(spider,category,0);
         }
     }
 
@@ -624,7 +637,7 @@ public class CatTest {
         analyzeRule = new AnalyzeRule(new RuleData());
         analyzeRule.setContent(json);
         System.out.println(analyzeRule.getElement("@css:.chapterTitle"));
-        ext = "https://cat.guibiaoguo.tk/jsonpath.json";
+        ext = "https://mao.guibiaoguo.tk/jsonpath.json";
         su = new SpiderUrl(ext,getHeaders(ext));
         json = SpiderReq.get(su).content;
         analyzeRule = new AnalyzeRule(new RuleData());
@@ -672,7 +685,7 @@ public class CatTest {
 
     @Test
     public void legado() throws Exception {
-        String ext = "https://cat.guibiaoguo.tk/jsonpath.json";
+        String ext = "https://mao.guibiaoguo.tk/jsonpath.json";
         ext = "{\n" +
                 "  \"ua\": \"Mozilla/5.0 (Linux; Android 11; Mi 10 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Mobile Safari/537.36\",\n" +
                 "  \"videoName\":\"谷歌硬盘\",\n" +
@@ -727,7 +740,7 @@ public class CatTest {
                 "  \"nodeUrl\": \"{$.name}/?page_index=0;post\",\n" +
                 "  \"scVodMark\": \"\"\n" +
                 "}";
-        ext = "https://cat.guibiaoguo.tk/jsonpath.json";
+        ext = "https://mao.guibiaoguo.tk/jsonpath.json";
         Spider spider = new Legado();
         spider.init(null,ext);
         String category = spider.homeContent(false);
@@ -751,7 +764,7 @@ public class CatTest {
         System.out.println(json);
         System.out.println(AnalyzeByRegex.getElement(json,StringUtils.split(rulestr,"&&"),0));
         System.out.println(AnalyzeByRegex.getElements(json,StringUtils.split(rulestr,"&&"),0));
-        ext = "https://cat.guibiaoguo.tk/jsonpath.json";
+        ext = "https://mao.guibiaoguo.tk/jsonpath.json";
         su = new SpiderUrl(ext,getHeaders(ext));
         json = SpiderReq.get(su).content;
         System.out.println(new AnalyzeByJSonPath(json).getString("{$.homeUrl}/test"));
@@ -798,7 +811,7 @@ public class CatTest {
 
     @Test
     public void testJsonPath() {
-        HttpParser.parseSearchUrlForHtml("https://cat.guibiaoguo.tk/jsonpath.json", new HttpParser.OnSearchCallBack() {
+        HttpParser.parseSearchUrlForHtml("https://mao.guibiaoguo.tk/jsonpath.json", new HttpParser.OnSearchCallBack() {
             @Override
             public void onSuccess(String url, SpiderReqResult s) {
                 System.out.println(new AnalyzeByJSonPath(s.content).getString("{$.homeUrl}/test"));
@@ -813,7 +826,7 @@ public class CatTest {
 
     @Test
     public void testJsonPathKt() {
-        HttpParser.parseSearchUrlForHtml("https://cat.guibiaoguo.tk/jsonpath.json", new HttpParser.OnSearchCallBack() {
+        HttpParser.parseSearchUrlForHtml("https://mao.guibiaoguo.tk/jsonpath.json", new HttpParser.OnSearchCallBack() {
             @Override
             public void onSuccess(String url, SpiderReqResult s) {
                 System.out.println(new AnalyzeRule(new RuleData()).setContent(s.content,url).getString("{$.homeUrl}/test"));

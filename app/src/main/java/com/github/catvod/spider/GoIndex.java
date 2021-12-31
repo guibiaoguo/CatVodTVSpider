@@ -73,7 +73,7 @@ public class GoIndex extends Spider {
                 for (String k : keys) {
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("type_name", k);
-                    jsonObject.put("type_id", URLEncoder.encode(rule.getCateManual().get(k),"utf-8"));
+                    jsonObject.put("type_id", rule.getCateManual().get(k));
                     classes.put(jsonObject);
                 }
             }

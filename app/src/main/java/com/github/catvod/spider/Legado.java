@@ -281,7 +281,7 @@ public class Legado extends Spider {
                                 if (StringUtils.isNotEmpty(leaf) && leaf.equals(rule.getNodeValue())) {
                                     String nodeUrl = analyzeRule.getString(rule.getNodeUrl(), null, true);
                                     getFileList(nodeUrl, vod_play);
-                                } else if (Arrays.asList(rule.getLeafValue().split(",")).contains(leaf)) {
+                                } else if (Arrays.asList(rule.getLeafValue().split(",")).contains(leaf) || StringUtils.contains(leaf.toLowerCase(),"video")) {
                                     vod_play.get(defaultFrom).add(name + "$" + id);
                                 } else if (StringUtils.contains(name, ".nfo")) {
                                     getNfo(vod, id);

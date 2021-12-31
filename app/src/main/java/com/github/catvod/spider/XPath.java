@@ -1,5 +1,7 @@
 package com.github.catvod.spider;
 
+import static com.github.catvod.utils.StringUtil.join;
+
 import android.content.Context;
 import android.text.TextUtils;
 
@@ -298,7 +300,7 @@ public class XPath extends Spider {
                 if (vodItems.size() == 0 && playFrom.size() > i) {
                     playFrom.set(i, "");
                 }
-                playList.add(TextUtils.join("#", vodItems));
+                playList.add(join("#", vodItems));
             }
             // 排除播放列表为空的播放源
             for (int i = playFrom.size() - 1; i >= 0; i--) {
@@ -313,8 +315,8 @@ public class XPath extends Spider {
                 if (i >= playFrom.size())
                     playList.remove(i);
             }
-            String vod_play_from = TextUtils.join("$$$", playFrom);
-            String vod_play_url = TextUtils.join("$$$", playList);
+            String vod_play_from = join("$$$", playFrom);
+            String vod_play_url = join("$$$", playList);
             vod.put("vod_play_from", vod_play_from);
             vod.put("vod_play_url", vod_play_url);
 

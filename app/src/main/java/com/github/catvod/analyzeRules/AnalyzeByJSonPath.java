@@ -45,9 +45,6 @@ public class AnalyzeByJSonPath {
             if (rules.size() == 1) {
                 ruleAnalyzes.reSetPos(); //将pos重置为0，复用解析器
                 result = ruleAnalyzes.innerRule("{$.",1,1,this);
-                if(StringUtils.isNotEmpty(result)) {
-                    result = getString(result);
-                }
                 if (result.isEmpty()) {
                     //st为空，表明无成功替换的内嵌规则
                     try {
