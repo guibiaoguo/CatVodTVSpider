@@ -62,7 +62,7 @@ public class ExampleUnitTest {
         echo(ext);
     }
 
-//    @Test
+    @Test
     public void test_bagedvd() throws Exception {
         String ext = "http://cat.guibiaoguo.tk/bagedvd.json";
 

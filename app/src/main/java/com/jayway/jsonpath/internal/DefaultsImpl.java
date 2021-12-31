@@ -7,7 +7,7 @@ import com.jayway.jsonpath.spi.json.JsonProvider;
 import com.jayway.jsonpath.spi.mapper.JsonOrgMappingProvider;
 import com.jayway.jsonpath.spi.mapper.MappingProvider;
 
-import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Set;
 
 public final class DefaultsImpl implements Defaults {
@@ -22,7 +22,7 @@ public final class DefaultsImpl implements Defaults {
 
   @Override
   public Set<Option> options() {
-    return EnumSet.noneOf(Option.class);
+    return new HashSet<>();
   }
 
   @Override

@@ -333,6 +333,8 @@ public class LegadoRule {
 
     private String scPage;
 
+    private Integer parse;
+
     public String getScPage() {
         return scPage;
     }
@@ -395,6 +397,10 @@ public class LegadoRule {
 
     public void setLeafValue(String leafValue) {
         this.leafValue = leafValue;
+    }
+
+    public Integer getParse() {
+        return parse;
     }
 
     public static LegadoRule fromJson(String json) {
@@ -563,6 +569,7 @@ public class LegadoRule {
             rule.decodePlayUrl = jsonObj.optBoolean("decodePlayUrl");
             rule.decodePlay = jsonObj.optString("decodePlay");
             rule.scPage = jsonObj.optString("scPage");
+            rule.parse = jsonObj.optInt("parse");
             return rule;
         } catch (Exception e) {
             SpiderDebug.log(e);

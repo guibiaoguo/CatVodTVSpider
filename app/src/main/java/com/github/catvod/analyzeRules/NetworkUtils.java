@@ -11,6 +11,7 @@ import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
 
@@ -78,12 +79,18 @@ public class NetworkUtils {
 
     
     public final String getAbsoluteURL( URL baseURL,  String relativePath) throws MalformedURLException {
-        if (baseURL == null) {
+        if (baseURL == null || StringUtil.isAbsUrl(relativePath)) {
             return relativePath;
         } else {
             String var10000;
             String relativeUrl;
             try {
+                relativePath = URLEncoder.encode(relativePath,"utf-8")
+                        .replaceAll("%2F","/")
+                        .replaceAll("%3F","?")
+                        .replaceAll("%3D","=")
+                        .replaceAll("%3B",";")
+                        .replaceAll("\\+","%20");
                 URL parseUrl = new URL(baseURL, relativePath);
                 var10000 = parseUrl.toURI().toASCIIString();
                 relativeUrl = var10000;

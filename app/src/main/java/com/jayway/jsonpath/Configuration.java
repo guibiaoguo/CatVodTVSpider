@@ -51,7 +51,7 @@ public class Configuration {
     private final Set<Option> options;
     private final Collection<EvaluationListener> evaluationListeners;
 
-    private Configuration(JsonProvider jsonProvider, MappingProvider mappingProvider, EnumSet<Option> options, Collection<EvaluationListener> evaluationListeners) {
+    private Configuration(JsonProvider jsonProvider, MappingProvider mappingProvider, Set<Option> options, Collection<EvaluationListener> evaluationListeners) {
         notNull(jsonProvider, "jsonProvider can not be null");
         notNull(mappingProvider, "mappingProvider can not be null");
         notNull(options, "setOptions can not be null");
@@ -128,7 +128,7 @@ public class Configuration {
      * @return a new configuration
      */
     public Configuration addOptions(Option... options) {
-        EnumSet<Option> opts = EnumSet.noneOf(Option.class);
+        Set<Option> opts = new HashSet<>();
         opts.addAll(this.options);
         opts.addAll(asList(options));
         return Configuration.builder().jsonProvider(jsonProvider).mappingProvider(mappingProvider).options(opts).evaluationListener(evaluationListeners).build();
@@ -184,7 +184,7 @@ public class Configuration {
 
         private JsonProvider jsonProvider;
         private MappingProvider mappingProvider;
-        private EnumSet<Option> options = EnumSet.noneOf(Option.class);
+        private Set<Option> options = new HashSet<>();
         private Collection<EvaluationListener> evaluationListener = new ArrayList<EvaluationListener>();
 
         public ConfigurationBuilder jsonProvider(JsonProvider provider) {

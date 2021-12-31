@@ -35,7 +35,7 @@ public class AnalyzeByJSoup {
         if (doc instanceof Element) {
             element = (Element) doc;
         } else if (doc instanceof JXNode) {
-            element = ((JXNode) doc).isElement() ? (Element) doc : Jsoup.parse(((JXNode) doc).value().toString());
+            element = ((JXNode) doc).isElement() ? ((JXNode) doc).asElement() : Jsoup.parse(((JXNode) doc).value().toString());
         } else {
             element = Jsoup.parse(doc.toString());
         }

@@ -90,7 +90,7 @@ public class Legado extends Spider {
                 for (String k : keys) {
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("type_name", k);
-                    jsonObject.put("type_id", URLEncoder.encode(rule.getCateManual().get(k), "utf-8"));
+                    jsonObject.put("type_id", rule.getCateManual().get(k));
                     classes.put(jsonObject);
                 }
             }
@@ -120,7 +120,7 @@ public class Legado extends Spider {
                             JSONObject v = new JSONObject();
                             v.put("vod_id", analyzeRule.getString(rule.getHomeVodId(), null, true));
                             v.put("vod_name", analyzeRule.getString(rule.getHomeVodName()));
-                            v.put("vod_pic", analyzeRule.getString(rule.getHomeVodImg()));
+                            v.put("vod_pic", StringUtils.trim(analyzeRule.getString(rule.getHomeVodImg())));
                             v.put("vod_remarks", analyzeRule.getString(rule.getHomeVodMark()));
                             videos.put(v);
                         }
@@ -179,7 +179,7 @@ public class Legado extends Spider {
                                     JSONObject v = new JSONObject();
                                     v.put("vod_id", analyzeRule.getString(rule.getCateVodId(), null, true));
                                     v.put("vod_name", analyzeRule.getString(rule.getCateVodName()));
-                                    v.put("vod_pic", analyzeRule.getString(rule.getCateVodImg()));
+                                    v.put("vod_pic", StringUtils.trim(analyzeRule.getString(rule.getCateVodImg())));
                                     v.put("vod_remarks", analyzeRule.getString(rule.getCateVodMark()));
                                     videos.put(v);
                                 }
@@ -233,7 +233,7 @@ public class Legado extends Spider {
                         JSONObject vod = new JSONObject();
                         vod.put("vod_id", ids.get(0));
                         vod.put("vod_name", analyzeRule.getString(rule.getDetailName()));
-                        vod.put("vod_pic", analyzeRule.getString(rule.getDetailImg()));
+                        vod.put("vod_pic", StringUtils.trim(analyzeRule.getString(rule.getDetailImg())));
                         vod.put("type_name", analyzeRule.getString(rule.getDetailCate()));
                         vod.put("vod_year", analyzeRule.getString(rule.getDetailYear()));
                         vod.put("vod_area", analyzeRule.getString(rule.getDetailArea()));
@@ -338,7 +338,7 @@ public class Legado extends Spider {
             String webUrl = playerUrl(infos[0]);
             SpiderDebug.log(webUrl);
             JSONObject result = new JSONObject();
-            result.put("parse", 1);
+            result.put("parse", rule.getParse());
             result.put("playUrl", "");
             if (!rule.getPlayUa().isEmpty()) {
                 result.put("ua", rule.getPlayUa());

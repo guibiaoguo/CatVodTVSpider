@@ -886,5 +886,24 @@ public class CatTest {
         System.out.println(analyzer.splitRule("@","&&"));
         String rulestr = ":class=\"text-muted number\"(?:[^\"]*\"){3}([^\"]*)\" title=\"([^\"]*)\">";
     }
+
+    @Test
+    public void bagedvd() throws Exception {
+        Spider spider = new Legado();
+        spider.init(null,"https://mao.guibiaoguo.tk/bagedvd.json");
+        String category = spider.homeContent(false);
+        System.out.println(category);
+        showCategory(spider,category,0);
+        JSONObject jsonObject = new JSONObject(category);
+        JSONArray classes = jsonObject.optJSONArray("class");
+        for (int i = 0; i < classes.length(); i++) {
+            String tid = classes.getJSONObject(i).optString("type_id");
+            System.out.println(tid);
+            //org.seimicrawler.xpath.core.function;
+            category = spider.categoryContent(tid, "1", false, null);
+            System.out.println(category);
+            showCategory(spider,category,0);
+        }
+    }
 }
 
