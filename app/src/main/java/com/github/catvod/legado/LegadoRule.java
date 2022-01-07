@@ -3,12 +3,12 @@ package com.github.catvod.legado;
 import com.github.catvod.crawler.SpiderDebug;
 
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Map;
 
 
 public class LegadoRule {
@@ -214,6 +214,8 @@ public class LegadoRule {
 
     private String leaf;
 
+    private String node;
+
     private String leafValue;
 
     private String nodeValue;
@@ -221,6 +223,12 @@ public class LegadoRule {
     private String defaultFrom;
 
     private String nodeUrl;
+
+    private String itemUrlNode;
+
+    private String itemUrlName;
+
+    private String itemUrlId;
 
     /**
      * 正则对取到的数据进行二次处理
@@ -327,13 +335,67 @@ public class LegadoRule {
      */
     private String scVodMarkR;
 
-    private boolean decodePlayUrl;
+    private boolean decodeFlag;
 
     private String decodePlay;
 
     private String scPage;
 
-    private Integer parse;
+    private String parse;
+
+    private String jx;
+
+    private Boolean decodeVipFlag;
+
+    private LinkedHashMap<String, String> infoMap = new LinkedHashMap<>();
+
+    private JSONArray preParamMaps;
+
+    public String getNode() {
+        return node;
+    }
+
+    private JSONArray categoryParamMaps;
+
+    private JSONArray detailParamMaps;
+
+    private JSONArray playerParamMaps;
+
+    public JSONArray getPreParamMaps() {
+        return preParamMaps;
+    }
+
+    public JSONArray getCategoryParamMaps() {
+        return categoryParamMaps;
+    }
+
+    public JSONArray getDetailParamMaps() {
+        return detailParamMaps;
+    }
+
+    public JSONArray getPlayerParamMaps() {
+        return playerParamMaps;
+    }
+
+    public LinkedHashMap<String, String> getInfoMap() {
+        return infoMap;
+    }
+
+    public Boolean getDecodeVipFlag() {
+        return decodeVipFlag;
+    }
+
+    public void setDecodeVipFlag(Boolean decodeVipFlag) {
+        this.decodeVipFlag = decodeVipFlag;
+    }
+
+    public String getParse() {
+        return parse;
+    }
+
+    public String getJx() {
+        return jx;
+    }
 
     public String getScPage() {
         return scPage;
@@ -343,12 +405,12 @@ public class LegadoRule {
         this.scPage = scPage;
     }
 
-    public boolean isDecodePlayUrl() {
-        return decodePlayUrl;
+    public boolean isDecodeFlag() {
+        return decodeFlag;
     }
 
-    public void setDecodePlayUrl(boolean decodePlayUrl) {
-        this.decodePlayUrl = decodePlayUrl;
+    public void setDecodeFlag(boolean decodeFlag) {
+        this.decodeFlag = decodeFlag;
     }
 
     public String getDecodePlay() {
@@ -399,8 +461,16 @@ public class LegadoRule {
         this.leafValue = leafValue;
     }
 
-    public Integer getParse() {
-        return parse;
+    public String getItemUrlNode() {
+        return itemUrlNode;
+    }
+
+    public String getItemUrlName() {
+        return itemUrlName;
+    }
+
+    public String getItemUrlId() {
+        return itemUrlId;
     }
 
     public static LegadoRule fromJson(String json) {
@@ -537,6 +607,18 @@ public class LegadoRule {
             if(StringUtils.isNotEmpty(rule.dtUrlNameR)) {
                 rule.dtUrlName += "##"+rule.dtUrlNameR+"##$1";
             }
+            rule.itemUrlNode = jsonObj.optString("itemUrlNode");
+            if(StringUtils.isEmpty(rule.itemUrlNode)){
+                rule.itemUrlNode = rule.dtUrlNode;
+            }
+            rule.itemUrlName = jsonObj.optString("itemUrlName");
+            if(StringUtils.isEmpty(rule.itemUrlName)){
+                rule.itemUrlName = rule.dtUrlName;
+            }
+            rule.itemUrlId = jsonObj.optString("itemUrlId");
+            if(StringUtils.isEmpty(rule.itemUrlId)){
+                rule.itemUrlId = rule.dtUrlId;
+            }
             rule.playUrl = jsonObj.optString("playUrl");
             rule.playUa = jsonObj.optString("playUa");
             rule.searchUrl = jsonObj.optString("searchUrl");
@@ -562,14 +644,32 @@ public class LegadoRule {
                 rule.scVodMark += "##"+rule.scVodMarkR+"##$1";
             }
             rule.leaf = jsonObj.optString("leaf");
+            rule.node = jsonObj.optString("node");
+            if(StringUtils.isEmpty(rule.node)){
+                rule.node = rule.leaf;
+            }
             rule.leafValue = jsonObj.optString("leafValue");
             rule.nodeValue = jsonObj.optString("nodeValue");
             rule.defaultFrom = jsonObj.optString("defaultFrom");
             rule.nodeUrl = jsonObj.optString("nodeUrl");
-            rule.decodePlayUrl = jsonObj.optBoolean("decodePlayUrl");
+            rule.decodeFlag = jsonObj.optBoolean("decodeFlag");
             rule.decodePlay = jsonObj.optString("decodePlay");
             rule.scPage = jsonObj.optString("scPage");
-            rule.parse = jsonObj.optInt("parse");
+            rule.parse = jsonObj.optString("parse");
+            rule.jx = jsonObj.optString("jx");
+            rule.decodeVipFlag = jsonObj.optBoolean("decodeVipFlag");
+            navs = jsonObj.optJSONObject("info");
+            if (navs != null) {
+                Iterator<String> keys = navs.keys();
+                while (keys.hasNext()) {
+                    String name = keys.next();
+                    rule.infoMap.put(name.trim(), navs.getString(name).trim());
+                }
+            }
+            rule.preParamMaps = jsonObj.optJSONArray("preParamMaps");
+            rule.categoryParamMaps = jsonObj.optJSONArray("categoryParamMaps");
+            rule.detailParamMaps = jsonObj.optJSONArray("detailParamMaps");
+            rule.playerParamMaps = jsonObj.optJSONArray("playerParamMaps");
             return rule;
         } catch (Exception e) {
             SpiderDebug.log(e);

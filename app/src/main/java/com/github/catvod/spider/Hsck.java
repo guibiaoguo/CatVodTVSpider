@@ -4,12 +4,15 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Base64;
 
+import com.github.catvod.analyzeRules.RuleAnalyzer;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.crawler.SpiderReq;
 import com.github.catvod.crawler.SpiderReqResult;
 import com.github.catvod.crawler.SpiderUrl;
+import com.github.catvod.utils.SpiderOKClient;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -65,12 +68,8 @@ public class Hsck extends Spider {
     protected String getDomain() {
         try {
             String ext = "https://user.seven301.xyz:8899/?u=" + siteUrl + "&p=/";
-            //使用
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .followRedirects(false)
-                    .build();
-            SpiderReqResult spiderReqResult = SpiderReq.header(client, ext, "sp_req_default", getHeaders(ext));
-            return spiderReqResult.headers.get("location").get(0);
+            SpiderReqResult spiderReqResult = SpiderReq.get(SpiderOKClient.noRedirectClient(), ext, "sp_req_default", getHeaders(ext));
+            return SpiderOKClient.getRedirectLocation(spiderReqResult.headers);
         } catch (Exception e) {
             return siteUrl;
         }
@@ -370,27 +369,52 @@ public class Hsck extends Spider {
     public String searchContent(String key, boolean quick) {
         try {
             String url = domain + "/vodsearch/" + key + "----------1---.html";
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
-            Document doc = Jsoup.parse(srr.content);
-            Elements elements = doc.select(".stui-vodlist>li");
             JSONArray videos = new JSONArray();
-            int i = 1;
-            while (elements != null && elements.size() > 0) {
-                for (Element element : elements) {
-                    JSONObject v = new JSONObject();
-                    v.put("vod_id", element.selectFirst("a").attr("href") + "#" + element.selectFirst("a").attr("data-original"));
-                    v.put("vod_name", element.selectFirst("a").attr("title"));
-                    v.put("vod_pic", element.selectFirst("a").attr("data-original"));
-                    v.put("vod_remarks", element.selectFirst(".pic-text").text());
-                    videos.put(v);
-                }
-                i++;
-                url = domain + "/vodsearch/" + key + "----------" + i + "---.html";
-                su = new SpiderUrl(url, getHeaders(url));
-                srr = SpiderReq.get(su);
-                doc = Jsoup.parse(srr.content);
-                elements = doc.select(".stui-vodlist>li");
+            RuleAnalyzer ruleAnalyzes = new RuleAnalyzer("", true);
+            //设置平衡组为代码平衡
+            ArrayList rules = ruleAnalyzes.splitRule(":", "-");
+            int start = 1;
+            int end = 1;
+            int step = 1;
+            if (rules.size() >= 1) {
+                if (StringUtils.isNotEmpty(rules.get(0).toString()))
+                    start = Integer.parseInt(rules.get(0).toString());
+            }
+            if (rules.size() >= 2) {
+                if (StringUtils.isNotEmpty(rules.get(1).toString()))
+                    end = Integer.parseInt(rules.get(1).toString());
+            }
+            if (rules.size() >= 3) {
+                if (StringUtils.isNotEmpty(rules.get(2).toString()))
+                    step = Integer.parseInt(rules.get(2).toString());
+            }
+            for (int i = start; i <= end; i = i + step) {
+                url = url.replace("{scPg}", i + "");
+                HttpParser.parseSearchUrlForHtml(url, new HttpParser.OnSearchCallBack() {
+                    @Override
+                    public void onSuccess(String url, SpiderReqResult s) {
+                        try {
+                            Document doc = Jsoup.parse(s.content);
+                            Elements elements = doc.select(".stui-vodlist>li");
+                            for (Element element : elements) {
+                                JSONObject v = new JSONObject();
+                                v.put("vod_id", element.selectFirst("a").attr("href") + "#" + element.selectFirst("a").attr("data-original"));
+                                v.put("vod_name", element.selectFirst("a").attr("title"));
+                                v.put("vod_pic", element.selectFirst("a").attr("data-original"));
+                                v.put("vod_remarks", element.selectFirst(".pic-text").text());
+                                videos.put(v);
+                            }
+                        } catch (Exception e) {
+                            SpiderDebug.log(e);
+                        }
+
+                    }
+
+                    @Override
+                    public void onFailure(int errorCode, String msg) {
+
+                    }
+                });
             }
             JSONObject result = new JSONObject();
             result.put("list", videos);

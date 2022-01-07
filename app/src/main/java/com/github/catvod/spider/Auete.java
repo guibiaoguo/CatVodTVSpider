@@ -1,7 +1,7 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
-import android.text.TextUtils;
+import com.github.catvod.utils.StringUtil;
 import android.util.Base64;
 
 import com.github.catvod.crawler.Spider;
@@ -9,6 +9,7 @@ import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.crawler.SpiderReq;
 import com.github.catvod.crawler.SpiderReqResult;
 import com.github.catvod.crawler.SpiderUrl;
+import com.github.catvod.utils.StringUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -399,7 +400,7 @@ public class Auete extends Spider {
                     vodItems.add(vod.text() + "$" + playURL);
                 }
                 if (vodItems.size() > 0)
-                    playList = TextUtils.join("#", vodItems);
+                    playList = StringUtil.join("#", vodItems);
 
                 if (playList.length() == 0)
                     continue;
@@ -408,8 +409,8 @@ public class Auete extends Spider {
             }
 
             if (vod_play.size() > 0) {
-                String vod_play_from = TextUtils.join("$$$", vod_play.keySet());
-                String vod_play_url = TextUtils.join("$$$", vod_play.values());
+                String vod_play_from = StringUtil.join("$$$", vod_play.keySet());
+                String vod_play_url = StringUtil.join("$$$", vod_play.values());
                 vodList.put("vod_play_from", vod_play_from);
                 vodList.put("vod_play_url", vod_play_url);
             }

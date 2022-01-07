@@ -154,11 +154,14 @@ public class AnalyzeRule {
                 if (StringUtils.isNotEmpty(sourceRule.rule)) {
                     switch (sourceRule.mode) {
                         case Json:
-                            result = getAnalyzeByJSonPath(result).getStringList(sourceRule.rule);break;
+                            result = getAnalyzeByJSonPath(result).getStringList(sourceRule.rule);
+                            break;
                         case XPath:
-                            result = getAnalyzeByXPath(result).getStringList(sourceRule.rule);break;
+                            result = getAnalyzeByXPath(result).getStringList(sourceRule.rule);
+                            break;
                         case Default:
-                            result = getAnalyzeByJSoup(result).getStringList(sourceRule.rule);break;
+                            result = getAnalyzeByJSoup(result).getStringList(sourceRule.rule);
+                            break;
                         default:
                             result = sourceRule.rule;
                     }
@@ -218,11 +221,14 @@ public class AnalyzeRule {
                 if (StringUtils.isNotEmpty(sourceRule.rule) || StringUtils.isEmpty(sourceRule.replaceRegex)) {
                     switch (sourceRule.mode) {
                         case Json:
-                            result = getAnalyzeByJSonPath(result).getString(sourceRule.rule);break;
+                            result = getAnalyzeByJSonPath(result).getString(sourceRule.rule);
+                            break;
                         case XPath:
-                            result = getAnalyzeByXPath(result).getString(sourceRule.rule);break;
+                            result = getAnalyzeByXPath(result).getString(sourceRule.rule);
+                            break;
                         case Default:
-                            result = isUrl ? getAnalyzeByJSoup(result).getString0(sourceRule.rule) : getAnalyzeByJSoup(result).getString(sourceRule.rule);break;
+                            result = isUrl ? getAnalyzeByJSoup(result).getString0(sourceRule.rule) : getAnalyzeByJSoup(result).getString(sourceRule.rule);
+                            break;
                         default:
                             result = sourceRule.rule;
                     }
@@ -241,11 +247,11 @@ public class AnalyzeRule {
         }
         if (isUrl) {
             if (StringUtils.isBlank(str)) {
-                baseUrl = baseUrl == null?"":baseUrl;
+                baseUrl = baseUrl == null ? "" : baseUrl;
                 return baseUrl;
-            } else {
+            } else if(str.startsWith("/")){
                 try {
-                    return NetworkUtils.INSTANCE.getAbsoluteURL(redirectUrl, str);
+                    return NetworkUtils.INSTANCE.getAbsoluteURL(redirectUrl, str.substring(1));
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                 }
@@ -266,11 +272,14 @@ public class AnalyzeRule {
                 sourceRule.makeUpRule(result);
                 switch (sourceRule.mode) {
                     case Regex:
-                        result = AnalyzeByRegex.getElement(ruleStr.toString(), StringUtils.split(sourceRule.rule, "&&"));break;
+                        result = AnalyzeByRegex.getElement(result.toString(), StringUtils.split(sourceRule.rule, "&&"));
+                        break;
                     case Json:
-                        result = getAnalyzeByJSonPath(result).getObject(sourceRule.rule);break;
+                        result = getAnalyzeByJSonPath(result).getObject(sourceRule.rule);
+                        break;
                     case XPath:
-                        result = getAnalyzeByXPath(result).getElements(sourceRule.rule);break;
+                        result = getAnalyzeByXPath(result).getElements(sourceRule.rule);
+                        break;
                     default:
                         result = getAnalyzeByJSoup(result).getElements(sourceRule.rule);
                 }
@@ -291,18 +300,28 @@ public class AnalyzeRule {
             result = content;
             for (SourceRule sourceRule : ruleList) {
                 putRule(sourceRule.putMap);
+                sourceRule.makeUpRule(sourceRule.rule);
                 switch (sourceRule.mode) {
                     case Regex:
-                        result = AnalyzeByRegex.getElements(ruleStr.toString(), StringUtils.split(sourceRule.rule, "&&"));break;
+                        result = AnalyzeByRegex.getElements(result.toString(), StringUtils.split(sourceRule.rule, "&&"));
+                        break;
                     case Json:
-                        result = getAnalyzeByJSonPath(result).getList(sourceRule.rule);break;
+                        result = getAnalyzeByJSonPath(result).getList(sourceRule.rule);
+                        break;
                     case XPath:
-                        result = getAnalyzeByXPath(result).getElements(sourceRule.rule);break;
+                        result = getAnalyzeByXPath(result).getElements(sourceRule.rule);
+                        break;
                     default:
                         result = getAnalyzeByJSoup(result).getElements(sourceRule.rule);
                 }
 
-                if (result != null && StringUtils.isNotEmpty(sourceRule.replaceRegex)) {
+                if (StringUtils.isNotEmpty(sourceRule.replaceRegex) && result instanceof List) {
+                    List<String> newList = new ArrayList<>();
+                    for (Object item : (List) result) {
+                        newList.add(replaceRegex(item.toString(), sourceRule));
+                    }
+                    result = newList;
+                } else if (StringUtils.isNotEmpty(sourceRule.replaceRegex)) {
                     result = replaceRegex(result.toString(), sourceRule);
                 }
             }
@@ -457,10 +476,10 @@ public class AnalyzeRule {
             Matcher evalMatcher = evalPattern.matcher(rule);
             if (evalMatcher.find()) {
                 tmp = rule.substring(start, evalMatcher.start());
-                if (mode != Mode.Js && mode != Mode.Regex && (evalMatcher.start() == 0 || !StringUtils.contains(tmp, "##"))) {
+                if (mode != Mode.Json && mode != Mode.Regex && (evalMatcher.start() == 0 || !StringUtils.contains(tmp, "##"))) {
                     mode = Mode.Regex;
                 }
-                while (evalMatcher.find()) {
+                do {
                     if (evalMatcher.start() > start) {
                         tmp = rule.substring(start, evalMatcher.start());
                         splitRegex(tmp);
@@ -476,7 +495,7 @@ public class AnalyzeRule {
                         splitRegex(tmp);
                     }
                     start = evalMatcher.end();
-                }
+                }while (evalMatcher.find());
             }
             if (rule.length() > start) {
                 tmp = rule.substring(start);
@@ -497,7 +516,7 @@ public class AnalyzeRule {
                 if (mode != Mode.Js && mode != Mode.Regex) {
                     mode = Mode.Regex;
                 }
-                while (regexMatcher.find()) {
+                do {
                     if (regexMatcher.start() > start) {
                         tmp = ruleStr.substring(start, regexMatcher.start());
                         ruleType.add(defaultRuleType);
@@ -507,7 +526,7 @@ public class AnalyzeRule {
                     ruleType.add(Integer.parseInt(tmp.substring(1)));
                     ruleParam.add(tmp);
                     start = regexMatcher.end();
-                }
+                } while (regexMatcher.find());
             }
             if (ruleStr.length() > start) {
                 tmp = ruleStr.substring(start);

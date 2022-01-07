@@ -1,13 +1,14 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
-import android.text.TextUtils;
+import com.github.catvod.utils.StringUtil;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.crawler.SpiderReq;
 import com.github.catvod.crawler.SpiderReqResult;
 import com.github.catvod.crawler.SpiderUrl;
+import com.github.catvod.utils.StringUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -169,7 +170,7 @@ public class Cokemv extends Spider {
                 }
             }
             // 获取分类数据的url
-            String url = siteUrl + "/vodshow/" + TextUtils.join("-", urlParams) + ".html";
+            String url = siteUrl + "/vodshow/" + StringUtil.join("-", urlParams) + ".html";
             SpiderUrl su = new SpiderUrl(url, getHeaders(url));
             // 发起http请求
             SpiderReqResult srr = SpiderReq.get(su);
@@ -277,13 +278,13 @@ public class Cokemv extends Spider {
             for (int j = 0; j < aa.size(); j++) {
                 actors.add(aa.get(j).text());
             }
-            actor = TextUtils.join(",", actors);
+            actor = StringUtil.join(",", actors);
             List<String> directors = new ArrayList<>();
             Elements bb = data.get(3).select("a");
             for (int j = 0; j < bb.size(); j++) {
                 directors.add(bb.get(j).text());
             }
-            director = TextUtils.join(",", directors);
+            director = StringUtil.join(",", directors);
             desc = doc.selectFirst("div.col-pd>span.data>p").text().trim();
 
             vodList.put("vod_id", ids.get(0));
@@ -346,7 +347,7 @@ public class Cokemv extends Spider {
                     vodItems.add(vod.text() + "$" + playURL);
                 }
                 if (vodItems.size() > 0)
-                    playList = TextUtils.join("#", vodItems);
+                    playList = StringUtil.join("#", vodItems);
 
                 if (playList.length() == 0)
                     continue;
@@ -355,8 +356,8 @@ public class Cokemv extends Spider {
             }
 
             if (vod_play.size() > 0) {
-                String vod_play_from = TextUtils.join("$$$", vod_play.keySet());
-                String vod_play_url = TextUtils.join("$$$", vod_play.values());
+                String vod_play_from = StringUtil.join("$$$", vod_play.keySet());
+                String vod_play_url = StringUtil.join("$$$", vod_play.values());
                 vodList.put("vod_play_from", vod_play_from);
                 vodList.put("vod_play_url", vod_play_url);
             }

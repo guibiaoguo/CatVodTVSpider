@@ -1,7 +1,7 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
-import android.text.TextUtils;
+import com.github.catvod.utils.StringUtil;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
@@ -259,8 +259,8 @@ public class Ysgc extends Spider {
             for (int i = 0; i < vod_play_from_list.length; i++) {
                 vod_play.put(vod_play_from_list[i], vod_play_url_list[i]);
             }
-            String vod_play_from = TextUtils.join("$$$", vod_play.keySet());
-            String vod_play_url = TextUtils.join("$$$", vod_play.values());
+            String vod_play_from = StringUtil.join("$$$", vod_play.keySet());
+            String vod_play_url = StringUtil.join("$$$", vod_play.values());
             vodList.put("vod_play_from", vod_play_from);
             vodList.put("vod_play_url", vod_play_url);
 

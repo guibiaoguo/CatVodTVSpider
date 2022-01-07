@@ -377,9 +377,8 @@ public class AnalyzeByJSoup {
             }
             if (split == '!') {
                 for (int pcInt : indexSet) {
-                    elements.set(pcInt, null);
+                    elements.remove(pcInt);
                 }
-                elements.removeAll(new ArrayList<>(null));
             } else if (split == '.') {
                 Elements es = new Elements();
                 for (int pcint : indexSet) {
@@ -423,9 +422,9 @@ public class AnalyzeByJSoup {
                             }
                             if (rl == '!') {
                                 split = '!';
-                                while (len > 0 && rl == ' ') {
+                                do{
                                     rl = rus.charAt(--len);
-                                }
+                                }while (len > 0 && rl == ' ');
                             }
 
                             if (rl == '[') {

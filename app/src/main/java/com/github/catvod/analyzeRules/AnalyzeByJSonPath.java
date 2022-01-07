@@ -1,5 +1,6 @@
 package com.github.catvod.analyzeRules;
 
+import com.github.catvod.utils.StringUtil;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ReadContext;
 
@@ -49,23 +50,32 @@ public class AnalyzeByJSonPath {
                     //st为空，表明无成功替换的内嵌规则
                     try {
                         Object obj = this.ctx.read(rule);
-                        result = obj.toString();
+                        if(obj instanceof JSONArray) {
+                            JSONArray jsonArray = (JSONArray) obj;
+                            List tmp = new ArrayList();
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                tmp.add(jsonArray.opt(i).toString());
+                            }
+                            result = StringUtil.join("\n",tmp);
+                        } else {
+                            result = obj.toString();
+                        }
                     } catch (Exception e) {
                     }
                 }
                 return result;
             } else {
-                JSONArray textList = new JSONArray();
+                List textList = new ArrayList();
                 for (Object r1 : rules) {
                     String temp = getString(r1.toString());
                     if (StringUtils.isNotEmpty(temp)) {
-                        textList.put(temp);
+                        textList.add(temp);
                         if (ruleAnalyzes.getElementsType().equals("||")) {
                             break;
                         }
                     }
                 }
-                return textList.toString();
+                return StringUtil.join("\n",textList);
             }
         }
     }

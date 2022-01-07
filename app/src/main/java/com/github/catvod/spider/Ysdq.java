@@ -1,7 +1,7 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
-import android.text.TextUtils;
+import com.github.catvod.utils.StringUtil;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
@@ -60,15 +60,11 @@ public class Ysdq extends Spider {
     }
 
     private String jsonArr2Str(JSONArray array) {
-        try {
-            ArrayList<String> strings = new ArrayList<>();
-            for (int i = 0; i < array.length(); i++) {
-                strings.add(array.getString(i));
-            }
-            return TextUtils.join(",", strings);
-        } catch (JSONException e) {
+        ArrayList<String> strings = new ArrayList<>();
+        for (int i = 0; i < array.length(); i++) {
+            strings.add(array.optString(i));
         }
-        return "";
+        return StringUtil.join(",", strings);
     }
 
     @Override
@@ -84,9 +80,9 @@ public class Ysdq extends Spider {
                     String url = cfg.optString("detailUrl").replace("%s", ids.get(0));
                     String json = SpiderReq.get(new SpiderUrl(url, null)).content;
                     JSONObject obj = new JSONObject(json).optJSONObject("data");
-                    vod.put("vod_id", obj.getString("vod_id"));
-                    vod.put("vod_name", obj.getString("vod_name"));
-                    vod.put("vod_pic", obj.getString("vod_pic"));
+                    vod.put("vod_id", obj.optString("vod_id"));
+                    vod.put("vod_name", obj.optString("vod_name"));
+                    vod.put("vod_pic", obj.optString("vod_pic"));
                     vod.put("type_name", obj.optString("vod_class"));
                     vod.put("vod_year", obj.optString("vod_year"));
                     vod.put("vod_lang", obj.optString("vod_lang"));
@@ -95,15 +91,15 @@ public class Ysdq extends Spider {
                     vod.put("vod_actor", obj.optString("vod_actor"));
                     vod.put("vod_director", obj.optString("vod_director"));
                     vod.put("vod_content", obj.optString("vod_content"));
-                    vod.put("vod_play_from", obj.getString("vod_play_from"));
-                    vod.put("vod_play_url", obj.getString("vod_play_url"));
+                    vod.put("vod_play_from", obj.optString("vod_play_from"));
+                    vod.put("vod_play_url", obj.optString("vod_play_url"));
                 } else if (type.equals("AppTV")) {
                     String url = ids.get(0);
                     String json = SpiderReq.get(new SpiderUrl(url, null)).content;
                     JSONObject obj = new JSONObject(json);
-                    vod.put("vod_id", obj.getString("id"));
-                    vod.put("vod_name", obj.getString("title"));
-                    vod.put("vod_pic", obj.getString("img_url"));
+                    vod.put("vod_id", obj.optString("id"));
+                    vod.put("vod_name", obj.optString("title"));
+                    vod.put("vod_pic", obj.optString("img_url"));
                     vod.put("type_name", jsonArr2Str(obj.optJSONArray("type")));
                     vod.put("vod_year", obj.optString("pubtime"));
                     vod.put("vod_area", jsonArr2Str(obj.optJSONArray("area")));
@@ -120,21 +116,21 @@ public class Ysdq extends Spider {
                         ArrayList<String> urls = new ArrayList<>();
                         for (int j = 0; j < playListUrls.length(); j++) {
                             JSONObject urlObj = playListUrls.getJSONObject(j);
-                            urls.add(urlObj.getString("title") + "$" + urlObj.getString("url"));
+                            urls.add(urlObj.optString("title") + "$" + urlObj.optString("url"));
                         }
-                        vod_play.put(from, TextUtils.join("#", urls));
+                        vod_play.put(from, StringUtil.join("#", urls));
                     }
-                    String vod_play_from = TextUtils.join("$$$", vod_play.keySet());
-                    String vod_play_url = TextUtils.join("$$$", vod_play.values());
+                    String vod_play_from = StringUtil.join("$$$", vod_play.keySet());
+                    String vod_play_url = StringUtil.join("$$$", vod_play.values());
                     vod.put("vod_play_from", vod_play_from);
                     vod.put("vod_play_url", vod_play_url);
                 } else if (type.equals("aiKanTv")) {
                     String url = cfg.optString("detailUrl").replace("%s", ids.get(0));
                     String json = SpiderReq.get(new SpiderUrl(url, null)).content;
                     JSONObject obj = new JSONObject(json).optJSONObject("data");
-                    vod.put("vod_id", obj.getString("vod_id"));
-                    vod.put("vod_name", obj.getString("vod_name"));
-                    vod.put("vod_pic", obj.getString("vod_pic"));
+                    vod.put("vod_id", obj.optString("vod_id"));
+                    vod.put("vod_name", obj.optString("vod_name"));
+                    vod.put("vod_pic", obj.optString("vod_pic"));
                     vod.put("type_name", obj.optString("vod_class"));
                     vod.put("vod_year", obj.optString("vod_year"));
                     vod.put("vod_lang", obj.optString("vod_lang"));
@@ -148,14 +144,14 @@ public class Ysdq extends Spider {
                     JSONArray playList = obj.getJSONArray("vod_play_list");
                     for (int i = 0; i < playList.length(); i++) {
                         JSONObject playListObj = playList.getJSONObject(i);
-                        String from = playListObj.getString("from");
-                        String playUrls = playListObj.getString("url");
+                        String from = playListObj.optString("from");
+                        String playUrls = playListObj.optString("url");
                         if (playUrls.length() > 0) {
                             vod_play.put(from, playUrls);
                         }
                     }
-                    String vod_play_from = TextUtils.join("$$$", vod_play.keySet());
-                    String vod_play_url = TextUtils.join("$$$", vod_play.values());
+                    String vod_play_from = StringUtil.join("$$$", vod_play.keySet());
+                    String vod_play_url = StringUtil.join("$$$", vod_play.values());
                     vod.put("vod_play_from", vod_play_from);
                     vod.put("vod_play_url", vod_play_url);
                 }
@@ -190,10 +186,10 @@ public class Ysdq extends Spider {
                         for (int i = 0; i < list.length(); i++) {
                             JSONObject obj = list.getJSONObject(i);
                             JSONObject v = new JSONObject();
-                            v.put("vod_id", obj.getString("vod_id"));
-                            v.put("vod_name", obj.getString("vod_name"));
-                            v.put("vod_pic", obj.getString("vod_pic"));
-                            v.put("vod_remarks", obj.getString("vod_remarks"));
+                            v.put("vod_id", obj.optString("vod_id"));
+                            v.put("vod_name", obj.optString("vod_name"));
+                            v.put("vod_pic", obj.optString("vod_pic"));
+                            v.put("vod_remarks", obj.optString("vod_remarks"));
                             videos.put(v);
                         }
                     } else if (type.equals("AppTV")) {
@@ -201,10 +197,10 @@ public class Ysdq extends Spider {
                         for (int i = 0; i < list.length(); i++) {
                             JSONObject obj = list.getJSONObject(i);
                             JSONObject v = new JSONObject();
-                            v.put("vod_id", obj.getString("nextlink"));
-                            v.put("vod_name", obj.getString("title"));
-                            v.put("vod_pic", obj.getString("pic"));
-                            v.put("vod_remarks", obj.getString("state"));
+                            v.put("vod_id", obj.optString("nextlink"));
+                            v.put("vod_name", obj.optString("title"));
+                            v.put("vod_pic", obj.optString("pic"));
+                            v.put("vod_remarks", obj.optString("state"));
                             videos.put(v);
                         }
                     } else if (type.equals("aiKanTv")) {
@@ -212,10 +208,10 @@ public class Ysdq extends Spider {
                         for (int i = 0; i < list.length(); i++) {
                             JSONObject obj = list.getJSONObject(i);
                             JSONObject v = new JSONObject();
-                            v.put("vod_id", obj.getString("vod_id"));
-                            v.put("vod_name", obj.getString("vod_name"));
-                            v.put("vod_pic", obj.getString("vod_pic"));
-                            v.put("vod_remarks", obj.getString("vod_remarks"));
+                            v.put("vod_id", obj.optString("vod_id"));
+                            v.put("vod_name", obj.optString("vod_name"));
+                            v.put("vod_pic", obj.optString("vod_pic"));
+                            v.put("vod_remarks", obj.optString("vod_remarks"));
                             videos.put(v);
                         }
                     }

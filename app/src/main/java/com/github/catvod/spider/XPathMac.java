@@ -1,7 +1,7 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
-import android.text.TextUtils;
+import com.github.catvod.utils.StringUtil;
 import android.util.Base64;
 
 import com.github.catvod.crawler.SpiderDebug;
@@ -107,7 +107,7 @@ public class XPathMac extends XPath {
                             playFrom[i] = show2VipFlag.get(playFrom[i]);
                         }
                     }
-                    jsonObject.optJSONArray("list").getJSONObject(0).put("vod_play_from", TextUtils.join("$$$", playFrom));
+                    jsonObject.optJSONArray("list").getJSONObject(0).put("vod_play_from", StringUtil.join("$$$", playFrom));
                     result = jsonObject.toString();
                 }
             } catch (Throwable th) {

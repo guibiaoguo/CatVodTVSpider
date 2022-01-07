@@ -3,7 +3,7 @@ package com.github.catvod.spider;
 import static com.github.catvod.utils.StringUtil.join;
 
 import android.content.Context;
-import android.text.TextUtils;
+import com.github.catvod.utils.StringUtil;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;

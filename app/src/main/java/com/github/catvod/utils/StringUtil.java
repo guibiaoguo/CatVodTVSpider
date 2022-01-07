@@ -5,6 +5,8 @@ import android.text.TextUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -583,6 +585,9 @@ public class StringUtil {
         return isAbsUrl;
     }
 
+    public static String join(@NonNull CharSequence delimiter, @NonNull String[] tokens) {
+        return join(delimiter, Arrays.asList(tokens));
+    }
     public static String join(@NonNull CharSequence delimiter, @NonNull Iterable tokens) {
         final Iterator<?> it = tokens.iterator();
         if (!it.hasNext()) {
@@ -595,5 +600,19 @@ public class StringUtil {
             sb.append(it.next());
         }
         return sb.toString();
+    }
+    public static String encode(String name) {
+        try {
+            name = URLEncoder.encode(name,"utf-8")
+                    .replaceAll("%2F","/")
+                    .replaceAll("%3F","?")
+                    .replaceAll("%3D","=")
+                    .replaceAll("%3B",";")
+                    .replaceAll("%3A",":")
+                    .replaceAll("\\+","%20");
+        } catch (Exception e) {
+
+        }
+        return name;
     }
 }

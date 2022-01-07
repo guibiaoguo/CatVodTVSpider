@@ -85,14 +85,9 @@ public class NetworkUtils {
             String var10000;
             String relativeUrl;
             try {
-                relativePath = URLEncoder.encode(relativePath,"utf-8")
-                        .replaceAll("%2F","/")
-                        .replaceAll("%3F","?")
-                        .replaceAll("%3D","=")
-                        .replaceAll("%3B",";")
-                        .replaceAll("\\+","%20");
+                relativePath = StringUtil.encode(relativePath);
                 URL parseUrl = new URL(baseURL, relativePath);
-                var10000 = parseUrl.toURI().toASCIIString();
+                var10000 = parseUrl.toString();
                 relativeUrl = var10000;
                 return relativeUrl;
             } catch (Exception var5) {

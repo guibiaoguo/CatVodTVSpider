@@ -6,6 +6,7 @@ import android.util.Log;
 import com.github.catvod.crawler.SpiderReq;
 import com.github.catvod.crawler.SpiderReqResult;
 import com.github.catvod.crawler.SpiderUrl;
+import com.github.catvod.utils.SpiderOKClient;
 import com.github.catvod.utils.StringUtil;
 
 import org.apache.commons.lang3.StringUtils;
@@ -14,6 +15,9 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
+
 /**
  * 作者：By hdy
  * 日期：On 2018/9/8
@@ -21,49 +25,19 @@ import java.util.Map;
  */
 
 public class HttpParser {
+
     private static final String TAG = "HttpParser";
+    private static final String PC_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36";
+    private static final String MOBILE_UA = "";
 
-    public static void parseSearchUrlForHtml(String sourceUrl,  OnSearchCallBack onSearchCallBack) {
-        String wd = sourceUrl.contains("%%") ? "%%" : "%%";
-        parseSearchUrlForHtml(wd, sourceUrl, onSearchCallBack);
-    }
-
-    public static String parseSearchUrl(String sourceUrl, String wd) {
+    public static void parseSearchUrlForHtml(String sourceUrl, OnSearchCallBack onSearchCallBack) {
         String[] d = sourceUrl.split(";");
         if (d.length == 1) {
-            return replaceKey(sourceUrl, wd);
-        } else if (d.length == 2) {
-            return replaceKey(d[0], wd);
-        } else {
-            wd = encodeUrl(wd, d[2]);
-            return replaceKey(d[0], wd);
-        }
-    }
-
-    private static String replaceKey(String url, String key) {
-        if (StringUtil.isEmpty(url) || StringUtil.isEmpty(key)) {
-            return url;
-        }
-        if (url.contains("%%")) {
-            return url.replace("%%", key);
-        }
-        return url.replace("**", key);
-    }
-
-    public static void parseSearchUrlForHtml(String wd, String sourceUrl,  OnSearchCallBack onSearchCallBack) {
-        String[] d = sourceUrl.split(";");
-        if (d.length == 1) {
-            wd = encodeUrl(wd, "UTF-8");
-            d[0] = replaceKey(d[0], wd);
             get(d[0], null, null, onSearchCallBack);
         } else if (d.length == 2) {
-            if ("get".equals(d[1]) || "*".equals(d[1])) {
-                wd = encodeUrl(wd, "UTF-8");
-                d[0] = replaceKey(d[0], wd);
+            if ("get".equalsIgnoreCase(d[1]) || "*".equals(d[1])) {
                 get(d[0], null, getHeaders(sourceUrl), onSearchCallBack);
             } else if ("post".equalsIgnoreCase(d[1])) {
-                wd = encodeUrl(wd, "UTF-8");
-                d[0] = replaceKey(d[0], wd);
                 String[] ss = StringUtil.splitUrlByQuestionMark(d[0]);
                 String[] sss;
                 if (ss.length > 1) {
@@ -83,18 +57,10 @@ public class HttpParser {
                 }
                 post(ss[0], null, getHeaders(sourceUrl), params, onSearchCallBack);
             } else {
-                wd = encodeUrl(wd, d[1]);
-                d[0] = replaceKey(d[0], wd);
                 get(d[0], d[1], getHeaders(sourceUrl), onSearchCallBack);
             }
         } else {
-            wd = encodeUrl(wd, d[2]);
             if ("post".equalsIgnoreCase(d[1])) {
-                if (StringUtil.isNotEmpty(d[2]) && !"utf-8".equalsIgnoreCase(d[2])) {
-                    //后面会自动编码
-                    wd = decodeUrl(wd, d[2]);
-                }
-                d[0] = replaceKey(d[0], wd);
                 String[] ss = StringUtil.splitUrlByQuestionMark(d[0]);
                 String[] sss;
                 if (ss.length > 1) {
@@ -114,7 +80,6 @@ public class HttpParser {
                 }
                 post(ss[0], d[2], getHeaders(sourceUrl), params, onSearchCallBack);
             } else {
-                d[0] = replaceKey(d[0], wd);
                 get(d[0], d[2], getHeaders(sourceUrl), onSearchCallBack);
             }
         }
@@ -171,7 +136,7 @@ public class HttpParser {
                         }
                         keyValue[1] = StringUtil.arrayToString(ck, 0, ";");
                     }
-                    headers.put(keyValue[0], keyValue[1]);
+                    headers.put(keyValue[0], keyValue[1].equalsIgnoreCase("PC_UA") ? PC_UA : keyValue[1].equalsIgnoreCase("MOBILE_UA") ? MOBILE_UA : keyValue[1]);
                 }
             }
         }
@@ -216,33 +181,63 @@ public class HttpParser {
         }
     }
 
-    public static void get(String url,  final String code,  HashMap headers,  final OnSearchCallBack onSearchCallBack) {
+    public static void get(String url, final String charset, HashMap headers, final OnSearchCallBack onSearchCallBack) {
 //        Log.d(TAG, "just get: "+url);
         try {
             url = url.replace(" ", "");
             url = StringUtil.decodeConflictStr(url);
             String finalUrl = url;
             SpiderUrl su = new SpiderUrl(finalUrl, headers);
-            SpiderReqResult spiderReqResult = SpiderReq.get(su);
-            onSearchCallBack.onSuccess(finalUrl,spiderReqResult);
+            SpiderReqResult spiderReqResult;
+            if (headers == null) {
+                headers = new HashMap<>();
+                headers.put("User-Agent", PC_UA);
+            }
+            if (headers.get("redirect") != null) {
+                spiderReqResult = SpiderReq.get(SpiderOKClient.noRedirectClient(), su);
+            } else {
+                spiderReqResult = SpiderReq.get(su);
+            }
+            if(spiderReqResult.content.contains("404 Not Found")) {
+                onSearchCallBack.onFailure(404,spiderReqResult.content);
+            } else {
+                onSearchCallBack.onSuccess(finalUrl, spiderReqResult);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             onSearchCallBack.onFailure(500, e.toString());
         }
     }
 
-    public static void post(String url,  final String code,  HashMap<String, String> headers, HashMap<String,String> params,  final OnSearchCallBack onSearchCallBack) {
+    public static void post(String url, final String code, HashMap<String, String> headers, HashMap<String, String> params, final OnSearchCallBack onSearchCallBack) {
 //        Log.d(TAG, "just get: "+url);
         try {
             url = url.replace(" ", "");
             url = StringUtil.decodeConflictStr(url);
             String finalUrl = url;
-            if(headers == null) {
+            if (headers == null) {
                 headers = new HashMap<>();
-                headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
+                headers.put("User-Agent", PC_UA);
             }
-            SpiderReqResult spiderReqResult = SpiderReq.postForm(finalUrl,params,headers);
-            onSearchCallBack.onSuccess(finalUrl,spiderReqResult);
+            SpiderReqResult spiderReqResult;
+            if (headers.get("redirect") != null) {
+                spiderReqResult = SpiderReq.postForm(SpiderOKClient.noRedirectClient(), finalUrl, params, "sp_req_default", headers);
+            } else if (headers.get("redirect") != null && headers.get("json") != null) {
+                spiderReqResult = SpiderReq.postJson(SpiderOKClient.noRedirectClient(), finalUrl, params, "sp_req_default", headers);
+            } else if (headers.get("json") != null) {
+                spiderReqResult = SpiderReq.postJson(finalUrl, params, headers);
+            } else if (headers.get("redirect") != null && params.get("jsonBody") != null) {
+                spiderReqResult = SpiderReq.postBody(SpiderOKClient.noRedirectClient(), url, RequestBody.create(MediaType.parse("application/json; charset=utf-8"), params.get("jsonBody")), "sp_req_default", headers);
+            } else if (params.get("jsonBody") != null) {
+                spiderReqResult = SpiderReq.postBody(url, RequestBody.create(MediaType.parse("application/json; charset=utf-8"), params.get("jsonBody")), headers);
+            } else {
+                spiderReqResult = SpiderReq.postForm(finalUrl, params, headers);
+            }
+            if(spiderReqResult.content.contains("404 Not Found")) {
+                onSearchCallBack.onFailure(404,spiderReqResult.content);
+            } else {
+                onSearchCallBack.onSuccess(finalUrl, spiderReqResult);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             onSearchCallBack.onFailure(500, e.toString());

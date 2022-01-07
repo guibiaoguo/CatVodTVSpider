@@ -1,7 +1,7 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
-import android.text.TextUtils;
+import com.github.catvod.utils.StringUtil;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
@@ -282,7 +282,7 @@ public class Nfx extends Spider {
                     for (int j = 0; j < aa.size(); j++) {
                         actors.add(aa.get(j).text());
                     }
-                    actor = TextUtils.join(",", actors);
+                    actor = StringUtil.join(",", actors);
                 }
             }
 
@@ -346,7 +346,7 @@ public class Nfx extends Spider {
                     vodItems.add(vod.text() + "$" + playURL);
                 }
                 if (vodItems.size() > 0)
-                    playList = TextUtils.join("#", vodItems);
+                    playList = StringUtil.join("#", vodItems);
 
                 if (playList.length() == 0)
                     continue;
@@ -355,8 +355,8 @@ public class Nfx extends Spider {
             }
 
             if (vod_play.size() > 0) {
-                String vod_play_from = TextUtils.join("$$$", vod_play.keySet());
-                String vod_play_url = TextUtils.join("$$$", vod_play.values());
+                String vod_play_from = StringUtil.join("$$$", vod_play.keySet());
+                String vod_play_url = StringUtil.join("$$$", vod_play.values());
                 vodList.put("vod_play_from", vod_play_from);
                 vodList.put("vod_play_url", vod_play_url);
             }

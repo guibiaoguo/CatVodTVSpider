@@ -1,7 +1,7 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
-import android.text.TextUtils;
+import com.github.catvod.utils.StringUtil;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
@@ -197,8 +197,8 @@ public class YydsAli1 extends Spider {
             }
             accessTk = "";
             if (vod_play.size() > 0) {
-                String vod_play_from = TextUtils.join("$$$", vod_play.keySet());
-                String vod_play_url = TextUtils.join("$$$", vod_play.values());
+                String vod_play_from = StringUtil.join("$$$", vod_play.keySet());
+                String vod_play_url = StringUtil.join("$$$", vod_play.values());
                 vodAtom.put("vod_play_from", vod_play_from);
                 vodAtom.put("vod_play_url", vod_play_url);
             }
@@ -234,7 +234,7 @@ public class YydsAli1 extends Spider {
             String shareToken = getShareTk(shareId, "");
             ArrayList<String> vodItems = new ArrayList<>();
             getFileList(shareToken, shareId, "", "root", vodItems);
-            vod_play.put("阿里云盘" + (vod_play.size() > 0 ? vod_play.size() : ""), TextUtils.join("#", vodItems));
+            vod_play.put("阿里云盘" + (vod_play.size() > 0 ? vod_play.size() : ""), StringUtil.join("#", vodItems));
         }
     }
 

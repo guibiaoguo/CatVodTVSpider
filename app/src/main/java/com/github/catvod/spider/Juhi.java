@@ -1,7 +1,7 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
-import android.text.TextUtils;
+import com.github.catvod.utils.StringUtil;
 import android.util.Base64;
 import com.github.catvod.utils.Misc;
 
@@ -10,6 +10,7 @@ import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.crawler.SpiderReq;
 import com.github.catvod.crawler.SpiderReqResult;
 import com.github.catvod.crawler.SpiderUrl;
+import com.github.catvod.utils.StringUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -167,7 +168,7 @@ public class Juhi extends Spider {
                 }
             }
             // 获取分类数据的url
-            String url = siteUrl + "/vodshow/" + TextUtils.join("-", urlParams) + "/";
+            String url = siteUrl + "/vodshow/" + StringUtil.join("-", urlParams) + "/";
             SpiderUrl su = new SpiderUrl(url, getHeaders(url));
             // 发起http请求
             SpiderReqResult srr = SpiderReq.get(su);
@@ -263,7 +264,7 @@ public class Juhi extends Spider {
             JSONObject vodList = new JSONObject();
 
             // 取基本数据
-            String cover = doc.selectFirst("div.myui-content__thumb > a > img").attr("src");
+            String cover = doc.selectFirst(".myui-vodlist__thumb img").attr("data-original");
             String title = doc.selectFirst("div.myui-content__thumb > a").attr("title");
             String desc = Jsoup.parse(doc.selectFirst("meta[name=description]").attr("content")).text();
             String category = "", area = "", year = "", remark = "", director = "", actor = "";
@@ -285,14 +286,14 @@ public class Juhi extends Spider {
                     for (int j = 0; j < aa.size(); j++) {
                         directors.add(aa.get(j).text());
                     }
-                    director = TextUtils.join(",", directors);
+                    director = StringUtil.join(",", directors);
                 } else if (info.equals("主演：")) {
                     List<String> actors = new ArrayList<>();
                     Elements aa = text.parent().select("a");
                     for (int j = 0; j < aa.size(); j++) {
                         actors.add(aa.get(j).text());
                     }
-                    actor = TextUtils.join(",", actors);
+                    actor = StringUtil.join(",", actors);
                 }
             }
 
@@ -359,7 +360,7 @@ public class Juhi extends Spider {
                     vodItems.add(vod.text() + "$" + playURL);
                 }
                 if (vodItems.size() > 0)
-                    playList = TextUtils.join("#", vodItems);
+                    playList = StringUtil.join("#", vodItems);
 
                 if (playList.length() == 0)
                     continue;
@@ -368,8 +369,8 @@ public class Juhi extends Spider {
             }
 
             if (vod_play.size() > 0) {
-                String vod_play_from = TextUtils.join("$$$", vod_play.keySet());
-                String vod_play_url = TextUtils.join("$$$", vod_play.values());
+                String vod_play_from = StringUtil.join("$$$", vod_play.keySet());
+                String vod_play_url = StringUtil.join("$$$", vod_play.values());
                 vodList.put("vod_play_from", vod_play_from);
                 vodList.put("vod_play_url", vod_play_url);
             }

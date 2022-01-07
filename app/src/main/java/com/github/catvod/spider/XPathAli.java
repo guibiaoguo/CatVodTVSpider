@@ -29,7 +29,7 @@ public class XPathAli extends XPath {
     private String accessTk = "";
     private String aliTk;
 
-    Pattern aliyun = Pattern.compile(".*?aliyundrive.com/s/(\\w+)[^\\w]?");
+    Pattern aliyun = Pattern.compile(".*?aliyundrive.com/s/(\\w+)[^\\w]?folder/(\\w+)");
     Pattern aliyunShort = Pattern.compile(".*?alywp.net/(\\w+)[^\\w]?");
 
     public String getName(String id) {
@@ -75,9 +75,13 @@ public class XPathAli extends XPath {
 
     private void updatePlaylist(String link, Map<String, List<String>> vod_play) {
         String shareId = null;
+        String root = "root";
         Matcher matcher = aliyun.matcher(link);
         if (matcher.find()) {
             shareId = matcher.group(1);
+            if(matcher.groupCount()>1) {
+                root = matcher.group(2);
+            }
         } else {
             matcher = aliyunShort.matcher(link);
             if (matcher.find()) {
@@ -94,7 +98,7 @@ public class XPathAli extends XPath {
         }
         if (shareId != null) {
             String shareToken = getShareTk(shareId, "");
-            getFileList(shareToken, shareId, "", "root", vod_play);
+            getFileList(shareToken, shareId, "", root, vod_play);
         }
     }
 
@@ -127,6 +131,7 @@ public class XPathAli extends XPath {
                 HashMap<String, String> headers = new HashMap<>();
                 headers.put("x-share-token", shareTk);
                 headers.put("authorization", accessTk);
+
                 headers.put("User-Agent","Mozilla/5.0 (Linux; Android 11; Mi 10 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Mobile Safari/537.36");
                 SpiderReqResult srr = SpiderReq.postBody("https://api.aliyundrive.com/v2/file/get_share_link_video_preview_play_info", RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json.toString()), headers);
                 JSONObject object = new JSONObject(srr.content);
@@ -221,7 +226,7 @@ public class XPathAli extends XPath {
     }
 
 
-    private void getFileList(String shareTk, String shareId, String sharePwd, String
+    private void  getFileList(String shareTk, String shareId, String sharePwd, String
             root, Map<String, List<String>> data) {
         try {
             // 取文件夹

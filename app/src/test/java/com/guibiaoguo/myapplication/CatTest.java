@@ -1,4 +1,7 @@
 package com.guibiaoguo.myapplication;
+
+import android.content.Context;
+
 import com.github.catvod.analyzeRules.AnalyzeRule;
 import com.github.catvod.analyzeRules.RuleData;
 import com.github.catvod.analyzeRules.AnalyzeByJSonPath;
@@ -6,6 +9,7 @@ import com.github.catvod.analyzeRules.AnalyzeByJSoup;
 import com.github.catvod.analyzeRules.AnalyzeByRegex;
 import com.github.catvod.analyzeRules.RuleAnalyzer;
 import com.github.catvod.crawler.Spider;
+import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.crawler.SpiderReq;
 import com.github.catvod.crawler.SpiderReqResult;
 import com.github.catvod.crawler.SpiderUrl;
@@ -23,6 +27,7 @@ import com.github.catvod.spider.MGTV;
 import com.github.catvod.spider.QQ;
 import com.github.catvod.spider.XPathAli;
 import com.github.catvod.spider.YydsAli2;
+import com.github.catvod.utils.StringUtil;
 
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
@@ -36,9 +41,13 @@ import org.jsoup.select.Elements;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import okhttp3.OkHttpClient;
 
@@ -441,7 +450,7 @@ public class CatTest {
     @Test
     public void alixz() throws Exception {
         Spider spider = new XPathAli();
-        spider.init(null,"https://mao.guibiaoguo.tk/qq.json");
+        spider.init(null, "https://mao.guibiaoguo.tk/qq.json");
         String category = spider.searchContent("熊出没", false);
 
         List<String> ids = new ArrayList<>();
@@ -471,20 +480,14 @@ public class CatTest {
     public void affhs() throws Exception {
         List<String> keys = new ArrayList<>();
 //        keys.add("钢铁侠");
-        xpathAli("https://mao.guibiaoguo.tk/ahhfs.json",keys);
+        xpathAli("https://mao.guibiaoguo.tk/ahhfs.json", keys);
     }
 
-    @Test
-    public void alps() throws Exception {
-        List<String> keys = new ArrayList<>();
-//        keys.add("钢铁侠");
-        xpathAli("https://mao.guibiaoguo.tk/qq.json",keys);
-    }
+    public void showCategory(Spider spider, String category, int index) throws JSONException {
 
-    public void showCategory(Spider spider,String category,int index) throws Exception {
         JSONObject jsonObject = new JSONObject(category);
         JSONArray categorys = jsonObject.optJSONArray("list");
-        if(category !=null && categorys.length()>index) {
+        if (category != null && categorys.length() > index) {
             List<String> ids = new ArrayList<>();
             ids.add(categorys.getJSONObject(index).optString("vod_id"));
             System.out.println(ids);
@@ -502,16 +505,16 @@ public class CatTest {
         }
     }
 
-    public void xpathAli(String ext,List<String> keys) throws Exception {
+    public void xpathAli(String ext, List<String> keys) throws Exception {
         Spider spider = new XPathAli();
         if (StringUtils.isEmpty(ext))
             ext = "https://mao.guibiaoguo.tk/qq.json";
         spider.init(null, ext);
-        for(String key:keys) {
-            String category = spider.searchContent("钢铁侠", false);
+        for (String key : keys) {
+            String category = spider.searchContent(key, false);
             System.out.println(category);
-            if(StringUtils.isNotEmpty(category))
-                showCategory(spider,category,0);
+            if (StringUtils.isNotEmpty(category))
+                showCategory(spider, category, 0);
         }
         JSONObject jsonObject = null;
 //        System.out.println(spider.searchContent("小姨", false));
@@ -527,8 +530,8 @@ public class CatTest {
             //org.seimicrawler.xpath.core.function;
             String category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
-            if(StringUtils.isNotEmpty(category))
-                showCategory(spider,category,0);
+            if (StringUtils.isNotEmpty(category))
+                showCategory(spider, category, 0);
         }
     }
 
@@ -580,12 +583,12 @@ public class CatTest {
 
     @Test
     public void goIndex() throws Exception {
-        String ext = "https://mao.guibiaoguo.tk/goindex.json";
+        String ext = "http://185.205.12.38:4004/goindex.json";
         Spider spider = new GoIndex();
-        spider.init(null,ext);
+        spider.init(null, ext);
         String category = spider.homeContent(false);
         System.out.println(category);
-        showCategory(spider,category,0);
+        showCategory(spider, category, 0);
         JSONObject jsonObject = new JSONObject(category);
         JSONArray classes = jsonObject.optJSONArray("class");
         for (int i = 0; i < classes.length(); i++) {
@@ -594,17 +597,18 @@ public class CatTest {
             //org.seimicrawler.xpath.core.function;
             category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
-            showCategory(spider,category,0);
+            showCategory(spider, category, 0);
         }
     }
+
     @Test
     public void jsonpath() throws Exception {
-        String ext = "https://mao.guibiaoguo.tk/jsonpath.json";
+        String ext = "http://185.205.12.38:4004/jsonpath.json";
         Spider spider = new Legado();
-        spider.init(null,ext);
+        spider.init(null, ext);
         String category = spider.homeContent(false);
         System.out.println(category);
-        showCategory(spider,category,0);
+        showCategory(spider, category, 2);
         JSONObject jsonObject = new JSONObject(category);
         JSONArray classes = jsonObject.optJSONArray("class");
         for (int i = 0; i < classes.length(); i++) {
@@ -613,7 +617,7 @@ public class CatTest {
             //org.seimicrawler.xpath.core.function;
             category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
-            showCategory(spider,category,0);
+            showCategory(spider, category, 0);
         }
     }
 
@@ -622,14 +626,14 @@ public class CatTest {
         String content = "下一站";
         String rulestr = "##一站##一战";
         AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
-        analyzeRule.setContent(content,"");
+        analyzeRule.setContent(content, "");
         Object object = analyzeRule.getElement(rulestr);
         System.out.println(object);
         String ext = "http://www.paper027.com/home/chapter/lists/id/77485.html";
         SpiderUrl su = new SpiderUrl(ext, getHeaders(ext));
         String json = SpiderReq.get(su).content;
         System.out.println(json);
-        analyzeRule.setContent(json,ext);
+        analyzeRule.setContent(json, ext);
         rulestr = ":class=\"text-muted number\"(?:[^\"]*\"){3}([^\"]*)\" title=\"([^\"]*)\">";
         object = analyzeRule.getElement(rulestr);
         System.out.println(object.toString());
@@ -638,10 +642,10 @@ public class CatTest {
         analyzeRule.setContent(json);
         System.out.println(analyzeRule.getElement("@css:.chapterTitle"));
         ext = "https://mao.guibiaoguo.tk/jsonpath.json";
-        su = new SpiderUrl(ext,getHeaders(ext));
+        su = new SpiderUrl(ext, getHeaders(ext));
         json = SpiderReq.get(su).content;
         analyzeRule = new AnalyzeRule(new RuleData());
-        analyzeRule.setContent(json,ext);
+        analyzeRule.setContent(json, ext);
         System.out.println(analyzeRule.getElement("$.ua"));
         String webUrl = analyzeRule.getString("{$.homeUrl}");
         System.out.println(webUrl);
@@ -649,10 +653,10 @@ public class CatTest {
             @Override
             public void onSuccess(String url, SpiderReqResult s) {
                 AnalyzeRule analyzeRule1 = new AnalyzeRule(new RuleData());
-                analyzeRule1.setContent(s.content,url);
+                analyzeRule1.setContent(s.content, url);
                 Object nodes = analyzeRule1.getStringList("$.data.files[1]%%$.data.files[3]");
                 System.out.println(nodes.toString());
-                if(nodes instanceof JSONArray) {
+                if (nodes instanceof JSONArray) {
                     for (int i = 0; i < ((JSONArray) nodes).length(); i++) {
                         analyzeRule1.setContent(((JSONArray) nodes).opt(i).toString());
                         System.out.println(analyzeRule1.getString("$.name"));
@@ -669,7 +673,7 @@ public class CatTest {
             @Override
             public void onSuccess(String url, SpiderReqResult s) {
                 AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
-                analyzeRule.setContent(s.content,url);
+                analyzeRule.setContent(s.content, url);
                 analyzeRule.setRedirectUrl(url);
                 System.out.println(analyzeRule.getElements("@css:.stui-vodlist>li"));
                 System.out.println(analyzeRule.getElements("class.stui-vodlist@tag.li.1"));
@@ -740,32 +744,32 @@ public class CatTest {
                 "  \"nodeUrl\": \"{$.name}/?page_index=0;post\",\n" +
                 "  \"scVodMark\": \"\"\n" +
                 "}";
-        ext = "https://mao.guibiaoguo.tk/jsonpath.json";
+//        ext = "https://mao.guibiaoguo.tk/jsonpath.json";
         Spider spider = new Legado();
-        spider.init(null,ext);
+        spider.init(null, ext);
         String category = spider.homeContent(false);
         System.out.println(category);
-        showCategory(spider,category,1);
+        showCategory(spider, category, 1);
     }
 
     @Test
     public void test() {
         String queue = "[test}";
         System.out.println(queue.charAt(0));
-        RuleAnalyzer analyzer = new RuleAnalyzer("{$.name}||{$.id}",false);
+        RuleAnalyzer analyzer = new RuleAnalyzer("{$.name}||{$.id}", false);
         analyzer.trim();
-        System.out.println(analyzer.splitRule("&&","||"));
+        System.out.println(analyzer.splitRule("&&", "||"));
         analyzer = new RuleAnalyzer("$.store.book[0].title@$.name");
-        System.out.println(analyzer.splitRule("@","&&"));
+        System.out.println(analyzer.splitRule("@", "&&"));
         String rulestr = "class=\"text-muted number\"(?:[^\"]*\"){3}([^\"]*)\" title=\"([^\"]*)\">";
         String ext = "http://www.paper027.com/home/chapter/lists/id/77485.html";
         SpiderUrl su = new SpiderUrl(ext, getHeaders(ext));
         String json = SpiderReq.get(su).content;
         System.out.println(json);
-        System.out.println(AnalyzeByRegex.getElement(json,StringUtils.split(rulestr,"&&"),0));
-        System.out.println(AnalyzeByRegex.getElements(json,StringUtils.split(rulestr,"&&"),0));
+        System.out.println(AnalyzeByRegex.getElement(json, StringUtils.split(rulestr, "&&"), 0));
+        System.out.println(AnalyzeByRegex.getElements(json, StringUtils.split(rulestr, "&&"), 0));
         ext = "https://mao.guibiaoguo.tk/jsonpath.json";
-        su = new SpiderUrl(ext,getHeaders(ext));
+        su = new SpiderUrl(ext, getHeaders(ext));
         json = SpiderReq.get(su).content;
         System.out.println(new AnalyzeByJSonPath(json).getString("{$.homeUrl}/test"));
         System.out.println(new AnalyzeByJSonPath(json).getString("$.ua"));
@@ -774,7 +778,8 @@ public class CatTest {
             public void onSuccess(String url, SpiderReqResult s) {
                 System.out.println(new AnalyzeByJSonPath(s.content).getString("$.data.files[1]"));
                 System.out.println(new AnalyzeByJSonPath(s.content).getString("$.data.files[*]"));
-                System.out.println(new AnalyzeByJSonPath(s.content).getString("$.data.files[1]%%$.data.files[3]"));
+                System.out.println(new AnalyzeByJSonPath(s.content).getString("$.data.files[1:3]"));
+                System.out.println(new AnalyzeByJSonPath(s.content).getString("$.data.files[1]"));
             }
 
             @Override
@@ -799,6 +804,7 @@ public class CatTest {
             public void onSuccess(String url, SpiderReqResult s) {
                 System.out.println(new AnalyzeByJSoup(s.content).getElements("@css:.stui-vodlist>li"));
                 System.out.println(new AnalyzeByJSoup(s.content).getElements("class.stui-vodlist@tag.li.1"));
+                System.out.println(new AnalyzeByJSoup(s.content).getElements("class.stui-vodlist@tag.li!1:2"));
                 System.out.println(new AnalyzeByJSoup(s.content).getElements("class.stui-vodlist@tag.li[2:5]"));
             }
 
@@ -829,7 +835,7 @@ public class CatTest {
         HttpParser.parseSearchUrlForHtml("https://mao.guibiaoguo.tk/jsonpath.json", new HttpParser.OnSearchCallBack() {
             @Override
             public void onSuccess(String url, SpiderReqResult s) {
-                System.out.println(new AnalyzeRule(new RuleData()).setContent(s.content,url).getString("{$.homeUrl}/test"));
+                System.out.println(new AnalyzeRule(new RuleData()).setContent(s.content, url).getString("{$.homeUrl}/test"));
             }
 
             @Override
@@ -845,7 +851,7 @@ public class CatTest {
             @Override
             public void onSuccess(String url, SpiderReqResult s) {
                 AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
-                analyzeRule.setContent(s.content,url);
+                analyzeRule.setContent(s.content, url);
                 analyzeRule.setRedirectUrl(url);
                 System.out.println(analyzeRule.getElements("@css:.chapterTitle"));
             }
@@ -863,7 +869,7 @@ public class CatTest {
             @Override
             public void onSuccess(String url, SpiderReqResult s) {
                 AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
-                analyzeRule.setContent(s.content,url);
+                analyzeRule.setContent(s.content, url);
                 analyzeRule.setRedirectUrl(url);
                 System.out.println(analyzeRule.getElements("//*[contains(@class,\"chapterTitle\")]"));
             }
@@ -879,21 +885,21 @@ public class CatTest {
     public void testkt() {
         String queue = "[test}";
         System.out.println(queue.charAt(0));
-        RuleAnalyzer analyzer = new RuleAnalyzer("{$.name}||{$.id}",false);
+        RuleAnalyzer analyzer = new RuleAnalyzer("{$.name}||{$.id}", false);
         analyzer.trim();
-        System.out.println(analyzer.splitRule("&&","||"));
-        analyzer = new RuleAnalyzer("$.store.book[0].title@$.name",false);
-        System.out.println(analyzer.splitRule("@","&&"));
+        System.out.println(analyzer.splitRule("&&", "||"));
+        analyzer = new RuleAnalyzer("$.store.book[0].title@$.name", false);
+        System.out.println(analyzer.splitRule("@", "&&"));
         String rulestr = ":class=\"text-muted number\"(?:[^\"]*\"){3}([^\"]*)\" title=\"([^\"]*)\">";
     }
 
     @Test
     public void bagedvd() throws Exception {
         Spider spider = new Legado();
-        spider.init(null,"https://mao.guibiaoguo.tk/bagedvd.json");
+        spider.init(null, "https://mao.guibiaoguo.tk/bagedvd.json");
         String category = spider.homeContent(false);
         System.out.println(category);
-        showCategory(spider,category,0);
+        showCategory(spider, category, 0);
         JSONObject jsonObject = new JSONObject(category);
         JSONArray classes = jsonObject.optJSONArray("class");
         for (int i = 0; i < classes.length(); i++) {
@@ -902,8 +908,533 @@ public class CatTest {
             //org.seimicrawler.xpath.core.function;
             category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
-            showCategory(spider,category,0);
+            showCategory(spider, category, 0);
         }
     }
+
+    @Test
+    public void zqystv() throws Exception {
+        Spider spider = new Legado();
+        spider.init(null, "https://mao.guibiaoguo.tk/zqystv.json");
+        String category = spider.homeContent(false);
+        System.out.println(category);
+        showCategory(spider, category, 0);
+        JSONObject jsonObject = new JSONObject(category);
+        JSONArray classes = jsonObject.optJSONArray("class");
+        for (int i = 0; i < classes.length(); i++) {
+            String tid = classes.getJSONObject(i).optString("type_id");
+            System.out.println(tid);
+            //org.seimicrawler.xpath.core.function;
+            category = spider.categoryContent(tid, "1", false, null);
+            System.out.println(category);
+            showCategory(spider, category, 0);
+        }
+    }
+
+    @Test
+    public void testCat() {
+        HttpParser.parseSearchUrlForHtml("https://mao.guibiaoguo.tk/212757.json", new HttpParser.OnSearchCallBack() {
+            @Override
+            public void onSuccess(String url, SpiderReqResult s) {
+                try {
+                    JSONObject mao = new JSONObject(s.content);
+                    JSONArray sites = mao.optJSONArray("sites");
+                    JSONArray trueSites = new JSONArray();
+                    for (int i = 42; i < sites.length(); i++) {
+                        int k = 0;
+                        JSONObject site = sites.optJSONObject(i);
+                        try {
+                            Spider spider = null;
+                            String api = site.optString("api");
+                            String ext = site.optString("ext");
+                            if (site.optInt("type") == 0) {
+                                if (StringUtil.isAbsUrl(api)) {
+                                    HttpParser.parseSearchUrlForHtml(api, new HttpParser.OnSearchCallBack() {
+                                        @Override
+                                        public void onSuccess(String url, SpiderReqResult s) {
+                                            trueSites.put(site);
+                                        }
+
+                                        @Override
+                                        public void onFailure(int errorCode, String msg) {
+
+                                        }
+                                    });
+                                } else {
+                                    trueSites.put(site);
+                                }
+                                continue;
+                            }
+
+                            if (!StringUtil.isAbsUrl(api)) {
+                                Class cls = null;
+                                try {
+                                    cls = Class.forName("com.github.catvod.spider." + api.substring(4));
+                                    spider = (Spider) cls.newInstance();
+                                } catch (Exception e) {
+                                    System.out.println(e.getMessage());
+                                }
+                                if (spider == null) {
+                                    continue;
+                                }
+                                if (StringUtils.isNotEmpty(ext)) {
+                                    Method method = cls.getMethod("init", Context.class, String.class);
+                                    method.invoke(spider, null, ext);
+                                } else {
+                                    spider.init(null);
+                                }
+                                String category = spider.homeContent(false);
+                                System.out.println(category);
+                                try {
+                                    showCategory(spider, category, 0);
+                                    k++;
+                                } catch (Exception e) {
+
+                                }
+
+                                if (StringUtils.isNotEmpty(category)) {
+                                    JSONObject jsonObject = new JSONObject(category);
+                                    JSONArray classes = jsonObject.optJSONArray("class");
+                                    for (int j = 0; j < classes.length(); j++) {
+                                        String tid = classes.getJSONObject(j).optString("type_id");
+                                        System.out.println(tid);
+                                        //org.seimicrawler.xpath.core.function;
+                                        category = spider.categoryContent(tid, "1", false, null);
+                                        System.out.println(category);
+                                        try {
+                                            showCategory(spider, category, 0);
+                                            k++;
+                                        } catch (Exception e) {
+
+                                        }
+                                    }
+                                }
+                                String[] keys = {"钢铁侠", "熊出没", "柯南"};
+                                for (String key : keys) {
+                                    category = spider.searchContent(key, false);
+                                    System.out.println(category);
+                                    if (StringUtils.isNotEmpty(category)) {
+                                        try {
+                                            showCategory(spider, category, 0);
+                                            k++;
+                                        } catch (Exception e) {
+
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            SpiderDebug.log(e);
+                        }
+                        if (k > 0)
+                            trueSites.put(site);
+                    }
+                    System.out.println(trueSites.toString(4));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(int errorCode, String msg) {
+
+            }
+        });
+    }
+
+    @Test
+    public void testSites() {
+        HttpParser.parseSearchUrlForHtml("https://mao.guibiaoguo.tk/212757.json", new HttpParser.OnSearchCallBack() {
+            @Override
+            public void onSuccess(String url, SpiderReqResult s) {
+                try {
+                    AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
+                    analyzeRule.setContent(s.content, url);
+                    analyzeRule.setRedirectUrl(url);
+                    List lives = analyzeRule.getElements("$.lives[*]");
+                    JSONArray c4 = new JSONArray();
+                    for (Object live : lives) {
+                        JSONObject c3 = new JSONObject();
+                        analyzeRule.setContent(live.toString());
+                        List channels = analyzeRule.getElements("$.channels");
+                        String group = analyzeRule.getString("$.group");
+                        JSONArray c2 = new JSONArray();
+                        for (Object channel : channels) {
+                            analyzeRule.setContent(channel.toString());
+                            List urls = analyzeRule.getElements("$.urls");
+                            JSONObject c = new JSONObject();
+                            String name = analyzeRule.getString("$.name");
+                            c.put("name", name);
+                            JSONArray urls1 = new JSONArray();
+                            urls.forEach(url1 -> {
+                                HttpParser.parseSearchUrlForHtml(url1.toString(), new HttpParser.OnSearchCallBack() {
+                                    @Override
+                                    public void onSuccess(String url, SpiderReqResult s) {
+                                        if (s.content.contains("#EXTM3U"))
+                                            urls1.put(url);
+                                        System.out.println(url);
+                                    }
+
+                                    @Override
+                                    public void onFailure(int errorCode, String msg) {
+
+                                    }
+                                });
+                            });
+                            c.put("urls", urls1);
+                            c2.put(c);
+                        }
+                        c3.put("channels", c2);
+                        c3.put("group", group);
+                        c4.put(c3);
+                    }
+                    System.out.println(c4.toString(4));
+                } catch (Exception e) {
+
+                }
+            }
+
+            @Override
+            public void onFailure(int errorCode, String msg) {
+
+            }
+        });
+    }
+
+    @Test
+    public void testM3u8() {
+        HttpParser.parseSearchUrlForHtml("https://mao.guibiaoguo.tk/212757.json", new HttpParser.OnSearchCallBack() {
+            @Override
+            public void onSuccess(String url, SpiderReqResult s) {
+                try {
+                    AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
+                    analyzeRule.setContent(s.content, url);
+                    analyzeRule.setRedirectUrl(url);
+                    List lives = analyzeRule.getElements("$.lives[*]");
+                    JSONArray c4 = new JSONArray();
+                    StringBuilder builderM3U8 = new StringBuilder("#EXTM3U").append("\n");
+                    StringBuilder builderTXT = new StringBuilder();
+                    for (Object live : lives) {
+                        JSONObject c3 = new JSONObject();
+                        analyzeRule.setContent(live.toString());
+                        List channels = analyzeRule.getElements("$.channels");
+                        String group = analyzeRule.getString("$.group");
+                        JSONArray c2 = new JSONArray();
+                        builderTXT.append(group).append(",#genre#").append("\n");
+                        for (Object channel : channels) {
+                            analyzeRule.setContent(channel.toString());
+                            List urls = analyzeRule.getElements("$.urls");
+                            JSONObject c = new JSONObject();
+                            String name = analyzeRule.getString("$.name");
+                            c.put("name", name);
+                            JSONArray urls1 = new JSONArray();
+                            urls.forEach(url1 -> {
+                                builderM3U8.append("#EXTINF:-1 group-title=\"" + group + "\"," + name).append("\n");
+                                builderM3U8.append(url1).append("\n");
+                                builderTXT.append(name).append(",").append(url1).append("\n");
+                            });
+
+                            c.put("urls", urls1);
+                            c2.put(c);
+                        }
+                        c3.put("channels", c2);
+                        c3.put("group", group);
+                        c4.put(c3);
+                    }
+                    System.out.println(c4.toString(4));
+                    System.out.println(builderM3U8.toString());
+                } catch (Exception e) {
+
+                }
+            }
+
+            @Override
+            public void onFailure(int errorCode, String msg) {
+
+            }
+        });
+    }
+
+    @Test
+    public void hsck1() throws Exception {
+        Spider spider = new Legado();
+        spider.init(null, "https://mao.guibiaoguo.tk/hsck1.json");
+        String category = spider.homeContent(false);
+        System.out.println(category);
+        showCategory(spider, category, 0);
+        JSONObject jsonObject = new JSONObject(category);
+        JSONArray classes = jsonObject.optJSONArray("class");
+        for (int i = 0; i < classes.length(); i++) {
+            String tid = classes.getJSONObject(i).optString("type_id");
+            System.out.println(tid);
+            //org.seimicrawler.xpath.core.function;
+            category = spider.categoryContent(tid, "1", false, null);
+            System.out.println(category);
+            showCategory(spider, category, 0);
+        }
+    }
+
+    @Test
+    public void alipanso() throws Exception {
+        Spider spider = new Legado();
+        spider.init(null, "http://185.205.12.38:4004/alipanso.json");
+        String category = spider.searchContent("名侦探柯南TV版 国语", false);
+        System.out.println(category);
+        showCategory(spider, category, 0);
+    }
+
+    @Test
+    public void alps() throws Exception {
+        List<String> keys = new ArrayList<>();
+        keys.add("名侦探柯南TV版 国语");
+        xpathAli("http://185.205.12.38:4004/qq.json", keys);
+
+    }
+
+    @Test
+    public void checkAppys() throws Exception {
+        String json1 = "[{\"title\":\"思奇影视\",\"url\":\"http://app.siqitv.vip/mogai_api.php/v1.vod\"},{\"title\":\"天天影视\",\"url\":\"http://app.at008.cn/api.php/v1.vod\"},{\"title\":\"久久影院\",\"url\":\"http://l.bhtv.org.cn/mv/api.php/Chengcheng/vod/\"},{\"title\":\"段友影视\",\"url\":\"http://js.66app.me/api.php/app/\"},{\"title\":\"木子电影\",\"url\":\"http://www.muzidy.top/mogai_api.php/v1.vod\"},{\"title\":\"流星雨\",\"url\":\"http://nn.lxyyy.xyz:8/c/api.php/WAiLaowang/vod/\"},{\"title\":\"CJT影院\",\"url\":\"https://www.cjt521.com/api.php/v1.vod\"},{\"title\":\"5060影院\",\"url\":\"https://app.linzhiyuan.xyz/xgapp.php/v1/\"},{\"title\":\"免费看TV\",\"url\":\"http://www.freekan.vip/api.php/iptv/vod/\"},{\"title\":\"飞捷影视\",\"url\":\"https://www.fj6080.com/api.php/v1.vod\"},{\"title\":\"玺娜影视\",\"url\":\"https://pp.wxina.cn/api.php/v1.vod\"},{\"title\":\"哎呀影视\",\"url\":\"https://www.aisvod.tv/xgapp.php/v1/\"},{\"title\":\"淘剧社\",\"url\":\"https://app.shuhai99.com/api.php/v1.vod\"},{\"title\":\"米奇TV\",\"url\":\"http://www.s6ep3.top/api.php/iptv/vod/\"},{\"title\":\"环球影视\",\"url\":\"https://hqystv.com/api.php/app/\"},{\"title\":\"追剧达人\",\"url\":\"http://vipmv.tv/xgapp.php/v1/\"},{\"title\":\"4K影院\",\"url\":\"http://4kdytv.com/api.php/v1.vod\"},{\"title\":\"阿姨追剧\",\"url\":\"https://www.ayzhuiju.com/ruifenglb_api.php/v1.vod\"},{\"title\":\"麻花视频\",\"url\":\"https://www.mahuashipin.com/api.php/app/\"},{\"title\":\"皮皮动漫\",\"url\":\"http://dm.muying.me/mogai_api.php/v1.vod\"},{\"title\":\"汇聚库TV\",\"url\":\"https://www.zzclove666.com/api.php/v1.vod\"},{\"title\":\"海胆影视\",\"url\":\"http://xf123.cc/api.php/app/\"},{\"title\":\"火箭影视\",\"url\":\"http://huojian.wchulian.com.cn/api.php/app/\"},{\"title\":\"聚多影视\",\"url\":\"http://jdyy.weetai.cn/api.php/iptv/vod/\"},{\"title\":\"小强TV\",\"url\":\"http://xqapp.hailanfj.com/xgapp.php/v1/\"},{\"title\":\"爱西西TV\",\"url\":\"http://tv.aixixi.vip/api.php/iptv/vod/\"},{\"title\":\"看365\",\"url\":\"https://www.kan365.xyz/api.php/app/\"},{\"title\":\"星空影视\",\"url\":\"https://xkys.tv/xgapp.php/v1/\"},{\"title\":\"奈非迷\",\"url\":\"https://app.netflixmi.com/api.php/v1.vod\"},{\"title\":\"大师兄\",\"url\":\"http://dsxtv.tv.ci/api.php/dsx/vod/\"},{\"title\":\"免费看\",\"url\":\"https://freekan.vip/mogai_api.php/v1.vod\"},{\"title\":\"绿箭影视\",\"url\":\"http://www.69ty.cc/mogai_api.php/v1.vod\"},{\"title\":\"视听星球\",\"url\":\"http://zjyapijzys.shynwlkj.com/api.php/v1.vod\"},{\"title\":\"TV酷\",\"url\":\"https://www.u23c.com/api.php/app/\"},{\"title\":\"星影相随\",\"url\":\"http://app.rootthree.top/mogai_api.php/v1.vod\"},{\"title\":\"樱花动漫\",\"url\":\"https://www.dmwu.cc/api.php/v1.vod\"},{\"title\":\"吾爱影视\",\"url\":\"http://52ysw.xyz/mogai_api.php/v1.vod\"},{\"title\":\"蜜果TV\",\"url\":\"https://www.miguotv.net/api.php/app/\"},{\"title\":\"白菜追剧\",\"url\":\"http://lbapp.huimaojia.com:30119/mogai_api.php/v1.vod\"},{\"title\":\"奇趣影视\",\"url\":\"https://app.qiqu.me/mogai_api.php/v1.vod\"},{\"title\":\"月色影视\",\"url\":\"http://69ty.cc/mogai_api.php/v1.vod\"},{\"title\":\"虾皮视频\",\"url\":\"http://tv.cmt8.xyz/api.php/iptv/vod/\"},{\"title\":\"QC影视\",\"url\":\"https://www.qcsvip.com/api.php/v1.vod\"},{\"title\":\"小蜻蜓\",\"url\":\"http://3ketv.com/mogai_api.php/v1.vod\"},{\"title\":\"漫岛影视\",\"url\":\"http://app.mdaotv.cn/mubai_api.php/m2.vod\"},{\"title\":\"3080影视\",\"url\":\"http://sv.3080l.me/api.php/app/\"},{\"title\":\"极客\",\"url\":\"https://www.i8k.cc/xgapp.php/v1/\"},{\"title\":\"雪人影视\",\"url\":\"https://xg.qd234.cn/api.php/app/\"},{\"title\":\"宅男影院\",\"url\":\"http://www.sexyy.top/api.php/v1.vod\"},{\"title\":\"80K影视\",\"url\":\"https://1080p.tv/api.php/v1.vod\"},{\"title\":\"米来影视\",\"url\":\"http://42.51.37.161:2346/api.php/iptv/vod/\"},{\"title\":\"麻子追剧\",\"url\":\"http://b.2maz.cn/api.php/v1.vod\"},{\"title\":\"小易影视\",\"url\":\"https://xy.irop.cn/api.php/app/\"},{\"title\":\"菜鸟动漫\",\"url\":\"http://taikong.huangguay.com/mogai_api.php/v1.vod\"},{\"title\":\"刺桐影视\",\"url\":\"http://tv.cttv.vip/api.php/iptv/vod/\"},{\"title\":\"渔渔影视\",\"url\":\"http://luobo.yugenye.site/api.php/v1.vod\"},{\"title\":\"畅视影视\",\"url\":\"http://app.reboju.net/api.php/app/\"},{\"title\":\"益达影院\",\"url\":\"http://luobu.yss6080.com/mogai_api.php/v1.vod\"},{\"title\":\"猪猪影院\",\"url\":\"http://app.2zdyy.com/api.php/v1.vod\"},{\"title\":\"苍蓝资源\",\"url\":\"https://vip.ruifenglb.com:4433/api.php/app/\"},{\"title\":\"我爱跟剧\",\"url\":\"https://www.genmov.com/api.php/v1.vod\"},{\"title\":\"世界电影\",\"url\":\"https://app.lovetv.online/api.php/app/\"},{\"title\":\"山楂影视\",\"url\":\"http://dy6.dcd1.cn/api.php/iptv/vod/\"},{\"title\":\"兔子窝\",\"url\":\"http://cj.huimaojia.com:12345/mogai_api.php/v1.vod\"},{\"title\":\"黄河影视\",\"url\":\"http://i.ledu8.cn/api.php/v1.vod\"},{\"title\":\"辉哥影视\",\"url\":\"https://app.y.hgyule8.com/api.php/v1.vod\"},{\"title\":\"疯狂看\",\"url\":\"http://app.fkkdy.vip/mogai_api.php/v1.vod\"},{\"title\":\"筋斗云\",\"url\":\"https://tv.jindcloud.com/api.php/v1.vod\"},{\"title\":\"艾特影视\",\"url\":\"https://www.aitee.cc/api.php/v1.vod\"},{\"title\":\"暖光影视\",\"url\":\"https://app.bl210.com/api.php/v1.vod\"},{\"title\":\"思古影视\",\"url\":\"https://app.siguyy.com/xgapp.php/v1/\"},{\"title\":\"星球视频\",\"url\":\"http://119.29.121.48:8088/api.php/v1.vod\"},{\"title\":\"yoyo\",\"url\":\"http://jx.wnvod.net/ruifenglb_api.php/v1.vod\"},{\"title\":\"初心影视\",\"url\":\"https://www.18mv.club/api.php/v1.vod\"},{\"title\":\"小易影视\",\"url\":\"http://xy.irop.cn/api.php/v1.vod\"},{\"title\":\"播放呀\",\"url\":\"https://www.bofangya.com/xgapp.php/v1/\"},{\"title\":\"天神影视\",\"url\":\"https://deity.fun/api.php/app/\"},{\"title\":\"影视工场\",\"url\":\"https://www.ysgc.cc/xgapp.php/v1/\"},{\"title\":\"冷视TV\",\"url\":\"https://len.tv/api.php/v1.vod\"},{\"title\":\"南府影视\",\"url\":\"http://app.nfuxs.club/nfuxsapp.php/v1.vod\"},{\"title\":\"奈飞中文\",\"url\":\"https://www.naifei.org/api.php/app/\"},{\"title\":\"海棠视频\",\"url\":\"https://www.haitangsp.net/api.php/app/\"},{\"title\":\"漫岛\",\"url\":\"http://a.mdaotv.cn/api.php/app/\"},{\"title\":\"爱追剧\",\"url\":\"https://4k.lqiyi.cn/api.php/app/\"},{\"title\":\"全能影视\",\"url\":\"https://qnys5566.com/mogai_api.php/v1.vod\"},{\"title\":\"小极影视\",\"url\":\"http://app.8d8q.com/api.php/v1.vod\"},{\"title\":\"雪人资源\",\"url\":\"https://zy.qd234.cn/mogai_api.php/v1.vod\"},{\"title\":\"柠柚影视\",\"url\":\"http://nu.e4tv.cn/lvdou_api.php/v1.vod\"},{\"title\":\"名视影\",\"url\":\"http://app.qqccv.com/mogai_api.php/v1.vod\"},{\"title\":\"莫扎兔\",\"url\":\"http://www.mozhatu.xyz/api.php/app/\"},{\"title\":\"麻瓜视频\",\"url\":\"http://aliyun.k8aa.com/mogai_api.php/v1.vod\"},{\"title\":\"爱看美剧\",\"url\":\"https://www.uumjw.com/api.php/v1.vod\"},{\"title\":\"追剧猫\",\"url\":\"http://tv.kmtvb.com/api.php/v1.vod\"},{\"title\":\"橘子影视\",\"url\":\"http://jz.juzidy.vip/mogai_api.php/v1.vod\"},{\"title\":\"久九影视\",\"url\":\"https://api.58qxk.cn/xgapp.php/v1/\"},{\"title\":\"大熊影视\",\"url\":\"https://dxys2233.com/mogai_api.php/v1.vod\"},{\"title\":\"美剧虫\",\"url\":\"https://meijuchong.com/api.php/v1.vod\"},{\"title\":\"皮皮影视\",\"url\":\"http://pp.ig4.cn/api.php/app/\"},{\"title\":\"林谷影视\",\"url\":\"http://ys.linguyy.xyz/mogai_api.php/v1.vod\"},{\"title\":\"快云影音\",\"url\":\"https://www.kuaiyunyy.com/api.php/app/\"},{\"title\":\"U5影视\",\"url\":\"https://appx.uy07.com/api.php/v1.vod\"},{\"title\":\"二九影视\",\"url\":\"https://app.19kp.com/api.php/v1.vod\"},{\"title\":\"优视影视\",\"url\":\"http://cc.ysys.asia/api.php/v1.vod\"},{\"title\":\"思奇TV\",\"url\":\"http://tv.siqitv.vip/api.php/iptv/vod/\"},{\"title\":\"瓜皮TV\",\"url\":\"http://www.dijiaxia.com/xgapp.php/v1/\"},{\"title\":\"老韩综\",\"url\":\"http://zy.kmoonhh.com/api.php/app/\"},{\"title\":\"天空影视\",\"url\":\"https://www.tkys.tv/api.php/app/\"},{\"title\":\"看剧吧\",\"url\":\"http://app.ishen520.com/api.php/v1.vod\"},{\"title\":\"京广航\",\"url\":\"https://www.jingguanhang.com/api.php/app/\"},{\"title\":\"熊猫动漫\",\"url\":\"http://dongman.k8aa.com/mogai_api.php/v1.vod\"},{\"title\":\"喵乐影视\",\"url\":\"http://miaoleys.com/api.php/v1.vod\"},{\"title\":\"冷月TV\",\"url\":\"https://tv.521x5.com/api.php/iptv/vod/\"},{\"title\":\"天天视频\",\"url\":\"http://app.qianju.cc/api.php/v1.vod\"},{\"title\":\"瑞丰资源\",\"url\":\"https://ts.yjhan.com:4433/ruifenglb_api.php/v1.vod\"},{\"title\":\"小极TV\",\"url\":\"http://api.8d8q.com/mmv/api.php/Chengcheng/vod/\"},{\"title\":\"尘梓TV\",\"url\":\"http://cztv.vip:83/api.php/chenziystv/vod/\"},{\"title\":\"二货影视\",\"url\":\"http://d.zjj.life:88/mv/api.php/Chengcheng/vod/\"},{\"title\":\"小熊猫TV\",\"url\":\"http://tv2.hetaoys.vip/api.php/iptv/vod/\"},{\"title\":\"心爱影视\",\"url\":\"https://xays6677.com/mogai_api.php/v1.vod\"},{\"title\":\"酷扑TV\",\"url\":\"https://www.kupu.cc/api.php/app/\"},{\"title\":\"大鱼TV\",\"url\":\"https://www.dytv123.com/api.php/app/\"},{\"title\":\"看看剧\",\"url\":\"https://www.kankanju.cn/api.php/v1.vod\"},{\"title\":\"蓝光视频\",\"url\":\"http://vip.91iqiyi.com/mogai_api.php/v1.vod\"},{\"title\":\"比邻影视\",\"url\":\"http://0hzy.cn:9990/mogai_api.php/v1.vod\"},{\"title\":\"乐酷TV\",\"url\":\"http://150.138.78.177:2021/api.php/Chengcheng/vod/\"},{\"title\":\"雨果影视\",\"url\":\"http://ygapp.xcys63.com/api.php/v1.vod\"},{\"title\":\"北墨影院\",\"url\":\"http://beimotv.com/api.php/app/\"},{\"title\":\"爱影视\",\"url\":\"https://www.hzlff.cn/api.php/v1.vod\"},{\"title\":\"荔枝影视\",\"url\":\"http://api.zjys.vip/api.php/iptv/vod/\"},{\"title\":\"畅看影视\",\"url\":\"http://www.sxbrd.com/api.php/app/\"},{\"title\":\"杨桃影视\",\"url\":\"https://ytys3456.com/mogai_api.php/v1.vod\"},{\"title\":\"DC影视\",\"url\":\"http://chaorenbb.com/api.php/v1.vod\"},{\"title\":\"我爱电影\",\"url\":\"http://xg.5imv.net/api.php/app/\"},{\"title\":\"雪梨视频\",\"url\":\"https://zsb2233.com/mogai_api.php/v1.vod\"},{\"title\":\"vip影院\",\"url\":\"http://360yy.cn/api.php/app/\"},{\"title\":\"动力影视\",\"url\":\"http://www.love9989.com/api.php/iptv/vod/\"},{\"title\":\"百讯视频\",\"url\":\"https://z.iopenyun.com:99/app_api.php/v1.vod\"},{\"title\":\"豆渣影视\",\"url\":\"http://douzhayss.cc/api.php/v1.vod\"},{\"title\":\"安逸影视\",\"url\":\"http://aytv.wchulian.com.cn:6633/api.php/app/\"},{\"title\":\"蜜果TV\",\"url\":\"http://vv.miguotv.net/m/api.php/Chengcheng/vod/\"},{\"title\":\"温妮影视\",\"url\":\"https://www.wenniys.com/mogai_api.php/v1.vod\"},{\"title\":\"小七影视\",\"url\":\"http://ys.kd60.cn/api.php/app/\"},{\"title\":\"极光影院\",\"url\":\"http://app.winxz.cc/api.php/v1.vod\"},{\"title\":\"神马影院\",\"url\":\"https://www.6080kan.cc/xgapp.php/v1/\"},{\"title\":\"躺平影视\",\"url\":\"http://www.lltpys.com/api.php/app/\"},{\"title\":\"污妖动漫\",\"url\":\"https://www.wyydm.com/api.php/app/\"},{\"title\":\"星辰视频\",\"url\":\"https://m.hj0999.com/api.php/v1.vod\"},{\"title\":\"新享影视\",\"url\":\"https://www.jiagan.cx/api.php/v1.vod\"},{\"title\":\"柚子视频\",\"url\":\"http://yz.26ys.cn/api.php/v1.vod\"},{\"title\":\"饭团影院\",\"url\":\"http://television.wkfile.com/api.php/app/\"},{\"title\":\"若惜影视\",\"url\":\"http://rxw.ruoxinew.com/api.php/Sntv/vod/\"},{\"title\":\"913e影视\",\"url\":\"http://www.913e.net/xgapp.php/v1/\"},{\"title\":\"剧迷视频\",\"url\":\"http://pan.hzafw.com/api.php/v1.vod\"},{\"title\":\"非凡TV\",\"url\":\"https://app.feifan.live:2087/xgapp.php/v1/\"},{\"title\":\"三日影院\",\"url\":\"https://www.3ri.net/api.php/v1.vod\"},{\"title\":\"爱迪影视\",\"url\":\"https://aidi.fun/xgapp.php/v1/\"},{\"title\":\"氢视频\",\"url\":\"http://h1080p.com/api.php/app/\"},{\"title\":\"独播社\",\"url\":\"http://35ys.cc/api.php/v1.vod\"},{\"title\":\"80影视\",\"url\":\"http://www.ccc8.net/api.php/v1.vod\"},{\"title\":\"土豆TV\",\"url\":\"http://xiuxian.qd234.cn/mogai_api.php/v1.vod\"},{\"title\":\"(无名)\",\"url\":\"http://ccxg.xazhutu.com/xgapp.php/v1/\"},{\"title\":\"双子星\",\"url\":\"http://tv.diyoui.cc/api.php/iptv/vod/\"},{\"title\":\"灵狐影视\",\"url\":\"http://x.dmntv.com/api.php/app/\"},{\"title\":\"萌蛋蛋\",\"url\":\"http://app.mengdandan.com/xgapp.php/v1/\"},{\"title\":\"LIBVIO\",\"url\":\"https://www.mkys.me/api.php/app/\"},{\"title\":\"影阅阁\",\"url\":\"http://221.236.18.12:665/api.php/v1.vod\"},{\"title\":\"大头影视\",\"url\":\"http://dy.idsao.com/mogai_api.php/v1.vod\"},{\"title\":\"爱追剧\",\"url\":\"http://81.71.18.95:520/lvdou_api.php/v1.vod\"},{\"title\":\"玺心影视\",\"url\":\"https://tv.arbd.cn/api.php/v1.vod\"},{\"title\":\"傲视影院\",\"url\":\"http://j.zjj.life:88/mv/api.php/Chengcheng/vod/\"},{\"title\":\"抹茶猪\",\"url\":\"https://www.mczdyw.com/api.php/app/\"},{\"title\":\"嗷呜动漫\",\"url\":\"http://app.aowufuns.com:1031/api.php/app/\"},{\"title\":\"盒子影院\",\"url\":\"http://i.nihaohezi.com/api.php/v1.vod\"},{\"title\":\"小白视频\",\"url\":\"https://ccoyytv.com/api.php/app/\"},{\"title\":\"遗忘影视\",\"url\":\"http://www.bywdtk.vip/mogai_api.php/v1.vod\"},{\"title\":\"迪迪影院\",\"url\":\"http://dd88.icu:6080/api.php/app/\"},{\"title\":\"嘀哩嘀哩\",\"url\":\"http://dilidili.la/api.php/app/\"},{\"title\":\"段友影视\",\"url\":\"http://js.66app.me/api.php/v1.vod\"},{\"title\":\"侦探影视\",\"url\":\"http://ys.huangguay.com/mogai_api.php/v1.vod\"},{\"title\":\"HG影视\",\"url\":\"http://hgyx.vip/api.php/v1.vod\"},{\"title\":\"饭后电影\",\"url\":\"http://summ.vip/api.php/v1.vod\"},{\"title\":\"月亮影视\",\"url\":\"http://ys.13tv.top/acj_api.php/v1.vod\"},{\"title\":\"黑龙影视\",\"url\":\"http://vip.ji-ding-he.site/api.php/iptv/vod/\"},{\"title\":\"苗点影视\",\"url\":\"https://www.msdv.cn/api.php/app/\"},{\"title\":\"可米影视\",\"url\":\"http://www.kmysw.vip/api.php/v1.vod\"},{\"title\":\"美剧范\",\"url\":\"http://ttzmz.net/api.php/v1.vod\"},{\"title\":\"HG影视\",\"url\":\"http://api.hgyx.vip/api.php/iptv/vod/\"},{\"title\":\"虎猫视频\",\"url\":\"https://humaosp.com/mogai_api.php/v1.vod\"},{\"title\":\"映迷\",\"url\":\"https://www.inmi.app/xgapp.php/v1/\"},{\"title\":\"手指影视\",\"url\":\"https://szys5678.com/mogai_api.php/v1.vod\"},{\"title\":\"影视大全\",\"url\":\"https://xc.xixi2yy.xyz/mogai_api.php/v1.vod\"},{\"title\":\"1080p\",\"url\":\"https://1080p.one/mogai_api.php/v1.vod\"},{\"title\":\"嘀哩嘀哩\",\"url\":\"https://api.diliktv.xyz/api.php/Chengcheng/vod/\"},{\"title\":\"555电影\",\"url\":\"http://w7tv.com/xgapp.php/v1/\"},{\"title\":\"追剧吧\",\"url\":\"http://zhuiju8.vip/api.php/v1.vod\"},{\"title\":\"爱西西\",\"url\":\"http://app.aixixi.vip/mogai_api.php/v1.vod\"},{\"title\":\"2号币\",\"url\":\"http://phoebe.cf/api.php/iptv/vod/\"},{\"title\":\"蜗牛动漫\",\"url\":\"http://woniudm.woniu.cyou:20000/mogai_api.php/v1.vod\"},{\"title\":\"影视热剧\",\"url\":\"http://lb.26ys.cn/api.php/v1.vod\"},{\"title\":\"毒舌电影\",\"url\":\"https://cms.96ym.cn/api.php/app/\"}]";
+        String json2 = "[{\"baseUrl\":\"\",\"apiUrl\":\"http://www.lanmaody.com/api.php/v1.vod\",\"searchUrl\":\"http://www.lanmaody.com/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"懒猫电影\",\"detailUrl\":\"http://www.lanmaody.com/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"https://www.jingguanghang.com\",\"apiUrl\":\"https://www.jingguanghang.com/api.php/app/\",\"searchUrl\":\"https://www.jingguanghang.com/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"京广航\",\"detailUrl\":\"https://www.jingguanghang.com/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"https://www.wyydm.com\",\"apiUrl\":\"https://www.wyydm.com/api.php/app/\",\"searchUrl\":\"https://www.wyydm.com/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"污妖动漫\",\"detailUrl\":\"https://www.wyydm.com/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://tv.78tv.cc/api.php/v1.vod\",\"searchUrl\":\"http://tv.78tv.cc/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"休闲影视\",\"detailUrl\":\"http://tv.78tv.cc/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://ys.huangguay.com/mogai_api.php/v1.vod\",\"searchUrl\":\"http://ys.huangguay.com/mogai_api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"侦探影视\",\"detailUrl\":\"http://ys.huangguay.com/mogai_api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"http://www.dijiaxia.com\",\"apiUrl\":\"http://www.dijiaxia.com/xgapp.php/v1/\",\"searchUrl\":\"http://www.dijiaxia.com/xgapp.php/v1/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"瓜皮TV\",\"detailUrl\":\"http://www.dijiaxia.com/xgapp.php/v1/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://www.videovips.top/api.php/v1.vod\",\"searchUrl\":\"http://www.videovips.top/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"哈尼视频\",\"detailUrl\":\"http://www.videovips.top/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://1080p.tv/api.php/v1.vod\",\"searchUrl\":\"http://1080p.tv/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"80k影视\",\"detailUrl\":\"http://1080p.tv/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://lbapp.huimaojia.com:30119/mogai_api.php/v1.vod\",\"searchUrl\":\"http://lbapp.huimaojia.com:30119/mogai_api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"白菜追剧\",\"detailUrl\":\"http://lbapp.huimaojia.com:30119/mogai_api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"https://tv.13nm.com/api.php/v1.vod\",\"searchUrl\":\"https://tv.13nm.com/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"柠檬影视\",\"detailUrl\":\"https://tv.13nm.com/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://dm.496dy.cn:88/api.php/v1.vod\",\"searchUrl\":\"http://dm.496dy.cn:88/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"追番猫\",\"detailUrl\":\"http://dm.496dy.cn:88/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"https://lb.5277s.com/api.php/v1.vod\",\"searchUrl\":\"https://lb.5277s.com/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"段友影视\",\"detailUrl\":\"https://lb.5277s.com/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://3ketv.com/mogai_api.php/v1.vod\",\"searchUrl\":\"http://3ketv.com/mogai_api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"小蜻蜓视频\",\"detailUrl\":\"http://3ketv.com/mogai_api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://cs.hgyx.vip/api.php/v1.vod\",\"searchUrl\":\"http://cs.hgyx.vip/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"HG影视\",\"detailUrl\":\"http://cs.hgyx.vip/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"https://len.tv/api.php/v1.vod\",\"searchUrl\":\"https://len.tv/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"冷视TV\",\"detailUrl\":\"https://len.tv/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"https://fufu.ixhduta.cn/api.php/v1.vod\",\"searchUrl\":\"https://fufu.ixhduta.cn/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"FUFU影视\",\"detailUrl\":\"https://fufu.ixhduta.cn/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://119.29.121.48/api.php/v1.vod\",\"searchUrl\":\"http://119.29.121.48/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"团夕影院\",\"detailUrl\":\"http://119.29.121.48/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"https://dbzy.cc\",\"apiUrl\":\"https://dbzy.cc/xgapp.php/v1/\",\"searchUrl\":\"https://dbzy.cc/xgapp.php/v1/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"点播TV\",\"detailUrl\":\"https://dbzy.cc/xgapp.php/v1/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"http://w7tv.com\",\"apiUrl\":\"http://w7tv.com/api.php/app/\",\"searchUrl\":\"http://w7tv.com/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"555电影\",\"detailUrl\":\"http://w7tv.com/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"https://www.bofangya.com\",\"apiUrl\":\"https://www.bofangya.com/xgapp.php/v1/\",\"searchUrl\":\"https://www.bofangya.com/xgapp.php/v1/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"播放呀\",\"detailUrl\":\"https://www.bofangya.com/xgapp.php/v1/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://app.shuhai99.com/api.php/v1.vod\",\"searchUrl\":\"http://app.shuhai99.com/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"淘剧社\",\"detailUrl\":\"http://app.shuhai99.com/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"https://www.007ts.cc\",\"apiUrl\":\"https://www.007ts.cc/api.php/app/\",\"searchUrl\":\"https://www.007ts.cc/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"007影视\",\"detailUrl\":\"https://www.007ts.cc/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://app.xiaoysw.com/api.php/v1.vod\",\"searchUrl\":\"http://app.xiaoysw.com/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"小极影视\",\"detailUrl\":\"http://app.xiaoysw.com/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"https://www.dushe520.com\",\"apiUrl\":\"https://www.dushe520.com/api.php/app/\",\"searchUrl\":\"https://www.dushe520.com/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"毒舌电影\",\"detailUrl\":\"https://www.dushe520.com/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://mm.tcsdchina.com:6096/mogai_api.php/v1.vod\",\"searchUrl\":\"http://mm.tcsdchina.com:6096/mogai_api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"公主影视\",\"detailUrl\":\"http://mm.tcsdchina.com:6096/mogai_api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://zly.xjqxz.top/api.php/v1.vod\",\"searchUrl\":\"http://zly.xjqxz.top/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"颖家影院\",\"detailUrl\":\"http://zly.xjqxz.top/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"http://app.reboju.net\",\"apiUrl\":\"http://app.reboju.net/api.php/app/\",\"searchUrl\":\"http://app.reboju.net/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"畅视影视\",\"detailUrl\":\"http://app.reboju.net/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"https://www.u23c.com\",\"apiUrl\":\"https://www.u23c.com/api.php/app/\",\"searchUrl\":\"https://www.u23c.com/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"琳琅影视\",\"detailUrl\":\"https://www.u23c.com/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://app.xkvideo.design/api.php/v1.vod\",\"searchUrl\":\"http://app.xkvideo.design/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"南府追剧\",\"detailUrl\":\"http://app.xkvideo.design/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"https://xy.irop.cn\",\"apiUrl\":\"https://xy.irop.cn/api.php/app/\",\"searchUrl\":\"https://xy.irop.cn/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"小易影视\",\"detailUrl\":\"https://xy.irop.cn/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://szys3355.com/mogai_api.php/v1.vod\",\"searchUrl\":\"http://szys3355.com/mogai_api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"手指影视\",\"detailUrl\":\"http://szys3355.com/mogai_api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"http://dd88.icu:6080\",\"apiUrl\":\"http://dd88.icu:6080/api.php/app/\",\"searchUrl\":\"http://dd88.icu:6080/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"迪迪影院\",\"detailUrl\":\"http://dd88.icu:6080/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://www.ccc8.net/api.php/v1.vod\",\"searchUrl\":\"http://www.ccc8.net/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"80影视\",\"detailUrl\":\"http://www.ccc8.net/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://4kdytv.com/api.php/v1.vod\",\"searchUrl\":\"http://4kdytv.com/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"4K影院\",\"detailUrl\":\"http://4kdytv.com/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"https://lb.5277s.com\",\"apiUrl\":\"https://www.i8k.cc/xgapp.php/v1/\",\"searchUrl\":\"https://www.i8k.cc/xgapp.php/v1/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"极客\",\"detailUrl\":\"https://www.i8k.cc/xgapp.php/v1/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"http://xf123.cc\",\"apiUrl\":\"http://xf123.cc/api.php/app/\",\"searchUrl\":\"http://xf123.cc/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"海胆影视\",\"detailUrl\":\"http://xf123.cc/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://58xtv.net/api.php/v1.vod\",\"searchUrl\":\"http://58xtv.net/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"先锋影视\",\"detailUrl\":\"http://58xtv.net/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://miaoletv.com/api.php/v1.vod\",\"searchUrl\":\"http://miaoletv.com/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"喵乐影视\",\"detailUrl\":\"http://miaoletv.com/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://www.sp.ooo/api.php/v1.vod\",\"searchUrl\":\"http://www.sp.ooo/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"VIP影视\",\"detailUrl\":\"http://www.sp.ooo/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"https://www.ik4.cc\",\"apiUrl\":\"https://www.ik4.cc/api.php/app/\",\"searchUrl\":\"https://www.ik4.cc/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"影视工场\",\"detailUrl\":\"https://www.ik4.cc/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"https://app.linzhiyuan.xyz\",\"apiUrl\":\"https://app.linzhiyuan.xyz/xgapp.php/v1/\",\"searchUrl\":\"https://app.linzhiyuan.xyz/xgapp.php/v1/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"5060影院\",\"detailUrl\":\"https://app.linzhiyuan.xyz/xgapp.php/v1/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"\",\"apiUrl\":\"https://www.hzlff.cn/api.php/v1.vod\",\"searchUrl\":\"https://www.hzlff.cn/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"爱影视\",\"detailUrl\":\"https://www.hzlff.cn/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"http://1.wcx.fit:8\",\"apiUrl\":\"http://1.wcx.fit:8/api.php/app/\",\"searchUrl\":\"http://1.wcx.fit:8/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"火箭影视\",\"detailUrl\":\"http://1.wcx.fit:8/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"http://app.jhdyw.vip:1234\",\"apiUrl\":\"http://app.jhdyw.vip:1234/api.php/app/\",\"searchUrl\":\"http://app.jhdyw.vip:1234/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"江湖影视\",\"detailUrl\":\"http://app.jhdyw.vip:1234/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"http://www.languotv.com\",\"apiUrl\":\"http://www.languotv.com/xgapp.php/v1/\",\"searchUrl\":\"http://www.languotv.com/xgapp.php/v1/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"蓝果影视\",\"detailUrl\":\"http://www.languotv.com/xgapp.php/v1/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://www.bd-4k.ml/api.php/v1.vod\",\"searchUrl\":\"http://www.bd-4k.ml/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"一只鱼影视\",\"detailUrl\":\"http://www.bd-4k.ml/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"http://www.913e.net\",\"apiUrl\":\"http://www.913e.net/api.php/app/\",\"searchUrl\":\"http://www.913e.net/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"913E影视\",\"detailUrl\":\"http://www.913e.net/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://longw.xyz:91/api.php/v1.vod\",\"searchUrl\":\"http://longw.xyz:91/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"追影兔\",\"detailUrl\":\"http://longw.xyz:91/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"https://api.58qxk.cn\",\"apiUrl\":\"https://api.58qxk.cn/api.php/app/\",\"searchUrl\":\"https://api.58qxk.cn/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"久九影视\",\"detailUrl\":\"https://api.58qxk.cn/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"https://app.siguyy.com\",\"apiUrl\":\"https://app.siguyy.com/xgapp.php/v1/\",\"searchUrl\":\"https://app.siguyy.com/xgapp.php/v1/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"思古影视\",\"detailUrl\":\"https://app.siguyy.com/xgapp.php/v1/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"http://app.mengdandan.com\",\"apiUrl\":\"http://app.mengdandan.com/xgapp.php/v1/\",\"searchUrl\":\"http://app.mengdandan.com/xgapp.php/v1/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"萌蛋蛋\",\"detailUrl\":\"http://app.mengdandan.com/xgapp.php/v1/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://app.5lp.net/api.php/v1.vod\",\"searchUrl\":\"http://app.5lp.net/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"吾爱影视\",\"detailUrl\":\"http://app.5lp.net/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://app.hetaoys.vip/api.php/v1.vod\",\"searchUrl\":\"http://app.hetaoys.vip/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"核桃影视V1\",\"detailUrl\":\"http://app.hetaoys.vip/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://yuntv.iyxtv.cn/mogai_api.php/v1.vod\",\"searchUrl\":\"http://yuntv.iyxtv.cn/mogai_api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"优炫影视\",\"detailUrl\":\"http://yuntv.iyxtv.cn/mogai_api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"https://www.aisvod.tv\",\"apiUrl\":\"https://www.aisvod.tv/xgapp.php/v1/\",\"searchUrl\":\"https://www.aisvod.tv/xgapp.php/v1/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"爱尚影视\",\"detailUrl\":\"https://www.aisvod.tv/xgapp.php/v1/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://www.fj6080.com/api.php/v1.vod\",\"searchUrl\":\"http://www.fj6080.com/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"飞捷影视\",\"detailUrl\":\"http://www.fj6080.com/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"https://diliktv.xyz\",\"apiUrl\":\"https://diliktv.xyz/xgapp.php/v1/\",\"searchUrl\":\"https://diliktv.xyz/xgapp.php/v1/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"嘀哩嘀哩\",\"detailUrl\":\"https://diliktv.xyz/xgapp.php/v1/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://v.nhdyys.cn/api.php/v1.vod\",\"searchUrl\":\"http://v.nhdyys.cn/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"内涵影视\",\"detailUrl\":\"http://v.nhdyys.cn/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"http://app1.yuzhouys.com\",\"apiUrl\":\"http://app1.yuzhouys.com/api.php/app/\",\"searchUrl\":\"http://app1.yuzhouys.com/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"海绵影视\",\"detailUrl\":\"http://app1.yuzhouys.com/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"https://hou.lu\",\"apiUrl\":\"https://hou.lu/api.php/app/\",\"searchUrl\":\"https://hou.lu/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"大师兄\",\"detailUrl\":\"https://hou.lu/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://www.52gen.com/api.php/v1.vod\",\"searchUrl\":\"http://www.52gen.com/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"我爱跟剧\",\"detailUrl\":\"http://www.52gen.com/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://www.269w.com/api.php/v1.vod\",\"searchUrl\":\"http://www.269w.com/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"小城影视\",\"detailUrl\":\"http://www.269w.com/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"https://app.y.hgyule8.com/api.php/v1.vod\",\"searchUrl\":\"https://app.y.hgyule8.com/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"辉哥影视\",\"detailUrl\":\"https://app.y.hgyule8.com/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://zhuijuba.vip/api.php/v1.vod\",\"searchUrl\":\"http://zhuijuba.vip/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"追剧吧\",\"detailUrl\":\"http://zhuijuba.vip/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"https://vip.wuqcms.com\",\"apiUrl\":\"https://vip.wuqcms.com/api.php/app/\",\"searchUrl\":\"https://vip.wuqcms.com/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"极乐阁\",\"detailUrl\":\"https://vip.wuqcms.com/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"\",\"apiUrl\":\"https://www.18mv.club/api.php/v1.vod\",\"searchUrl\":\"https://www.18mv.club/api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"初心影视\",\"detailUrl\":\"https://www.18mv.club/api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"https://ptygx.com\",\"apiUrl\":\"https://ptygx.com/api.php/app/\",\"searchUrl\":\"https://ptygx.com/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"九合视频\",\"detailUrl\":\"https://ptygx.com/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"http://vipmv.tv\",\"apiUrl\":\"http://vipmv.tv/xgapp.php/v1/\",\"searchUrl\":\"http://vipmv.tv/xgapp.php/v1/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"追剧达人\",\"detailUrl\":\"http://vipmv.tv/xgapp.php/v1/video_detail?id=%s\",\"type\":\"AppV0\"},{\"baseUrl\":\"\",\"apiUrl\":\"http://yfys1122.com/mogai_api.php/v1.vod\",\"searchUrl\":\"http://yfys1122.com/mogai_api.php/v1.vod?page=1&limit=10&wd=%s\",\"parserUrl\":\"\",\"sourceName\":\"远方影视\",\"detailUrl\":\"http://yfys1122.com/mogai_api.php/v1.vod/detail?vod_id=%s&rel_limit=10\",\"type\":\"aiKanTv\"},{\"baseUrl\":\"http://www.ayinb.com\",\"apiUrl\":\"http://www.ayinb.com/api.php/app/\",\"searchUrl\":\"http://www.ayinb.com/api.php/app/search?text=%s&pg=1\",\"parserUrl\":\"\",\"sourceName\":\"爱影吧\",\"detailUrl\":\"http://www.ayinb.com/api.php/app/video_detail?id=%s\",\"type\":\"AppV0\"}]";
+        JSONArray array1 = new JSONArray(json1);
+        JSONArray array2 = new JSONArray(json2);
+        JSONArray array3 = new JSONArray();
+        JSONArray array4 = new JSONArray();
+        for (int i = 0; i < array2.length(); i++) {
+            JSONObject ysdq = array2.optJSONObject(i);
+            for (int j = 0; j < array1.length(); j++) {
+                JSONObject appYs = array1.optJSONObject(j);
+                if (ysdq.optString("apiUrl").equalsIgnoreCase(appYs.optString("url"))) {
+                    System.out.println(ysdq.toString());
+                    array3.put(ysdq);
+                    break;
+                }
+            }
+        }
+        System.out.println(array3.toString(4));
+        System.out.println(array4.toString(4));
+    }
+
+    @Test
+    public void testM3U8Sites() {
+        HttpParser.parseSearchUrlForHtml("https://gitee.com/shentong_012/HikerRules/raw/master/%E8%A7%86%E7%95%8C.m3u8", new HttpParser.OnSearchCallBack() {
+            @Override
+            public void onSuccess(String url, SpiderReqResult s) {
+                try {
+                    AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
+                    analyzeRule.setContent(s.content, url);
+                    analyzeRule.setRedirectUrl(url);
+                    List channels = analyzeRule.getElements(":#EX(TINF):-1 group-title=\"(.*)\",(.*)\\s(.*)");
+                    Map<String,List> c3;
+                    Map<String,Map<String,List>> c1 = new HashMap<>();
+                    int i = 0;
+                    for (Object channel : channels) {
+//                        if(i>=300){
+//                            break;
+//                        }
+                        analyzeRule.setContent(channel);
+
+                        String url1 = analyzeRule.getString("$3");
+                        String name = analyzeRule.getString("$2");;
+                        String group = analyzeRule.getString("$1");;
+                        if(c1.get(group) == null){
+                            c3=new HashMap<>();
+                            c1.put(group,c3);
+                        } else {
+                            c3 = c1.get(group);
+                        }
+                        List urls1 ;
+                        if(c3.get(name) == null){
+                            urls1 = new ArrayList();
+                            c3.put(name,urls1);
+                        } else {
+                            urls1 = c3.get(name);
+                        }
+                        if(url1.endsWith(".m3u8")){
+                            HttpParser.parseSearchUrlForHtml(url1, new HttpParser.OnSearchCallBack() {
+                                @Override
+                                public void onSuccess(String url, SpiderReqResult s) {
+                                    if (s.content.contains("#EXTM3U"))
+                                        urls1.add(url);
+                                    System.out.println(url);
+                                }
+
+                                @Override
+                                public void onFailure(int errorCode, String msg) {
+
+                                }
+                            });
+                        }
+                        i++;
+                    }
+                    System.out.println(new JSONObject(c1).toString(4));
+
+                    JSONArray e1 = new JSONArray();
+                    c1.forEach((key,value)->{
+                        JSONObject d1 = new JSONObject();
+                        try {
+                            JSONArray d2 = new JSONArray();
+                            value.forEach((key1,value1)->{
+                                try {
+
+                                    if(!value1.isEmpty()){
+                                        JSONObject d3 = new JSONObject();
+                                        d3.put("name",key1);
+                                        d3.put("urls",value1);
+                                        d2.put(d3);
+                                    }
+                                } catch (Exception e) {
+
+                                }
+                            });
+                            d1.put("group",key);
+                            d1.put("channels",d2);
+                            e1.put(d1);
+                        }catch (Exception e) {
+
+                        }
+
+                    });
+                    System.out.println(e1.toString(4));
+                } catch (Exception e) {
+
+                }
+            }
+
+            @Override
+            public void onFailure(int errorCode, String msg) {
+
+            }
+        });
+    }
+
+    @Test
+    public void testMatch() {
+        String str = "#EXTM3U\n" +
+                "#EXTINF:-1 group-title=\"港台频道\",凤凰资讯台\n" +
+                "http://ott.js.chinamobile.com/TVOD/3/224/3221228098/index.m3u8\n" +
+                "#EXTINF:-1 group-title=\"港台频道\",凤凰香港台\n" +
+                "http://ott.js.chinamobile.com/TVOD/3/224/3221228060/index.m3u8";
+        Pattern pattern = Pattern.compile("#EXTINF:-1 group-title=\"(.*)\",(.*)\\s(.*)");
+        Matcher matcher = pattern.matcher(str);
+        while (matcher.find()) {
+            System.out.println(matcher.group(0));
+        }
+    }
+
+    @Test
+    public void testCatLegddo() {
+        HttpParser.parseSearchUrlForHtml("https://mao.guibiaoguo.tk/212757.json", new HttpParser.OnSearchCallBack() {
+            @Override
+            public void onSuccess(String url, SpiderReqResult s) {
+                try {
+                    JSONObject mao = new JSONObject(s.content);
+                    JSONArray sites = mao.optJSONArray("sites");
+                    JSONArray trueSites = new JSONArray();
+                    for (int i = 0; i < sites.length(); i++) {
+                        int k = 0;
+                        JSONObject site = sites.optJSONObject(i);
+                        try {
+                            Spider spider = null;
+                            String api = site.optString("api");
+                            String ext = site.optString("ext");
+                            if (site.optInt("type") == 0) {
+                                if (StringUtil.isAbsUrl(api)) {
+                                    HttpParser.parseSearchUrlForHtml(api, new HttpParser.OnSearchCallBack() {
+                                        @Override
+                                        public void onSuccess(String url, SpiderReqResult s) {
+                                            trueSites.put(site);
+                                        }
+
+                                        @Override
+                                        public void onFailure(int errorCode, String msg) {
+
+                                        }
+                                    });
+                                } else {
+                                    trueSites.put(site);
+                                }
+                                continue;
+                            }
+
+                            if (!StringUtil.isAbsUrl(api)) {
+                                Class cls = null;
+                                try {
+                                    if(api.contains("XPath")) {
+                                        cls = Class.forName("com.github.catvod.spider.Legado");
+                                    } else {
+                                        cls = Class.forName("com.github.catvod.spider." + api.substring(4));
+                                    }
+                                    spider = (Spider) cls.newInstance();
+                                } catch (Exception e) {
+                                    System.out.println(e.getMessage());
+                                }
+                                if (spider == null) {
+                                    continue;
+                                }
+                                if (StringUtils.isNotEmpty(ext)) {
+                                    Method method = cls.getMethod("init", Context.class, String.class);
+                                    method.invoke(spider, null, ext);
+                                } else {
+                                    spider.init(null);
+                                }
+                                String category = spider.homeContent(false);
+                                System.out.println(category);
+                                try {
+                                    showCategory(spider, category, 0);
+                                    k++;
+                                } catch (Exception e) {
+
+                                }
+
+                                if (StringUtils.isNotEmpty(category)) {
+                                    JSONObject jsonObject = new JSONObject(category);
+                                    JSONArray classes = jsonObject.optJSONArray("class");
+                                    for (int j = 0; j < classes.length(); j++) {
+                                        String tid = classes.getJSONObject(j).optString("type_id");
+                                        System.out.println(tid);
+                                        //org.seimicrawler.xpath.core.function;
+                                        category = spider.categoryContent(tid, "1", false, null);
+                                        System.out.println(category);
+                                        try {
+                                            showCategory(spider, category, 0);
+                                            k++;
+                                        } catch (Exception e) {
+
+                                        }
+                                    }
+                                }
+                                String[] keys = {"钢铁侠", "熊出没", "柯南"};
+                                for (String key : keys) {
+                                    category = spider.searchContent(key, false);
+                                    System.out.println(category);
+                                    if (StringUtils.isNotEmpty(category)) {
+                                        try {
+                                            showCategory(spider, category, 0);
+                                            k++;
+                                        } catch (Exception e) {
+
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            SpiderDebug.log(e);
+                        }
+                        if (k > 0)
+                            trueSites.put(site);
+                    }
+                    System.out.println(trueSites.toString(4));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(int errorCode, String msg) {
+
+            }
+        });
+    }
+
 }
 
