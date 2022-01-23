@@ -2,6 +2,7 @@ package com.github.catvod.analyzeRules;
 
 import com.github.catvod.utils.StringUtil;
 import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.PathNotFoundException;
 import com.jayway.jsonpath.ReadContext;
 
 import org.apache.commons.lang3.StringUtils;
@@ -60,7 +61,10 @@ public class AnalyzeByJSonPath {
                         } else {
                             result = obj.toString();
                         }
+                    } catch (PathNotFoundException e) {
+                        return "";
                     } catch (Exception e) {
+                        return e.getMessage();
                     }
                 }
                 return result;
@@ -103,7 +107,10 @@ public class AnalyzeByJSonPath {
                     } else {
                         result.add(obj.toString());
                     }
-                } catch (Exception e) {
+                }catch (PathNotFoundException e){
+                    result.add("");
+                }catch (Exception e) {
+                    result.add(e.getMessage());
                 }
             } else {
                 result.add(st);

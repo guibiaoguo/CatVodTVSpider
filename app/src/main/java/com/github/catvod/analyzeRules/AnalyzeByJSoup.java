@@ -101,8 +101,8 @@ public class AnalyzeByJSoup {
                 }
             }
             if (results.size() > 0) {
-                if ("%".equals(ruleAnalyzes.getElementsType())) {
-                    for (int i = 0; i < results.size(); i++) {
+                if ("%%".equals(ruleAnalyzes.getElementsType())) {
+                    for (int i = 0; i < results.get(0).size(); i++) {
                         for (List temp : results) {
                             if (i < temp.size())
                                 result.add(temp.get(i));

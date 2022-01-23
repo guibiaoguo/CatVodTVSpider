@@ -43,6 +43,7 @@ import org.junit.Test;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -484,7 +485,6 @@ public class CatTest {
     }
 
     public void showCategory(Spider spider, String category, int index) throws JSONException {
-
         JSONObject jsonObject = new JSONObject(category);
         JSONArray categorys = jsonObject.optJSONArray("list");
         if (category != null && categorys.length() > index) {
@@ -516,23 +516,23 @@ public class CatTest {
             if (StringUtils.isNotEmpty(category))
                 showCategory(spider, category, 0);
         }
-        JSONObject jsonObject = null;
-//        System.out.println(spider.searchContent("小姨", false));
-//        System.out.println(spider.searchContent("百家", false));
-//        System.out.println(spider.searchContent("快乐大本营", false));
-        String homeContent = spider.homeContent(true);
-        System.out.println(homeContent);
-        jsonObject = new JSONObject(homeContent);
-        JSONArray classes = jsonObject.optJSONArray("class");
-        for (int i = 0; i < classes.length(); i++) {
-            String tid = classes.getJSONObject(i).optString("type_id");
-            System.out.println(tid);
-            //org.seimicrawler.xpath.core.function;
-            String category = spider.categoryContent(tid, "1", false, null);
-            System.out.println(category);
-            if (StringUtils.isNotEmpty(category))
-                showCategory(spider, category, 0);
-        }
+//        JSONObject jsonObject = null;
+////        System.out.println(spider.searchContent("小姨", false));
+////        System.out.println(spider.searchContent("百家", false));
+////        System.out.println(spider.searchContent("快乐大本营", false));
+//        String homeContent = spider.homeContent(true);
+//        System.out.println(homeContent);
+//        jsonObject = new JSONObject(homeContent);
+//        JSONArray classes = jsonObject.optJSONArray("class");
+//        for (int i = 0; i < classes.length(); i++) {
+//            String tid = classes.getJSONObject(i).optString("type_id");
+//            System.out.println(tid);
+//            //org.seimicrawler.xpath.core.function;
+//            String category = spider.categoryContent(tid, "1", false, null);
+//            System.out.println(category);
+//            if (StringUtils.isNotEmpty(category))
+//                showCategory(spider, category, 0);
+//        }
     }
 
     @Test
@@ -603,7 +603,7 @@ public class CatTest {
 
     @Test
     public void jsonpath() throws Exception {
-        String ext = "http://185.205.12.38:4004/jsonpath.json";
+        String ext = "https://mao.guibiaoguo.tk/jsonpath.json";
         Spider spider = new Legado();
         spider.init(null, ext);
         String category = spider.homeContent(false);
@@ -627,7 +627,7 @@ public class CatTest {
         String rulestr = "##一站##一战";
         AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
         analyzeRule.setContent(content, "");
-        Object object = analyzeRule.getElement(rulestr);
+        Object object = analyzeRule.getString(rulestr);
         System.out.println(object);
         String ext = "http://www.paper027.com/home/chapter/lists/id/77485.html";
         SpiderUrl su = new SpiderUrl(ext, getHeaders(ext));
@@ -647,7 +647,7 @@ public class CatTest {
         analyzeRule = new AnalyzeRule(new RuleData());
         analyzeRule.setContent(json, ext);
         System.out.println(analyzeRule.getElement("$.ua"));
-        String webUrl = analyzeRule.getString("{$.homeUrl}");
+        String webUrl = analyzeRule.getString("@fun:{base64Encode:'$.homeUrl'}");
         System.out.println(webUrl);
         HttpParser.parseSearchUrlForHtml(webUrl, new HttpParser.OnSearchCallBack() {
             @Override
@@ -685,71 +685,6 @@ public class CatTest {
 
             }
         });
-    }
-
-    @Test
-    public void legado() throws Exception {
-        String ext = "https://mao.guibiaoguo.tk/jsonpath.json";
-        ext = "{\n" +
-                "  \"ua\": \"Mozilla/5.0 (Linux; Android 11; Mi 10 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Mobile Safari/537.36\",\n" +
-                "  \"videoName\":\"谷歌硬盘\",\n" +
-                "  \"homeUrl\": \"https://joes.shentong.workers.dev/0:/%E5%8A%A8%E6%BC%AB/2000-2019%E9%87%8C%E7%95%AA/?page_index=0;post\",\n" +
-                "  \"cateNode\": \"\",\n" +
-                "  \"cateName\": \"\",\n" +
-                "  \"cateId\": \"\",\n" +
-                "  \"cateIdR\": \"\",\n" +
-                "  \"cateManual\": {\"M01\":\"M01\",\"M02\":\"M02\",\"M03\":\"M03\",\"M04\":\"M04\",\"M05\":\"M05\",\"M06\":\"M06\",\"M07\":\"M07\",\"M08\":\"M08\",\"M09\":\"M09\",\"M10\":\"M10\",\"M11\":\"M11\"},\n" +
-                "  \"homeVodNode\": \"$.data.files[*]\",\n" +
-                "  \"homeVodName\": \"name\",\n" +
-                "  \"homeVodId\": \"$.name\",\n" +
-                "  \"homeVodIdR\": \"\",\n" +
-                "  \"homeVodImg\": \"name\",\n" +
-                "  \"homeVodImgR\": \"\",\n" +
-                "  \"homeVodMark\": \"name\",\n" +
-                "  \"cateUrl\": \"https://joes.shentong.workers.dev/0:/%E4%B8%A2%E4%B8%A2%E7%94%B5%E5%BD%B1/{cateId}/?page_index=0;post\",\n" +
-                "  \"cateVodNode\": \"$.data.files[*]\",\n" +
-                "  \"cateVodName\": \"name\",\n" +
-                "  \"cateVodId\": \"name\",\n" +
-                "  \"cateVodIdR\": \"\",\n" +
-                "  \"cateVodImg\": \"\",\n" +
-                "  \"cateVodImgR\": \"\",\n" +
-                "  \"cateVodMark\": \"\",\n" +
-                "  \"dtUrl\": \"{vid}/?page_index=0;post\",\n" +
-                "  \"dtNode\": \"$.data.files[*]\",\n" +
-                "  \"dtName\": \"name\",\n" +
-                "  \"dtNameR\": \"\",\n" +
-                "  \"dtImg\": \"\",\n" +
-                "  \"dtImgR\": \"\",\n" +
-                "  \"dtFromNode\": \"\",\n" +
-                "  \"dtFromName\": \"\",\n" +
-                "  \"dtFromNameR\": \"\",\n" +
-                "  \"dtUrlNode\": \"$.data.files[*]\",\n" +
-                "  \"dtUrlSubNode\": \"\",\n" +
-                "  \"dtUrlId\": \"$.name\",\n" +
-                "  \"dtUrlIdR\": \"\",\n" +
-                "  \"dtUrlName\": \"$.name\",\n" +
-                "  \"dtUrlNameR\": \"\",\n" +
-                "  \"playUrl\": \"{playUrl}\",\n" +
-                "  \"playUa\": \"\",\n" +
-                "  \"searchUrl\": \"https://joes.shentong.workers.dev/0.search?q=**;post\",\n" +
-                "  \"scVodNode\": \"json:data>files\",\n" +
-                "  \"scVodName\": \"name\",\n" +
-                "  \"scVodId\": \"name\",\n" +
-                "  \"scVodIdR\": \"\",\n" +
-                "  \"scVodImg\": \"\",\n" +
-                "  \"leaf\": \"mimeType\",\n" +
-                "  \"nodeValue\": \"application/vnd.google-apps.folder\",\n" +
-                "  \"defaultFrom\": \"workerdev\",\n" +
-                "  \"leafValue\": \"video/x-matroska,application/vnd.rn-realmedia\",\n" +
-                "  \"nodeUrl\": \"{$.name}/?page_index=0;post\",\n" +
-                "  \"scVodMark\": \"\"\n" +
-                "}";
-//        ext = "https://mao.guibiaoguo.tk/jsonpath.json";
-        Spider spider = new Legado();
-        spider.init(null, ext);
-        String category = spider.homeContent(false);
-        System.out.println(category);
-        showCategory(spider, category, 1);
     }
 
     @Test
@@ -929,6 +864,25 @@ public class CatTest {
             System.out.println(category);
             showCategory(spider, category, 0);
         }
+    }
+
+    @Test
+    public void goindx1() throws Exception {
+        Spider spider = new Legado();
+        spider.init(null, "https://mao.guibiaoguo.tk/jsonpath.json");
+        String category = spider.homeContent(false);
+        System.out.println(category);
+        showCategory(spider, category, 0);
+//        JSONObject jsonObject = new JSONObject(category);
+//        JSONArray classes = jsonObject.optJSONArray("class");
+//        for (int i = 0; i < classes.length(); i++) {
+//            String tid = classes.getJSONObject(i).optString("type_id");
+//            System.out.println(tid);
+//            //org.seimicrawler.xpath.core.function;
+//            category = spider.categoryContent(tid, "1", false, null);
+//            System.out.println(category);
+//            showCategory(spider, category, 0);
+//        }
     }
 
     @Test
@@ -1178,9 +1132,24 @@ public class CatTest {
     public void alipanso() throws Exception {
         Spider spider = new Legado();
         spider.init(null, "http://185.205.12.38:4004/alipanso.json");
-        String category = spider.searchContent("名侦探柯南TV版 国语", false);
+        String category = "";
+//        String category = spider.searchContent("名侦探柯南TV版 国语", false);
+//        System.out.println(category);
+//        showCategory(spider, category, 0);
+        category = spider.homeContent(false);
         System.out.println(category);
         showCategory(spider, category, 0);
+        JSONObject jsonObject = new JSONObject(category);
+        JSONArray classes = jsonObject.optJSONArray("class");
+        for (int i = 0; i < classes.length(); i++) {
+            String tid = classes.getJSONObject(i).optString("type_id");
+            System.out.println(tid);
+            //org.seimicrawler.xpath.core.function;
+            category = spider.categoryContent(tid, "1", false, null);
+            System.out.println(category);
+            showCategory(spider, category, 0);
+        }
+        System.out.println("ends");
     }
 
     @Test
@@ -1436,5 +1405,363 @@ public class CatTest {
         });
     }
 
+    @Test
+    public void testHD() throws Exception{
+        String s1 = new String(Base64.getUrlDecoder().decode("JTdCJTIycGFyZW50X25hbWUlMjI6JTIyOzAwMS0xMDA7MDAxLTEwMCUyMiwlMjJmb2xkZXJfaWQlMjI6JTIyNjE3NDgxYTAyNmI1M2EwZDA1Zjg0Y2RjYTU3NjljMDVkODhmNmU3ZiUyMiwlMjJmaWxlX2lkJTIyOiUyMjYxNzQ4MWEwMDBlNWQ3ZGQzNTFjNGJhMWI0NjM1YmY3MDljM2QwOGYlMjIsJTIyZmlsZV9uYW1lJTIyOiUyMiVFNSU5MCU4RCVFNCVCRSVBNiVFNiU4RSVBMiVFNiU5RiVBRiVFNSU4RCU5Ny5FUDAwMS4lRTYlOTklQUUlRTklODAlOUElRTglQUYlOUQuJUU3JUFDJUFDMDAxJUU4JUFGJTlELiVFNCVCQSU5MSVFOSU5QyU4NCVFOSVBMyU5RSVFOCVCRCVBNiVFNiU5RCU4MCVFNCVCQSVCQSVFNCVCQSU4QiVFNCVCQiVCNi5tcDQlMjIsJTIyc2hhcmVfaWQlMjI6JTIyaGlSc3d2WmlKd0glMjIsJTIyc2hhcmVfcHdkJTIyOiUyMiUyMiwlMjJleHBpcmF0aW9uJTIyOiUyMiUyMiU3RA=="));
+        System.out.println(s1);
+    }
+
+    @Test
+    public void testXpath() throws Exception {
+        AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
+        String content = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
+                "<!--created on 2022-01-03 02:37:01 - tinyMediaManager 4.2.4-->\n" +
+                "<movie>\n" +
+                "  <title>星河战队2：联邦英雄</title>\n" +
+                "  <originaltitle>Starship Troopers 2: Hero of the Federation</originaltitle>\n" +
+                "  <sorttitle/>\n" +
+                "  <epbookmark/>\n" +
+                "  <year>2004</year>\n" +
+                "  <ratings>\n" +
+                "    <rating default=\"false\" max=\"10\" name=\"themoviedb\">\n" +
+                "      <value>4.2</value>\n" +
+                "      <votes>406</votes>\n" +
+                "    </rating>\n" +
+                "    <rating default=\"true\" max=\"10\" name=\"imdb\">\n" +
+                "      <value>3.6</value>\n" +
+                "      <votes>22836</votes>\n" +
+                "    </rating>\n" +
+                "    <rating default=\"false\" max=\"10\" name=\"NFO\">\n" +
+                "      <value>3.5</value>\n" +
+                "      <votes>0</votes>\n" +
+                "    </rating>\n" +
+                "  </ratings>\n" +
+                "  <userrating>0.0</userrating>\n" +
+                "  <top250>0</top250>\n" +
+                "  <set>\n" +
+                "    <name>星河战队（系列）</name>\n" +
+                "    <overview/>\n" +
+                "  </set>\n" +
+                "  <plot>　　在虫族突袭布宜诺斯艾利斯之后，联邦军队发动反攻，在坦戈约里击溃虫族，并在P行星虏获虫族首领。在此之后，联邦军队乘胜追击，派大军杀向虫族隔离区。残酷的战斗没有止境，机动部队第6战队遭到虫族围攻，苦盼救援部队不得，眼看灭亡在即。关键时刻，第6战队首领夏普德将军（埃德·劳特 Ed Lauter 饰）与几名士兵吸引虫族，命令霍顿（Jason-Shane Scott 饰）、珊蒂余下的战士前往最近的祖鲁角哨站避难。此前，该哨站已经废止，所有人员全部死亡，只有一名中尉幸存。在这个隔绝之地，战士们进行最后的抵抗……</plot>\n" +
+                "  <outline>　　在虫族突袭布宜诺斯艾利斯之后，联邦军队发动反攻，在坦戈约里击溃虫族，并在P行星虏获虫族首领。在此之后，联邦军队乘胜追击，派大军杀向虫族隔离区。残酷的战斗没有止境，机动部队第6战队遭到虫族围攻，苦盼救援部队不得，眼看灭亡在即。关键时刻，第6战队首领夏普德将军（埃德·劳特 Ed Lauter 饰）与几名士兵吸引虫族，命令霍顿（Jason-Shane Scott 饰）、珊蒂余下的战士前往最近的祖鲁角哨站避难。此前，该哨站已经废止，所有人员全部死亡，只有一名中尉幸存。在这个隔绝之地，战士们进行最后的抵抗……</outline>\n" +
+                "  <tagline/>\n" +
+                "  <runtime>88</runtime>\n" +
+                "  <thumb aspect=\"poster\">https://image.tmdb.org/t/p/original/9iqrqOjLaFcGNnSQlJxYLfgrhqn.jpg</thumb>\n" +
+                "  <fanart>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/original/kSEc72AYeZEgwPBHle8bGjmRnAC.jpg</thumb>\n" +
+                "  </fanart>\n" +
+                "  <mpaa>US:R / US:Rated R</mpaa>\n" +
+                "  <certification>US:R / US:Rated R</certification>\n" +
+                "  <id>tt0367093</id>\n" +
+                "  <tmdbid>10304</tmdbid>\n" +
+                "  <tmdbCollectionId>10522</tmdbCollectionId>\n" +
+                "  <uniqueid default=\"false\" type=\"Imdb\">tt0367093</uniqueid>\n" +
+                "  <uniqueid default=\"false\" type=\"Tmdb\">10304</uniqueid>\n" +
+                "  <uniqueid default=\"false\" type=\"tmdb\">10304</uniqueid>\n" +
+                "  <uniqueid default=\"false\" type=\"tmdbSet\">10522</uniqueid>\n" +
+                "  <uniqueid default=\"true\" type=\"imdb\">tt0367093</uniqueid>\n" +
+                "  <country>美国</country>\n" +
+                "  <status/>\n" +
+                "  <code/>\n" +
+                "  <premiered>2004-04-20</premiered>\n" +
+                "  <watched>false</watched>\n" +
+                "  <playcount>0</playcount>\n" +
+                "  <lastplayed/>\n" +
+                "  <genre>Adventure</genre>\n" +
+                "  <genre>Horror</genre>\n" +
+                "  <genre>Action</genre>\n" +
+                "  <genre>Science Fiction</genre>\n" +
+                "  <studio>Startroop Pictures Inc.</studio>\n" +
+                "  <studio>Tippett Studio</studio>\n" +
+                "  <credits>Edward Neumeier</credits>\n" +
+                "  <director tmdbid=\"7727\">Phil Tippett</director>\n" +
+                "  <tag>general</tag>\n" +
+                "  <tag>places and planets</tag>\n" +
+                "  <tag>extraterrestrial technology</tag>\n" +
+                "  <tag>troops</tag>\n" +
+                "  <tag>us army</tag>\n" +
+                "  <tag>alien life-form</tag>\n" +
+                "  <tag>creature</tag>\n" +
+                "  <actor>\n" +
+                "    <name>Billy Brown</name>\n" +
+                "    <role>Pvt. Ottis Brick</role>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/h632/xE1AQdJeTwgrFq7hdSeSjaHNL9h.jpg</thumb>\n" +
+                "    <profile>https://www.themoviedb.org/person/64805</profile>\n" +
+                "    <tmdbid>64805</tmdbid>\n" +
+                "  </actor>\n" +
+                "  <actor>\n" +
+                "    <name>Richard Burgi</name>\n" +
+                "    <role>Capt. V.J. Dax</role>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/h632/o4YYXnrZI69OZ8bm57sQCfxQYBT.jpg</thumb>\n" +
+                "    <profile>https://www.themoviedb.org/person/25849</profile>\n" +
+                "    <tmdbid>25849</tmdbid>\n" +
+                "  </actor>\n" +
+                "  <actor>\n" +
+                "    <name>Kelly Carlson</name>\n" +
+                "    <role>Pvt. Charlie Soda</role>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/h632/ixaaYmWOznjPO1hD2QGRQO6gDu6.jpg</thumb>\n" +
+                "    <profile>https://www.themoviedb.org/person/56447</profile>\n" +
+                "    <tmdbid>56447</tmdbid>\n" +
+                "  </actor>\n" +
+                "  <actor>\n" +
+                "    <name>Cy Carter</name>\n" +
+                "    <role>Pvt. Billie Otter</role>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/h632/1LQnSwpHY4MaLCySbfHR20dhlte.jpg</thumb>\n" +
+                "    <profile>https://www.themoviedb.org/person/64806</profile>\n" +
+                "    <tmdbid>64806</tmdbid>\n" +
+                "  </actor>\n" +
+                "  <actor>\n" +
+                "    <name>Sandrine Holt</name>\n" +
+                "    <role>Pvt. Jill Sandee</role>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/h632/iiB6r5Ja19phs5TMlIF3EgjycGe.jpg</thumb>\n" +
+                "    <profile>https://www.themoviedb.org/person/65345</profile>\n" +
+                "    <tmdbid>65345</tmdbid>\n" +
+                "  </actor>\n" +
+                "  <actor>\n" +
+                "    <name>Ed Lauter</name>\n" +
+                "    <role>Gen. Jack Gordon Shepherd</role>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/h632/5q1CNG6M4cKIrFjFmy7typjEPqt.jpg</thumb>\n" +
+                "    <profile>https://www.themoviedb.org/person/21523</profile>\n" +
+                "    <tmdbid>21523</tmdbid>\n" +
+                "  </actor>\n" +
+                "  <actor>\n" +
+                "    <name>J.P. Manoux</name>\n" +
+                "    <role>TSgt. Ari Peck</role>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/h632/lLEfizV970QfahQSBssUvj8Exs7.jpg</thumb>\n" +
+                "    <profile>https://www.themoviedb.org/person/88702</profile>\n" +
+                "    <tmdbid>88702</tmdbid>\n" +
+                "  </actor>\n" +
+                "  <actor>\n" +
+                "    <name>Lawrence Monoson</name>\n" +
+                "    <role>Lt. Pavlov Dill</role>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/h632/hli6dgeyskxXmfJwghyN1AtZCrn.jpg</thumb>\n" +
+                "    <profile>https://www.themoviedb.org/person/106752</profile>\n" +
+                "    <tmdbid>106752</tmdbid>\n" +
+                "  </actor>\n" +
+                "  <actor>\n" +
+                "    <name>Colleen Porch</name>\n" +
+                "    <role>Pvt. Lei Sahara</role>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/h632/dJFpGcCBXb99ZmXfVTHipOcTAdg.jpg</thumb>\n" +
+                "    <profile>https://www.themoviedb.org/person/83983</profile>\n" +
+                "    <tmdbid>83983</tmdbid>\n" +
+                "  </actor>\n" +
+                "  <actor>\n" +
+                "    <name>Drew Powell</name>\n" +
+                "    <role>Pvt. Kipper Tor</role>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/h632/v3iLHQYKDdd7AI8GOqMwqxhzeMH.jpg</thumb>\n" +
+                "    <profile>https://www.themoviedb.org/person/173995</profile>\n" +
+                "    <tmdbid>173995</tmdbid>\n" +
+                "  </actor>\n" +
+                "  <actor>\n" +
+                "    <name>Ed Quinn</name>\n" +
+                "    <role>Cpl. Joe Griff</role>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/h632/gqvAe9M9FyYiIltLxFUpJVlXRRP.jpg</thumb>\n" +
+                "    <profile>https://www.themoviedb.org/person/53922</profile>\n" +
+                "    <tmdbid>53922</tmdbid>\n" +
+                "  </actor>\n" +
+                "  <actor>\n" +
+                "    <name>Jason-Shane Scott</name>\n" +
+                "    <role>Pvt. Duff Horton</role>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/h632/pOcUrkdJQaq3FddzcNLnID0RlDI.jpg</thumb>\n" +
+                "    <profile>https://www.themoviedb.org/person/98658</profile>\n" +
+                "    <tmdbid>98658</tmdbid>\n" +
+                "  </actor>\n" +
+                "  <actor>\n" +
+                "    <name>Brenda Strong</name>\n" +
+                "    <role>Sgt. Dede Rake</role>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/h632/jMfkFmQT2zgTojkcmn67Fju3HU.jpg</thumb>\n" +
+                "    <profile>https://www.themoviedb.org/person/101396</profile>\n" +
+                "    <tmdbid>101396</tmdbid>\n" +
+                "  </actor>\n" +
+                "  <actor>\n" +
+                "    <name>Brian Tee</name>\n" +
+                "    <role>Cpl. Thom Kobe</role>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/h632/aTouFlcx3enc2AfP4caKr3Rv8gi.jpg</thumb>\n" +
+                "    <profile>https://www.themoviedb.org/person/116278</profile>\n" +
+                "    <tmdbid>116278</tmdbid>\n" +
+                "  </actor>\n" +
+                "  <actor>\n" +
+                "    <name>David Wells</name>\n" +
+                "    <role>Recruiting Sergeant</role>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/h632/vb91buPdGmorgzzdFgNCUbcLA4V.jpg</thumb>\n" +
+                "    <profile>https://www.themoviedb.org/person/64236</profile>\n" +
+                "    <tmdbid>64236</tmdbid>\n" +
+                "  </actor>\n" +
+                "  <actor>\n" +
+                "    <name>Tim Conlon</name>\n" +
+                "    <role>Fleet Pilot</role>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/h632/2spxhPR3kozQQNLXbr5ITTomDHc.jpg</thumb>\n" +
+                "    <profile>https://www.themoviedb.org/person/1212249</profile>\n" +
+                "    <tmdbid>1212249</tmdbid>\n" +
+                "  </actor>\n" +
+                "  <actor>\n" +
+                "    <name>Bobby C. King</name>\n" +
+                "    <role>Smiling Lieutenant</role>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/h632/yJXXSZnQMulutq418Cg03Z85QNT.jpg</thumb>\n" +
+                "    <profile>https://www.themoviedb.org/person/191377</profile>\n" +
+                "    <tmdbid>191377</tmdbid>\n" +
+                "  </actor>\n" +
+                "  <actor>\n" +
+                "    <name>Stephen Stanton</name>\n" +
+                "    <role>FedNet (voice)</role>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/h632/uaoZXILATHT27HUnBh8Q345glc6.jpg</thumb>\n" +
+                "    <profile>https://www.themoviedb.org/person/1213640</profile>\n" +
+                "    <tmdbid>1213640</tmdbid>\n" +
+                "  </actor>\n" +
+                "  <producer>\n" +
+                "    <name>Edward Neumeier</name>\n" +
+                "    <role>Co-Producer</role>\n" +
+                "    <thumb>https://image.tmdb.org/t/p/h632/sBkGYHLdTDs3c1OShy9EyB93PCn.jpg</thumb>\n" +
+                "  </producer>\n" +
+                "  <producer>\n" +
+                "    <name>Jon Davison</name>\n" +
+                "    <role>Producer</role>\n" +
+                "    <thumb/>\n" +
+                "  </producer>\n" +
+                "  <producer>\n" +
+                "    <name>Phil Tippett</name>\n" +
+                "    <role>Co-Producer</role>\n" +
+                "    <thumb>http://image.tmdb.org/t/p/h632/2uQ0B7fN5cDQk17J1X3pxDSf9y.jpg</thumb>\n" +
+                "  </producer>\n" +
+                "  <producer>\n" +
+                "    <name>Glenn S. Gainor</name>\n" +
+                "    <role>Executive Producer</role>\n" +
+                "    <thumb/>\n" +
+                "  </producer>\n" +
+                "  <producer>\n" +
+                "    <name>Mykel Denis</name>\n" +
+                "    <role>Production Coordinator</role>\n" +
+                "    <thumb/>\n" +
+                "  </producer>\n" +
+                "  <producer>\n" +
+                "    <name>Chris Baugh</name>\n" +
+                "    <role>Location Manager</role>\n" +
+                "    <thumb/>\n" +
+                "  </producer>\n" +
+                "  <producer>\n" +
+                "    <name>Penny Ellers</name>\n" +
+                "    <role>Casting</role>\n" +
+                "    <thumb/>\n" +
+                "  </producer>\n" +
+                "  <producer>\n" +
+                "    <name>Jan Powell</name>\n" +
+                "    <role>Casting Associate</role>\n" +
+                "    <thumb/>\n" +
+                "  </producer>\n" +
+                "  <producer>\n" +
+                "    <name>Sophia N. von Bülow</name>\n" +
+                "    <role>Production Accountant</role>\n" +
+                "    <thumb/>\n" +
+                "  </producer>\n" +
+                "  <trailer>plugin://plugin.video.youtube/?action=play_video&amp;videoid=9_sXs02IOLs</trailer>\n" +
+                "  <languages>English</languages>\n" +
+                "  <dateadded>2018-11-13 00:00:00</dateadded>\n" +
+                "  <fileinfo>\n" +
+                "    <streamdetails>\n" +
+                "      <video>\n" +
+                "        <codec/>\n" +
+                "        <aspect>0.0</aspect>\n" +
+                "        <width>0</width>\n" +
+                "        <height>0</height>\n" +
+                "        <durationinseconds>0</durationinseconds>\n" +
+                "        <stereomode/>\n" +
+                "      </video>\n" +
+                "    </streamdetails>\n" +
+                "  </fileinfo>\n" +
+                "  <lockdata>true</lockdata>\n" +
+                "  <writer>Edward Neumeier</writer>\n" +
+                "  <imdbid>tt0367093</imdbid>\n" +
+                "  <releasedate>2004-04-20</releasedate>\n" +
+                "  <criticrating>33</criticrating>\n" +
+                "  <tmdbsetid>10522</tmdbsetid>\n" +
+                "  <collectionnumber>10522</collectionnumber>\n" +
+                "  <!--tinyMediaManager meta data-->\n" +
+                "  <source>BLURAY</source>\n" +
+                "  <edition>NONE</edition>\n" +
+                "  <original_filename>Starship.Troopers.2.-.Hero.of.the.Federation(2004).mkv</original_filename>\n" +
+                "  <user_note/>\n" +
+                "</movie>";
+        analyzeRule.setContent(content);
+        analyzeRule.getString("//actor/name/text()&&//actor/thumb/text()");
+        analyzeRule.getString("//actor/name/text()");
+        analyzeRule.getString("//actor/name/text()||//actor/role/text()");
+        analyzeRule.getString("//actor/name/text()%%//actor/thumb/text()");
+        analyzeRule.getString("//actor/name/text()&&//actor/thumb/text()");
+        analyzeRule.getString("tag.actor@tag.name@text");
+        analyzeRule.getString("tag.actor@tag.name@text%%tag.actor@tag.thumb@text");
+        analyzeRule.getString("tag.actor@tag.name@text%%tag.actor@tag.tmdbid@text");
+        analyzeRule.getString("tag.actor@tag.name@text%%tag.actor@tag.role@text");
+    }
+
+    @Test
+    public void testJavbus() throws Exception {
+        String content = "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n" +
+                "<movie>\n" +
+                "  <plot><![CDATA[プレステージ専属女優『桜ここみ』が男と二人っきりでお泊りデート。大人の色気満々で、男の責めに身を任せてウットリと気持ちよさそうに感じる！肉厚のお尻をカメラに突き出しながら、快感に酔いしれる姿は見逃せません！二人っきりの空間で、独特の味わいを醸し出す性交は臨場感抜群です！]]></plot>\n" +
+                "  <outline />\n" +
+                "  <lockdata>false</lockdata>\n" +
+                "  <dateadded>2020-09-06 18:07:44</dateadded>\n" +
+                "  <title>ABP-061 一泊二日、美少女完全予約制。 第二章 ～桜ここみの場合～</title>\n" +
+                "  <originaltitle>一泊二日、美少女完全予約制。 第二章 ～桜ここみの場合～</originaltitle>\n" +
+                "  <actor>\n" +
+                "    <name>桜ここみ</name>\n" +
+                "    <type>Actor</type>\n" +
+                "  </actor>\n" +
+                "  <year>2013</year>\n" +
+                "  <sorttitle>ABP-061</sorttitle>\n" +
+                "  <mpaa>XXX</mpaa>\n" +
+                "  <premiered>2013-10-22</premiered>\n" +
+                "  <releasedate>2013-10-22</releasedate>\n" +
+                "  <runtime>123</runtime>\n" +
+                "  <genre>ハイビジョン</genre>\n" +
+                "  <genre>パイズリ</genre>\n" +
+                "  <genre>単体作品</genre>\n" +
+                "  <genre>美少女</genre>\n" +
+                "  <studio>プレステージ</studio>\n" +
+                "  <uniqueid type=\"JavScraper\">ABP-061</uniqueid>\n" +
+                "  <javscraperid>ABP-061</javscraperid>\n" +
+                "  <uniqueid type=\"JavScraper-Json\">{\"OriginalTitle\":\"一泊二日、美少女完全予約制。 第二章 ～桜ここみの場合～\",\"Plot\":\"プレステージ専属女優『桜ここみ』が男と二人っきりでお泊りデート。大人の色気満々で、男の責めに身を任せてウットリと気持ちよさそうに感じる！肉厚のお尻をカメラに突き出しながら、快感に酔いしれる姿は見逃せません！二人っきりの空間で、独特の味わいを醸し出す性交は臨場感抜群です！\",\"Runtime\":\"123 minutes\",\"Studio\":\"プレステージ\",\"Maker\":\"プレステージ\",\"Set\":\"一泊二日、美少女完全予約制。\",\"Genres\":[\"ハイビジョン\",\"パイズリ\",\"単体作品\",\"美少女\"],\"Actors\":[\"桜ここみ\"],\"Samples\":[\"https://pics.dmm.co.jp//digital/video/118abp00061/118abp00061pl.jpg\",\"https://pics.dmm.co.jp/digital/video/118abp00061/118abp00061jp-1.jpg\",\"https://pics.dmm.co.jp/digital/video/118abp00061/118abp00061jp-2.jpg\",\"https://pics.dmm.co.jp/digital/video/118abp00061/118abp00061jp-3.jpg\",\"https://pics.dmm.co.jp/digital/video/118abp00061/118abp00061jp-4.jpg\",\"https://pics.dmm.co.jp/digital/video/118abp00061/118abp00061jp-5.jpg\",\"https://pics.dmm.co.jp/digital/video/118abp00061/118abp00061jp-6.jpg\",\"https://pics.dmm.co.jp/digital/video/118abp00061/118abp00061jp-7.jpg\",\"https://pics.dmm.co.jp/digital/video/118abp00061/118abp00061jp-8.jpg\",\"https://pics.dmm.co.jp/digital/video/118abp00061/118abp00061jp-9.jpg\"],\"Provider\":\"Jav123\",\"Url\":\"https://www.jav321.com/video/118abp00061\",\"Num\":\"ABP-061\",\"Title\":\"一泊二日、美少女完全予約制。 第二章 ～桜ここみの場合～\",\"Cover\":\"http://pics.dmm.co.jp//digital/video/118abp00061/118abp00061pl.jpg\",\"Date\":\"2013-10-22\"}</uniqueid>\n" +
+                "  <javscraper-jsonid>{\"OriginalTitle\":\"一泊二日、美少女完全予約制。 第二章 ～桜ここみの場合～\",\"Plot\":\"プレステージ専属女優『桜ここみ』が男と二人っきりでお泊りデート。大人の色気満々で、男の責めに身を任せてウットリと気持ちよさそうに感じる！肉厚のお尻をカメラに突き出しながら、快感に酔いしれる姿は見逃せません！二人っきりの空間で、独特の味わいを醸し出す性交は臨場感抜群です！\",\"Runtime\":\"123 minutes\",\"Studio\":\"プレステージ\",\"Maker\":\"プレステージ\",\"Set\":\"一泊二日、美少女完全予約制。\",\"Genres\":[\"ハイビジョン\",\"パイズリ\",\"単体作品\",\"美少女\"],\"Actors\":[\"桜ここみ\"],\"Samples\":[\"https://pics.dmm.co.jp//digital/video/118abp00061/118abp00061pl.jpg\",\"https://pics.dmm.co.jp/digital/video/118abp00061/118abp00061jp-1.jpg\",\"https://pics.dmm.co.jp/digital/video/118abp00061/118abp00061jp-2.jpg\",\"https://pics.dmm.co.jp/digital/video/118abp00061/118abp00061jp-3.jpg\",\"https://pics.dmm.co.jp/digital/video/118abp00061/118abp00061jp-4.jpg\",\"https://pics.dmm.co.jp/digital/video/118abp00061/118abp00061jp-5.jpg\",\"https://pics.dmm.co.jp/digital/video/118abp00061/118abp00061jp-6.jpg\",\"https://pics.dmm.co.jp/digital/video/118abp00061/118abp00061jp-7.jpg\",\"https://pics.dmm.co.jp/digital/video/118abp00061/118abp00061jp-8.jpg\",\"https://pics.dmm.co.jp/digital/video/118abp00061/118abp00061jp-9.jpg\"],\"Provider\":\"Jav123\",\"Url\":\"https://www.jav321.com/video/118abp00061\",\"Num\":\"ABP-061\",\"Title\":\"一泊二日、美少女完全予約制。 第二章 ～桜ここみの場合～\",\"Cover\":\"http://pics.dmm.co.jp//digital/video/118abp00061/118abp00061pl.jpg\",\"Date\":\"2013-10-22\"}</javscraper-jsonid>\n" +
+                "  <uniqueid type=\"JavScraper-Url\">https://www.jav321.com/video/118abp00061</uniqueid>\n" +
+                "  <javscraper-urlid>https://www.jav321.com/video/118abp00061</javscraper-urlid>\n" +
+                "  <fileinfo>\n" +
+                "    <streamdetails>\n" +
+                "      <video>\n" +
+                "        <codec>h264</codec>\n" +
+                "        <micodec>h264</micodec>\n" +
+                "        <bitrate>5518652</bitrate>\n" +
+                "        <width>1920</width>\n" +
+                "        <height>1080</height>\n" +
+                "        <aspect>16:9</aspect>\n" +
+                "        <aspectratio>16:9</aspectratio>\n" +
+                "        <framerate>29.97</framerate>\n" +
+                "        <language>jpn</language>\n" +
+                "        <scantype>progressive</scantype>\n" +
+                "        <default>True</default>\n" +
+                "        <forced>False</forced>\n" +
+                "        <duration>122</duration>\n" +
+                "        <durationinseconds>7357</durationinseconds>\n" +
+                "      </video>\n" +
+                "      <audio>\n" +
+                "        <codec>aac</codec>\n" +
+                "        <micodec>aac</micodec>\n" +
+                "        <bitrate>128686</bitrate>\n" +
+                "        <language>jpn</language>\n" +
+                "        <scantype>progressive</scantype>\n" +
+                "        <channels>2</channels>\n" +
+                "        <samplingrate>44100</samplingrate>\n" +
+                "        <default>True</default>\n" +
+                "        <forced>False</forced>\n" +
+                "      </audio>\n" +
+                "    </streamdetails>\n" +
+                "  </fileinfo>\n" +
+                "</movie>";
+        AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
+        analyzeRule.setContent(content);
+        System.out.println(analyzeRule.getString("tag.title@text"));
+        System.out.println(analyzeRule.getString("@css:title@text@put:{charset:'@constant:gbk'}"));
+        System.out.println(analyzeRule.getString("tag.title@text<js></js>@Fun:urlEncode#@get:{charset}"));
+        System.out.println(analyzeRule.getString("@css:uniqueid[type=\"JavScraper-Json\"]@text"));
+    }
 }
 

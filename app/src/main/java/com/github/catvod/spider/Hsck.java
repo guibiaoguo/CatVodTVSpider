@@ -372,21 +372,21 @@ public class Hsck extends Spider {
             JSONArray videos = new JSONArray();
             RuleAnalyzer ruleAnalyzes = new RuleAnalyzer("", true);
             //设置平衡组为代码平衡
-            ArrayList rules = ruleAnalyzes.splitRule(":", "-");
+            String[] rules = StringUtils.split("1:5",":");
             int start = 1;
             int end = 1;
             int step = 1;
-            if (rules.size() >= 1) {
-                if (StringUtils.isNotEmpty(rules.get(0).toString()))
-                    start = Integer.parseInt(rules.get(0).toString());
+            if (rules.length >= 1) {
+                if (StringUtils.isNotEmpty(rules[0]))
+                    start = Integer.parseInt(rules[0]);
             }
-            if (rules.size() >= 2) {
-                if (StringUtils.isNotEmpty(rules.get(1).toString()))
-                    end = Integer.parseInt(rules.get(1).toString());
+            if (rules.length >= 2) {
+                if (StringUtils.isNotEmpty(rules[1]))
+                    end = Integer.parseInt(rules[1]);
             }
-            if (rules.size() >= 3) {
-                if (StringUtils.isNotEmpty(rules.get(2).toString()))
-                    step = Integer.parseInt(rules.get(2).toString());
+            if (rules.length >= 3) {
+                if (StringUtils.isNotEmpty(rules[2]))
+                    step = Integer.parseInt(rules[2]);
             }
             for (int i = start; i <= end; i = i + step) {
                 url = url.replace("{scPg}", i + "");

@@ -8,7 +8,6 @@ import org.json.JSONObject;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 
 public class LegadoRule {
@@ -341,11 +340,79 @@ public class LegadoRule {
 
     private String scPage;
 
-    private String parse;
+    private Integer parse;
 
-    private String jx;
+    private Integer jx;
 
     private Boolean decodeVipFlag;
+
+    private Boolean decodeSCFlag;
+
+    private String decodeValue;
+
+    private String actorNfo;
+    private String titleNfo;
+    private String thumbNfo;
+    private String genreNfo;
+    private String countryNfo;
+    private String directorNfo;
+    private String yearNfo;
+    private String remarkNfo;
+    private String plotNfo;
+    private String urlNfo;
+    private Boolean nfoFlag;
+
+    public String getUrlNfo() {
+        return urlNfo;
+    }
+
+    public Boolean getNfoFlag() {
+        return nfoFlag;
+    }
+
+    public String getActorNfo() {
+        return actorNfo;
+    }
+
+    public String getTitleNfo() {
+        return titleNfo;
+    }
+
+    public String getThumbNfo() {
+        return thumbNfo;
+    }
+
+    public String getGenreNfo() {
+        return genreNfo;
+    }
+
+    public String getCountryNfo() {
+        return countryNfo;
+    }
+
+    public String getDirectorNfo() {
+        return directorNfo;
+    }
+
+    public String getYearNfo() {
+        return yearNfo;
+    }
+
+    public String getRemarkNfo() {
+        return remarkNfo;
+    }
+
+    public String getPlotNfo() {
+        return plotNfo;
+    }
+
+    public Boolean getDecodeSCFlag() {
+        return decodeSCFlag;
+    }
+
+    public String getDecodeValue() {
+        return decodeValue;
+    }
 
     private LinkedHashMap<String, String> infoMap = new LinkedHashMap<>();
 
@@ -354,12 +421,17 @@ public class LegadoRule {
     public String getNode() {
         return node;
     }
+    private JSONArray homeParamMaps;
 
     private JSONArray categoryParamMaps;
 
     private JSONArray detailParamMaps;
 
     private JSONArray playerParamMaps;
+
+    public JSONArray getHomeParamMaps() {
+        return homeParamMaps;
+    }
 
     public JSONArray getPreParamMaps() {
         return preParamMaps;
@@ -389,11 +461,11 @@ public class LegadoRule {
         this.decodeVipFlag = decodeVipFlag;
     }
 
-    public String getParse() {
+    public Integer getParse() {
         return parse;
     }
 
-    public String getJx() {
+    public Integer getJx() {
         return jx;
     }
 
@@ -655,9 +727,11 @@ public class LegadoRule {
             rule.decodeFlag = jsonObj.optBoolean("decodeFlag");
             rule.decodePlay = jsonObj.optString("decodePlay");
             rule.scPage = jsonObj.optString("scPage");
-            rule.parse = jsonObj.optString("parse");
-            rule.jx = jsonObj.optString("jx");
+            rule.parse = jsonObj.optInt("parse");
+            rule.jx = jsonObj.optInt("jx");
             rule.decodeVipFlag = jsonObj.optBoolean("decodeVipFlag");
+            rule.decodeSCFlag = jsonObj.optBoolean("decodeSCFlag");
+            rule.decodeValue = jsonObj.optString("decodeValue");
             navs = jsonObj.optJSONObject("info");
             if (navs != null) {
                 Iterator<String> keys = navs.keys();
@@ -667,9 +741,48 @@ public class LegadoRule {
                 }
             }
             rule.preParamMaps = jsonObj.optJSONArray("preParamMaps");
+            rule.homeParamMaps = jsonObj.optJSONArray("homeParamMaps");
             rule.categoryParamMaps = jsonObj.optJSONArray("categoryParamMaps");
             rule.detailParamMaps = jsonObj.optJSONArray("detailParamMaps");
             rule.playerParamMaps = jsonObj.optJSONArray("playerParamMaps");
+            rule.titleNfo = jsonObj.optString("titleNfo");
+            if(StringUtils.isEmpty(rule.titleNfo)) {
+                rule.titleNfo = "tag.title@text";
+            }
+            rule.thumbNfo = jsonObj.optString("thumbNfo");
+            if(StringUtils.isEmpty(rule.thumbNfo)) {
+                rule.thumbNfo = "@css:thumb[aspect=\"poster\"]@text||uniqueid[type=\"JavScraper-Json\"]@text##.*Cover\":\"(.*?)\".*##$1";
+            }
+            rule.genreNfo = jsonObj.optString("genreNfo");
+            if(StringUtils.isEmpty(rule.genreNfo)) {
+                rule.genreNfo = "tag.genre@text##\n##,";
+            }
+            rule.yearNfo = jsonObj.optString("yearNfo");
+            if(StringUtils.isEmpty(rule.yearNfo)) {
+                rule.yearNfo = "tag.premiered@text";
+            }
+            rule.countryNfo = jsonObj.optString("countryNfo");
+            if(StringUtils.isEmpty(rule.countryNfo)) {
+                rule.countryNfo = "tag.country||tag.language.0@text";
+            }
+            rule.remarkNfo = jsonObj.optString("remarkNfo");
+            if(StringUtils.isEmpty(rule.remarkNfo)) {
+                rule.remarkNfo = "tag.tag||tag.sorttitle@text";
+            }
+            rule.actorNfo = jsonObj.optString("actorNfo");
+            if(StringUtils.isEmpty(rule.actorNfo)) {
+                rule.actorNfo = "tag.actor@tag.name@text";
+            }
+            rule.directorNfo = jsonObj.optString("directorNfo");
+            if(StringUtils.isEmpty(rule.directorNfo)) {
+                rule.directorNfo = "tag.producer@tag.name||tag.studio@text";
+            }
+            rule.plotNfo = jsonObj.optString("contentNfo");
+            if(StringUtils.isEmpty(rule.plotNfo)) {
+                rule.plotNfo = "tag.plot@text";
+            }
+            rule.urlNfo = jsonObj.optString("urlNfo");
+            rule.nfoFlag = jsonObj.optBoolean("nfoFlag");
             return rule;
         } catch (Exception e) {
             SpiderDebug.log(e);

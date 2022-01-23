@@ -3,6 +3,8 @@ package com.github.catvod.analyzeRules;
 import android.annotation.TargetApi;
 import android.os.Build;
 
+import com.github.catvod.crawler.Spider;
+import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.StringUtil;
 
 import org.apache.commons.lang3.StringUtils;
@@ -12,8 +14,10 @@ import org.jsoup.nodes.Entities;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -31,14 +35,20 @@ public class AnalyzeRule {
     private AnalyzeByXPath analyzeByXPath = null;
     private AnalyzeByJSoup analyzeByJSoup = null;
     private AnalyzeByJSonPath analyzeByJSonPath = null;
+    private AnalyzeByFunction analyzeByFunction = null;
 
     private boolean objectChangedXP = false;
     private boolean objectChangedJS = false;
     private boolean objectChangedJP = false;
+    private boolean objectChangedFun = false;
 
+    private Pattern JS_PATTERN =
+            Pattern.compile("<js>([\\w\\W]*?)</js>|@js:([\\w\\W]*)", Pattern.CASE_INSENSITIVE);
     private Pattern putPattern = Pattern.compile("@put:(\\{[^}]+?\\})", Pattern.CASE_INSENSITIVE);
     private Pattern evalPattern =
             Pattern.compile("@get:\\{[^}]+?\\}|\\{\\{[\\w\\W]*?\\}\\}", Pattern.CASE_INSENSITIVE);
+    private Pattern funPattern =
+            Pattern.compile("@fun:(\\{[^}]+?\\})", Pattern.CASE_INSENSITIVE);
     private Pattern regexPattern = Pattern.compile("\\$\\d{1,2}");
     private Pattern titleNumPattern = Pattern.compile("(第)(.+?)(章)");
     private RuleDataInterface ruleData;
@@ -65,6 +75,7 @@ public class AnalyzeRule {
         objectChangedJP = true;
         objectChangedXP = true;
         objectChangedJS = true;
+        objectChangedFun = true;
         return this;
     }
 
@@ -82,6 +93,21 @@ public class AnalyzeRule {
             e.printStackTrace();
         }
         return redirectUrl;
+    }
+
+    /**
+     * 获取Function解析类
+     */
+    private AnalyzeByFunction getAnalyzeByFunction(Object o) {
+        if (o != content) {
+            return new AnalyzeByFunction(o);
+        } else {
+            if (analyzeByFunction == null || objectChangedFun) {
+                analyzeByFunction = new AnalyzeByFunction(content);
+                objectChangedFun = false;
+            }
+            return analyzeByFunction;
+        }
     }
 
     /**
@@ -108,7 +134,7 @@ public class AnalyzeRule {
         } else {
             if (analyzeByJSoup == null || objectChangedJS) {
                 analyzeByJSoup = new AnalyzeByJSoup(content);
-                objectChangedXP = false;
+                objectChangedJS = false;
             }
             return analyzeByJSoup;
         }
@@ -123,7 +149,7 @@ public class AnalyzeRule {
         } else {
             if (analyzeByJSonPath == null || objectChangedJP) {
                 analyzeByJSonPath = new AnalyzeByJSonPath(content);
-                objectChangedXP = false;
+                objectChangedJP = false;
             }
             return analyzeByJSonPath;
         }
@@ -150,6 +176,7 @@ public class AnalyzeRule {
             result = content;
             for (SourceRule sourceRule : ruleList) {
                 putRule(sourceRule.putMap);
+//                result = funRule(sourceRule.funMap,result);
                 sourceRule.makeUpRule(result);
                 if (StringUtils.isNotEmpty(sourceRule.rule)) {
                     switch (sourceRule.mode) {
@@ -158,6 +185,9 @@ public class AnalyzeRule {
                             break;
                         case XPath:
                             result = getAnalyzeByXPath(result).getStringList(sourceRule.rule);
+                            break;
+                        case Function:
+                            result = getAnalyzeByFunction(result).getStringList(sourceRule.rule);
                             break;
                         case Default:
                             result = getAnalyzeByJSoup(result).getStringList(sourceRule.rule);
@@ -217,17 +247,24 @@ public class AnalyzeRule {
             result = content;
             for (SourceRule sourceRule : ruleList) {
                 putRule(sourceRule.putMap);
+//                result = funRule(sourceRule.funMap,result);
                 sourceRule.makeUpRule(result);
                 if (StringUtils.isNotEmpty(sourceRule.rule) || StringUtils.isEmpty(sourceRule.replaceRegex)) {
                     switch (sourceRule.mode) {
                         case Json:
                             result = getAnalyzeByJSonPath(result).getString(sourceRule.rule);
                             break;
+                        case Function:
+                            result = getAnalyzeByFunction(result).getString(sourceRule.rule);
+                            break;
                         case XPath:
                             result = getAnalyzeByXPath(result).getString(sourceRule.rule);
                             break;
                         case Default:
                             result = isUrl ? getAnalyzeByJSoup(result).getString0(sourceRule.rule) : getAnalyzeByJSoup(result).getString(sourceRule.rule);
+                            break;
+                        case Constant:
+                            result = sourceRule.rule;
                             break;
                         default:
                             result = sourceRule.rule;
@@ -269,6 +306,7 @@ public class AnalyzeRule {
             result = content;
             for (SourceRule sourceRule : ruleList) {
                 putRule(sourceRule.putMap);
+//                result = funRule(sourceRule.funMap,result);
                 sourceRule.makeUpRule(result);
                 switch (sourceRule.mode) {
                     case Regex:
@@ -300,6 +338,7 @@ public class AnalyzeRule {
             result = content;
             for (SourceRule sourceRule : ruleList) {
                 putRule(sourceRule.putMap);
+//                result = funRule(sourceRule.funMap,result);
                 sourceRule.makeUpRule(sourceRule.rule);
                 switch (sourceRule.mode) {
                     case Regex:
@@ -307,6 +346,9 @@ public class AnalyzeRule {
                         break;
                     case Json:
                         result = getAnalyzeByJSonPath(result).getList(sourceRule.rule);
+                        break;
+                    case Function:
+                        result = getAnalyzeByFunction(result).getStringList(sourceRule.rule);
                         break;
                     case XPath:
                         result = getAnalyzeByXPath(result).getElements(sourceRule.rule);
@@ -341,6 +383,43 @@ public class AnalyzeRule {
         });
     }
 
+    private Object funRule(LinkedHashMap<String,String> ruleMap,Object data) {
+        Object result = data;
+        for(Map.Entry<String,String> entry:ruleMap.entrySet()) {
+            String key = entry.getKey();
+            if(StringUtils.isNotEmpty(entry.getValue()) && !StringUtil.isJson(entry.getValue()))
+                result = getString(entry.getValue());
+            else if(StringUtil.isJson(entry.getValue()))
+                result = getString(entry.getValue());
+//                for (Iterator<String> it = ruleData.getVariableMap().keySet().iterator(); it.hasNext(); ) {
+//                    String key1 = it.next();
+//                    String value = get(key1);
+//                    value = StringUtils.startsWith(key,"urlEncode")?value:StringUtil.encode(value);
+//                    if (value.length() > 0) {
+//                        result = result.toString().replace("{" + key1 + "}", value);
+//                    }
+//                }
+//            }
+            String charset = "utf-8";
+            if(key.split("#").length>1){
+                charset = key.split("#")[1];
+            }
+            try{
+                if(StringUtils.startsWith(key,"base64Encode")) {
+                    result = Base64.encodeToString(result.toString().getBytes(charset),Base64.NO_WRAP);
+                } else if(StringUtils.startsWith(key,"base64Decode")) {
+                    result = new String(Base64.decode(result.toString(),Base64.NO_WRAP));
+                }  else if(StringUtils.startsWith(key,"urlEncode")) {
+                    result = StringUtil.encode(result.toString(),charset);
+                }  else if(StringUtils.startsWith(key,"urlDecode")) {
+                    result = StringUtil.decode(result.toString(),charset);
+                }
+            } catch (Exception e) {
+
+            }
+        }
+        return result;
+    }
     private String splitPutRule(String ruleStr, Map<String, String> putMap) {
         String vRuleStr = ruleStr;
         Matcher putMatcher = putPattern.matcher(vRuleStr);
@@ -352,8 +431,38 @@ public class AnalyzeRule {
                     Iterator<String> keys = navs.keys();
                     while (keys.hasNext()) {
                         String name = keys.next();
-                        putMap.put(name.trim(), navs.optString(name).trim());
+                        putMap.put(name.trim(), navs.optString(name).trim().replaceAll("%7B","{").replaceAll("%7D","}"));
                     }
+                }
+            } catch (Exception e) {
+
+            }
+        }
+        return vRuleStr;
+    }
+
+    @TargetApi(Build.VERSION_CODES.N)
+    private String splitFunRule(String ruleStr, LinkedHashMap<String, String> putMap) {
+        String vRuleStr = ruleStr;
+        Matcher putMatcher = funPattern.matcher(vRuleStr);
+        while (putMatcher.find()) {
+            vRuleStr = vRuleStr.replace(putMatcher.group(), "");
+            try {
+                String js = putMatcher.group(1);
+//                js = js.replaceAll("【","{").replaceAll("】","}");
+                JSONObject navs = new JSONObject(js);
+                List<String> sorts = new ArrayList();
+                if (navs != null) {
+                    Iterator<String> keys = navs.keys();
+                    while (keys.hasNext()) {
+                        String name = keys.next();
+                        sorts.add(js.indexOf(name)+"$"+name);
+                    }
+                }
+                sorts.sort(Comparator.naturalOrder());
+                for (String sort:sorts) {
+                    String name = sort.split("\\$")[1];
+                    putMap.put(name.trim(), navs.optString(name).replaceAll("%7B","{").replaceAll("%7D","}"));
                 }
             } catch (Exception e) {
 
@@ -402,7 +511,21 @@ public class AnalyzeRule {
         } else if (isRegex) {
             mMode = Mode.Regex;
         }
-        String tmp;
+        Matcher jsMatcher = JS_PATTERN.matcher(rule);
+        String tmp = "";
+        if(jsMatcher.find()) {
+            do {
+                if(jsMatcher.start()> start) {
+                    tmp = rule.substring(start,jsMatcher.start());
+                    if(StringUtils.isNotEmpty(tmp)) {
+                        ruleList.add(new SourceRule(tmp,mMode));
+                    }
+                }
+                if(StringUtils.isNotEmpty(jsMatcher.group(1)) || StringUtils.isNotEmpty(jsMatcher.group(2)))
+                    ruleList.add(new SourceRule(jsMatcher.group(1) == null?jsMatcher.group(2):jsMatcher.group(1),Mode.Js));
+                start = jsMatcher.end();
+            } while (jsMatcher.find());
+        }
         if (rule.length() > start) {
             tmp = StringUtils.trim(rule.substring(start));
             if (StringUtils.isNotEmpty(tmp)) {
@@ -413,7 +536,7 @@ public class AnalyzeRule {
     }
 
     enum Mode {
-        XPath, Json, Default, Js, Regex
+        XPath, Json, Default, Js, Regex,Function,Constant
 
     }
 
@@ -423,6 +546,10 @@ public class AnalyzeRule {
     }
 
     private String get(String key) {
+        String value = ruleData.getVariable(key);
+        if(StringUtils.isEmpty(value) || value.equalsIgnoreCase("null")) {
+            return "";
+        }
         return ruleData.getVariable(key);
     }
 
@@ -434,8 +561,10 @@ public class AnalyzeRule {
         private String replacement = "";
 
         private Map<String, String> putMap = new HashMap<String, String>();
+        private LinkedHashMap<String,String> funMap = new LinkedHashMap();
         private List<String> ruleParam = new ArrayList<>();
         private List<Integer> ruleType = new ArrayList<>();
+        private int fun = -3;
         private int getRuleType = -2;
         private int jsRuleType = -1;
         private int defaultRuleType = 0;
@@ -447,22 +576,35 @@ public class AnalyzeRule {
         public SourceRule(String ruleStr, Mode mMode) {
             this.mode = mMode;
             this.rule = ruleStr;
-            if (ruleStr.startsWith("@CSS")) {
+//            ruleStr = splitFunRule(rule,funMap);
+            if(mMode == Mode.Js) {
+                this.mode = Mode.Js;
+                rule = ruleStr;
+            } else if (StringUtils.startsWithIgnoreCase(ruleStr,"@CSS:")) {
                 this.mode = Mode.Default;
                 rule = ruleStr;
-            } else if (ruleStr.startsWith("@@")) {
+            } else if (StringUtils.startsWithIgnoreCase(ruleStr,"@@")) {
                 this.mode = Mode.Default;
                 this.rule = ruleStr.substring(2);
-            } else if (ruleStr.startsWith("@XPath")) {
+            } else if (StringUtils.startsWithIgnoreCase(ruleStr,"@XPath:")) {
                 this.mode = Mode.XPath;
                 this.rule = ruleStr.substring(7);
-            } else if (ruleStr.startsWith("@Json")) {
+            } else if (StringUtils.startsWithIgnoreCase(ruleStr,"@Js:")) {
+                this.mode = Mode.Js;
+                this.rule = ruleStr.substring(4);
+            } else if (StringUtils.startsWithIgnoreCase(ruleStr,"@Json:")) {
                 this.mode = Mode.Json;
                 this.rule = ruleStr.substring(6);
-            } else if (isJSON || ruleStr.startsWith("$.") || ruleStr.startsWith("$[")) {
+            }  else if (StringUtils.startsWithIgnoreCase(ruleStr,"@Fun:")) {
+                this.mode = Mode.Function;
+                this.rule = ruleStr.substring(5);
+            } else if (StringUtils.startsWithIgnoreCase(ruleStr,"@constant:")) {
+                this.mode = Mode.Constant;
+                this.rule = ruleStr.substring(10);
+            } else if (isJSON||StringUtils.startsWithIgnoreCase(ruleStr,"$.") || StringUtils.startsWithIgnoreCase(ruleStr,"$[")) {
                 this.mode = Mode.Json;
                 rule = ruleStr;
-            } else if (ruleStr.startsWith("/")) {
+            } else if (StringUtils.startsWithIgnoreCase(ruleStr,"/")) {
                 this.mode = Mode.XPath;
                 rule = ruleStr;
             } else {
@@ -476,7 +618,7 @@ public class AnalyzeRule {
             Matcher evalMatcher = evalPattern.matcher(rule);
             if (evalMatcher.find()) {
                 tmp = rule.substring(start, evalMatcher.start());
-                if (mode != Mode.Json && mode != Mode.Regex && (evalMatcher.start() == 0 || !StringUtils.contains(tmp, "##"))) {
+                if (!isRule(tmp) && mode !=Mode.Function && mode != Mode.Js && mode != Mode.Regex && (evalMatcher.start() == 0 || !StringUtils.contains(tmp, "##"))) {
                     mode = Mode.Regex;
                 }
                 do {
@@ -485,12 +627,12 @@ public class AnalyzeRule {
                         splitRegex(tmp);
                     }
                     tmp = evalMatcher.group();
-                    if (tmp.startsWith("@get")) {
+                    if (StringUtils.startsWithIgnoreCase(tmp,"@get")) {
                         ruleType.add(getRuleType);
                         ruleParam.add(tmp.substring(6, tmp.length() - 1));
                     } else if (tmp.startsWith("{{")) {
                         ruleType.add(jsRuleType);
-                        ruleParam.add(tmp.substring(2, tmp.length() - 3));
+                        ruleParam.add(tmp.substring(2, tmp.length() - 2));
                     } else {
                         splitRegex(tmp);
                     }
@@ -548,6 +690,10 @@ public class AnalyzeRule {
                         } else {
                             infoVal.insert(0, ruleParam.get(index));
                         }
+                    } else if(regType == jsRuleType){
+                        if(isRule(ruleParam.get(index))) {
+                            infoVal.insert(0,getString(ruleParam.get(index)));
+                        }
                     } else if (regType == getRuleType) {
                         infoVal.insert(0, get(ruleParam.get(index)));
                     } else {
@@ -567,6 +713,13 @@ public class AnalyzeRule {
             if (ruleStrs.length > 3) {
                 replaceFirst = true;
             }
+        }
+
+        public Boolean isRule(String ruleStr) {
+            return ruleStr.startsWith("@") //js首个字符不可能是@，除非是装饰器，所以@开头规定为规则
+                    || ruleStr.startsWith("$.")
+                    || ruleStr.startsWith("$[")
+                    || ruleStr.startsWith("//");
         }
     }
 }

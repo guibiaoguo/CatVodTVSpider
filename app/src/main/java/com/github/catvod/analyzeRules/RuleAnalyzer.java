@@ -70,12 +70,13 @@ public final class RuleAnalyzer {
     }
 
     private final int findToAny(char... seq) {
-        for (int pos = this.pos; pos != this.queue.length(); ++pos) {
-            for (char s : seq) {
-                if (this.queue.charAt(pos) == s) {
+        while (pos != queue.length()) {
+            for(char s:seq) {
+                if(queue.charAt(pos) == s) {
                     return pos;
                 }
             }
+            pos++;
         }
         return -1;
     }
@@ -191,6 +192,7 @@ public final class RuleAnalyzer {
                     return splitRuleNext();
                 } else {
                     rule.add(queue.substring(pos));
+                    return rule;
                 }
             }
             this.pos = st;
@@ -222,7 +224,7 @@ public final class RuleAnalyzer {
                 rule.add(queue.substring(startX, end));
                 pos = end + step;
                 while (consumeTo(elementsType)) {
-                    rule.add(queue.substring(startX, pos));
+                    rule.add(queue.substring(start, pos));
                     pos += step;
                 }
                 rule.add(queue.substring(pos));
@@ -232,7 +234,7 @@ public final class RuleAnalyzer {
                 rule.add(queue.substring(startX, end));
                 pos = end + step;
                 while (consumeTo(elementsType) && pos < st) {
-                    rule.add(queue.substring(startX, pos));
+                    rule.add(queue.substring(start, pos));
                     pos += step;
                 }
 

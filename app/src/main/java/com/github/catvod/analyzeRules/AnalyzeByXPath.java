@@ -127,7 +127,7 @@ public class AnalyzeByXPath {
             return result;
         } else {
             ArrayList<List<String>> results = new ArrayList<>();
-            for (Object r1 : results) {
+            for (Object r1 : rules) {
                 List<String> temp = getStringList(r1.toString());
                 if (temp != null && !temp.isEmpty()) {
                     results.add(temp);
@@ -155,30 +155,47 @@ public class AnalyzeByXPath {
         return result;
     }
 
+//    @TargetApi(Build.VERSION_CODES.N)
+//    public final String getString(String xPath) {
+//        if (xPath.isEmpty()) {
+//            return null;
+//        }
+//        List result = new ArrayList();
+//        RuleAnalyzer ruleAnalyzes = new RuleAnalyzer(xPath);
+//        ArrayList rules = ruleAnalyzes.splitRule("&&", "||");
+//        if (rules.size() == 1) {
+//            getResult(xPath).forEach(it -> {
+//                result.add(it.toString());
+//            });
+//            return StringUtil.join("\n",result);
+//        } else {
+//            for (Object r1 : rules) {
+//                String temp = getString(r1.toString());
+//                if (temp != null && !temp.isEmpty()) {
+//                    result.add(temp);
+//                    if (!temp.isEmpty() && ruleAnalyzes.getElementsType().equals("||")) {
+//                        break;
+//                    }
+//                }
+//            }
+//            return StringUtil.join("\n",result);
+//        }
+//    }
+
     @TargetApi(Build.VERSION_CODES.N)
-    public final String getString(String xPath) {
-        if (xPath.isEmpty()) {
+    public final String getString(String rule) {
+        if (rule.isEmpty()) {
             return null;
         }
+        List textS = getStringList(rule);
         List result = new ArrayList();
-        RuleAnalyzer ruleAnalyzes = new RuleAnalyzer(xPath);
-        ArrayList rules = ruleAnalyzes.splitRule("&&", "||");
-        if (rules.size() == 1) {
-            getResult(xPath).forEach(it -> {
-                result.add(it.toString());
+        if (textS != null & !textS.isEmpty()) {
+            textS.forEach(text -> {
+                result.add(text);
             });
             return StringUtil.join("\n",result);
         } else {
-            for (Object r1 : rules) {
-                String temp = getString(r1.toString());
-                if (temp != null && !temp.isEmpty()) {
-                    result.add(temp);
-                    if (!temp.isEmpty() && ruleAnalyzes.getElementsType().equals("||")) {
-                        break;
-                    }
-                }
-            }
-            return StringUtil.join("\n",result);
+            return null;
         }
     }
 

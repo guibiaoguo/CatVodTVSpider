@@ -1,16 +1,19 @@
 package com.github.catvod.spider;
 
-
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.crawler.SpiderReq;
 import com.github.catvod.crawler.SpiderReqResult;
 import com.github.catvod.crawler.SpiderUrl;
+
+import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.SpiderOKClient;
+import com.github.catvod.utils.StringUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -79,9 +82,9 @@ public class XPathAli extends XPath {
         Matcher matcher = aliyun.matcher(link);
         if (matcher.find()) {
             shareId = matcher.group(1);
-            if(matcher.groupCount()>1) {
-                root = matcher.group(2);
-            }
+//            if(matcher.groupCount()>1) {
+//                root = matcher.group(2);
+//            }
         } else {
             matcher = aliyunShort.matcher(link);
             if (matcher.find()) {
@@ -98,7 +101,7 @@ public class XPathAli extends XPath {
         }
         if (shareId != null) {
             String shareToken = getShareTk(shareId, "");
-            getFileList(shareToken, shareId, "", root, vod_play);
+            getFileList(shareToken, shareId, "", root,"","", vod_play);
         }
     }
 
@@ -147,7 +150,7 @@ public class XPathAli extends XPath {
                     for (int i = 0; i < playList.length(); i++) {
                         JSONObject obj = playList.getJSONObject(i);
                         if (obj.optString("template_id").equals(infos[2])) {
-                            videoUrl = "http://116.85.31.19:3000/apis/yun-play/" + infos[1] + '/' + infos[0] + '/' + accessTk + '/' + shareTk + '/' + infos[2] + "/index.m3u8";
+                            videoUrl = "http://116.85.31.19:3000/apis/yun-play/" + infos[3] + '/' + accessTk + '/' + shareTk + '/' + infos[2] + "/index.m3u8";
                             break;
                         } else {
                             templateId = obj.optString("template_id");
@@ -227,7 +230,7 @@ public class XPathAli extends XPath {
 
 
     private void  getFileList(String shareTk, String shareId, String sharePwd, String
-            root, Map<String, List<String>> data) {
+            root,String parentName,String foldname, Map<String, List<String>> data) {
         try {
             // 取文件夹
             JSONObject json = new JSONObject();
@@ -248,7 +251,9 @@ public class XPathAli extends XPath {
                     JSONObject item = rootList.getJSONObject(i);
                     if (item.getString("type").equals("folder")) {
                         String dirId = item.getString("file_id");
-                        getFileList(shareTk, shareId, sharePwd, dirId, data);
+                        foldname = item.getString("name");
+                        String name = root == "root"?"":parentName +";"+item.getString("name");
+                        getFileList(shareTk, shareId, sharePwd, dirId,name,foldname,data);
                     } else {
                         String[] types = {"3G2", "3GP", "3GP2", "3GPP", "AMV", "ASF", "AVI", "DIVX", "DPG", "DVR-MS", "EVO", "F4V", "FLV", "IFO", "K3G", "M1V", "M2T", "M2TS", "M2V", "M4B", "M4P", "M4V", "MKV", "MOV", "MP2V", "MP4", "MPE", "MPEG", "MPG", "MPV2", "MTS", "MXF", "NSR", "NSV", "OGM", "OGV", "QT", "RAM", "RM", "RMVB", "RPM", "SKM", "TP", "TPR", "TRP", "TS", "VOB", "WEBM", "WM", "WMP", "WMV", "WTV"};
                         if (item.getString("type").equals("file") && Arrays.asList(types).contains(item.getString("file_extension").toUpperCase())) {
@@ -263,7 +268,22 @@ public class XPathAli extends XPath {
                                 } else {
                                     vodLists = data.get(templateId);
                                 }
-                                vodLists.add(fileName + "$" + shareId + "+" + fileId + "+" + templateId);
+                                JSONObject jsonObject = new JSONObject();
+                                jsonObject.put("parent_name",parentName+";"+foldname);
+                                jsonObject.put("folder_id",root);
+                                jsonObject.put("file_id",fileId);
+                                jsonObject.put("file_name",item.getString("name"));
+                                jsonObject.put("share_id",shareId);
+                                jsonObject.put("share_pwd",sharePwd);
+                                jsonObject.put("expiration","");
+                                String pid = jsonObject.toString();
+                                try{
+                                    pid = Base64.encodeToString(StringUtil.encode(pid).getBytes("utf-8"), Base64.NO_WRAP);
+                                    pid = pid.replaceAll("/","$");
+                                } catch (Exception e) {
+
+                                }
+                                vodLists.add(fileName + "$" + shareId + "+" + fileId + "+" + templateId+"+"+pid);
                             }
                         }
                     }

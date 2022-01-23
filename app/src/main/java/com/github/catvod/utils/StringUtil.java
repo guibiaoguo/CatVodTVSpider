@@ -5,6 +5,7 @@ import android.text.TextUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -12,9 +13,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import rxhttp.wrapper.annotations.NonNull;
-import rxhttp.wrapper.annotations.Nullable;
 
 /**
  * 作者：By hdy
@@ -394,11 +392,11 @@ public class StringUtil {
         return baseUrl;
     }
 
-    public static boolean isEmpty(@Nullable CharSequence str) {
+    public static boolean isEmpty(CharSequence str) {
         return str == null || str.length() == 0;
     }
 
-    public static boolean isNotEmpty(@Nullable CharSequence str) {
+    public static boolean isNotEmpty(CharSequence str) {
         return !isEmpty(str);
     }
 
@@ -585,10 +583,10 @@ public class StringUtil {
         return isAbsUrl;
     }
 
-    public static String join(@NonNull CharSequence delimiter, @NonNull String[] tokens) {
+    public static String join(CharSequence delimiter, String[] tokens) {
         return join(delimiter, Arrays.asList(tokens));
     }
-    public static String join(@NonNull CharSequence delimiter, @NonNull Iterable tokens) {
+    public static String join(CharSequence delimiter, Iterable tokens) {
         final Iterator<?> it = tokens.iterator();
         if (!it.hasNext()) {
             return "";
@@ -602,13 +600,31 @@ public class StringUtil {
         return sb.toString();
     }
     public static String encode(String name) {
+        return encode(name,"utf-8");
+    }
+
+    public static String decode(String name) {
+        return decode(name,"utf-8");
+    }
+
+    public static String decode(String str,String charset) {
         try {
-            name = URLEncoder.encode(name,"utf-8")
+            str = URLDecoder.decode(str,charset);
+        }catch (Exception e) {
+
+        }
+        return str;
+    }
+
+    public static String encode(String name,String charset) {
+        try {
+            name = URLEncoder.encode(name,charset)
                     .replaceAll("%2F","/")
                     .replaceAll("%3F","?")
                     .replaceAll("%3D","=")
                     .replaceAll("%3B",";")
                     .replaceAll("%3A",":")
+                    .replaceAll("%2C",",")
                     .replaceAll("\\+","%20");
         } catch (Exception e) {
 
