@@ -1133,7 +1133,7 @@ public class CatTest {
         Spider spider = new Legado();
         spider.init(null, "http://185.205.12.38:4004/alipanso.json");
         String category = "";
-//        String category = spider.searchContent("名侦探柯南TV版 国语", false);
+//        category = spider.searchContent("名侦探柯南TV版 国语", false);
 //        System.out.println(category);
 //        showCategory(spider, category, 0);
         category = spider.homeContent(false);
@@ -1682,6 +1682,8 @@ public class CatTest {
                 "  <user_note/>\n" +
                 "</movie>";
         analyzeRule.setContent(content);
+//        analyzeRule.getElements(":<actor>[\\S\\s]*?<\\/actor>");
+        analyzeRule.getString("tag.thumb@[aspect=\"poster\"]@text");
         analyzeRule.getString("//actor/name/text()&&//actor/thumb/text()");
         analyzeRule.getString("//actor/name/text()");
         analyzeRule.getString("//actor/name/text()||//actor/role/text()");
@@ -1763,5 +1765,30 @@ public class CatTest {
         System.out.println(analyzeRule.getString("tag.title@text<js></js>@Fun:urlEncode#@get:{charset}"));
         System.out.println(analyzeRule.getString("@css:uniqueid[type=\"JavScraper-Json\"]@text"));
     }
+
+    @Test
+    public void myalipan() throws Exception {
+        Spider spider = new Legado();
+        spider.init(null, "http://185.205.12.38:4004/myalipan.json");
+        String category = "";
+//        category = spider.searchContent("名侦探柯南TV版 国语", false);
+//        System.out.println(category);
+//        showCategory(spider, category, 0);
+        category = spider.homeContent(false);
+        System.out.println(category);
+        showCategory(spider, category, 0);
+        JSONObject jsonObject = new JSONObject(category);
+        JSONArray classes = jsonObject.optJSONArray("class");
+        for (int i = 0; i < classes.length(); i++) {
+            String tid = classes.getJSONObject(i).optString("type_id");
+            System.out.println(tid);
+            //org.seimicrawler.xpath.core.function;
+            category = spider.categoryContent(tid, "1", false, null);
+            System.out.println(category);
+            showCategory(spider, category, 0);
+        }
+        System.out.println("ends");
+    }
+
 }
 

@@ -26,12 +26,12 @@ import rxhttp.wrapper.annotations.NonNull;
 public class AnalyzeByJSoup {
 
     public AnalyzeByJSoup(Object doc) {
-        parse(doc);
+        element = parse(doc);
     }
 
     private Element element;
 
-    public final AnalyzeByJSoup parse(Object doc) {
+    public final Element parse(Object doc) {
         if (doc instanceof Element) {
             element = (Element) doc;
         } else if (doc instanceof JXNode) {
@@ -39,7 +39,7 @@ public class AnalyzeByJSoup {
         } else {
             element = Jsoup.parse(doc.toString());
         }
-        return this;
+        return element;
     }
 
     public Elements getElements(String rule) {

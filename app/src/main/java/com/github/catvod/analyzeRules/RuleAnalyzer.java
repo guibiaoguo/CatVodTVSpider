@@ -4,8 +4,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 
-import kotlin.jvm.internal.Intrinsics;
-
 public final class RuleAnalyzer {
     private String queue;
     private int pos;
@@ -30,12 +28,11 @@ public final class RuleAnalyzer {
     }
 
     public final void trim() {
-        if (this.queue.charAt(this.pos) == '@' || Intrinsics.compare(this.queue.charAt(this.pos), 33) < 0) {
-            for (int var10001 = this.pos++; this.queue.charAt(this.pos) == '@' || Intrinsics.compare(this.queue.charAt(this.pos), 33) < 0; var10001 = this.pos++) {
-            }
-
-            this.start = this.pos;
-            this.startX = this.pos;
+        if (this.queue.charAt(this.pos) == '@' || this.queue.charAt(this.pos) < '!') {
+            pos++;
+            while (queue.charAt(pos) == '@' || queue.charAt(pos) < '!') pos++;
+            start = this.pos;
+            startX = this.pos;
         }
 
     }
@@ -240,7 +237,7 @@ public final class RuleAnalyzer {
 
                 if (this.pos > st) {
                     this.startX = this.start;
-                    splitRuleNext();
+                    return splitRuleNext();
                 } else {
                     rule.add(queue.substring(pos));
                     return rule;
@@ -256,10 +253,10 @@ public final class RuleAnalyzer {
         this.start = this.pos;
         if (!this.consumeTo(this.elementsType)) {
             rule.add(queue.substring(startX));
+            return rule;
         } else {
-            splitRuleNext();
+            return splitRuleNext();
         }
-        return rule;
     }
 
 

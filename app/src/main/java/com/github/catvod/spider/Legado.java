@@ -208,7 +208,7 @@ public class Legado extends Spider {
                             errorObject.put("vod_name", e.getMessage()).put("vod_id", url + e.getMessage());
                             errorArray.put(errorObject);
                             result.put("list", errorArray);
-                            error.putVariable("vod_actor", e.getMessage());
+                            error.putVariable("vod_actor", "home:"+e.getMessage());
                         } catch (Exception e1) {
 
                         }
@@ -223,7 +223,7 @@ public class Legado extends Spider {
                         errorObject.put("vod_name", errorCode + "$" + msg).put("vod_id", errorCode + msg);
                         errorArray.put(errorObject);
                         result.put("list", errorArray);
-                        error.putVariable("vod_actor", errorCode + "$" + msg);
+                        error.putVariable("vod_actor", "home:"+errorCode + "$" + msg);
                     } catch (Exception e1) {
 
                     }
@@ -242,7 +242,7 @@ public class Legado extends Spider {
                 errorObject.put("vod_name", e.getMessage());
                 errorArray.put(errorObject);
                 result.put("list", errorArray);
-                error.putVariable("vod_actor", e.getMessage());
+                error.putVariable("vod_actor", "home:"+e.getMessage());
             } catch (Exception e1) {
 
             }
@@ -352,7 +352,7 @@ public class Legado extends Spider {
                                     errorObject.put("vod_name", e.getMessage()).put("vod_id", e.getMessage());
                                     errorArray.put(errorObject);
                                     result.put("list", errorArray);
-                                    error.putVariable("vod_director", e.getMessage());
+                                    error.putVariable("vod_director", "cate:"+e.getMessage());
                                 } catch (Exception e1) {
 
                                 }
@@ -366,7 +366,7 @@ public class Legado extends Spider {
                             errorObject.put("vod_name", e.getMessage()).put("vod_id", url + e.getMessage());
                             errorArray.put(errorObject);
                             result.put("list", errorArray);
-                            error.putVariable("vod_director", e.getMessage());
+                            error.putVariable("vod_director","cate:"+ e.getMessage());
                         } catch (Exception e1) {
 
                         }
@@ -382,7 +382,7 @@ public class Legado extends Spider {
                         errorObject.put("vod_name", errorCode + "$" + msg).put("vod_id", errorCode + msg);
                         errorArray.put(errorObject);
                         result.put("list", errorArray);
-                        error.putVariable("vod_director", errorCode + "$" + msg);
+                        error.putVariable("vod_director", "cate:"+errorCode + "$" + msg);
                     } catch (Exception e1) {
 
                     }
@@ -401,7 +401,7 @@ public class Legado extends Spider {
                 errorObject.put("vod_name", e.getMessage());
                 errorArray.put(errorObject);
                 result.put("list", errorArray);
-                error.putVariable("vod_actor", e.getMessage());
+                error.putVariable("vod_director", "cate:"+e.getMessage());
             } catch (Exception e1) {
 
             }
@@ -528,11 +528,13 @@ public class Legado extends Spider {
                                         vod_play.get(defaultFroms[k]).add(name+"$"+id+"+"+defaultFroms[k]);
                                     }
                                 } else if (StringUtils.contains(name, ".nfo")) {
-                                    getNfo(vod, id);
+                                    putParamMap(rule.getDetailParamMaps());
+                                    getNfo(vod,analyzeRule.getString(rule.getUrlNfo(),null,true));
                                 }
                             }
                         }
                         if(rule.getNfoFlag()) {
+                            putParamMap(rule.getDetailParamMaps());
                             getNfo(vod,analyzeRule.getString(rule.getUrlNfo()));
                         }
                         if (vod_play.size() > 0) {
@@ -561,10 +563,10 @@ public class Legado extends Spider {
                         try {
                             JSONArray errorArray = new JSONArray();
                             JSONObject errorObject = new JSONObject();
-                            errorObject.put("vod_name", ids.get(0)).put("vod_id", ids.get(0));
+                            errorObject.put("vod_name", "detail:"+ids.get(0)).put("vod_id", ids.get(0));
                             errorObject.put("vod_actor", error.getVariable("vod_actor"));
                             errorObject.put("vod_director", error.getVariable("vod_director"));
-                            errorObject.put("vod_content", e.getMessage());
+                            errorObject.put("vod_content", "detail:"+e.getMessage());
                             errorArray.put(errorObject);
                             result.put("list", errorArray);
                         } catch (Exception e1) {
@@ -612,7 +614,7 @@ public class Legado extends Spider {
                 errorObject.put("vod_name", e.getMessage());
                 errorArray.put(errorObject);
                 result.put("list", errorArray);
-                error.putVariable("vod_actor", e.getMessage());
+                error.putVariable("vod_content", "detail:"+e.getMessage());
             } catch (Exception e1) {
 
             }

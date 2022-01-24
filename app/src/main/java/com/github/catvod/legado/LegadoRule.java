@@ -751,7 +751,7 @@ public class LegadoRule {
             }
             rule.thumbNfo = jsonObj.optString("thumbNfo");
             if(StringUtils.isEmpty(rule.thumbNfo)) {
-                rule.thumbNfo = "@css:thumb[aspect=\"poster\"]@text||uniqueid[type=\"JavScraper-Json\"]@text##.*Cover\":\"(.*?)\".*##$1";
+                rule.thumbNfo = "//thumb[@aspect=\"poster\"][1]/text()||//uniqueid[@type=\"JavScraper-Json\"]/text()##.*Cover\":\"(.*?)\".*##$1";
             }
             rule.genreNfo = jsonObj.optString("genreNfo");
             if(StringUtils.isEmpty(rule.genreNfo)) {
@@ -763,11 +763,11 @@ public class LegadoRule {
             }
             rule.countryNfo = jsonObj.optString("countryNfo");
             if(StringUtils.isEmpty(rule.countryNfo)) {
-                rule.countryNfo = "tag.country||tag.language.0@text";
+                rule.countryNfo = "tag.country@text||tag.language.0@text";
             }
             rule.remarkNfo = jsonObj.optString("remarkNfo");
             if(StringUtils.isEmpty(rule.remarkNfo)) {
-                rule.remarkNfo = "tag.tag||tag.sorttitle@text";
+                rule.remarkNfo = "tag.tag@text||tag.sorttitle@text";
             }
             rule.actorNfo = jsonObj.optString("actorNfo");
             if(StringUtils.isEmpty(rule.actorNfo)) {
@@ -775,7 +775,7 @@ public class LegadoRule {
             }
             rule.directorNfo = jsonObj.optString("directorNfo");
             if(StringUtils.isEmpty(rule.directorNfo)) {
-                rule.directorNfo = "tag.producer@tag.name||tag.studio@text";
+                rule.directorNfo = "tag.producer@tag.name@text||tag.studio@text";
             }
             rule.plotNfo = jsonObj.optString("contentNfo");
             if(StringUtils.isEmpty(rule.plotNfo)) {
@@ -783,6 +783,9 @@ public class LegadoRule {
             }
             rule.urlNfo = jsonObj.optString("urlNfo");
             rule.nfoFlag = jsonObj.optBoolean("nfoFlag");
+            if(!rule.nfoFlag && StringUtils.isEmpty(rule.urlNfo)) {
+                rule.urlNfo = rule.getDetailUrlId();
+            }
             return rule;
         } catch (Exception e) {
             SpiderDebug.log(e);
