@@ -1,14 +1,8 @@
 package com.github.catvod.analyzeRules;
 
-
-import android.annotation.TargetApi;
-import android.os.Build;
-import android.text.TextUtils;
-
 import com.github.catvod.utils.StringUtil;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -112,7 +106,7 @@ public class AnalyzeByXPath {
     }
 
 
-    @TargetApi(Build.VERSION_CODES.N)
+//    @TargetApi(Build.VERSION_CODES.N)
     public final List<String> getStringList(String xPath) {
         if (xPath.isEmpty()) {
             return null;
@@ -121,9 +115,10 @@ public class AnalyzeByXPath {
         RuleAnalyzer ruleAnalyzes = new RuleAnalyzer(xPath);
         ArrayList rules = ruleAnalyzes.splitRule("&&", "||", "%%");
         if (rules.size() == 1) {
-            getResult(xPath).forEach(it -> {
+            List its = getResult(xPath);
+            for(Object it:its) {
                 result.add(it.toString());
-            });
+            }
             return result;
         } else {
             ArrayList<List<String>> results = new ArrayList<>();
@@ -182,7 +177,7 @@ public class AnalyzeByXPath {
 //        }
 //    }
 
-    @TargetApi(Build.VERSION_CODES.N)
+//    @TargetApi(Build.VERSION_CODES.N)
     public final String getString(String rule) {
         if (rule.isEmpty()) {
             return null;
@@ -190,9 +185,12 @@ public class AnalyzeByXPath {
         List textS = getStringList(rule);
         List result = new ArrayList();
         if (textS != null & !textS.isEmpty()) {
-            textS.forEach(text -> {
+//            textS.forEach(text -> {
+//                result.add(text);
+//            });
+            for(Object text:textS) {
                 result.add(text);
-            });
+            }
             return StringUtil.join("\n",result);
         } else {
             return null;

@@ -2,12 +2,10 @@ package com.github.catvod.spider;
 
 import static com.github.catvod.utils.StringUtil.join;
 
-import android.annotation.TargetApi;
 import android.content.Context;
-import android.os.Build;
 
 import com.github.catvod.analyzeRules.AnalyzeRule;
-import com.github.catvod.analyzeRules.RuleAnalyzer;
+
 import com.github.catvod.analyzeRules.RuleData;
 import com.github.catvod.analyzeRules.RuleDataInterface;
 import com.github.catvod.crawler.Spider;
@@ -22,22 +20,16 @@ import com.github.catvod.utils.StringUtil;
 
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
+
 import org.json.JSONObject;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import rxhttp.wrapper.annotations.NonNull;
 
 /**
  * bill
@@ -67,12 +59,15 @@ public class Legado extends Spider {
         putParamMap(rule.getPreParamMaps());
     }
 
-    @TargetApi(Build.VERSION_CODES.N)
     public void putHeaderMap(Map<String, List<String>> headers) {
         if (headers != null && !headers.isEmpty()) {
-            headers.forEach((key, value) -> {
-                ruleData.putVariable(key, new JSONArray(value).toString());
-            });
+            for(Map.Entry header:headers.entrySet()) {
+                try {
+                    ruleData.putVariable(header.getKey().toString(),new JSONObject(header.getValue().toString()).toString());
+                } catch (Exception e) {
+                    ruleData.putVariable(header.getKey().toString(),e.getMessage());
+                }
+            }
         }
     }
 

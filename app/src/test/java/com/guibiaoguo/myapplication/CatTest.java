@@ -1299,7 +1299,7 @@ public class CatTest {
                     JSONObject mao = new JSONObject(s.content);
                     JSONArray sites = mao.optJSONArray("sites");
                     JSONArray trueSites = new JSONArray();
-                    for (int i = 0; i < sites.length(); i++) {
+                    for (int i = 36; i < 43; i++) {
                         int k = 0;
                         JSONObject site = sites.optJSONObject(i);
                         try {
@@ -1372,7 +1372,7 @@ public class CatTest {
                                         }
                                     }
                                 }
-                                String[] keys = {"钢铁侠", "熊出没", "柯南"};
+                                String[] keys = {"名侦探柯南 普通话"};
                                 for (String key : keys) {
                                     category = spider.searchContent(key, false);
                                     System.out.println(category);

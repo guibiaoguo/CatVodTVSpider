@@ -1,8 +1,5 @@
 package com.github.catvod.analyzeRules;
 
-import android.annotation.TargetApi;
-import android.os.Build;
-
 import com.github.catvod.utils.StringUtil;
 
 import org.apache.commons.lang3.StringUtils;
@@ -47,7 +44,7 @@ public class AnalyzeByJSoup {
     }
 
 
-    @TargetApi(Build.VERSION_CODES.N)
+//    @TargetApi(Build.VERSION_CODES.N)
     public final String getString(String rule) {
         if (rule.isEmpty()) {
             return null;
@@ -55,9 +52,12 @@ public class AnalyzeByJSoup {
         List textS = getStringList(rule);
         List result = new ArrayList();
         if (textS != null & !textS.isEmpty()) {
-            textS.forEach(text -> {
+//            textS.forEach(text -> {
+//                result.add(text);
+//            });
+            for (Object text:textS) {
                 result.add(text);
-            });
+            }
             return StringUtil.join("\n",result);
         } else {
             return null;
@@ -205,7 +205,7 @@ public class AnalyzeByJSoup {
         }
     }
 
-    @TargetApi(Build.VERSION_CODES.N)
+//    @TargetApi(Build.VERSION_CODES.N)
     private List getResultLast(Elements elements, String lastRule) {
         List<String> textS = new ArrayList<>();
 

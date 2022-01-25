@@ -1,9 +1,7 @@
 package com.github.catvod.analyzeRules;
 
-import android.annotation.TargetApi;
 import android.os.Build;
 
-import com.github.catvod.crawler.Spider;
 import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.StringUtil;
 
@@ -376,11 +374,10 @@ public class AnalyzeRule {
         return results;
     }
 
-    @TargetApi(Build.VERSION_CODES.N)
     private void putRule(Map<String, String> putMap) {
-        putMap.forEach((key, value) -> {
-            put(key, getString(value));
-        });
+        for (Map.Entry data:putMap.entrySet()) {
+            put(data.getKey().toString(),getString(data.getValue().toString()));
+        }
     }
 
     private Object funRule(LinkedHashMap<String,String> ruleMap,Object data) {
@@ -441,35 +438,35 @@ public class AnalyzeRule {
         return vRuleStr;
     }
 
-    @TargetApi(Build.VERSION_CODES.N)
-    private String splitFunRule(String ruleStr, LinkedHashMap<String, String> putMap) {
-        String vRuleStr = ruleStr;
-        Matcher putMatcher = funPattern.matcher(vRuleStr);
-        while (putMatcher.find()) {
-            vRuleStr = vRuleStr.replace(putMatcher.group(), "");
-            try {
-                String js = putMatcher.group(1);
-//                js = js.replaceAll("【","{").replaceAll("】","}");
-                JSONObject navs = new JSONObject(js);
-                List<String> sorts = new ArrayList();
-                if (navs != null) {
-                    Iterator<String> keys = navs.keys();
-                    while (keys.hasNext()) {
-                        String name = keys.next();
-                        sorts.add(js.indexOf(name)+"$"+name);
-                    }
-                }
-                sorts.sort(Comparator.naturalOrder());
-                for (String sort:sorts) {
-                    String name = sort.split("\\$")[1];
-                    putMap.put(name.trim(), navs.optString(name).replaceAll("%7B","{").replaceAll("%7D","}"));
-                }
-            } catch (Exception e) {
-
-            }
-        }
-        return vRuleStr;
-    }
+//    @TargetApi(Build.VERSION_CODES.N)
+//    private String splitFunRule(String ruleStr, LinkedHashMap<String, String> putMap) {
+//        String vRuleStr = ruleStr;
+//        Matcher putMatcher = funPattern.matcher(vRuleStr);
+//        while (putMatcher.find()) {
+//            vRuleStr = vRuleStr.replace(putMatcher.group(), "");
+//            try {
+//                String js = putMatcher.group(1);
+////                js = js.replaceAll("【","{").replaceAll("】","}");
+//                JSONObject navs = new JSONObject(js);
+//                List<String> sorts = new ArrayList();
+//                if (navs != null) {
+//                    Iterator<String> keys = navs.keys();
+//                    while (keys.hasNext()) {
+//                        String name = keys.next();
+//                        sorts.add(js.indexOf(name)+"$"+name);
+//                    }
+//                }
+//                sorts.sort(Comparator.naturalOrder());
+//                for (String sort:sorts) {
+//                    String name = sort.split("\\$")[1];
+//                    putMap.put(name.trim(), navs.optString(name).replaceAll("%7B","{").replaceAll("%7D","}"));
+//                }
+//            } catch (Exception e) {
+//
+//            }
+//        }
+//        return vRuleStr;
+//    }
 
     private String replaceRegex(String result, SourceRule sourceRule) {
         if (StringUtils.isEmpty(sourceRule.replaceRegex)) return result;
