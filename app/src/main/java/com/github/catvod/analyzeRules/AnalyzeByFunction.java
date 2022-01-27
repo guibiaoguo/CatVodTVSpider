@@ -5,6 +5,7 @@ import com.github.catvod.utils.StringUtil;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,23 +24,25 @@ public class AnalyzeByFunction {
     public List getStringList(String ruleStr) {
         List results = new ArrayList();
         List textList = new ArrayList();
-        if(content instanceof String) {
-            textList.add(content);
-        } else if(content instanceof List) {
+        if(content instanceof List) {
             textList = (ArrayList)content;
+        } else {
+            textList.add(content);
         }
         try {
             String[] rules = ruleStr.split("&&");
             for (Object result:textList) {
                 for(String rule:rules) {
-                    if(StringUtils.startsWith(rule,"base64Encode")) {
+                    if(StringUtils.startsWithIgnoreCase(rule,"base64Encode")) {
                         result = base64Encode(result.toString(),rule);
-                    } else if(StringUtils.startsWith(rule,"base64Decode")) {
+                    } else if(StringUtils.startsWithIgnoreCase(rule,"base64Decode")) {
                         result = base64Decode(result.toString(),rule);
-                    }  else if(StringUtils.startsWith(rule,"urlEncode")) {
+                    }  else if(StringUtils.startsWithIgnoreCase(rule,"urlEncode")) {
                         result = urlEncode(result.toString(),rule);
-                    }  else if(StringUtils.startsWith(rule,"urlDecode")) {
+                    }  else if(StringUtils.startsWithIgnoreCase(rule,"urlDecode")) {
                         result = urlDecode(result.toString(),rule);
+                    } else if(StringUtils.startsWithIgnoreCase(rule,"math")) {
+                        result = math(result.toString(),rule);
                     }
                 }
                 results.add(result);
@@ -85,7 +88,36 @@ public class AnalyzeByFunction {
         if(rules.length == 1) {
             return StringUtil.decode(content);
         } else if(rules.length == 2) {
-            return StringUtil.decode(content,rule);
+            return StringUtil.decode(content,rules[1]);
+        }
+        return "";
+    }
+
+    public Object math(String content,String rule) throws Exception {
+        String[] rules = rule.split("#");
+        if(rules.length > 1) {
+            Class[] classes = new Class[rules.length-1];
+            List objects = new ArrayList();
+            try {
+                Integer.parseInt(content);
+                classes[0]=int.class;
+                objects.add(Integer.parseInt(content));
+            } catch (Exception e) {
+                classes[0]=String.class;
+                objects.add(content);
+            }
+            for (int i=2;i<rules.length;i++) {
+                try{
+                    Integer.parseInt(rules[i]);
+                    classes[i-1]=int.class;
+                    objects.add(Integer.parseInt(rules[i]));
+                } catch (NumberFormatException e) {
+                    classes[i]=String.class;
+                    objects.add(rules[i]);
+                }
+            }
+            Method method = Math.class.getMethod(rules[1], classes);
+            return method.invoke(Math.class,objects.toArray());
         }
         return "";
     }

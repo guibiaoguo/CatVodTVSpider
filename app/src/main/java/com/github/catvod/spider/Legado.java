@@ -63,7 +63,11 @@ public class Legado extends Spider {
         if (headers != null && !headers.isEmpty()) {
             for(Map.Entry header:headers.entrySet()) {
                 try {
-                    ruleData.putVariable(header.getKey().toString(),new JSONObject(header.getValue().toString()).toString());
+                    if(header.getValue() instanceof List) {
+                        List data = (List)header.getValue();
+                        ruleData.putVariable(header.getKey().toString(),new JSONArray(data).toString());
+                    } else
+                        ruleData.putVariable(header.getKey().toString(),new JSONObject(header.getValue().toString()).toString());
                 } catch (Exception e) {
                     ruleData.putVariable(header.getKey().toString(),e.getMessage());
                 }
@@ -78,12 +82,9 @@ public class Legado extends Spider {
                 String url = param.optString("paramUrl");
                 String key = param.optString("paramKey");
                 String value = param.optString("paramValue");
-                if (StringUtils.isNotEmpty(url)) {
+                String webUrl = analyzeRule.getString(url);
+                if (StringUtils.isNotEmpty(webUrl) && StringUtil.isWebUrl(webUrl)) {
 //                    url = getRealUrl(url, true, ruleData.getVariableMap());
-                    String webUrl = analyzeRule.getString(url);
-                    if(StringUtils.isEmpty(webUrl)) {
-                        webUrl = url;
-                    }
                     HttpParser.parseSearchUrlForHtml(webUrl, new HttpParser.OnSearchCallBack() {
                         @Override
                         public void onSuccess(String url, SpiderReqResult s) {
@@ -149,9 +150,9 @@ public class Legado extends Spider {
             }
 //            String webUrl = getRealUrl(rule.getHomeUrl(), true, ruleData.getVariableMap());
             putParamMap(rule.getHomeParamMaps());
-            analyzeRule.setContent("");
+//            analyzeRule.setContent("");
             String webUrl = analyzeRule.getString(rule.getHomeUrl());
-            if(StringUtils.isEmpty(webUrl)) {
+            if(StringUtils.isEmpty(webUrl)|| !StringUtil.isWebUrl(webUrl)) {
                 webUrl = rule.getHomeUrl();
             }
             HttpParser.parseSearchUrlForHtml(webUrl, new HttpParser.OnSearchCallBack() {
@@ -226,7 +227,7 @@ public class Legado extends Spider {
             });
             result.put("class", classes);
             if (filter && rule.getFilter() != null) {
-                result.put("filters", rule.getFilter());
+                result.put("filters", new JSONObject(rule.getFilter()));
             }
             return result.toString();
         } catch (Exception e) {
@@ -312,9 +313,9 @@ public class Legado extends Spider {
             ruleData.putVariable("cateId",tid);
             ruleData.putVariable("catePg",pg);
             putParamMap(rule.getCategoryParamMaps());
-            analyzeRule.setContent("");
+//            analyzeRule.setContent("");
             String webUrl = analyzeRule.getString(rule.getCateUrl());
-            if(StringUtils.isEmpty(webUrl)) {
+            if(StringUtils.isEmpty(webUrl) || !StringUtil.isWebUrl(webUrl)) {
                 webUrl = categoryUrl(tid,pg,filter,extend);
             }
 //            String webUrl = analyzeRule.getString(rule.getCateUrl(),null,true);
@@ -445,9 +446,9 @@ public class Legado extends Spider {
                 ruleData.putVariable("title",name);
             }
             putParamMap(rule.getDetailParamMaps());
-            analyzeRule.setContent("");
+//            analyzeRule.setContent("");
             String webUrl = analyzeRule.getString(rule.getDetailUrl());
-            if(StringUtils.isEmpty(webUrl)) {
+            if(StringUtils.isEmpty(webUrl) || !StringUtil.isWebUrl(webUrl)) {
                 webUrl = detailUrl(vids[0]);
             }
 //            String webUrl = detailUrl(ids.get(0));
@@ -517,7 +518,7 @@ public class Legado extends Spider {
                                 if (analyzeRule.getString(rule.getNode()).equals(rule.getNodeValue()) && StringUtils.isNotEmpty(rule.getNodeValue())) {
                                     putParamMap(rule.getDetailParamMaps());
                                     String nodeUrl = analyzeRule.getString(rule.getNodeUrl(), null, true);
-                                    getFileList(nodeUrl, vod_play);
+                                    getFileList(nodeUrl, vod_play,defaultFrom);
                                 } else if (Arrays.asList(rule.getLeafValue().split(",")).contains(leaf) || StringUtils.contains(leaf.toLowerCase(), "video")) {
                                     for (int k = 0; k < defaultFroms.length; k++) {
                                         vod_play.get(defaultFroms[k]).add(name+"$"+id+"+"+defaultFroms[k]);
@@ -537,7 +538,8 @@ public class Legado extends Spider {
                             List vod_plays = new ArrayList();
                             for (Map.Entry<String, List<String>> entry : vod_play.entrySet()) {
                                 if(entry.getKey().equalsIgnoreCase("vod_pic")) {
-                                    vod.put("vod_pic",entry.getValue().get(0));
+                                    if(StringUtils.isNotEmpty(entry.getValue().get(0)))
+                                        vod.put("vod_pic",entry.getValue().get(0));
                                 }else if (entry.getValue() != null && !entry.getValue().isEmpty()) {
                                     vod_from.add(entry.getKey());
                                     vod_plays.add(join("#", entry.getValue()));
@@ -641,9 +643,9 @@ public class Legado extends Spider {
                 ruleData.putVariable("info",infos[1]);
             }
             putParamMap(rule.getPlayerParamMaps());
-            analyzeRule.setContent("");
+//            analyzeRule.setContent("");
             String webUrl = analyzeRule.getString(rule.getPlayUrl());
-            if(StringUtils.isEmpty(webUrl)) {
+            if(StringUtils.isEmpty(webUrl) || !StringUtil.isWebUrl(webUrl)) {
                 webUrl = playerUrl(infos[0]);
             }
 //            String webUrl = analyzeRule.getString(rule.getPlayUrl(),null,true);
@@ -679,7 +681,8 @@ public class Legado extends Spider {
                     }
                 });
                 result.put("parse", 0);
-            } else {
+            }
+            if(StringUtils.isEmpty(result.optString("url"))) {
                 result.put("url", webUrl);
             }
             if (StringUtils.isNotEmpty(webUrl)) {
@@ -805,7 +808,7 @@ public class Legado extends Spider {
 //                webUrl = webUrl.replace("{scPg}", i + "");
 //                webUrl = getRealUrl(webUrl, true, ruleData.getVariableMap());
                 webUrl = analyzeRule.getString(rule.getSearchUrl());
-                if(StringUtils.isEmpty(webUrl)) {
+                if(StringUtils.isEmpty(webUrl) || !StringUtil.isWebUrl(webUrl)) {
                     webUrl = searchUrl(key,i+"");
                 }
                 HttpParser.parseSearchUrlForHtml(webUrl, new HttpParser.OnSearchCallBack() {
@@ -865,7 +868,7 @@ public class Legado extends Spider {
         return "";
     }
 
-    private void getFileList(String root, Map<String, List<String>> data) {
+    private void getFileList(String root, Map<String, List<String>> data,String defaultFrom) {
         try {
 //            root = getRealUrl(root, true, ruleData.getVariableMap());
 //            root = analyzeRule.getString(root,null,true);
@@ -881,12 +884,12 @@ public class Legado extends Spider {
                                 analyzeRule.setContent(rootList.get(i));
                                 if (analyzeRule.getString(rule.getNode()).equals(rule.getNodeValue())) {
                                     analyzeRule.getString(rule.getItemUrlName());
-                                    getFileList(analyzeRule.getString(rule.getNodeUrl(), null, true), data);
+                                    getFileList(analyzeRule.getString(rule.getNodeUrl(), null, true), data,defaultFrom);
                                 } else {
                                     String[] types = rule.getLeafValue().split(",");
                                     if (Arrays.asList(types).contains(analyzeRule.getString(rule.getLeaf()))) {
                                         data.put("vod_pic", Collections.singletonList(analyzeRule.getString(rule.getDetailImg())));
-                                        String[] templateIds = rule.getDefaultFrom().split(",");
+                                        String[] templateIds = defaultFrom.split(",");
                                         List<String> vodLists;
                                         String fileName = analyzeRule.getString(rule.getItemUrlName());
                                         String fileId = analyzeRule.getString(rule.getItemUrlId(), null, true);

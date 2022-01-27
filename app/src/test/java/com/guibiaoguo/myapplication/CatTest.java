@@ -2,6 +2,7 @@ package com.guibiaoguo.myapplication;
 
 import android.content.Context;
 
+import com.github.catvod.analyzeRules.AnalyzeByFunction;
 import com.github.catvod.analyzeRules.AnalyzeRule;
 import com.github.catvod.analyzeRules.RuleData;
 import com.github.catvod.analyzeRules.AnalyzeByJSonPath;
@@ -500,7 +501,11 @@ public class CatTest {
             if (!playurls.equals("")) {
                 String playurl = playurls.split("#")[0].split("\\$")[1];
                 System.out.println(playurl);
-                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
+                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[0].split("\\$")[1], new ArrayList<>()));
+                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[1].split("\\$")[1], new ArrayList<>()));
+                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[2].split("\\$")[1], new ArrayList<>()));
+                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[3].split("\\$")[1], new ArrayList<>()));
+                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[4].split("\\$")[1], new ArrayList<>()));
             }
         }
     }
@@ -1133,9 +1138,9 @@ public class CatTest {
         Spider spider = new Legado();
         spider.init(null, "http://185.205.12.38:4004/alipanso.json");
         String category = "";
-//        category = spider.searchContent("名侦探柯南TV版 国语", false);
-//        System.out.println(category);
-//        showCategory(spider, category, 0);
+        category = spider.searchContent("名侦探柯南TV版 国语", false);
+        System.out.println(category);
+        showCategory(spider, category, 0);
         category = spider.homeContent(false);
         System.out.println(category);
         showCategory(spider, category, 0);
@@ -1790,5 +1795,157 @@ public class CatTest {
         System.out.println("ends");
     }
 
+    @Test
+    public void testDouban() throws Exception {
+        int page = 1;
+        int count =100;
+        String weburl = "https://frodo.douban.com/api/v2/movie/movie_showing？？area=全部&" + "playable=0&sort=recommend&score_range=0,10" + "&start=0"+"&count="+count+"&loc_id=108288&apikey=0dad551ec0f84ed02907ff5c42e8ec70?host=frodo.douban.com;post;{User-Agent@Rexxar-Core/0.1.3 api-client/1 com.douban.frodo/7.9.0.beta2(215) Android/25 product/TAS-AL00 vendor/HUAWEI model/TAS-AL00  rom/android  network/wifi  platform/mobile com.douban.frodo/7.9.0.beta2(215) Rexxar/1.2.151  platform/mobile 1.2.151}";
+        //weburl = "https://frodo.douban.com/api/v2/movie/35376457？？apikey=0dad551ec0f84ed02907ff5c42e8ec70?host=frodo.douban.com;post;{User-Agent@Rexxar-Core/0.1.3 api-client/1 com.douban.frodo/7.9.0.beta2(215) Android/25 product/TAS-AL00 vendor/HUAWEI model/TAS-AL00  rom/android  network/wifi  platform/mobile com.douban.frodo/7.9.0.beta2(215) Rexxar/1.2.151  platform/mobile 1.2.151}";
+        weburl = "https://frodo.douban.com/api/v2/subject_collection/tv_hot/items？？playable=1&sort=recommend&score_range=0,10&start=0&count=100&apikey=0dad551ec0f84ed02907ff5c42e8ec70?host=frodo.douban.com;post;{User-Agent@Rexxar-Core/0.1.3 api-client/1 com.douban.frodo/7.9.0.beta2(215) Android/25 product/TAS-AL00 vendor/HUAWEI model/TAS-AL00  rom/android  network/wifi  platform/mobile com.douban.frodo/7.9.0.beta2(215) Rexxar/1.2.151  platform/mobile 1.2.151}";
+        weburl = "https://frodo.douban.com/api/v2/movie/tag？？start=0&count=30&q=电影,美国&sort=recommend&score_range=0,10&start=0&count=100&apikey=0dad551ec0f84ed02907ff5c42e8ec70?host=frodo.douban.com;post;{User-Agent@Rexxar-Core/0.1.3 api-client/1 com.douban.frodo/7.9.0.beta2(215) Android/25 product/TAS-AL00 vendor/HUAWEI model/TAS-AL00  rom/android  network/wifi  platform/mobile com.douban.frodo/7.9.0.beta2(215) Rexxar/1.2.151  platform/mobile 1.2.151}";
+        System.out.println(weburl);
+        HttpParser.parseSearchUrlForHtml(weburl, new HttpParser.OnSearchCallBack() {
+            @Override
+            public void onSuccess(String url, SpiderReqResult s) {
+                try {
+                    System.out.println(s.content);
+                    JSONObject jsonObject = new JSONObject(s.content);
+                    jsonObject.optInt("count");
+                } catch (Exception e) {
+                    onFailure(300,e.getMessage());
+                }
+            }
+
+            @Override
+            public void onFailure(int errorCode, String msg) {
+
+            }
+        });
+    }
+    @Test
+    public void qindou() throws Exception {
+        Spider spider = new Legado();
+        spider.init(null, "http://185.205.12.38:4004/qindou.json");
+        String category = "";
+//        category = spider.searchContent("名侦探柯南TV版 国语", false);
+//        System.out.println(category);
+//        showCategory(spider, category, 0);
+        category = spider.homeContent(false);
+        System.out.println(category);
+        showCategory(spider, category, 0);
+        JSONObject jsonObject = new JSONObject(category);
+        JSONArray classes = jsonObject.optJSONArray("class");
+        for (int i = 0; i < classes.length(); i++) {
+            String tid = classes.getJSONObject(i).optString("type_id");
+            System.out.println(tid);
+            //org.seimicrawler.xpath.core.function;
+            category = spider.categoryContent(tid, "1", false, null);
+            System.out.println(category);
+            showCategory(spider, category, 0);
+        }
+        System.out.println("ends");
+    }
+
+    @Test
+    public void testTV() throws Exception {
+        String weburl = "https://movie.douban.com/subject/35332289/episode/1/";
+        HttpParser.parseSearchUrlForHtml(weburl, new HttpParser.OnSearchCallBack() {
+            @Override
+            public void onSuccess(String url, SpiderReqResult s) {
+                AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
+                analyzeRule.setContent(s.content,url);
+                analyzeRule.getString("@css:#footer~script@html");
+            }
+
+            @Override
+            public void onFailure(int errorCode, String msg) {
+
+            }
+        });
+    }
+
+    @Test
+    public void testHtml() throws Exception {
+        for (int i=1;i<=15;i++) {
+            String weburl = "https://movie.douban.com/subject/35332289/episode/"+i+"/";
+            HttpParser.parseSearchUrlForHtml(weburl, new HttpParser.OnSearchCallBack() {
+                @Override
+                public void onSuccess(String url, SpiderReqResult s) {
+                    AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
+                    analyzeRule.setContent(s.content);
+                    System.out.println(analyzeRule.getString("@css:#wrapper+script@src"));
+                    System.out.println(analyzeRule.getString("all##body##"));
+                    System.out.println(analyzeRule.getString("all##[\\s\\S]*videos = (.*)]},[\\s\\S]*##$1]}<js></js>@Json:$.data[*].play_link[0]##.*url=(.*)##$1<js></js>@Fun:urlDecode"));
+
+                }
+
+                @Override
+                public void onFailure(int errorCode, String msg) {
+
+                }
+            });
+        }
+    }
+
+    @Test
+    public void testMath() throws Exception {
+        System.out.println(Math.addExact(2,35));
+        Method method = Math.class.getMethod("addExact", int.class, int.class);
+        method.invoke(Math.class, 1, 2);
+        Math.subtractExact(5,2);
+        Math.multiplyExact(5,2);
+        System.out.println(method.invoke(Math.class,2,5));
+        AnalyzeByFunction analyzeByFunction = new AnalyzeByFunction(2);
+        System.out.println(analyzeByFunction.getString("math#subtractExact#1&&math#multiplyExact#30"));
+        AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
+        analyzeRule.setContent(2);
+        analyzeRule.getString("@put:{cateId:'@constant:23423','catePg':'@constant:2',count:'@constant:50'}");
+        System.out.println(analyzeRule.getString("@get:{catePg}<js></js>@Fun:math#subtractExact#1&&math#multiplyExact#@get:{count}##(\\d+)##https://www.bgdvd.cc/@get:{cateId}/page-$1"));
+    }
+
+    @Test
+    public void qindou_filter() {
+        try {
+            JSONArray classes = new JSONArray();
+            System.out.println(classes.toString(4));
+            JSONObject filter = new JSONObject();
+            String items = "{\n" +
+                    "        \"subtype\": [\"全部形式\", \"电影\", \"电视剧\", \"综艺\", \"动漫\", \"纪录片\", \"短片\"],\n" +
+                    "        \"local\": [\"全部地区\", \"中国大陆\", \"美国\", \"中国香港\", \"中国台湾\", \"日本\", \"韩国\", \"英国\", \"法国\", \"德国\", \"意大利\", \"西班牙\", \"印度\", \"泰国\", \"俄罗斯\", \"伊朗\", \"加拿大\", \"澳大利亚\", \"爱尔兰\", \"瑞典\", \"巴西\", \"丹麦\"],\n" +
+                    "        \"type\": [\"全部类型\", \"剧情\", \"喜剧\", \"动作\", \"爱情\", \"科幻\", \"动画\", \"悬疑\", \"惊悚\", \"恐怖\", \"犯罪\", \"同性\", \"音乐\", \"歌舞\", \"传记\", \"历史\", \"战争\", \"西部\", \"奇幻\", \"冒险\", \"灾难\", \"武侠\", \"情色\"],\n" +
+                    "        \"year\": [\"全部年代\", \"2021\", \"2020\", \"2019\", \"2010年代\", \"2000年代\", \"90年代\", \"80年代\", \"70年代\", \"60年代\", \"更早\"],\n" +
+                    "        \"class\": [\"全部特色\", \"经典\", \"青春\", \"文艺\", \"搞笑\", \"励志\", \"魔幻\", \"感人\", \"女性\", \"黑帮\", \"治愈\", \"美食\", \"宗教\", \"小说改编\", \"超级英雄\"]\n" +
+                    "    }";
+            JSONObject itemsObject = new JSONObject(items);
+            classes = itemsObject.optJSONArray("subtype");
+            itemsObject.remove("subtype");
+            for (int i = 0; i < classes.length(); i++) {
+                String type_id = classes.optString(i);
+                JSONArray jsonArray = new JSONArray();
+                JSONArray names = itemsObject.names();
+                for (int j=0;j<names.length();j++) {
+                    JSONObject t1 = new JSONObject();
+                    JSONArray t2 = new JSONArray();
+                    JSONArray itemData = itemsObject.optJSONArray(names.optString(j));
+                    for (int k=0;k<itemData.length();k++) {
+                        JSONObject t3 = new JSONObject();
+                        String v = itemData.optString(k);
+                        String n = itemData.optString(k);
+                        t3.put("v", n);
+                        t3.put("n", v);
+                        t2.put(t3);
+                    }
+                    t1.put("key", names.optString(i));
+                    t1.put("name", itemsObject.optJSONArray(names.optString(j)).optString(0).replaceAll("全部",""));
+                    t1.put("value", t2);
+                    jsonArray.put(t1);
+                }
+                filter.put(type_id, jsonArray);
+            }
+            System.out.println(filter.toString());
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
 }
 

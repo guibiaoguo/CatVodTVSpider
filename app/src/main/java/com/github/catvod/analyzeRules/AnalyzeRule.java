@@ -261,9 +261,6 @@ public class AnalyzeRule {
                         case Default:
                             result = isUrl ? getAnalyzeByJSoup(result).getString0(sourceRule.rule) : getAnalyzeByJSoup(result).getString(sourceRule.rule);
                             break;
-                        case Constant:
-                            result = sourceRule.rule;
-                            break;
                         default:
                             result = sourceRule.rule;
                     }
@@ -652,7 +649,7 @@ public class AnalyzeRule {
             Matcher regexMatcher = regexPattern.matcher(ruleStrArray[0]);
 
             if (regexMatcher.find()) {
-                if (mode != Mode.Js && mode != Mode.Regex) {
+                if (mode != Mode.Js && mode != Mode.Function && mode != Mode.Regex) {
                     mode = Mode.Regex;
                 }
                 do {

@@ -39,7 +39,7 @@ public class LegadoRule {
     /**
      * 筛选
      */
-    private JSONObject filter;
+    private String filter;
 
     /**
      * 更新推荐视频节点 xpath
@@ -570,11 +570,11 @@ public class LegadoRule {
                     rule.cateManual.put(name.trim(), navs.getString(name).trim());
                 }
             }
-            rule.filter = jsonObj.optJSONObject("filter");
+            rule.filter = jsonObj.optString("filter");
             rule.homeVodNode = jsonObj.optString("homeVodNode").trim();
             rule.homeVodName = jsonObj.optString("homeVodName").trim();
             rule.homeVodNameR = jsonObj.optString("homeVodNameR").trim();
-            if(StringUtils.isNotEmpty(rule.homeVodName)) {
+            if(StringUtils.isNotEmpty(rule.homeVodNameR)) {
                 rule.homeVodName += "##"+rule.homeVodNameR+"##$1";
             }
             rule.homeVodId = jsonObj.optString("homeVodId").trim();
@@ -817,7 +817,7 @@ public class LegadoRule {
         return cateManual;
     }
 
-    public JSONObject getFilter() {
+    public String getFilter() {
         return filter;
     }
 

@@ -160,12 +160,20 @@ public class AnalyzeByJSonPath {
         RuleAnalyzer ruleAnalyzes = new RuleAnalyzer(rule, true); //设置平衡组为代码平衡
         ArrayList rules = ruleAnalyzes.splitRule("&&", "||", "%%");
         if (rules.size() == 1) {
-            Object obj = this.ctx.read(rules.get(0).toString());
-            if (obj instanceof JSONArray) {
-                JSONArray jsonArray = (JSONArray) obj;
-                for (int i = 0; i < jsonArray.length(); i++) {
-                    result.add(jsonArray.opt(i).toString());
+            try {
+                Object obj = this.ctx.read(rules.get(0).toString());
+                if (obj instanceof JSONArray) {
+                    JSONArray jsonArray = (JSONArray) obj;
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        result.add(jsonArray.opt(i).toString());
+                    }
+                } else {
+                    result.add(obj.toString());
                 }
+            } catch (PathNotFoundException e) {
+
+            }catch (Exception e) {
+                result.add(e.getMessage());
             }
             return result;
         } else {
