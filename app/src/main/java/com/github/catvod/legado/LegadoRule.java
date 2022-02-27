@@ -361,6 +361,11 @@ public class LegadoRule {
     private String plotNfo;
     private String urlNfo;
     private Boolean nfoFlag;
+    private String nextPage;
+
+    public String getNextPage() {
+        return nextPage;
+    }
 
     public String getUrlNfo() {
         return urlNfo;
@@ -786,6 +791,7 @@ public class LegadoRule {
             if(!rule.nfoFlag && StringUtils.isEmpty(rule.urlNfo)) {
                 rule.urlNfo = rule.getDetailUrlId();
             }
+            rule.nextPage = jsonObj.optString("nextPage");
             return rule;
         } catch (Exception e) {
             SpiderDebug.log(e);

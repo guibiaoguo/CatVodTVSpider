@@ -502,7 +502,7 @@ public class CatTest {
                 String playurl = playurls.split("#")[0].split("\\$")[1];
                 System.out.println(playurl);
                 System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[0].split("\\$")[1], new ArrayList<>()));
-                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[1].split("\\$")[1], new ArrayList<>()));
+//                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[1].split("\\$")[1], new ArrayList<>()));
                 System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[2].split("\\$")[1], new ArrayList<>()));
                 System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[3].split("\\$")[1], new ArrayList<>()));
                 System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[4].split("\\$")[1], new ArrayList<>()));
@@ -1040,12 +1040,17 @@ public class CatTest {
                                     }
                                 });
                             });
-                            c.put("urls", urls1);
-                            c2.put(c);
+                            if (urls1.length() > 0)
+                                c.put("urls", urls1);
+                            if(c.length() > 0)
+                                c2.put(c);
                         }
-                        c3.put("channels", c2);
-                        c3.put("group", group);
-                        c4.put(c3);
+                        if (c2.length() > 0) {
+                            c3.put("channels", c2);
+                            c3.put("group", group);
+                        }
+                        if(c3.length() > 0)
+                            c4.put(c3);
                     }
                     System.out.println(c4.toString(4));
                 } catch (Exception e) {
@@ -1134,11 +1139,30 @@ public class CatTest {
     }
 
     @Test
+    public void hsck2() throws Exception {
+        Spider spider = new Legado();
+        spider.init(null, "https://mao.guibiaoguo.tk/hsck2.json");
+        String category = spider.homeContent(false);
+        System.out.println(category);
+        showCategory(spider, category, 0);
+        JSONObject jsonObject = new JSONObject(category);
+        JSONArray classes = jsonObject.optJSONArray("class");
+        for (int i = 0; i < classes.length(); i++) {
+            String tid = classes.getJSONObject(i).optString("type_id");
+            System.out.println(tid);
+            //org.seimicrawler.xpath.core.function;
+            category = spider.categoryContent(tid, "1", false, null);
+            System.out.println(category);
+            showCategory(spider, category, 0);
+        }
+    }
+
+    @Test
     public void alipanso() throws Exception {
         Spider spider = new Legado();
         spider.init(null, "http://185.205.12.38:4004/alipanso.json");
         String category = "";
-        category = spider.searchContent("名侦探柯南TV版 国语", false);
+        category = spider.searchContent("火影忍者 4K", false);
         System.out.println(category);
         showCategory(spider, category, 0);
         category = spider.homeContent(false);

@@ -26,6 +26,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -474,6 +475,7 @@ public class Legado extends Spider {
                         vod.put("vod_content", analyzeRule.getString(rule.getDetailDesc()));
                         ArrayList<String> playFrom = new ArrayList<>();
                         List fromNodes = getNodes(analyzeRule, rule.getDetailFromNode());
+                        String nextPage = analyzeRule.getString(rule.getNextPage());
                         if (fromNodes != null) {
                             for (int i = 0; i < fromNodes.size(); i++) {
                                 analyzeRule.setContent(fromNodes.get(i));
@@ -489,7 +491,7 @@ public class Legado extends Spider {
                             defaultFrom = playFrom.get(0);
                         }
                         analyzeRule.setContent(s.content);
-                        List urlListNodes = getNodes(analyzeRule, rule.getDetailUrlNode());
+                        List<String> urlListNodes = getNodes(analyzeRule, rule.getDetailUrlNode());
                         Map<String, List<String>> vod_play = new HashMap<>();
                         String[] defaultFroms = defaultFrom.split(",");
                         for (int j = 0; j < defaultFroms.length; j++) {
@@ -497,7 +499,7 @@ public class Legado extends Spider {
                         }
                         for (int i = 0; i < urlListNodes.size(); i++) {
                             analyzeRule.setContent(urlListNodes.get(i));
-                            List urlSubNodes = getNodes(analyzeRule, rule.getDetailUrlSubNode());
+                            List<String> urlSubNodes = getNodes(analyzeRule, rule.getDetailUrlSubNode());
                             if (urlSubNodes == null || urlSubNodes.size() == 0) {
                                 urlSubNodes = new ArrayList();
                                 urlSubNodes.add(urlListNodes.get(i));
@@ -510,25 +512,31 @@ public class Legado extends Spider {
                                 vod_play.put(defaultFrom, new ArrayList<>());
                             }
                             for (int j = 0; j < urlSubNodes.size(); j++) {
+//                                putParamMap(rule.getDetailParamMaps());
                                 analyzeRule.setContent(urlSubNodes.get(j));
                                 analyzeRule.setRedirectUrl(url);
                                 String name = analyzeRule.getString(rule.getDetailUrlName());
                                 String id = analyzeRule.getString(rule.getDetailUrlId(), null, true);
-                                String leaf = analyzeRule.getString(rule.getLeaf());
-                                if (analyzeRule.getString(rule.getNode()).equals(rule.getNodeValue()) && StringUtils.isNotEmpty(rule.getNodeValue())) {
-                                    putParamMap(rule.getDetailParamMaps());
-                                    String nodeUrl = analyzeRule.getString(rule.getNodeUrl(), null, true);
-                                    getFileList(nodeUrl, vod_play,defaultFrom);
-                                } else if (Arrays.asList(rule.getLeafValue().split(",")).contains(leaf) || StringUtils.contains(leaf.toLowerCase(), "video")) {
-                                    for (int k = 0; k < defaultFroms.length; k++) {
-                                        vod_play.get(defaultFroms[k]).add(name+"$"+id+"+"+defaultFroms[k]);
-                                    }
-                                } else if (StringUtils.contains(name, ".nfo")) {
-                                    putParamMap(rule.getDetailParamMaps());
-                                    getNfo(vod,analyzeRule.getString(rule.getUrlNfo(),null,true));
-                                }
+//                                String leaf = analyzeRule.getString(rule.getLeaf());
+                                getFileList(urlSubNodes.get(j),vod_play,defaultFrom);
+//                                if (analyzeRule.getString(rule.getNode()).equals(rule.getNodeValue()) && StringUtils.isNotEmpty(rule.getNodeValue())) {
+//                                    putParamMap(rule.getDetailParamMaps());
+//                                    String nodeUrl = analyzeRule.getString(rule.getNodeUrl(), null, true);
+//                                    getFileList(nodeUrl, vod_play,defaultFrom);
+//                                } else if (Arrays.asList(rule.getLeafValue().split(",")).contains(leaf) || StringUtils.contains(leaf.toLowerCase(), "video")) {
+//                                    for (int k = 0; k < defaultFroms.length; k++) {
+//                                        vod_play.get(defaultFroms[k]).add(name+"$"+id+"+"+defaultFroms[k]);
+//                                    }
+//                                } else if (StringUtils.contains(name, ".nfo")) {
+//                                    putParamMap(rule.getDetailParamMaps());
+//                                    getNfo(vod,analyzeRule.getString(rule.getUrlNfo(),null,true));
+//                                }
                             }
                         }
+//                        if(StringUtils.isNotEmpty(nextPage)) {
+//                            String nodeUrl = analyzeRule.getString(rule.getNodeUrl(), null, true);
+//                            getFileList(nodeUrl, vod_play,defaultFrom);
+//                        }
                         if(rule.getNfoFlag()) {
                             putParamMap(rule.getDetailParamMaps());
                             getNfo(vod,analyzeRule.getString(rule.getUrlNfo()));
@@ -542,7 +550,18 @@ public class Legado extends Spider {
                                         vod.put("vod_pic",entry.getValue().get(0));
                                 }else if (entry.getValue() != null && !entry.getValue().isEmpty()) {
                                     vod_from.add(entry.getKey());
-                                    vod_plays.add(join("#", entry.getValue()));
+                                    String[] vods = entry.getValue().toArray(new String[0]);
+                                    Arrays.sort(vods, new Comparator<String>() {
+                                        @Override
+                                        public int compare(String o1, String o2) {
+                                            Long n1 = extractNumber(o1.split("\\$")[0]);
+                                            Long n2 = extractNumber(o2.split("\\$")[0]);
+                                            String n3 = o1.split("\\$")[0].replaceAll("\\d","");
+                                            String n4 = o2.split("\\$")[0].replaceAll("\\d","");
+                                            return n3.compareTo(n4)+n1.compareTo(n2);
+                                        }
+                                    });
+                                    vod_plays.add(join("#", vods));
                                 }
                             }
                             String vod_play_from = join("$$$", vod_from);
@@ -617,6 +636,17 @@ public class Legado extends Spider {
             }
         }
         return result.toString();
+    }
+
+    private static Long extractNumber(String name) {
+        Long i;
+        try {
+            String number = name.replaceAll("[^\\d]", "");
+            i = Long.parseLong(number);
+        } catch (Exception e) {
+            i = 0L;
+        }
+        return i;
     }
 
     protected String playerUrl(String vid) {
@@ -868,55 +898,78 @@ public class Legado extends Spider {
         return "";
     }
 
-    private void getFileList(String root, Map<String, List<String>> data,String defaultFrom) {
+    private void getFileList(String content, Map<String, List<String>> data,String defaultFrom) {
         try {
 //            root = getRealUrl(root, true, ruleData.getVariableMap());
 //            root = analyzeRule.getString(root,null,true);
-            HttpParser.parseSearchUrlForHtml(root, new HttpParser.OnSearchCallBack() {
-                @Override
-                public void onSuccess(String url, SpiderReqResult s) {
-                    try {
-                        analyzeRule.setContent(s.content, url);
-                        List rootList = getNodes(analyzeRule, rule.getItemUrlNode());
-                        if (rootList != null && rootList.size() > 0) {
-                            for (int i = 0; i < rootList.size(); i++) {
-                                analyzeRule.setRedirectUrl(url);
-                                analyzeRule.setContent(rootList.get(i));
-                                if (analyzeRule.getString(rule.getNode()).equals(rule.getNodeValue())) {
-                                    analyzeRule.getString(rule.getItemUrlName());
-                                    getFileList(analyzeRule.getString(rule.getNodeUrl(), null, true), data,defaultFrom);
-                                } else {
-                                    String[] types = rule.getLeafValue().split(",");
-                                    if (Arrays.asList(types).contains(analyzeRule.getString(rule.getLeaf()))) {
-                                        data.put("vod_pic", Collections.singletonList(analyzeRule.getString(rule.getDetailImg())));
-                                        String[] templateIds = defaultFrom.split(",");
-                                        List<String> vodLists;
-                                        String fileName = analyzeRule.getString(rule.getItemUrlName());
-                                        String fileId = analyzeRule.getString(rule.getItemUrlId(), null, true);
-                                        for (String templateId : templateIds) {
-                                            if (data.get(templateId) == null) {
-                                                vodLists = new ArrayList<>();
-                                                data.put(templateId, vodLists);
-                                            } else {
-                                                vodLists = data.get(templateId);
+            analyzeRule.setContent(content);
+            String name = analyzeRule.getString(rule.getDetailUrlName());
+            String id = analyzeRule.getString(rule.getDetailUrlId(), null, true);
+            String leaf = analyzeRule.getString(rule.getLeaf());
+            if (StringUtils.isNotEmpty(analyzeRule.getString(rule.getNextPage())) || analyzeRule.getString(rule.getNode()).equals(rule.getNodeValue()) && StringUtils.isNotEmpty(rule.getNodeValue())) {
+//                putParamMap(rule.getDetailParamMaps());
+                String nodeUrl = analyzeRule.getString(rule.getNodeUrl(), null, true);
+                HttpParser.parseSearchUrlForHtml(nodeUrl, new HttpParser.OnSearchCallBack() {
+                    @Override
+                    public void onSuccess(String url, SpiderReqResult s) {
+                        try {
+                            analyzeRule.setContent(s.content, url);
+                            List<String> rootList = getNodes(analyzeRule, rule.getItemUrlNode());
+                            if (rootList != null && rootList.size() > 0) {
+                                for (int i = 0; i < rootList.size(); i++) {
+                                    analyzeRule.setRedirectUrl(url);
+                                    analyzeRule.setContent(rootList.get(i));
+                                    if (analyzeRule.getString(rule.getNode()).equals(rule.getNodeValue())) {
+                                        analyzeRule.getString(rule.getItemUrlName());
+                                        getFileList(rootList.get(i), data,defaultFrom);
+                                    } else {
+                                        String[] types = rule.getLeafValue().split(",");
+                                        if (Arrays.asList(types).contains(analyzeRule.getString(rule.getLeaf()))) {
+                                            data.put("vod_pic", Collections.singletonList(analyzeRule.getString(rule.getDetailImg())));
+                                            String[] templateIds = defaultFrom.split(",");
+                                            List<String> vodLists;
+                                            String fileName = analyzeRule.getString(rule.getItemUrlName());
+                                            String fileId = analyzeRule.getString(rule.getItemUrlId(), null, true);
+                                            for (String templateId : templateIds) {
+                                                if (data.get(templateId) == null) {
+                                                    vodLists = new ArrayList<>();
+                                                    data.put(templateId, vodLists);
+                                                } else {
+                                                    vodLists = data.get(templateId);
+                                                }
+                                                vodLists.add(fileName + "$" + fileId + "+" + templateId);
                                             }
-                                            vodLists.add(fileName + "$" + fileId + "+" + templateId);
                                         }
                                     }
                                 }
                             }
+                            analyzeRule.setContent(s.content);
+                            if(StringUtils.isNotEmpty(analyzeRule.getString(rule.getNextPage()))) {
+                                getFileList(s.content, data,defaultFrom);
+                            }
+                        } catch (Exception e) {
+                            SpiderDebug.log(e);
                         }
-                    } catch (Exception e) {
-                        SpiderDebug.log(e);
+
                     }
 
-                }
+                    @Override
+                    public void onFailure(int errorCode, String msg) {
 
-                @Override
-                public void onFailure(int errorCode, String msg) {
-
+                    }
+                });
+            } else if (Arrays.asList(rule.getLeafValue().split(",")).contains(leaf) || StringUtils.contains(leaf.toLowerCase(), "video")) {
+                String[] defaultFroms = defaultFrom.split(",");
+                for (int k = 0; k < defaultFroms.length; k++) {
+                    data.get(defaultFroms[k]).add(name+"$"+id+"+"+defaultFroms[k]);
                 }
-            });
+            } else if (StringUtils.contains(name, ".nfo")) {
+                putParamMap(rule.getDetailParamMaps());
+                JSONObject vod = new JSONObject();
+                getNfo(vod,analyzeRule.getString(rule.getUrlNfo(),null,true));
+                data.put("NFO",Collections.singletonList(vod.toString()));
+            }
+
             // 取文件列表
         } catch (Exception e) {
             SpiderDebug.log(e);
