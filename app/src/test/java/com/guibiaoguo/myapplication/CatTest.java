@@ -1003,7 +1003,7 @@ public class CatTest {
 
     @Test
     public void testSites() {
-        HttpParser.parseSearchUrlForHtml("https://mao.guibiaoguo.tk/212757.json", new HttpParser.OnSearchCallBack() {
+        HttpParser.parseSearchUrlForHtml("https://mao.guibiaoguo.tk/212757_debug.json", new HttpParser.OnSearchCallBack() {
             @Override
             public void onSuccess(String url, SpiderReqResult s) {
                 try {
@@ -1023,7 +1023,6 @@ public class CatTest {
                             List urls = analyzeRule.getElements("$.urls");
                             JSONObject c = new JSONObject();
                             String name = analyzeRule.getString("$.name");
-                            c.put("name", name);
                             JSONArray urls1 = new JSONArray();
                             urls.forEach(url1 -> {
                                 HttpParser.parseSearchUrlForHtml(url1.toString(), new HttpParser.OnSearchCallBack() {
@@ -1041,6 +1040,7 @@ public class CatTest {
                                 });
                             });
                             if (urls1.length() > 0)
+                                c.put("name", name);
                                 c.put("urls", urls1);
                             if(c.length() > 0)
                                 c2.put(c);
