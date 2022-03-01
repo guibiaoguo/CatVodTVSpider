@@ -5,8 +5,7 @@ import com.github.catvod.utils.StringUtil;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.crawler.SpiderReq;
-import com.github.catvod.crawler.SpiderUrl;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,8 +25,7 @@ public class Ysdq extends Spider {
     protected void fetchRule() {
         if (sites.size() == 0) {
             try {
-                SpiderUrl su = new SpiderUrl("https://pj567.coding.net/p/source/d/source/git/raw/master/mobile/config.json", null);
-                String json = SpiderReq.get(su).content;
+                String json = OkHttpUtil.string("https://pj567.coding.net/p/source/d/source/git/raw/master/mobile/config.json", null);
                 JSONArray sources = new JSONObject(json).optJSONArray("source");
                 for (int i = 0; i < sources.length(); i++) {
                     JSONObject obj = sources.getJSONObject(i);
@@ -78,7 +76,7 @@ public class Ysdq extends Spider {
                 JSONObject vod = new JSONObject();
                 if (type.equals("AppV0")) {
                     String url = cfg.optString("detailUrl").replace("%s", ids.get(0));
-                    String json = SpiderReq.get(new SpiderUrl(url, null)).content;
+                    String json = OkHttpUtil.string(url, null);
                     JSONObject obj = new JSONObject(json).optJSONObject("data");
                     vod.put("vod_id", obj.optString("vod_id"));
                     vod.put("vod_name", obj.optString("vod_name"));
@@ -95,7 +93,7 @@ public class Ysdq extends Spider {
                     vod.put("vod_play_url", obj.optString("vod_play_url"));
                 } else if (type.equals("AppTV")) {
                     String url = ids.get(0);
-                    String json = SpiderReq.get(new SpiderUrl(url, null)).content;
+                    String json = OkHttpUtil.string(url, null);
                     JSONObject obj = new JSONObject(json);
                     vod.put("vod_id", obj.optString("id"));
                     vod.put("vod_name", obj.optString("title"));
@@ -126,7 +124,7 @@ public class Ysdq extends Spider {
                     vod.put("vod_play_url", vod_play_url);
                 } else if (type.equals("aiKanTv")) {
                     String url = cfg.optString("detailUrl").replace("%s", ids.get(0));
-                    String json = SpiderReq.get(new SpiderUrl(url, null)).content;
+                    String json = OkHttpUtil.string(url, null);
                     JSONObject obj = new JSONObject(json).optJSONObject("data");
                     vod.put("vod_id", obj.optString("vod_id"));
                     vod.put("vod_name", obj.optString("vod_name"));
@@ -169,7 +167,7 @@ public class Ysdq extends Spider {
     @Override
     public String searchContent(String key, boolean quick) {
         try {
-            if(quick)
+            if (quick)
                 return "";
             fetchRule();
             JSONObject cfg = getJson();
@@ -180,7 +178,7 @@ public class Ysdq extends Spider {
                     JSONObject result = new JSONObject();
                     JSONArray videos = new JSONArray();
                     url = url.replace("%s", URLEncoder.encode(key));
-                    String json = SpiderReq.get(new SpiderUrl(url, null)).content;
+                    String json = OkHttpUtil.string(url, null);
                     if (type.equals("AppV0")) {
                         JSONArray list = new JSONObject(json).optJSONArray("list");
                         for (int i = 0; i < list.length(); i++) {

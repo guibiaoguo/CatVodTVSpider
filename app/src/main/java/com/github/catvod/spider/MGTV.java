@@ -5,9 +5,9 @@ import android.net.Uri;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.crawler.SpiderReq;
 import com.github.catvod.crawler.SpiderReqResult;
 import com.github.catvod.crawler.SpiderUrl;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -59,9 +59,8 @@ public class MGTV extends Spider {
         try {
 
             String url = "https://pianku.api.mgtv.com/rider/config/platformChannels/v1?platform=msite&abroad=0&_support=10000000";
-            SpiderUrl su = new SpiderUrl(url, null);
-            SpiderReqResult srr = SpiderReq.get(su);
-            JSONObject jsonObject = new JSONObject(srr.content);
+            String srr = OkHttpUtil.string(url, getHeaders(url));
+            JSONObject jsonObject = new JSONObject(srr);
             JSONArray data = jsonObject.optJSONArray("data");
             JSONArray classes = new JSONArray();
             for (int i = 0; i < data.length(); i++) {
@@ -77,10 +76,9 @@ public class MGTV extends Spider {
             }
             result.put("class", classes);
             url = "https://pianku.api.mgtv.com/rider/list/pcweb/v3?platform=pcweb&channelId=2&pn=1&chargeInfo=&sort=c2";
-            su = new SpiderUrl(url, getHeaders(url));
-            srr = SpiderReq.get(su);
+            srr = OkHttpUtil.string(url, getHeaders(url));
             try {
-                jsonObject = new JSONObject(srr.content);
+                jsonObject = new JSONObject(srr);
                 // 取首页推荐视频列表
                 JSONArray list = jsonObject.optJSONObject("data").optJSONArray("hitDocs");
                 JSONArray videos = new JSONArray();
@@ -113,9 +111,8 @@ public class MGTV extends Spider {
     public String homeVideoContent() {
         try {
             String url = siteUrl + "/api.php/app/index_video?token=";
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
-            JSONObject jsonObject = new JSONObject(srr.content);
+            String srr = OkHttpUtil.string(url, getHeaders(url));
+            JSONObject jsonObject = new JSONObject(srr);
             JSONArray jsonArray = jsonObject.getJSONArray("list");
             JSONArray videos = new JSONArray();
             for (int i = 0; i < jsonArray.length(); i++) {
@@ -153,11 +150,10 @@ public class MGTV extends Spider {
                     url += "&" + key + "=" + URLEncoder.encode(val);
                 }
             }
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
+            String srr = OkHttpUtil.string(url, getHeaders(url));
             JSONObject result = new JSONObject();
             try {
-                JSONObject jsonObject = new JSONObject(srr.content);
+                JSONObject jsonObject = new JSONObject(srr);
                 // 取首页推荐视频列表
                 JSONArray list = jsonObject.optJSONObject("data").optJSONArray("hitDocs");
                 JSONArray videos = new JSONArray();
@@ -196,9 +192,8 @@ public class MGTV extends Spider {
     public String detailContent(List<String> ids) {
         try {
             String url = ids.get(0).split("#")[0];
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
-            JSONObject jsonObject = new JSONObject(srr.content);
+            String srr = OkHttpUtil.string(url, getHeaders(url));
+            JSONObject jsonObject = new JSONObject(srr);
             JSONObject dataObject = jsonObject.getJSONObject("data");
             JSONObject vodList = new JSONObject();
             JSONObject vod = dataObject.optJSONObject("info");
@@ -286,9 +281,8 @@ public class MGTV extends Spider {
     public String searchContent(String key, boolean quick) {
         try {
             String url = "https://mobileso.bz.mgtv.com/pc/search/v1?q="+key+"&pn=1&pc=5000&size=5000";
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
-            JSONObject dataObject = new JSONObject(srr.content);
+            String srr = OkHttpUtil.string(url, getHeaders(url));
+            JSONObject dataObject = new JSONObject(srr);
             JSONArray jsonArray = dataObject.optJSONObject("data").getJSONArray("contents");
             JSONArray videos = new JSONArray();
             for (int i = 0; i < jsonArray.length(); i++) {

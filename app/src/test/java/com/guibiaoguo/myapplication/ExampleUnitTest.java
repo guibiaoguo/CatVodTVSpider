@@ -1,16 +1,11 @@
 package com.guibiaoguo.myapplication;
 
 import com.github.catvod.crawler.Spider;
-import com.github.catvod.crawler.SpiderReq;
-import com.github.catvod.crawler.SpiderUrl;
 import com.github.catvod.spider.Legado;
-import com.github.catvod.spider.XPath;
 import com.github.catvod.spider.XPath;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;

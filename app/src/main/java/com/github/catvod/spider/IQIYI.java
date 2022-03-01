@@ -5,15 +5,14 @@ import android.net.Uri;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.crawler.SpiderReq;
 import com.github.catvod.crawler.SpiderReqResult;
-import com.github.catvod.crawler.SpiderUrl;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
+
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -59,15 +58,14 @@ public class IQIYI extends Spider {
     public String homeContent(boolean filter) {
         try {
             String url = siteUrl + "/search/video/videolists?channel_id=2&is_purchase=&mode=24&pageNum=1&pageSize=24&data_type=1&site=iqiyi";
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
+            String srr = OkHttpUtil.string(url, getHeaders(url));
             JSONObject result = new JSONObject();
             result.put("class", classConfig);
             if (filter) {
                 result.put("filters", filterConfig);
             }
             try {
-                JSONObject jsonObject = new JSONObject(srr.content);
+                JSONObject jsonObject = new JSONObject(srr);
                 // 取首页推荐视频列表
                 JSONArray list = jsonObject.optJSONObject("data").optJSONArray("list");
                 JSONArray videos = new JSONArray();
@@ -111,9 +109,8 @@ public class IQIYI extends Spider {
     public String homeVideoContent() {
         try {
             String url = siteUrl + "/api.php/app/index_video?token=";
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
-            JSONObject jsonObject = new JSONObject(srr.content);
+            String srr = OkHttpUtil.string(url, getHeaders(url));
+            JSONObject jsonObject = new JSONObject(srr);
             JSONArray jsonArray = jsonObject.getJSONArray("list");
             JSONArray videos = new JSONArray();
             for (int i = 0; i < jsonArray.length(); i++) {
@@ -155,11 +152,10 @@ public class IQIYI extends Spider {
                 }
                 url += "&three_category_id=" + join(",", three_category_id);
             }
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
+            String srr = OkHttpUtil.string(url, getHeaders(url));
             JSONObject result = new JSONObject();
             try {
-                JSONObject jsonObject = new JSONObject(srr.content);
+                JSONObject jsonObject = new JSONObject(srr);
                 // 取首页推荐视频列表
                 JSONArray list = jsonObject.optJSONObject("data").optJSONArray("list");
                 JSONArray videos = new JSONArray();
@@ -207,9 +203,8 @@ public class IQIYI extends Spider {
     public String detailContent(List<String> ids) {
         try {
             String url = siteUrl + ids.get(0);
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
-            JSONObject jsonObject = new JSONObject(srr.content);
+            String srr = OkHttpUtil.string(url, getHeaders(url));
+            JSONObject jsonObject = new JSONObject(srr);
             JSONObject dataObject = jsonObject.getJSONObject("data");
             JSONObject vodList = new JSONObject();
             JSONObject vod = dataObject;
@@ -317,9 +312,8 @@ public class IQIYI extends Spider {
     public String searchContent(String key, boolean quick) {
         try {
             String url = "https://search.video.iqiyi.com/o?if=html5&key=" + key + "&pageNum=1&pos=1&pageSize=20";
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
-            JSONObject dataObject = new JSONObject(srr.content);
+            String srr = OkHttpUtil.string(url, getHeaders(url));
+            JSONObject dataObject = new JSONObject(srr);
             JSONArray jsonArray = dataObject.optJSONObject("data").optJSONArray("docinfos");
             JSONArray videos = new JSONArray();
             for (int i = 0; i < jsonArray.length(); i++) {

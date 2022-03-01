@@ -1,17 +1,14 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
-import com.github.catvod.utils.StringUtil;
-import android.util.Base64;
-import com.github.catvod.utils.Misc;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.crawler.SpiderReq;
-import com.github.catvod.crawler.SpiderReqResult;
-import com.github.catvod.crawler.SpiderUrl;
+import com.github.catvod.utils.Misc;
 import com.github.catvod.utils.StringUtil;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -21,7 +18,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.net.URLEncoder;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -83,9 +79,7 @@ public class Juhi extends Spider {
     @Override
     public String homeContent(boolean filter) {
         try {
-            SpiderUrl su = new SpiderUrl(siteUrl, getHeaders(siteUrl));
-            SpiderReqResult srr = SpiderReq.get(su);
-            Document doc = Jsoup.parse(srr.content);
+            Document doc = Jsoup.parse(OkHttpUtil.string(siteUrl, getHeaders(siteUrl)));
             // 分类节点
             Elements elements = doc.select("ul.nav-menu > li > a");
             JSONArray classes = new JSONArray();
@@ -95,7 +89,7 @@ public class Juhi extends Spider {
                 boolean show = name.equals("电影") ||
                         name.equals("电视剧") ||
                         name.equals("综艺") ||
-                        name.equals("动漫") ;
+                        name.equals("动漫");
                 if (show) {
                     Matcher mather = regexCategory.matcher(ele.attr("href"));
                     if (!mather.find())
@@ -169,16 +163,13 @@ public class Juhi extends Spider {
             }
             // 获取分类数据的url
             String url = siteUrl + "/vodshow/" + StringUtil.join("-", urlParams) + "/";
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            // 发起http请求
-            SpiderReqResult srr = SpiderReq.get(su);
-            String html = srr.content;
+            String html = OkHttpUtil.string(url, getHeaders(url));
             Document doc = Jsoup.parse(html);
             JSONObject result = new JSONObject();
             int pageCount = 0;
             int page = -1;
 
-            
+
             // 取页码相关信息
             Elements pageInfo = doc.select("ul.myui-page>li");
             if (pageInfo.size() == 0) {
@@ -255,11 +246,9 @@ public class Juhi extends Spider {
     public String detailContent(List<String> ids) {
         try {
             // 视频详情url
-            String url = siteUrl + "/voddetail/" + ids.get(0)+ "/";
+            String url = siteUrl + "/voddetail/" + ids.get(0) + "/";
             //System.out.println(url);
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
-            Document doc = Jsoup.parse(srr.content);
+            Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
             JSONObject result = new JSONObject();
             JSONObject vodList = new JSONObject();
 
@@ -408,9 +397,7 @@ public class Juhi extends Spider {
 
             // 播放页 url
             String url = siteUrl + "/vodplay/" + id + "/";
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
-            Document doc = Jsoup.parse(srr.content);
+            Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
             Elements allScript = doc.select("script");
             JSONObject result = new JSONObject();
             for (int i = 0; i < allScript.size(); i++) {
@@ -431,13 +418,25 @@ public class Juhi extends Spider {
                                 result.put("url", videoUrl);
                                 return result.toString();
                             } catch (Exception e) {
-                            SpiderDebug.log(e);
+                                SpiderDebug.log(e);
                             }
                         }
-                        result.put("parse", pCfg.getInt("sn"));
-                        result.put("playUrl", playUrl);
-                        result.put("url", videoUrl);
-                        result.put("header", headers.toString());
+                        else if (isVideoFormat(videoUrl)) {
+                            try {
+                                result.put("parse", 0);
+                                result.put("playUrl", "");
+                                result.put("url", videoUrl);
+                                return result.toString();
+                            } catch (Exception e) {
+                                SpiderDebug.log(e);
+                            }
+                        } else {
+                            result.put("parse", pCfg.getInt("sn"));
+                            result.put("playUrl", playUrl);
+                            result.put("url", videoUrl);
+                            result.put("header", headers.toString());
+                        }
+
                     }
                     break;
                 }
@@ -449,8 +448,18 @@ public class Juhi extends Spider {
         return "";
     }
 
-
-
+    @Override
+    public boolean isVideoFormat(String url) {
+        String[] videoFormatList = {".M3U8", ".3G2", ".3GP", ".3GP2", ".3GPP", ".AMV", ".ASF", ".AVI", ".DIVX", ".DPG", ".DVR-MS", ".EVO", ".F4V", ".FLV", ".IFO", ".K3G", ".M1V", ".M2T", ".M2TS", ".M2V", ".M4B", ".M4P", ".M4V", ".MKV", ".MOV", ".MP2V", ".MP4", ".MPE", ".MPEG", ".MPG", ".MPV2", ".MTS", ".MXF", ".NSR", ".NSV", ".OGM", ".OGV", ".QT", ".RAM", ".RM", ".RMVB", ".RPM", ".SKM", ".TP", ".TPR", ".TRP", ".TS", ".VOB", ".WEBM", ".WM", ".WMP", ".WMV", ".WTV"};
+        url = url.toLowerCase();
+        if (url.contains("=http") || url.contains("=https") || url.contains("=https%3a%2f") || url.contains("=http%3a%2f")) {
+            return false;
+        }
+        if(StringUtils.endsWithAny(url.toUpperCase(),videoFormatList)) {
+            return true;
+        }
+        return false;
+    }
 
     @Override
     public String searchContent(String key, boolean quick) {
@@ -459,10 +468,8 @@ public class Juhi extends Spider {
                 return "";
             long currentTime = System.currentTimeMillis();
             String url = siteUrl + "/index.php/ajax/suggest?mid=1&wd=" + URLEncoder.encode(key) + "&limit=10&timestamp=" + currentTime;
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
             //Document doc = Jsoup.parse(srr.content);
-            JSONObject searchResult = new JSONObject(srr.content);
+            JSONObject searchResult = new JSONObject(OkHttpUtil.string(url, getHeaders(url)));
             JSONObject result = new JSONObject();
             JSONArray videos = new JSONArray();
             if (searchResult.getInt("total") > 0) {

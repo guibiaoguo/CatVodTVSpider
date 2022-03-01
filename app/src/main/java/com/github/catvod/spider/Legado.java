@@ -11,11 +11,10 @@ import com.github.catvod.analyzeRules.RuleDataInterface;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 
-import com.github.catvod.crawler.SpiderReqResult;
-
 import com.github.catvod.legado.LegadoRule;
 import com.github.catvod.utils.Misc;
 import com.github.catvod.utils.StringUtil;
+import com.github.catvod.utils.okhttp.OKCallBack;
 
 
 import org.apache.commons.lang3.StringUtils;
@@ -26,11 +25,13 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import okhttp3.Call;
+import okhttp3.Response;
 
 /**
  * bill
@@ -62,15 +63,15 @@ public class Legado extends Spider {
 
     public void putHeaderMap(Map<String, List<String>> headers) {
         if (headers != null && !headers.isEmpty()) {
-            for(Map.Entry header:headers.entrySet()) {
+            for(Map.Entry<String,List<String>> header:headers.entrySet()) {
                 try {
-                    if(header.getValue() instanceof List) {
-                        List data = (List)header.getValue();
-                        ruleData.putVariable(header.getKey().toString(),new JSONArray(data).toString());
+                    if(header.getValue() != null) {
+                        List<String> data = header.getValue();
+                        ruleData.putVariable(header.getKey(),new JSONArray(data).toString());
                     } else
-                        ruleData.putVariable(header.getKey().toString(),new JSONObject(header.getValue().toString()).toString());
+                        ruleData.putVariable(header.getKey(),new JSONObject(header.getValue().toString()).toString());
                 } catch (Exception e) {
-                    ruleData.putVariable(header.getKey().toString(),e.getMessage());
+                    ruleData.putVariable(header.getKey(),e.getMessage());
                 }
             }
         }
@@ -86,18 +87,25 @@ public class Legado extends Spider {
                 String webUrl = analyzeRule.getString(url);
                 if (StringUtils.isNotEmpty(webUrl) && StringUtil.isWebUrl(webUrl)) {
 //                    url = getRealUrl(url, true, ruleData.getVariableMap());
-                    HttpParser.parseSearchUrlForHtml(webUrl, new HttpParser.OnSearchCallBack() {
+                    final String finalUrl = getFinalUrl(webUrl);
+                    HttpParser.parseSearchUrlForHtml(webUrl, new OKCallBack.OKCallBackDefault() {
                         @Override
-                        public void onSuccess(String url, SpiderReqResult s) {
-                            analyzeRule.setContent(s.content, url);
-                            analyzeRule.setRedirectUrl(url);
-                            putHeaderMap(s.headers);
-                            String value1 = analyzeRule.getString(value);
-                            ruleData.putVariable(key, value1);
+                        protected void onFailure(Call call, Exception e) {
+
                         }
 
                         @Override
-                        public void onFailure(int errorCode, String msg) {
+                        protected void onResponse(Response response) {
+                            try{
+                                analyzeRule.setContent(response.body().string(), finalUrl);
+                                analyzeRule.setRedirectUrl(finalUrl);
+                                putHeaderMap(response.headers().toMultimap());
+                                String value1 = analyzeRule.getString(value);
+                                ruleData.putVariable(key, value1);
+                            } catch (Exception e) {
+                                SpiderDebug.log(e);
+                            }
+
                         }
                     });
                 } else {
@@ -115,16 +123,16 @@ public class Legado extends Spider {
         if (rule == null) {
             if (ext != null) {
                 if (ext.startsWith("http")) {
-                    HttpParser.parseSearchUrlForHtml(ext, new HttpParser.OnSearchCallBack() {
+                    HttpParser.parseSearchUrlForHtml(ext, new OKCallBack.OKCallBackString() {
                         @Override
-                        public void onSuccess(String url, SpiderReqResult s) {
-                            rule = LegadoRule.fromJson(s.content);
-                            loadRuleExt(s.content);
+                        protected void onFailure(Call call, Exception e) {
+
                         }
 
                         @Override
-                        public void onFailure(int errorCode, String msg) {
-
+                        protected void onResponse(String s) {
+                            rule = LegadoRule.fromJson(s);
+                            loadRuleExt(s);
                         }
                     });
                 } else {
@@ -156,15 +164,30 @@ public class Legado extends Spider {
             if(StringUtils.isEmpty(webUrl)|| !StringUtil.isWebUrl(webUrl)) {
                 webUrl = rule.getHomeUrl();
             }
-            HttpParser.parseSearchUrlForHtml(webUrl, new HttpParser.OnSearchCallBack() {
+            final String finalUrl = getFinalUrl(webUrl);
+            HttpParser.parseSearchUrlForHtml(webUrl, new OKCallBack.OKCallBackString() {
                 @Override
-                public void onSuccess(String url, SpiderReqResult s) {
+                protected void onFailure(Call call, Exception e) {
                     try {
-                        analyzeRule.setContent(s.content, url);
-                        analyzeRule.setRedirectUrl(url);
-                        List videoNodes = getNodes(analyzeRule, rule.getHomeVodNode());
+                        JSONArray errorArray = new JSONArray();
+                        JSONObject errorObject = new JSONObject();
+                        errorObject.put("vod_name",  "$" + e.getMessage()).put("vod_id",  e.getMessage());
+                        errorArray.put(errorObject);
+                        result.put("list", errorArray);
+                        error.putVariable("vod_actor", "home:"+"$" + e.getMessage());
+                    } catch (Exception e1) {
+                        SpiderDebug.log(e);
+                    }
+                }
+
+                @Override
+                protected void onResponse(String s) {
+                    try {
+                        analyzeRule.setContent(s, finalUrl);
+                        analyzeRule.setRedirectUrl(finalUrl);
+                        List<Object> videoNodes = getNodes(analyzeRule, rule.getHomeVodNode());
                         if (rule.getCateManual().size() == 0) {
-                            List nodes = getNodes(analyzeRule, rule.getCateNode());
+                            List<Object> nodes = getNodes(analyzeRule, rule.getCateNode());
                             for (int i = 0; i < nodes.size(); i++) {
                                 analyzeRule.setContent(nodes.get(i));
                                 JSONObject jsonObject = new JSONObject();
@@ -187,7 +210,7 @@ public class Legado extends Spider {
                             if (StringUtils.isEmpty(analyzeRule.getString(rule.getHomeVodImg()))) {
                                 String name = analyzeRule.getString(rule.getHomeVodName());
                                 if (StringUtils.isNotEmpty(rule.getInfoMap().get(name))) {
-                                    String[] infos = rule.getInfoMap().get(name).split("$");
+                                    String[] infos = rule.getInfoMap().get(name).split("\\$");
                                     v.put("vod_pic", infos[0]);
                                     if (infos.length > 1 && StringUtils.isEmpty(analyzeRule.getString(rule.getHomeVodMark()))) {
                                         v.put("vod_remarks", infos[1]);
@@ -202,27 +225,13 @@ public class Legado extends Spider {
                         try {
                             JSONArray errorArray = new JSONArray();
                             JSONObject errorObject = new JSONObject();
-                            errorObject.put("vod_name", e.getMessage()).put("vod_id", url + e.getMessage());
+                            errorObject.put("vod_name", e.getMessage()).put("vod_id", finalUrl + e.getMessage());
                             errorArray.put(errorObject);
                             result.put("list", errorArray);
                             error.putVariable("vod_actor", "home:"+e.getMessage());
                         } catch (Exception e1) {
-
+                            SpiderDebug.log(e);
                         }
-                    }
-                }
-
-                @Override
-                public void onFailure(int errorCode, String msg) {
-                    try {
-                        JSONArray errorArray = new JSONArray();
-                        JSONObject errorObject = new JSONObject();
-                        errorObject.put("vod_name", errorCode + "$" + msg).put("vod_id", errorCode + msg);
-                        errorArray.put(errorObject);
-                        result.put("list", errorArray);
-                        error.putVariable("vod_actor", "home:"+errorCode + "$" + msg);
-                    } catch (Exception e1) {
-
                     }
                 }
             });
@@ -241,14 +250,14 @@ public class Legado extends Spider {
                 result.put("list", errorArray);
                 error.putVariable("vod_actor", "home:"+e.getMessage());
             } catch (Exception e1) {
-
+                SpiderDebug.log(e);
             }
         }
         return result.toString();
     }
 
     protected String categoryUrl(String tid, String pg, boolean filter, HashMap<String, String> extend) {
-        String cateUrl = null;
+        String cateUrl;
         if (StringUtil.isAbsUrl(tid)) {
             cateUrl = StringUtils.trim(tid).split("\n")[0];
         } else {
@@ -320,16 +329,31 @@ public class Legado extends Spider {
                 webUrl = categoryUrl(tid,pg,filter,extend);
             }
 //            String webUrl = analyzeRule.getString(rule.getCateUrl(),null,true);
-            HttpParser.parseSearchUrlForHtml(webUrl, new HttpParser.OnSearchCallBack() {
+            final String finalUrl = getFinalUrl(webUrl);
+            HttpParser.parseSearchUrlForHtml(webUrl, new OKCallBack.OKCallBackString() {
                 @Override
-                public void onSuccess(String url, SpiderReqResult s) {
+                protected void onFailure(Call call, Exception e) {
+                    try {
+                        JSONArray errorArray = new JSONArray();
+                        JSONObject errorObject = new JSONObject();
+                        errorObject.put("vod_name",  "$" + e.getMessage()).put("vod_id", e.getMessage());
+                        errorArray.put(errorObject);
+                        result.put("list", errorArray);
+                        error.putVariable("vod_director", "cate:"+"$" + e.getMessage());
+                    } catch (Exception e1) {
+                        SpiderDebug.log(e);
+                    }
+                }
+
+                @Override
+                protected void onResponse(String s) {
                     try {
                         if (!rule.getCateVodNode().isEmpty()) {
                             try {
                                 JSONArray videos = new JSONArray();
-                                analyzeRule.setContent(s.content, url);
-                                analyzeRule.setRedirectUrl(url);
-                                List nodes = getNodes(analyzeRule, rule.getCateVodNode());
+                                analyzeRule.setContent(s, finalUrl);
+                                analyzeRule.setRedirectUrl(finalUrl);
+                                List<Object> nodes = getNodes(analyzeRule, rule.getCateVodNode());
                                 for (int i = 0; i < nodes.size(); i++) {
                                     analyzeRule.setContent(nodes.get(i));
                                     JSONObject v = new JSONObject();
@@ -351,7 +375,7 @@ public class Legado extends Spider {
                                     result.put("list", errorArray);
                                     error.putVariable("vod_director", "cate:"+e.getMessage());
                                 } catch (Exception e1) {
-
+                                    SpiderDebug.log(e);
                                 }
                             }
                         }
@@ -360,28 +384,13 @@ public class Legado extends Spider {
                         try {
                             JSONArray errorArray = new JSONArray();
                             JSONObject errorObject = new JSONObject();
-                            errorObject.put("vod_name", e.getMessage()).put("vod_id", url + e.getMessage());
+                            errorObject.put("vod_name", e.getMessage()).put("vod_id", finalUrl + e.getMessage());
                             errorArray.put(errorObject);
                             result.put("list", errorArray);
                             error.putVariable("vod_director","cate:"+ e.getMessage());
                         } catch (Exception e1) {
-
+                            SpiderDebug.log(e);
                         }
-                    }
-
-                }
-
-                @Override
-                public void onFailure(int errorCode, String msg) {
-                    try {
-                        JSONArray errorArray = new JSONArray();
-                        JSONObject errorObject = new JSONObject();
-                        errorObject.put("vod_name", errorCode + "$" + msg).put("vod_id", errorCode + msg);
-                        errorArray.put(errorObject);
-                        result.put("list", errorArray);
-                        error.putVariable("vod_director", "cate:"+errorCode + "$" + msg);
-                    } catch (Exception e1) {
-
                     }
                 }
             });
@@ -400,7 +409,7 @@ public class Legado extends Spider {
                 result.put("list", errorArray);
                 error.putVariable("vod_director", "cate:"+e.getMessage());
             } catch (Exception e1) {
-
+                SpiderDebug.log(e);
             }
         }
         return "";
@@ -431,13 +440,13 @@ public class Legado extends Spider {
                 errorArray.put(errorObject);
                 result.put("list", errorArray);
             } catch (Exception e1) {
-
+                SpiderDebug.log(e1);
             }
             return result.toString();
         }
         try {
             String[] vids = ids.get(0).split("\\+");
-            String name = "";
+            String name;
             if(vids.length >= 1) {
                 ruleData.putVariable("vid",vids[0]);
 //                ruleData.putVariable("title","");
@@ -455,15 +464,31 @@ public class Legado extends Spider {
 //            String webUrl = detailUrl(ids.get(0));
 
 //            String webUrl = analyzeRule.getString(rule.getDetailUrl(),null,true);
-            HttpParser.parseSearchUrlForHtml(webUrl, new HttpParser.OnSearchCallBack() {
+            final String finalUrl = getFinalUrl(webUrl);
+            HttpParser.parseSearchUrlForHtml(webUrl, new OKCallBack.OKCallBackString() {
                 @Override
-                public void onSuccess(String url, SpiderReqResult s) {
+                protected void onFailure(Call call, Exception e) {
                     try {
-                        analyzeRule.setContent(s.content, url);
-                        analyzeRule.setRedirectUrl(url);
+                        JSONArray errorArray = new JSONArray();
+                        JSONObject errorObject = new JSONObject();
+                        errorObject.put("vod_name",  "$" + e.getMessage()).put("vod_id", e.getMessage());
+                        errorObject.put("vod_actor", error.getVariable("vod_actor"));
+                        errorObject.put("vod_director", error.getVariable("vod_director"));
+                        errorArray.put(errorObject);
+                        result.put("list", errorArray);
+                    } catch (Exception e1) {
+                        SpiderDebug.log(e);
+                    }
+                }
+
+                @Override
+                protected void onResponse(String s) {
+                    try {
+                        analyzeRule.setContent(s, finalUrl);
+                        analyzeRule.setRedirectUrl(finalUrl);
                         JSONObject vod = new JSONObject();
                         vod.put("vod_id", ids.get(0));
-                        String title = analyzeRule.getString("@get:{title}");;
+                        String title = analyzeRule.getString("@get:{title}");
                         vod.put("vod_name", StringUtils.isNotEmpty(title)?title:analyzeRule.getString(rule.getDetailName()));
                         vod.put("vod_pic", analyzeRule.getString(rule.getDetailImg()));
                         vod.put("type_name", analyzeRule.getString(rule.getDetailCate()));
@@ -474,8 +499,8 @@ public class Legado extends Spider {
                         vod.put("vod_director", analyzeRule.getString(rule.getDetailDirector()));
                         vod.put("vod_content", analyzeRule.getString(rule.getDetailDesc()));
                         ArrayList<String> playFrom = new ArrayList<>();
-                        List fromNodes = getNodes(analyzeRule, rule.getDetailFromNode());
-                        String nextPage = analyzeRule.getString(rule.getNextPage());
+                        List<Object> fromNodes = getNodes(analyzeRule, rule.getDetailFromNode());
+//                        String nextPage = analyzeRule.getString(rule.getNextPage());
                         if (fromNodes != null) {
                             for (int i = 0; i < fromNodes.size(); i++) {
                                 analyzeRule.setContent(fromNodes.get(i));
@@ -483,30 +508,29 @@ public class Legado extends Spider {
                                 playFrom.add(name);
                             }
                         }
-                        String defaultFrom = "";
+                        String defaultFrom;
                         if (playFrom.size() == 0) {
                             defaultFrom = rule.getDefaultFrom();
                             playFrom.add(defaultFrom);
                         } else {
                             defaultFrom = playFrom.get(0);
                         }
-                        analyzeRule.setContent(s.content);
-                        List<String> urlListNodes = getNodes(analyzeRule, rule.getDetailUrlNode());
+                        analyzeRule.setContent(s);
+                        List<Object> urlListNodes = getNodes(analyzeRule, rule.getDetailUrlNode());
                         Map<String, List<String>> vod_play = new HashMap<>();
                         String[] defaultFroms = defaultFrom.split(",");
-                        for (int j = 0; j < defaultFroms.length; j++) {
-                            vod_play.put(defaultFroms[j],new ArrayList<>());
+                        for (String from : defaultFroms) {
+                            vod_play.put(from, new ArrayList<>());
                         }
                         for (int i = 0; i < urlListNodes.size(); i++) {
                             analyzeRule.setContent(urlListNodes.get(i));
-                            List<String> urlSubNodes = getNodes(analyzeRule, rule.getDetailUrlSubNode());
+                            List<Object> urlSubNodes = getNodes(analyzeRule, rule.getDetailUrlSubNode());
                             if (urlSubNodes == null || urlSubNodes.size() == 0) {
-                                urlSubNodes = new ArrayList();
+                                urlSubNodes = new ArrayList<>();
                                 urlSubNodes.add(urlListNodes.get(i));
                             }
                             if (i < playFrom.size()) {
                                 defaultFrom = playFrom.get(i);
-                                defaultFroms = defaultFrom.split(",");
                             }
                             if (vod_play.get(defaultFrom) == null) {
                                 vod_play.put(defaultFrom, new ArrayList<>());
@@ -514,11 +538,11 @@ public class Legado extends Spider {
                             for (int j = 0; j < urlSubNodes.size(); j++) {
 //                                putParamMap(rule.getDetailParamMaps());
                                 analyzeRule.setContent(urlSubNodes.get(j));
-                                analyzeRule.setRedirectUrl(url);
-                                String name = analyzeRule.getString(rule.getDetailUrlName());
-                                String id = analyzeRule.getString(rule.getDetailUrlId(), null, true);
+                                analyzeRule.setRedirectUrl(finalUrl);
+//                                String name = analyzeRule.getString(rule.getDetailUrlName());
+//                                String id = analyzeRule.getString(rule.getDetailUrlId(), null, true);
 //                                String leaf = analyzeRule.getString(rule.getLeaf());
-                                getFileList(urlSubNodes.get(j),vod_play,defaultFrom);
+                                getFileList(urlSubNodes.get(j).toString(),vod_play,defaultFrom);
 //                                if (analyzeRule.getString(rule.getNode()).equals(rule.getNodeValue()) && StringUtils.isNotEmpty(rule.getNodeValue())) {
 //                                    putParamMap(rule.getDetailParamMaps());
 //                                    String nodeUrl = analyzeRule.getString(rule.getNodeUrl(), null, true);
@@ -542,8 +566,8 @@ public class Legado extends Spider {
                             getNfo(vod,analyzeRule.getString(rule.getUrlNfo()));
                         }
                         if (vod_play.size() > 0) {
-                            List vod_from = new ArrayList();
-                            List vod_plays = new ArrayList();
+                            List<String> vod_from = new ArrayList<>();
+                            List<String> vod_plays = new ArrayList<>();
                             for (Map.Entry<String, List<String>> entry : vod_play.entrySet()) {
                                 if(entry.getKey().equalsIgnoreCase("vod_pic")) {
                                     if(StringUtils.isNotEmpty(entry.getValue().get(0)))
@@ -551,15 +575,12 @@ public class Legado extends Spider {
                                 }else if (entry.getValue() != null && !entry.getValue().isEmpty()) {
                                     vod_from.add(entry.getKey());
                                     String[] vods = entry.getValue().toArray(new String[0]);
-                                    Arrays.sort(vods, new Comparator<String>() {
-                                        @Override
-                                        public int compare(String o1, String o2) {
-                                            Long n1 = extractNumber(o1.split("\\$")[0]);
-                                            Long n2 = extractNumber(o2.split("\\$")[0]);
-                                            String n3 = o1.split("\\$")[0].replaceAll("\\d","");
-                                            String n4 = o2.split("\\$")[0].replaceAll("\\d","");
-                                            return n3.compareTo(n4)+n1.compareTo(n2);
-                                        }
+                                    Arrays.sort(vods, (o1, o2) -> {
+                                        Long n1 = extractNumber(o1.split("\\$")[0]);
+                                        Long n2 = extractNumber(o2.split("\\$")[0]);
+                                        String n3 = o1.split("\\$")[0].replaceAll("\\d","");
+                                        String n4 = o2.split("\\$")[0].replaceAll("\\d","");
+                                        return n3.compareTo(n4)+n1.compareTo(n2);
                                     });
                                     vod_plays.add(join("#", vods));
                                 }
@@ -570,7 +591,7 @@ public class Legado extends Spider {
                             vod.put("vod_play_url", vod_play_url);
                         }
 
-                        detailContentExt(s.content, vod);
+                        detailContentExt(s, vod);
                         JSONArray list = new JSONArray();
                         list.put(vod);
                         result.put("list", list);
@@ -586,23 +607,8 @@ public class Legado extends Spider {
                             errorArray.put(errorObject);
                             result.put("list", errorArray);
                         } catch (Exception e1) {
-
+                            SpiderDebug.log(e1);
                         }
-                    }
-                }
-
-                @Override
-                public void onFailure(int errorCode, String msg) {
-                    try {
-                        JSONArray errorArray = new JSONArray();
-                        JSONObject errorObject = new JSONObject();
-                        errorObject.put("vod_name", errorCode + "$" + msg).put("vod_id", errorCode + msg);
-                        errorObject.put("vod_actor", error.getVariable("vod_actor"));
-                        errorObject.put("vod_director", error.getVariable("vod_director"));
-                        errorArray.put(errorObject);
-                        result.put("list", errorArray);
-                    } catch (Exception e1) {
-
                     }
                 }
             });
@@ -617,7 +623,7 @@ public class Legado extends Spider {
                     errorArray.put(errorObject);
                     result.put("list", errorArray);
                 } catch (Exception e1) {
-
+                    SpiderDebug.log(e1);
                 }
                 return result.toString();
             }
@@ -632,14 +638,14 @@ public class Legado extends Spider {
                 result.put("list", errorArray);
                 error.putVariable("vod_content", "detail:"+e.getMessage());
             } catch (Exception e1) {
-
+                SpiderDebug.log(e1);
             }
         }
         return result.toString();
     }
 
     private static Long extractNumber(String name) {
-        Long i;
+        long i;
         try {
             String number = name.replaceAll("[^\\d]", "");
             i = Long.parseLong(number);
@@ -692,22 +698,23 @@ public class Legado extends Spider {
                 result.put("ua", rule.getPlayUa());
             }
             if (rule.isDecodeFlag()) {
-                HttpParser.parseSearchUrlForHtml(webUrl, new HttpParser.OnSearchCallBack() {
+                final String finalUrl = getFinalUrl(webUrl);
+                HttpParser.parseSearchUrlForHtml(webUrl, new OKCallBack.OKCallBackString() {
                     @Override
-                    public void onSuccess(String url, SpiderReqResult s) {
-                        analyzeRule.setContent(s.content, url);
-                        analyzeRule.setRedirectUrl(url);
+                    protected void onFailure(Call call, Exception e) {
+
+                    }
+
+                    @Override
+                    protected void onResponse(String s) {
+                        analyzeRule.setContent(s, finalUrl);
+                        analyzeRule.setRedirectUrl(finalUrl);
                         String decodePlay = analyzeRule.getString(rule.getDecodePlay());
                         try {
                             result.put("url", decodePlay);
                         } catch (Exception e) {
-
+                            SpiderDebug.log(e);
                         }
-                    }
-
-                    @Override
-                    public void onFailure(int errorCode, String msg) {
-
                     }
                 });
                 result.put("parse", 0);
@@ -762,16 +769,16 @@ public class Legado extends Spider {
                         builder.append("vod_actor=").append(error.getVariable("vod_actor")).append("&");
                         builder.append("vod_director=").append( error.getVariable("vod_director"));
                     } catch (Exception e1) {
-
+                        SpiderDebug.log(e);
                     }
                     return result.toString();
                 }
-                result.put("url", "https://mao.guibiaoguo.tk/test.html?msg="+e.getMessage()+"&"+builder.toString());
+                result.put("url", "https://mao.guibiaoguo.tk/test.html?msg="+e.getMessage()+"&"+builder);
                 result.put("parse", 1);
                 result.put("jx",0);
                 result.put("playUrl", "");
             } catch (Exception e1) {
-
+                SpiderDebug.log(e);
             }
         }
         return result.toString();
@@ -784,10 +791,7 @@ public class Legado extends Spider {
         if (url.contains("=http") || url.contains("=https") || url.contains("=https%3a%2f") || url.contains("=http%3a%2f")) {
             return false;
         }
-        if(StringUtils.endsWithAny(url.toUpperCase(),videoFormatList)) {
-            return true;
-        }
-        return false;
+        return StringUtils.endsWithAny(url.toUpperCase(), videoFormatList);
     }
 
     protected String searchUrl(String vid,String scPg) {
@@ -830,7 +834,7 @@ public class Legado extends Spider {
             }
             ruleData.putVariable("wd",key);
 //            String webUrl = rule.getSearchUrl().replace("{wd}", StringUtil.encode(key));
-            String webUrl = "";
+            String webUrl;
             JSONObject result = new JSONObject();
             JSONArray videos = new JSONArray();
             for (int i = start; i <= end; i = i + step) {
@@ -841,13 +845,19 @@ public class Legado extends Spider {
                 if(StringUtils.isEmpty(webUrl) || !StringUtil.isWebUrl(webUrl)) {
                     webUrl = searchUrl(key,i+"");
                 }
-                HttpParser.parseSearchUrlForHtml(webUrl, new HttpParser.OnSearchCallBack() {
+                final String finalUrl = getFinalUrl(webUrl);
+                HttpParser.parseSearchUrlForHtml(webUrl, new OKCallBack.OKCallBackString() {
                     @Override
-                    public void onSuccess(String url, SpiderReqResult s) {
+                    protected void onFailure(Call call, Exception e) {
+
+                    }
+
+                    @Override
+                    protected void onResponse(String s) {
                         try {
-                            analyzeRule.setContent(s.content, url);
-                            analyzeRule.setRedirectUrl(url);
-                            List vodArray = getNodes(analyzeRule, rule.getSearchVodNode());
+                            analyzeRule.setContent(s, finalUrl);
+                            analyzeRule.setRedirectUrl(finalUrl);
+                            List<Object> vodArray = getNodes(analyzeRule, rule.getSearchVodNode());
                             for (int j = 0; j < vodArray.size(); j++) {
                                 analyzeRule.setContent(vodArray.get(j));
                                 JSONObject v = new JSONObject();
@@ -856,37 +866,14 @@ public class Legado extends Spider {
                                 v.put("vod_name", analyzeRule.getString(rule.getSearchVodName()));
                                 v.put("vod_pic", analyzeRule.getString(rule.getSearchVodImg()));
                                 v.put("vod_remarks", analyzeRule.getString(rule.getSearchVodMark()));
-                                if(rule.getDecodeSCFlag()) {
-                                    HttpParser.parseSearchUrlForHtml(surl, new HttpParser.OnSearchCallBack() {
-                                        @Override
-                                        public void onSuccess(String url, SpiderReqResult s) {
-                                            analyzeRule.setContent(s.content, url);
-                                            analyzeRule.setRedirectUrl(url);
-                                            putHeaderMap(s.headers);
-                                            String value1 = analyzeRule.getString(rule.getDecodeValue());
-                                            try{
-                                                if(StringUtils.isNotEmpty(value1))
-                                                    v.put("vod_id",value1);
-                                            }catch (Exception e) {
-
-                                            }
-                                        }
-
-                                        @Override
-                                        public void onFailure(int errorCode, String msg) {
-                                        }
-                                    });
-                                }
+                                putParamMap(rule.getSearchParamMaps());
+                                String vod_id = analyzeRule.getString(rule.getDecodeValue());
+                                v.put("vod_id", vod_id);
                                 videos.put(v);
                             }
                         } catch (Exception e) {
                             SpiderDebug.log(e);
                         }
-                    }
-
-                    @Override
-                    public void onFailure(int errorCode, String msg) {
-
                     }
                 });
             }
@@ -898,6 +885,13 @@ public class Legado extends Spider {
         return "";
     }
 
+    public String getFinalUrl(String webUrl) {
+        String[] d = webUrl.split(";");
+        String[] ss = StringUtil.splitUrlByQuestionMark(d[0]);
+        String url = ss[0].replace(" ", "");
+        url = StringUtil.decodeConflictStr(url);
+        return url;
+    }
     private void getFileList(String content, Map<String, List<String>> data,String defaultFrom) {
         try {
 //            root = getRealUrl(root, true, ruleData.getVariableMap());
@@ -909,19 +903,25 @@ public class Legado extends Spider {
             if (StringUtils.isNotEmpty(analyzeRule.getString(rule.getNextPage())) || analyzeRule.getString(rule.getNode()).equals(rule.getNodeValue()) && StringUtils.isNotEmpty(rule.getNodeValue())) {
 //                putParamMap(rule.getDetailParamMaps());
                 String nodeUrl = analyzeRule.getString(rule.getNodeUrl(), null, true);
-                HttpParser.parseSearchUrlForHtml(nodeUrl, new HttpParser.OnSearchCallBack() {
+                final String finalUrl = getFinalUrl(nodeUrl);
+                HttpParser.parseSearchUrlForHtml(nodeUrl, new OKCallBack.OKCallBackString() {
                     @Override
-                    public void onSuccess(String url, SpiderReqResult s) {
+                    protected void onFailure(Call call, Exception e) {
+
+                    }
+
+                    @Override
+                    protected void onResponse(String s) {
                         try {
-                            analyzeRule.setContent(s.content, url);
-                            List<String> rootList = getNodes(analyzeRule, rule.getItemUrlNode());
+                            analyzeRule.setContent(s, finalUrl);
+                            List<Object> rootList = getNodes(analyzeRule, rule.getItemUrlNode());
                             if (rootList != null && rootList.size() > 0) {
                                 for (int i = 0; i < rootList.size(); i++) {
-                                    analyzeRule.setRedirectUrl(url);
+                                    analyzeRule.setRedirectUrl(finalUrl);
                                     analyzeRule.setContent(rootList.get(i));
                                     if (analyzeRule.getString(rule.getNode()).equals(rule.getNodeValue())) {
                                         analyzeRule.getString(rule.getItemUrlName());
-                                        getFileList(rootList.get(i), data,defaultFrom);
+                                        getFileList(rootList.get(i).toString(), data,defaultFrom);
                                     } else {
                                         String[] types = rule.getLeafValue().split(",");
                                         if (Arrays.asList(types).contains(analyzeRule.getString(rule.getLeaf()))) {
@@ -943,25 +943,19 @@ public class Legado extends Spider {
                                     }
                                 }
                             }
-                            analyzeRule.setContent(s.content);
+                            analyzeRule.setContent(s);
                             if(StringUtils.isNotEmpty(analyzeRule.getString(rule.getNextPage()))) {
-                                getFileList(s.content, data,defaultFrom);
+                                getFileList(s, data,defaultFrom);
                             }
                         } catch (Exception e) {
                             SpiderDebug.log(e);
                         }
-
-                    }
-
-                    @Override
-                    public void onFailure(int errorCode, String msg) {
-
                     }
                 });
             } else if (Arrays.asList(rule.getLeafValue().split(",")).contains(leaf) || StringUtils.contains(leaf.toLowerCase(), "video")) {
                 String[] defaultFroms = defaultFrom.split(",");
-                for (int k = 0; k < defaultFroms.length; k++) {
-                    data.get(defaultFroms[k]).add(name+"$"+id+"+"+defaultFroms[k]);
+                for (String from : defaultFroms) {
+                    data.get(from).add(name + "$" + id + "+" + from);
                 }
             } else if (StringUtils.contains(name, ".nfo")) {
                 putParamMap(rule.getDetailParamMaps());
@@ -977,12 +971,17 @@ public class Legado extends Spider {
     }
 
     public void getNfo(JSONObject vod, String weburl) {
-        HttpParser.parseSearchUrlForHtml(weburl, new HttpParser.OnSearchCallBack() {
+        HttpParser.parseSearchUrlForHtml(weburl, new OKCallBack.OKCallBackString() {
             @Override
-            public void onSuccess(String url, SpiderReqResult s) {
+            protected void onFailure(Call call, Exception e) {
+
+            }
+
+            @Override
+            protected void onResponse(String s) {
                 try {
-                    analyzeRule.setContent(s.content);
-                    System.out.println(s.content);
+                    analyzeRule.setContent(s);
+                    System.out.println(s);
                     if(StringUtils.isNotEmpty(analyzeRule.getString(rule.getActorNfo()))) {
                         String title = analyzeRule.getString("@get:{title}");
                         vod.put("vod_name", StringUtils.isNotEmpty(title)?title:analyzeRule.getString(rule.getTitleNfo()));
@@ -999,16 +998,11 @@ public class Legado extends Spider {
                     SpiderDebug.log(e);
                 }
             }
-
-            @Override
-            public void onFailure(int errorCode, String msg) {
-
-            }
         });
     }
 
 
-    private List getNodes(AnalyzeRule analyzeRule, String cateNode) {
+    private List<Object> getNodes(AnalyzeRule analyzeRule, String cateNode) {
         return analyzeRule.getElements(cateNode);
     }
 }

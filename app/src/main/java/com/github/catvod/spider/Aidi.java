@@ -1,13 +1,12 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
+
 import com.github.catvod.utils.StringUtil;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.crawler.SpiderReq;
-import com.github.catvod.crawler.SpiderReqResult;
-import com.github.catvod.crawler.SpiderUrl;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -89,9 +88,7 @@ public class Aidi extends Spider {
     @Override
     public String homeContent(boolean filter) {
         try {
-            SpiderUrl su = new SpiderUrl(siteUrl, getHeaders(siteUrl));
-            SpiderReqResult srr = SpiderReq.get(su);
-            Document doc = Jsoup.parse(srr.content);
+            Document doc = Jsoup.parse(OkHttpUtil.string(siteUrl, getHeaders(siteUrl)));
             // 分类节点
             Elements elements = doc.select("ul.nav_list > li a");
             JSONArray classes = new JSONArray();
@@ -101,6 +98,7 @@ public class Aidi extends Spider {
                     name = "动漫";
                 }
                 boolean show = name.equals("电影") ||
+                        name.equals("韩国电影") ||
                         name.equals("连续剧") ||
                         name.equals("动漫") ||
                         name.equals("纪录片") ||
@@ -178,10 +176,7 @@ public class Aidi extends Spider {
             }
             // 获取分类数据的url
             String url = siteUrl + "/show/" + StringUtil.join("-", urlParams) + ".html";
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            // 发起http请求
-            SpiderReqResult srr = SpiderReq.get(su);
-            String html = srr.content;
+            String html = OkHttpUtil.string(url, getHeaders(url));
             Document doc = Jsoup.parse(html);
             JSONObject result = new JSONObject();
             int pageCount = 0;
@@ -264,9 +259,7 @@ public class Aidi extends Spider {
         try {
             // 视频详情url
             String url = siteUrl + "/movie/" + ids.get(0) + ".html";
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
-            Document doc = Jsoup.parse(srr.content);
+            Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
             JSONObject result = new JSONObject();
             JSONObject vodList = new JSONObject();
 
@@ -341,16 +334,16 @@ public class Aidi extends Spider {
                 Element source = sources.get(i);
                 String sourceName = source.attr("alt");
                 boolean found = false;
-                for (Iterator<String> it = playerConfig.keys(); it.hasNext(); ) {
-                    String flag = it.next();
-                    if (playerConfig.getJSONObject(flag).getString("sh").equals(sourceName)) {
-                        sourceName = flag;
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found)
-                    continue;
+//                for (Iterator<String> it = playerConfig.keys(); it.hasNext(); ) {
+//                    String flag = it.next();
+//                    if (playerConfig.getJSONObject(flag).getString("sh").equals(sourceName)) {
+//                        sourceName = flag;
+//                        found = true;
+//                        break;
+//                    }
+//                }
+//                if (!found)
+//                    continue;
                 String playList = "";
                 Elements playListA = sourceList.get(i).select("li > a");
                 List<String> vodItems = new ArrayList<>();
@@ -401,30 +394,31 @@ public class Aidi extends Spider {
         try {
             // 播放页 url
             String url = siteUrl + "/play/" + id + ".html";
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
-            Document doc = Jsoup.parse(srr.content);
-            Elements allScript = doc.select("script");
+            Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
+//            Elements allScript = doc.select("script");
             JSONObject result = new JSONObject();
-            for (int i = 0; i < allScript.size(); i++) {
-                String scContent = allScript.get(i).html().trim();
-                if (scContent.startsWith("var player_")) { // 取直链
-                    int start = scContent.indexOf('{');
-                    int end = scContent.lastIndexOf('}') + 1;
-                    String json = scContent.substring(start, end);
-                    JSONObject player = new JSONObject(json);
-                    if (playerConfig.has(player.getString("from"))) {
-                        JSONObject pCfg = playerConfig.getJSONObject(player.getString("from"));
-                        String videoUrl = player.getString("url");
-                        String playUrl = pCfg.getString("pu");
-                        result.put("parse", pCfg.getInt("sn"));
-                        result.put("playUrl", playUrl);
-                        result.put("url", videoUrl);
-                        result.put("header", "");
-                    }
-                    break;
-                }
-            }
+//            for (int i = 0; i < allScript.size(); i++) {
+//                String scContent = allScript.get(i).html().trim();
+//                if (scContent.startsWith("var player_")) { // 取直链
+//                    int start = scContent.indexOf('{');
+//                    int end = scContent.lastIndexOf('}') + 1;
+//                    String json = scContent.substring(start, end);
+//                    JSONObject player = new JSONObject(json);
+//                    if (playerConfig.has(player.getString("from"))) {
+//                        JSONObject pCfg = playerConfig.getJSONObject(player.getString("from"));
+//                        String videoUrl = player.getString("url");
+//                        String playUrl = pCfg.getString("pu");
+//                        result.put("parse", pCfg.getInt("sn"));
+//                        result.put("playUrl", playUrl);
+//                        result.put("url", videoUrl);
+//                        result.put("header", "");
+//                    }
+//                    break;
+//                }
+//            }
+            result.put("parse", 1);
+            result.put("playUrl", "");
+            result.put("url", url);
             return result.toString();
         } catch (Exception e) {
             SpiderDebug.log(e);
@@ -445,9 +439,7 @@ public class Aidi extends Spider {
             if (quick)
                 return "";
             String url = siteUrl + "/vsearch/-------------.html?wd=" + URLEncoder.encode(key) + "&submit=";
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
-            Document doc = Jsoup.parse(srr.content);
+            Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
             JSONObject result = new JSONObject();
 
             JSONArray videos = new JSONArray();
