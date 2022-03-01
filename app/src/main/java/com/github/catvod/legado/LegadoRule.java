@@ -434,6 +434,12 @@ public class LegadoRule {
 
     private JSONArray playerParamMaps;
 
+    private JSONArray searchParamMaps;
+
+    public JSONArray getSearchParamMaps() {
+        return searchParamMaps;
+    }
+
     public JSONArray getHomeParamMaps() {
         return homeParamMaps;
     }
@@ -750,6 +756,7 @@ public class LegadoRule {
             rule.categoryParamMaps = jsonObj.optJSONArray("categoryParamMaps");
             rule.detailParamMaps = jsonObj.optJSONArray("detailParamMaps");
             rule.playerParamMaps = jsonObj.optJSONArray("playerParamMaps");
+            rule.searchParamMaps = jsonObj.optJSONArray("searchParamMaps");
             rule.titleNfo = jsonObj.optString("titleNfo");
             if(StringUtils.isEmpty(rule.titleNfo)) {
                 rule.titleNfo = "tag.title@text";

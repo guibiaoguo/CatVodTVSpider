@@ -3,20 +3,18 @@ package com.github.catvod.spider;
 import android.util.Log;
 
 
-import com.github.catvod.crawler.SpiderReq;
-import com.github.catvod.crawler.SpiderReqResult;
-import com.github.catvod.crawler.SpiderUrl;
-import com.github.catvod.utils.SpiderOKClient;
 import com.github.catvod.utils.StringUtil;
+import com.github.catvod.utils.okhttp.OKCallBack;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-import okhttp3.MediaType;
-import okhttp3.RequestBody;
+import java.util.TreeMap;
 
 /**
  * 作者：By hdy
@@ -30,13 +28,13 @@ public class HttpParser {
     private static final String PC_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36";
     private static final String MOBILE_UA = "";
 
-    public static void parseSearchUrlForHtml(String sourceUrl, OnSearchCallBack onSearchCallBack) {
+    public static void parseSearchUrlForHtml(String sourceUrl, OKCallBack callBack) {
         String[] d = sourceUrl.split(";");
         if (d.length == 1) {
-            get(d[0], null, null, onSearchCallBack);
+            get(d[0], null, null, callBack);
         } else if (d.length == 2) {
             if ("get".equalsIgnoreCase(d[1]) || "*".equals(d[1])) {
-                get(d[0], null, getHeaders(sourceUrl), onSearchCallBack);
+                get(d[0], null, getHeaders(sourceUrl), callBack);
             } else if ("post".equalsIgnoreCase(d[1])) {
                 String[] ss = StringUtil.splitUrlByQuestionMark(d[0]);
                 String[] sss;
@@ -55,9 +53,9 @@ public class HttpParser {
                         params.put(kk[0], StringUtil.arrayToString(kk, 1, "="));
                     }
                 }
-                post(ss[0], null, getHeaders(sourceUrl), params, onSearchCallBack);
+                post(ss[0], null, getHeaders(sourceUrl), params, callBack);
             } else {
-                get(d[0], d[1], getHeaders(sourceUrl), onSearchCallBack);
+                get(d[0], d[1], getHeaders(sourceUrl), callBack);
             }
         } else {
             if ("post".equalsIgnoreCase(d[1])) {
@@ -78,9 +76,9 @@ public class HttpParser {
                         params.put(kk[0], StringUtil.arrayToString(kk, 1, "="));
                     }
                 }
-                post(ss[0], d[2], getHeaders(sourceUrl), params, onSearchCallBack);
+                post(ss[0], d[2], getHeaders(sourceUrl), params, callBack);
             } else {
-                get(d[0], d[2], getHeaders(sourceUrl), onSearchCallBack);
+                get(d[0], d[2], getHeaders(sourceUrl), callBack);
             }
         }
     }
@@ -181,35 +179,28 @@ public class HttpParser {
         }
     }
 
-    public static void get(String url, final String charset, HashMap headers, final OnSearchCallBack onSearchCallBack) {
+    public static void get(String url, final String charset, HashMap headers, OKCallBack callBack) {
 //        Log.d(TAG, "just get: "+url);
         try {
             url = url.replace(" ", "");
             url = StringUtil.decodeConflictStr(url);
             String finalUrl = url;
-            SpiderUrl su = new SpiderUrl(finalUrl, headers);
-            SpiderReqResult spiderReqResult;
             if (headers == null) {
                 headers = new HashMap<>();
                 headers.put("User-Agent", PC_UA);
             }
             if (headers.get("redirect") != null) {
-                spiderReqResult = SpiderReq.get(SpiderOKClient.noRedirectClient(), su);
+                Map<String, List<String>> respHeaders = new TreeMap<>();
+                OkHttpUtil.get(OkHttpUtil.noRedirectClient(),finalUrl,callBack);
             } else {
-                spiderReqResult = SpiderReq.get(su);
-            }
-            if(spiderReqResult.content.contains("404 Not Found")) {
-                onSearchCallBack.onFailure(404,spiderReqResult.content);
-            } else {
-                onSearchCallBack.onSuccess(finalUrl, spiderReqResult);
+                OkHttpUtil.get(OkHttpUtil.defaultClient(),finalUrl,callBack);
             }
         } catch (Exception e) {
             e.printStackTrace();
-            onSearchCallBack.onFailure(500, e.toString());
         }
     }
 
-    public static void post(String url, final String code, HashMap<String, String> headers, HashMap<String, String> params, final OnSearchCallBack onSearchCallBack) {
+    public static void post(String url, final String code, HashMap<String, String> headers, HashMap<String, String> params, OKCallBack callBack) {
 //        Log.d(TAG, "just get: "+url);
         try {
             url = url.replace(" ", "");
@@ -219,36 +210,26 @@ public class HttpParser {
                 headers = new HashMap<>();
                 headers.put("User-Agent", PC_UA);
             }
-            SpiderReqResult spiderReqResult;
+            JSONObject jsonObject = new JSONObject();
+            for (Map.Entry<String,String> entry:params.entrySet()) {
+                jsonObject.put(entry.getKey(), entry.getValue());
+            }
             if (headers.get("redirect") != null) {
-                spiderReqResult = SpiderReq.postForm(SpiderOKClient.noRedirectClient(), finalUrl, params, "sp_req_default", headers);
+                OkHttpUtil.post(OkHttpUtil.noRedirectClient(),finalUrl,params,headers,callBack);
             } else if (headers.get("redirect") != null && headers.get("json") != null) {
-                spiderReqResult = SpiderReq.postJson(SpiderOKClient.noRedirectClient(), finalUrl, params, "sp_req_default", headers);
+                OkHttpUtil.postJson(OkHttpUtil.noRedirectClient(),finalUrl,jsonObject.toString(),headers,callBack);
             } else if (headers.get("json") != null) {
-                spiderReqResult = SpiderReq.postJson(finalUrl, params, headers);
+                OkHttpUtil.postJson(OkHttpUtil.defaultClient(),finalUrl,jsonObject.toString(),headers,callBack);
             } else if (headers.get("redirect") != null && params.get("jsonBody") != null) {
-                spiderReqResult = SpiderReq.postBody(SpiderOKClient.noRedirectClient(), url, RequestBody.create(MediaType.parse("application/json; charset=utf-8"), params.get("jsonBody")), "sp_req_default", headers);
+                OkHttpUtil.postJson(OkHttpUtil.noRedirectClient(),finalUrl,params.get("jsonBody"),headers,callBack);
             } else if (params.get("jsonBody") != null) {
-                spiderReqResult = SpiderReq.postBody(url, RequestBody.create(MediaType.parse("application/json; charset=utf-8"), params.get("jsonBody")), headers);
+                OkHttpUtil.postJson(OkHttpUtil.defaultClient(),finalUrl,params.get("jsonBody"),headers,callBack);
             } else {
-                spiderReqResult = SpiderReq.postForm(finalUrl, params, headers);
-            }
-            if(spiderReqResult.content.contains("404 Not Found")) {
-                onSearchCallBack.onFailure(404,spiderReqResult.content);
-            } else {
-                onSearchCallBack.onSuccess(finalUrl, spiderReqResult);
+                OkHttpUtil.post(OkHttpUtil.defaultClient(),finalUrl,params,headers,callBack);
             }
         } catch (Exception e) {
             e.printStackTrace();
-            onSearchCallBack.onFailure(500, e.toString());
         }
-    }
-
-    public interface OnSearchCallBack {
-
-        void onSuccess(String url, SpiderReqResult s);
-
-        void onFailure(int errorCode, String msg);
     }
 
     public static String encodeUrl(String str, String code) {//url解码

@@ -5,9 +5,9 @@ import android.net.Uri;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.crawler.SpiderReq;
 import com.github.catvod.crawler.SpiderReqResult;
 import com.github.catvod.crawler.SpiderUrl;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -64,9 +64,8 @@ public class QQ extends Spider {
     public String homeContent(boolean filter) {
         try {
             String url = "https://v.qq.com/channel/tv?listpage=1&channel=tv&sort=18&_all=1";
-            SpiderUrl su = new SpiderUrl(url, null);
-            SpiderReqResult srr = SpiderReq.get(su);
-            Document doc = Jsoup.parse(srr.content);
+            String srr = OkHttpUtil.string(url, getHeaders(url));
+            Document doc = Jsoup.parse(srr);
             JSONArray classes = new JSONArray();
             for (Element cls:doc.select(".nav_cell")) {
                 JSONObject c = new JSONObject();
@@ -81,15 +80,14 @@ public class QQ extends Spider {
                 }
             }
             url = siteUrl + "/x/bu/pagesheet/list?_all=1&append=1&channel=choice";
-            su = new SpiderUrl(url, getHeaders(url));
-            srr = SpiderReq.get(su);
+            srr = OkHttpUtil.string(url, getHeaders(url));
             JSONObject result = new JSONObject();
             if (filter) {
                 result.put("filters", filterConfig);
             }
             result.put("class", classes);
             try {
-                doc = Jsoup.parse(srr.content);
+                doc = Jsoup.parse(srr);
                 // 取首页推荐视频列表
                 Elements list = doc.select(".list_item");
                 JSONArray videos = new JSONArray();
@@ -122,9 +120,8 @@ public class QQ extends Spider {
     public String homeVideoContent() {
         try {
             String url = siteUrl + "/api.php/app/index_video?token=";
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
-            JSONObject jsonObject = new JSONObject(srr.content);
+            String srr = OkHttpUtil.string(url, getHeaders(url));
+            JSONObject jsonObject = new JSONObject(srr);
             JSONArray jsonArray = jsonObject.getJSONArray("list");
             JSONArray videos = new JSONArray();
             for (int i = 0; i < jsonArray.length(); i++) {
@@ -171,11 +168,10 @@ public class QQ extends Spider {
                     url += "&" + key + "=" + URLEncoder.encode(val);
                 }
             }
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
+            String srr = OkHttpUtil.string(url, getHeaders(url));
             JSONObject result = new JSONObject();
             try {
-                Document doc = Jsoup.parse(srr.content);
+                Document doc = Jsoup.parse(srr);
                 // 取首页推荐视频列表
                 Elements list = doc.select(".list_item");
                 JSONArray videos = new JSONArray();
@@ -212,9 +208,8 @@ public class QQ extends Spider {
     public String detailContent(List<String> ids) {
         try {
             String url = "https://node.video.qq.com/x/api/float_vinfo2?cid=" + ids.get(0);
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
-            JSONObject jsonObject = new JSONObject(srr.content);
+            String srr = OkHttpUtil.string(url, getHeaders(url));
+            JSONObject jsonObject = new JSONObject(srr);
             JSONObject dataObject = jsonObject.optJSONObject("c");
             if(dataObject == null) {
                 return "";
@@ -245,9 +240,8 @@ public class QQ extends Spider {
                 playFlags.add(playerList.optString(i-1));
                 if(i%30==0||i==playerList.length()) {
                     url = "https://union.video.qq.com/fcgi-bin/data?otype=json&tid=682&appid=20001238&appkey=6c03bbe9658448a4&union_platform=1&idlist=" + join(",", playFlags);
-                    su = new SpiderUrl(url, getHeaders(url));
-                    srr = SpiderReq.get(su);
-                    JSONArray results = new JSONObject(srr.content.substring(13, srr.content.length() - 1)).getJSONArray("results");
+                    srr = OkHttpUtil.string(url, getHeaders(url));
+                    JSONArray results = new JSONObject(srr.substring(13, srr.length() - 1)).getJSONArray("results");
                     for (int j = 0; j < results.length(); j++) {
                         JSONObject data = results.getJSONObject(j).getJSONObject("fields");
                         if(!data.optString("title").contains("预告"))
@@ -318,9 +312,8 @@ public class QQ extends Spider {
     public String searchContent(String key, boolean quick) {
         try {
             String url = "http://node.video.qq.com/x/api/msearch?keyWord=" + key;
-            SpiderUrl su = new SpiderUrl(url, getHeaders(url));
-            SpiderReqResult srr = SpiderReq.get(su);
-            JSONObject dataObject = new JSONObject(srr.content);
+            String srr = OkHttpUtil.string(url, getHeaders(url));
+            JSONObject dataObject = new JSONObject(srr);
             JSONArray jsonArray = dataObject.getJSONArray("uiData");
             JSONArray videos = new JSONArray();
             for (int i = 0; i < jsonArray.length(); i++) {

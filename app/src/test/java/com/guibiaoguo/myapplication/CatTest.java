@@ -11,24 +11,34 @@ import com.github.catvod.analyzeRules.AnalyzeByRegex;
 import com.github.catvod.analyzeRules.RuleAnalyzer;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.crawler.SpiderReq;
-import com.github.catvod.crawler.SpiderReqResult;
-import com.github.catvod.crawler.SpiderUrl;
 import com.github.catvod.spider.Aidi;
 
 
+import com.github.catvod.spider.Auete;
+import com.github.catvod.spider.Buka;
+import com.github.catvod.spider.Cokemv;
 import com.github.catvod.spider.Enlienli;
 import com.github.catvod.spider.GoIndex;
 import com.github.catvod.spider.Hsck;
 import com.github.catvod.spider.HttpParser;
 import com.github.catvod.spider.IQIYI;
+import com.github.catvod.spider.Imaple;
 import com.github.catvod.spider.Juhi;
+import com.github.catvod.spider.Jumi;
 import com.github.catvod.spider.Legado;
 import com.github.catvod.spider.MGTV;
+import com.github.catvod.spider.N0ys;
+import com.github.catvod.spider.Nekk;
+import com.github.catvod.spider.Nfx;
+import com.github.catvod.spider.Proxy;
 import com.github.catvod.spider.QQ;
 import com.github.catvod.spider.XPathAli;
+import com.github.catvod.spider.Ysgc;
 import com.github.catvod.spider.YydsAli2;
+import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.StringUtil;
+import com.github.catvod.utils.okhttp.OKCallBack;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
@@ -39,19 +49,18 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import okhttp3.OkHttpClient;
+import okhttp3.Call;
 
 public class CatTest {
 
@@ -60,53 +69,84 @@ public class CatTest {
         System.out.println("1");
     }
 
-    @Ignore
     @Test
     public void test2() {
         System.out.println("2");
     }
 
     @Test
-    public void nfx() throws Exception {
-        Aidi aidi = new Aidi();
-        aidi.init(null);
-        String homeContent = aidi.homeContent(true);
-        System.out.println(homeContent);
-        aidi.homeVideoContent();
-        JSONObject jsonObject = new JSONObject(homeContent);
-        JSONArray classes = jsonObject.optJSONArray("class");
-        String tid = classes.getJSONObject(1).optString("type_id");
-        System.out.println(tid);
-        //org.seimicrawler.xpath.core.function;
-        String category = aidi.categoryContent(tid, "2", false, null);
-        System.out.println(category);
-        List<String> ids = new ArrayList<>();
-
-        jsonObject = new JSONObject(category);
-        classes = jsonObject.optJSONArray("list");
-        ids.add(classes.getJSONObject(1).optString("vod_id"));
-        System.out.println(ids);
-
-        String detail = aidi.detailContent(ids);
-        System.out.println(detail);
-
-        jsonObject = new JSONObject(detail);
-        classes = jsonObject.optJSONArray("list");
-        String playurl = classes.getJSONObject(0).optString("vod_play_url").split("#")[0].split("\\$")[1];
-        System.out.println(playurl);
-
-        System.out.println(aidi.playerContent("", playurl, new ArrayList<>()));
-        System.out.println(aidi.searchContent("美", false));
+    public void aidi() throws Exception {
+        spider(new Aidi());
     }
 
     @Test
-    public void qq() throws Exception {
-        Spider spider = new QQ();
-        spider.init(null);
-        System.out.println(spider.searchContent("小姨", false));
-        System.out.println(spider.searchContent("熊出没", false));
-        System.out.println(spider.searchContent("百家", false));
-        System.out.println(spider.searchContent("快乐大本营", false));
+    public void auete() throws Exception {
+        spider(new Auete());
+    }
+
+    @Test
+    public void buka() throws Exception {
+        spider(new Buka());
+    }
+
+    @Test
+    public void cokemv() throws Exception {
+        spider(new Cokemv());
+    }
+
+    @Test
+    public void enlienli() throws Exception {
+        spider(new Enlienli());
+    }
+
+    @Test
+    public void goIndex() throws Exception {
+        String ext = "http://185.205.12.38:4004/goindex.json";
+        Spider spider = new GoIndex();
+        spider.init(null, ext);
+        String category = spider.homeContent(false);
+        System.out.println(category);
+        showCategory(spider, category, 0);
+        JSONObject jsonObject = new JSONObject(category);
+        JSONArray classes = jsonObject.optJSONArray("class");
+        for (int i = 0; i < classes.length(); i++) {
+            String tid = classes.getJSONObject(i).optString("type_id");
+            System.out.println(tid);
+            //org.seimicrawler.xpath.core.function;
+            category = spider.categoryContent(tid, "1", false, null);
+            System.out.println(category);
+            showCategory(spider, category, 0);
+        }
+    }
+
+    @Test
+    public void jsonpath() throws Exception {
+        String ext = "https://mao.guibiaoguo.tk/jsonpath.json";
+        Spider spider = new Legado();
+        spider.init(null, ext);
+        String category = spider.homeContent(false);
+        System.out.println(category);
+        showCategory(spider, category, 2);
+        JSONObject jsonObject = new JSONObject(category);
+        JSONArray classes = jsonObject.optJSONArray("class");
+        for (int i = 0; i < classes.length(); i++) {
+            String tid = classes.getJSONObject(i).optString("type_id");
+            System.out.println(tid);
+            //org.seimicrawler.xpath.core.function;
+            category = spider.categoryContent(tid, "1", false, null);
+            System.out.println(category);
+            showCategory(spider, category, 0);
+        }
+    }
+
+    @Test
+    public void hsck() throws Exception {
+        Spider spider = new Hsck();
+        spider.init(null, "https://www.buscdn.fun/");
+        System.out.println(spider.searchContent("巨乳", false));
+//        System.out.println(spider.searchContent("小姨", false));
+//        System.out.println(spider.searchContent("百家", false));
+//        System.out.println(spider.searchContent("快乐大本营", false));
         String homeContent = spider.homeContent(true);
         System.out.println(homeContent);
         JSONObject jsonObject = new JSONObject(homeContent);
@@ -126,17 +166,22 @@ public class CatTest {
 
             String detail = spider.detailContent(ids);
             System.out.println(detail);
-            if (detail == "") {
-                System.out.println("出现异常了");
-                continue;
-            }
             jsonObject = new JSONObject(detail);
             JSONArray details = jsonObject.optJSONArray("list");
-            String playurl = details.getJSONObject(0).optString("vod_play_url").split("#")[0].split("\\$")[1];
+            String playurls = details.getJSONObject(0).optString("vod_play_url");
+            if (playurls.equals("")) {
+                continue;
+            }
+            String playurl = playurls.split("#")[0].split("\\$")[1];
             System.out.println(playurl);
 
             System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
         }
+    }
+
+    //    @Test
+    public void imaple() throws Exception {
+        spider(new Imaple());
     }
 
     @Test
@@ -164,7 +209,7 @@ public class CatTest {
             ids.add(categorys.getJSONObject(1).optString("vod_id"));
             System.out.println(ids);
             String detail = spider.detailContent(ids);
-            if (detail == "") {
+            if (detail.equals("")) {
                 System.out.println("出现异常了");
                 continue;
             }
@@ -176,6 +221,16 @@ public class CatTest {
 
             System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
         }
+    }
+
+    @Test
+    public void juhi() throws Exception {
+        spider(new Juhi());
+    }
+
+    @Test
+    public void jumi() throws Exception {
+        spider(new Jumi());
     }
 
     @Test
@@ -221,20 +276,125 @@ public class CatTest {
     }
 
     @Test
-    public void juhi() {
-        Spider spider = new Juhi();
+    public void n0ys() throws Exception {
+        spider(new N0ys());
+    }
+
+    @Test
+    public void nekk() throws Exception {
+        spider(new Nekk());
+    }
+
+//    @Test
+    public void nfx() throws Exception {
+        spider(new Nfx());
+    }
+
+//    @Test
+    public void ysgc() throws Exception {
+        spider(new Ysgc());
+    }
+
+    @Test
+    public void qq() throws Exception {
+        Spider spider = new QQ();
+        spider.init(null);
+        System.out.println(spider.searchContent("小姨", false));
+        System.out.println(spider.searchContent("熊出没", false));
+        System.out.println(spider.searchContent("百家", false));
+        System.out.println(spider.searchContent("快乐大本营", false));
+        String homeContent = spider.homeContent(true);
+        System.out.println(homeContent);
+        JSONObject jsonObject = new JSONObject(homeContent);
+        JSONArray classes = jsonObject.optJSONArray("class");
+        for (int i = 0; i < classes.length(); i++) {
+            String tid = classes.getJSONObject(i).optString("type_id");
+            System.out.println(tid);
+            //org.seimicrawler.xpath.core.function;
+            String category = spider.categoryContent(tid, "1", false, null);
+            System.out.println(category);
+            List<String> ids = new ArrayList<>();
+
+            jsonObject = new JSONObject(category);
+            JSONArray categorys = jsonObject.optJSONArray("list");
+            ids.add(categorys.getJSONObject(1).optString("vod_id"));
+            System.out.println(ids);
+
+            String detail = spider.detailContent(ids);
+            System.out.println(detail);
+            if (detail.equals("")) {
+                System.out.println("出现异常了");
+                continue;
+            }
+            jsonObject = new JSONObject(detail);
+            JSONArray details = jsonObject.optJSONArray("list");
+            String playurl = details.getJSONObject(0).optString("vod_play_url").split("#")[0].split("\\$")[1];
+            System.out.println(playurl);
+
+            System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
+        }
+    }
+
+    @Test
+    public void alixz() throws Exception {
+        Spider spider = new XPathAli();
+        spider.init(null, "https://mao.guibiaoguo.tk/qq.json");
+        String category = spider.searchContent("熊出没", false);
+
+        List<String> ids = new ArrayList<>();
+        JSONObject jsonObject = new JSONObject(category);
+        JSONArray categorys = jsonObject.optJSONArray("list");
+        ids.add(categorys.getJSONObject(5).optString("vod_id"));
+        System.out.println(ids);
+        String detail = spider.detailContent(ids);
+        System.out.println(detail);
+        jsonObject = new JSONObject(detail);
+        JSONArray details = jsonObject.optJSONArray("list");
+        String playurls = details.getJSONObject(0).optString("vod_play_url");
+        if (!playurls.equals("")) {
+            String playurl = playurls.split("#")[0].split("\\$")[1];
+            System.out.println(playurl);
+            System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
+        }
+    }
+
+    public void spider(Spider spider) throws Exception {
         spider.init(null);
         String homeContent = spider.homeContent(true);
         System.out.println(homeContent);
+        spider.homeVideoContent();
+        JSONObject jsonObject = new JSONObject(homeContent);
+        JSONArray classes = jsonObject.optJSONArray("class");
+        String tid = classes.getJSONObject(1).optString("type_id");
+        System.out.println(tid);
+        //org.seimicrawler.xpath.core.function;
+        String category = spider.categoryContent(tid, "2", false, null);
+        System.out.println(category);
+        List<String> ids = new ArrayList<>();
+
+        jsonObject = new JSONObject(category);
+        classes = jsonObject.optJSONArray("list");
+        ids.add(classes.getJSONObject(1).optString("vod_id"));
+        System.out.println(ids);
+
+        String detail = spider.detailContent(ids);
+        System.out.println(detail);
+
+        jsonObject = new JSONObject(detail);
+        classes = jsonObject.optJSONArray("list");
+        String playurl = classes.getJSONObject(0).optString("vod_play_url").split("#")[0].split("\\$")[1];
+        System.out.println(playurl);
+
+        System.out.println(spider.playerContent("", playurl, new ArrayList<>()));
+        System.out.println(spider.searchContent("美", false));
     }
 
     @Test
     public void qq_filter() {
         try {
             String url = "https://v.qq.com/channel/tv?listpage=1&channel=tv&sort=18&_all=1";
-            SpiderUrl su = new SpiderUrl(url, null);
-            SpiderReqResult srr = SpiderReq.get(su);
-            Document doc = Jsoup.parse(srr.content);
+            String srr = OkHttpUtil.string(url, null);
+            Document doc = Jsoup.parse(srr);
             JSONArray classes = new JSONArray();
             for (Element cls : doc.select(".nav_cell")) {
                 JSONObject c = new JSONObject();
@@ -253,11 +413,10 @@ public class CatTest {
             for (int i = 0; i < classes.length(); i++) {
                 String type_id = classes.optJSONObject(i).optString("type_id");
                 url = "https://v.qq.com/channel/" + type_id + "?listpage=1&channel=" + type_id + "&sort=18&_all=1";
-                su = new SpiderUrl(url, null);
-                srr = SpiderReq.get(su);
-                doc = Jsoup.parse(srr.content);
+                srr = OkHttpUtil.string(url, null);
+                doc = Jsoup.parse(srr);
                 Elements elements = doc.select(".filter_line");
-                if (elements == null) {
+                if (elements.size() == 0) {
                     classes.remove(i);
                     continue;
                 }
@@ -281,18 +440,10 @@ public class CatTest {
                 }
                 filter.put(type_id, jsonArray);
             }
-            System.out.println(filter.toString());
+            System.out.println(filter);
         } catch (Exception e) {
-            System.out.println(e);
+            SpiderDebug.log(e);
         }
-    }
-
-    @Test
-    public void enlienli() {
-        Spider spider = new Enlienli();
-        spider.init(null);
-        String homeContent = spider.homeContent(true);
-        System.out.println(homeContent);
     }
 
     @Test
@@ -304,10 +455,9 @@ public class CatTest {
             if (i == 12) {
                 url = "https://pcw-api.iqiyi.com/search/category/categoryinfo?brand=IQIYI&channel_id=12&include_knowledge_content_type=KNOWLEDGE_CONTENT_TYPE_KNOWLEDGE&locale=zh";
             }
-            SpiderUrl su = new SpiderUrl(url, null);
-            SpiderReqResult srr = SpiderReq.get(su);
-            System.out.println(srr.content);
-            JSONObject jsonObject = new JSONObject(srr.content);
+            String srr = OkHttpUtil.string(url, null);
+            System.out.println(srr);
+            JSONObject jsonObject = new JSONObject(srr);
             JSONArray data = jsonObject.optJSONArray("data");
             if (data.length() == 0) {
                 continue;
@@ -348,9 +498,8 @@ public class CatTest {
     @Test
     public void mgtv_filter() throws Exception {
         String url = "https://pianku.api.mgtv.com/rider/config/platformChannels/v1?platform=msite&abroad=0&_support=10000000";
-        SpiderUrl su = new SpiderUrl(url, null);
-        SpiderReqResult srr = SpiderReq.get(su);
-        JSONObject jsonObject = new JSONObject(srr.content);
+        String srr = OkHttpUtil.string(url, null);
+        JSONObject jsonObject = new JSONObject(srr);
         JSONArray data = jsonObject.optJSONArray("data");
         JSONArray classes = new JSONArray();
         for (int i = 0; i < data.length(); i++) {
@@ -360,14 +509,13 @@ public class CatTest {
             c.put("type_id", cate.optString("channelId"));
             classes.put(c);
         }
-        System.out.println(classes.toString());
+        System.out.println(classes);
         JSONObject filter = new JSONObject();
         for (int i = 0; i < classes.length(); i++) {
             String type_id = classes.optJSONObject(i).optString("type_id");
             url = "https://pianku.api.mgtv.com/rider/config/channel/v1?channelId=" + type_id + "&platform=msite&abroad=0&_support=10000000" + type_id + "?listpage=1&channel=";
-            su = new SpiderUrl(url, null);
-            srr = SpiderReq.get(su);
-            jsonObject = new JSONObject(srr.content);
+            srr = OkHttpUtil.string(url, null);
+            jsonObject = new JSONObject(srr);
             data = jsonObject.optJSONObject("data").optJSONArray("listItems");
             if (data == null) {
                 classes.remove(i);
@@ -394,83 +542,20 @@ public class CatTest {
             }
             filter.put(type_id, jsonArray);
         }
-        System.out.println(filter.toString());
+        System.out.println(filter);
     }
 
     @Test
     public void hsck_url() {
         String ext = "https://user.seven301.xyz:8899/?u=http://hsck.us/&p=/";
         //使用
-        OkHttpClient client = new OkHttpClient.Builder()
-                .followRedirects(false)
-                .build();
-        SpiderReqResult spiderReqResult = SpiderReq.header(client, ext, "sp_req_default", getHeaders(ext));
-        System.out.println(spiderReqResult.headers.get("location"));
+        Map<String, List<String>> respHeaders = new TreeMap<>();
+        OkHttpUtil.stringNoRedirect(ext, null, respHeaders);
+        String redLoc = OkHttpUtil.getRedirectLocation(respHeaders);
+        System.out.println(redLoc);
 
     }
 
-    @Test
-    public void hsck() throws Exception {
-        Spider spider = new Hsck();
-        spider.init(null, "https://www.buscdn.fun/");
-        System.out.println(spider.searchContent("巨乳", false));
-//        System.out.println(spider.searchContent("小姨", false));
-//        System.out.println(spider.searchContent("百家", false));
-//        System.out.println(spider.searchContent("快乐大本营", false));
-        String homeContent = spider.homeContent(true);
-        System.out.println(homeContent);
-        JSONObject jsonObject = new JSONObject(homeContent);
-        JSONArray classes = jsonObject.optJSONArray("class");
-        for (int i = 0; i < classes.length(); i++) {
-            String tid = classes.getJSONObject(i).optString("type_id");
-            System.out.println(tid);
-            //org.seimicrawler.xpath.core.function;
-            String category = spider.categoryContent(tid, "1", false, null);
-            System.out.println(category);
-            List<String> ids = new ArrayList<>();
-
-            jsonObject = new JSONObject(category);
-            JSONArray categorys = jsonObject.optJSONArray("list");
-            ids.add(categorys.getJSONObject(1).optString("vod_id"));
-            System.out.println(ids);
-
-            String detail = spider.detailContent(ids);
-            System.out.println(detail);
-            jsonObject = new JSONObject(detail);
-            JSONArray details = jsonObject.optJSONArray("list");
-            String playurls = details.getJSONObject(0).optString("vod_play_url");
-            if (playurls.equals("")) {
-                continue;
-            }
-            String playurl = playurls.split("#")[0].split("\\$")[1];
-            System.out.println(playurl);
-
-            System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
-        }
-    }
-
-    @Test
-    public void alixz() throws Exception {
-        Spider spider = new XPathAli();
-        spider.init(null, "https://mao.guibiaoguo.tk/qq.json");
-        String category = spider.searchContent("熊出没", false);
-
-        List<String> ids = new ArrayList<>();
-        JSONObject jsonObject = new JSONObject(category);
-        JSONArray categorys = jsonObject.optJSONArray("list");
-        ids.add(categorys.getJSONObject(5).optString("vod_id"));
-        System.out.println(ids);
-        String detail = spider.detailContent(ids);
-        System.out.println(detail);
-        jsonObject = new JSONObject(detail);
-        JSONArray details = jsonObject.optJSONArray("list");
-        String playurls = details.getJSONObject(0).optString("vod_play_url");
-        if (!playurls.equals("")) {
-            String playurl = playurls.split("#")[0].split("\\$")[1];
-            System.out.println(playurl);
-            System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
-        }
-    }
 
     protected HashMap<String, String> getHeaders(String url) {
         HashMap<String, String> headers = new HashMap<>();
@@ -485,10 +570,10 @@ public class CatTest {
         xpathAli("https://mao.guibiaoguo.tk/ahhfs.json", keys);
     }
 
-    public void showCategory(Spider spider, String category, int index) throws JSONException {
+    public String showCategory(Spider spider, String category, int index) throws JSONException {
         JSONObject jsonObject = new JSONObject(category);
         JSONArray categorys = jsonObject.optJSONArray("list");
-        if (category != null && categorys.length() > index) {
+        if (categorys.length() > index) {
             List<String> ids = new ArrayList<>();
             ids.add(categorys.getJSONObject(index).optString("vod_id"));
             System.out.println(ids);
@@ -501,13 +586,16 @@ public class CatTest {
             if (!playurls.equals("")) {
                 String playurl = playurls.split("#")[0].split("\\$")[1];
                 System.out.println(playurl);
-                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[0].split("\\$")[1], new ArrayList<>()));
+                if(!StringUtils.contains(playurl,".m3u8"))
+                    System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[0].split("\\$")[1], new ArrayList<>()));
 //                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[1].split("\\$")[1], new ArrayList<>()));
-                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[2].split("\\$")[1], new ArrayList<>()));
-                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[3].split("\\$")[1], new ArrayList<>()));
-                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[4].split("\\$")[1], new ArrayList<>()));
+//                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[2].split("\\$")[1], new ArrayList<>()));
+//                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[3].split("\\$")[1], new ArrayList<>()));
+//                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[4].split("\\$")[1], new ArrayList<>()));
+                return playurl;
             }
         }
+        return "";
     }
 
     public void xpathAli(String ext, List<String> keys) throws Exception {
@@ -562,7 +650,6 @@ public class CatTest {
 //            category = spider.categoryContent(tid, "1", false, null);
 //            System.out.println(category);
         List<String> ids = new ArrayList<>();
-
         jsonObject = new JSONObject(category);
         JSONArray categorys = jsonObject.optJSONArray("list");
         ids.add(categorys.getJSONObject(0).optString("vod_id"));
@@ -587,46 +674,6 @@ public class CatTest {
     }
 
     @Test
-    public void goIndex() throws Exception {
-        String ext = "http://185.205.12.38:4004/goindex.json";
-        Spider spider = new GoIndex();
-        spider.init(null, ext);
-        String category = spider.homeContent(false);
-        System.out.println(category);
-        showCategory(spider, category, 0);
-        JSONObject jsonObject = new JSONObject(category);
-        JSONArray classes = jsonObject.optJSONArray("class");
-        for (int i = 0; i < classes.length(); i++) {
-            String tid = classes.getJSONObject(i).optString("type_id");
-            System.out.println(tid);
-            //org.seimicrawler.xpath.core.function;
-            category = spider.categoryContent(tid, "1", false, null);
-            System.out.println(category);
-            showCategory(spider, category, 0);
-        }
-    }
-
-    @Test
-    public void jsonpath() throws Exception {
-        String ext = "https://mao.guibiaoguo.tk/jsonpath.json";
-        Spider spider = new Legado();
-        spider.init(null, ext);
-        String category = spider.homeContent(false);
-        System.out.println(category);
-        showCategory(spider, category, 2);
-        JSONObject jsonObject = new JSONObject(category);
-        JSONArray classes = jsonObject.optJSONArray("class");
-        for (int i = 0; i < classes.length(); i++) {
-            String tid = classes.getJSONObject(i).optString("type_id");
-            System.out.println(tid);
-            //org.seimicrawler.xpath.core.function;
-            category = spider.categoryContent(tid, "1", false, null);
-            System.out.println(category);
-            showCategory(spider, category, 0);
-        }
-    }
-
-    @Test
     public void analyze() {
         String content = "下一站";
         String rulestr = "##一站##一战";
@@ -635,8 +682,7 @@ public class CatTest {
         Object object = analyzeRule.getString(rulestr);
         System.out.println(object);
         String ext = "http://www.paper027.com/home/chapter/lists/id/77485.html";
-        SpiderUrl su = new SpiderUrl(ext, getHeaders(ext));
-        String json = SpiderReq.get(su).content;
+        String json = OkHttpUtil.string(ext, null);
         System.out.println(json);
         analyzeRule.setContent(json, ext);
         rulestr = ":class=\"text-muted number\"(?:[^\"]*\"){3}([^\"]*)\" title=\"([^\"]*)\">";
@@ -647,18 +693,22 @@ public class CatTest {
         analyzeRule.setContent(json);
         System.out.println(analyzeRule.getElement("@css:.chapterTitle"));
         ext = "https://mao.guibiaoguo.tk/jsonpath.json";
-        su = new SpiderUrl(ext, getHeaders(ext));
-        json = SpiderReq.get(su).content;
+        json = OkHttpUtil.string(ext, null);
         analyzeRule = new AnalyzeRule(new RuleData());
         analyzeRule.setContent(json, ext);
         System.out.println(analyzeRule.getElement("$.ua"));
         String webUrl = analyzeRule.getString("@fun:{base64Encode:'$.homeUrl'}");
         System.out.println(webUrl);
-        HttpParser.parseSearchUrlForHtml(webUrl, new HttpParser.OnSearchCallBack() {
+        HttpParser.parseSearchUrlForHtml(webUrl, new OKCallBack.OKCallBackString() {
             @Override
-            public void onSuccess(String url, SpiderReqResult s) {
+            protected void onFailure(Call call, Exception e) {
+
+            }
+
+            @Override
+            protected void onResponse(String content) {
                 AnalyzeRule analyzeRule1 = new AnalyzeRule(new RuleData());
-                analyzeRule1.setContent(s.content, url);
+                analyzeRule1.setContent(content);
                 Object nodes = analyzeRule1.getStringList("$.data.files[1]%%$.data.files[3]");
                 System.out.println(nodes.toString());
                 if (nodes instanceof JSONArray) {
@@ -668,28 +718,14 @@ public class CatTest {
                     }
                 }
             }
-
-            @Override
-            public void onFailure(int errorCode, String msg) {
-
-            }
         });
-        HttpParser.parseSearchUrlForHtml("https://www.zqystv.com/zqys/dydq.html", new HttpParser.OnSearchCallBack() {
-            @Override
-            public void onSuccess(String url, SpiderReqResult s) {
-                AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
-                analyzeRule.setContent(s.content, url);
-                analyzeRule.setRedirectUrl(url);
-                System.out.println(analyzeRule.getElements("@css:.stui-vodlist>li"));
-                System.out.println(analyzeRule.getElements("class.stui-vodlist@tag.li.1"));
-                System.out.println(analyzeRule.getElements("class.stui-vodlist@tag.li[2:5]"));
-            }
-
-            @Override
-            public void onFailure(int errorCode, String msg) {
-
-            }
-        });
+        String s = OkHttpUtil.string("https://www.zqystv.com/zqys/dydq.html", getHeaders("https://www.zqystv.com/zqys/dydq.html"));
+        analyzeRule = new AnalyzeRule(new RuleData());
+        analyzeRule.setContent(s, "https://www.zqystv.com/zqys/dydq.html");
+        analyzeRule.setRedirectUrl("https://www.zqystv.com/zqys/dydq.html");
+        System.out.println(analyzeRule.getElements("@css:.stui-vodlist>li"));
+        System.out.println(analyzeRule.getElements("class.stui-vodlist@tag.li.1"));
+        System.out.println(analyzeRule.getElements("class.stui-vodlist@tag.li[2:5]"));
     }
 
     @Test
@@ -703,122 +739,65 @@ public class CatTest {
         System.out.println(analyzer.splitRule("@", "&&"));
         String rulestr = "class=\"text-muted number\"(?:[^\"]*\"){3}([^\"]*)\" title=\"([^\"]*)\">";
         String ext = "http://www.paper027.com/home/chapter/lists/id/77485.html";
-        SpiderUrl su = new SpiderUrl(ext, getHeaders(ext));
-        String json = SpiderReq.get(su).content;
+        String json = OkHttpUtil.string(ext, null);
         System.out.println(json);
         System.out.println(AnalyzeByRegex.getElement(json, StringUtils.split(rulestr, "&&"), 0));
         System.out.println(AnalyzeByRegex.getElements(json, StringUtils.split(rulestr, "&&"), 0));
         ext = "https://mao.guibiaoguo.tk/jsonpath.json";
-        su = new SpiderUrl(ext, getHeaders(ext));
-        json = SpiderReq.get(su).content;
+        json = OkHttpUtil.string(ext, null);
         System.out.println(new AnalyzeByJSonPath(json).getString("{$.homeUrl}/test"));
         System.out.println(new AnalyzeByJSonPath(json).getString("$.ua"));
-        HttpParser.parseSearchUrlForHtml(new AnalyzeByJSonPath(json).getString("$.homeUrl"), new HttpParser.OnSearchCallBack() {
+        HttpParser.parseSearchUrlForHtml(new AnalyzeByJSonPath(json).getString("$.homeUrl"), new OKCallBack.OKCallBackString() {
             @Override
-            public void onSuccess(String url, SpiderReqResult s) {
-                System.out.println(new AnalyzeByJSonPath(s.content).getString("$.data.files[1]"));
-                System.out.println(new AnalyzeByJSonPath(s.content).getString("$.data.files[*]"));
-                System.out.println(new AnalyzeByJSonPath(s.content).getString("$.data.files[1:3]"));
-                System.out.println(new AnalyzeByJSonPath(s.content).getString("$.data.files[1]"));
+            protected void onFailure(Call call, Exception e) {
+
             }
 
             @Override
-            public void onFailure(int errorCode, String msg) {
-
-            }
-        });
-
-        HttpParser.parseSearchUrlForHtml("http://www.paper027.com/home/chapter/lists/id/77485.html", new HttpParser.OnSearchCallBack() {
-            @Override
-            public void onSuccess(String url, SpiderReqResult s) {
-                System.out.println(new AnalyzeByJSoup(s.content).getElements("@css:.chapterTitle"));
-            }
-
-            @Override
-            public void onFailure(int errorCode, String msg) {
-
+            protected void onResponse(String content) {
+                System.out.println(new AnalyzeByJSonPath(content).getString("$.data.files[1]"));
+                System.out.println(new AnalyzeByJSonPath(content).getString("$.data.files[*]"));
+                System.out.println(new AnalyzeByJSonPath(content).getString("$.data.files[1:3]"));
+                System.out.println(new AnalyzeByJSonPath(content).getString("$.data.files[1]"));
             }
         });
-        HttpParser.parseSearchUrlForHtml("https://www.zqystv.com/zqys/dydq.html", new HttpParser.OnSearchCallBack() {
-            @Override
-            public void onSuccess(String url, SpiderReqResult s) {
-                System.out.println(new AnalyzeByJSoup(s.content).getElements("@css:.stui-vodlist>li"));
-                System.out.println(new AnalyzeByJSoup(s.content).getElements("class.stui-vodlist@tag.li.1"));
-                System.out.println(new AnalyzeByJSoup(s.content).getElements("class.stui-vodlist@tag.li!1:2"));
-                System.out.println(new AnalyzeByJSoup(s.content).getElements("class.stui-vodlist@tag.li[2:5]"));
-            }
-
-            @Override
-            public void onFailure(int errorCode, String msg) {
-
-            }
-        });
+        String s = OkHttpUtil.string("http://www.paper027.com/home/chapter/lists/id/77485.html", getHeaders("http://www.paper027.com/home/chapter/lists/id/77485.html"));
+        System.out.println(new AnalyzeByJSoup(s).getElements("@css:.chapterTitle"));
+        s = OkHttpUtil.string("https://www.zqystv.com/zqys/dydq.html", getHeaders("https://www.zqystv.com/zqys/dydq.html"));
+        System.out.println(new AnalyzeByJSoup(s).getElements("@css:.stui-vodlist>li"));
+        System.out.println(new AnalyzeByJSoup(s).getElements("class.stui-vodlist@tag.li.1"));
+        System.out.println(new AnalyzeByJSoup(s).getElements("class.stui-vodlist@tag.li!1:2"));
+        System.out.println(new AnalyzeByJSoup(s).getElements("class.stui-vodlist@tag.li[2:5]"));
     }
 
     @Test
     public void testJsonPath() {
-        HttpParser.parseSearchUrlForHtml("https://mao.guibiaoguo.tk/jsonpath.json", new HttpParser.OnSearchCallBack() {
-            @Override
-            public void onSuccess(String url, SpiderReqResult s) {
-                System.out.println(new AnalyzeByJSonPath(s.content).getString("{$.homeUrl}/test"));
-            }
-
-            @Override
-            public void onFailure(int errorCode, String msg) {
-
-            }
-        });
+        String s = OkHttpUtil.string("https://mao.guibiaoguo.tk/jsonpath.json", getHeaders("https://mao.guibiaoguo.tk/jsonpath.json"));
+        System.out.println(new AnalyzeByJSonPath(s).getString("{$.homeUrl}/test"));
     }
 
     @Test
     public void testJsonPathKt() {
-        HttpParser.parseSearchUrlForHtml("https://mao.guibiaoguo.tk/jsonpath.json", new HttpParser.OnSearchCallBack() {
-            @Override
-            public void onSuccess(String url, SpiderReqResult s) {
-                System.out.println(new AnalyzeRule(new RuleData()).setContent(s.content, url).getString("{$.homeUrl}/test"));
-            }
-
-            @Override
-            public void onFailure(int errorCode, String msg) {
-
-            }
-        });
+        String s = OkHttpUtil.string("https://mao.guibiaoguo.tk/jsonpath.json", getHeaders("https://mao.guibiaoguo.tk/jsonpath.json"));
+        System.out.println(new AnalyzeRule(new RuleData()).setContent(s, "https://mao.guibiaoguo.tk/jsonpath.json").getString("{$.homeUrl}/test"));
     }
 
     @Test
     public void testJsoupKt() {
-        HttpParser.parseSearchUrlForHtml("http://www.paper027.com/home/chapter/lists/id/77485.html", new HttpParser.OnSearchCallBack() {
-            @Override
-            public void onSuccess(String url, SpiderReqResult s) {
-                AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
-                analyzeRule.setContent(s.content, url);
-                analyzeRule.setRedirectUrl(url);
-                System.out.println(analyzeRule.getElements("@css:.chapterTitle"));
-            }
-
-            @Override
-            public void onFailure(int errorCode, String msg) {
-
-            }
-        });
+        String s = OkHttpUtil.string("http://www.paper027.com/home/chapter/lists/id/77485.html", getHeaders("http://www.paper027.com/home/chapter/lists/id/77485.html"));
+        AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
+        analyzeRule.setContent(s, "http://www.paper027.com/home/chapter/lists/id/");
+        analyzeRule.setRedirectUrl("http://www.paper027.com/home/chapter/lists/id/");
+        System.out.println(analyzeRule.getElements("@css:.chapterTitle"));
     }
 
     @Test
     public void testXpathKt() {
-        HttpParser.parseSearchUrlForHtml("http://www.paper027.com/home/chapter/lists/id/77485.html", new HttpParser.OnSearchCallBack() {
-            @Override
-            public void onSuccess(String url, SpiderReqResult s) {
-                AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
-                analyzeRule.setContent(s.content, url);
-                analyzeRule.setRedirectUrl(url);
-                System.out.println(analyzeRule.getElements("//*[contains(@class,\"chapterTitle\")]"));
-            }
-
-            @Override
-            public void onFailure(int errorCode, String msg) {
-
-            }
-        });
+        String s = OkHttpUtil.string("http://www.paper027.com/home/chapter/lists/id/77485.html", getHeaders("http://www.paper027.com/home/chapter/lists/id/77485.html"));
+        AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
+        analyzeRule.setContent(s, "");
+        analyzeRule.setRedirectUrl("");
+        System.out.println(analyzeRule.getElements("//*[contains(@class,\"chapterTitle\")]"));
     }
 
     @Test
@@ -831,6 +810,7 @@ public class CatTest {
         analyzer = new RuleAnalyzer("$.store.book[0].title@$.name", false);
         System.out.println(analyzer.splitRule("@", "&&"));
         String rulestr = ":class=\"text-muted number\"(?:[^\"]*\"){3}([^\"]*)\" title=\"([^\"]*)\">";
+        System.out.println(rulestr);
     }
 
     @Test
@@ -892,231 +872,196 @@ public class CatTest {
 
     @Test
     public void testCat() {
-        HttpParser.parseSearchUrlForHtml("https://mao.guibiaoguo.tk/212757.json", new HttpParser.OnSearchCallBack() {
-            @Override
-            public void onSuccess(String url, SpiderReqResult s) {
+        try {
+            String s = OkHttpUtil.string("https://mao.guibiaoguo.tk/212757_debug.json", getHeaders(""));
+            JSONObject mao = new JSONObject(s);
+            JSONArray sites = mao.optJSONArray("sites");
+            JSONArray trueSites = new JSONArray();
+            JSONArray playUrls = new JSONArray();
+            for (int i = 210; i < sites.length(); i++) {
+                int k = 0;
+                JSONObject site = sites.optJSONObject(i);
                 try {
-                    JSONObject mao = new JSONObject(s.content);
-                    JSONArray sites = mao.optJSONArray("sites");
-                    JSONArray trueSites = new JSONArray();
-                    for (int i = 42; i < sites.length(); i++) {
-                        int k = 0;
-                        JSONObject site = sites.optJSONObject(i);
+                    Spider spider = null;
+                    String api = site.optString("api");
+                    String ext = site.optString("ext");
+                    if (site.optInt("type") == 0) {
+                        if (StringUtil.isAbsUrl(api)) {
+                            String content = OkHttpUtil.string(api, getHeaders(""));
+                            if (StringUtils.isNotEmpty(content)) {
+                                System.out.println(api);
+                                trueSites.put(site);
+                            }
+                        } else {
+                            trueSites.put(site);
+                        }
+                        continue;
+                    }
+
+                    if (!StringUtil.isAbsUrl(api)) {
+                        Class cls = null;
                         try {
-                            Spider spider = null;
-                            String api = site.optString("api");
-                            String ext = site.optString("ext");
-                            if (site.optInt("type") == 0) {
-                                if (StringUtil.isAbsUrl(api)) {
-                                    HttpParser.parseSearchUrlForHtml(api, new HttpParser.OnSearchCallBack() {
-                                        @Override
-                                        public void onSuccess(String url, SpiderReqResult s) {
-                                            trueSites.put(site);
-                                        }
-
-                                        @Override
-                                        public void onFailure(int errorCode, String msg) {
-
-                                        }
-                                    });
-                                } else {
-                                    trueSites.put(site);
-                                }
-                                continue;
-                            }
-
-                            if (!StringUtil.isAbsUrl(api)) {
-                                Class cls = null;
-                                try {
-                                    cls = Class.forName("com.github.catvod.spider." + api.substring(4));
-                                    spider = (Spider) cls.newInstance();
-                                } catch (Exception e) {
-                                    System.out.println(e.getMessage());
-                                }
-                                if (spider == null) {
-                                    continue;
-                                }
-                                if (StringUtils.isNotEmpty(ext)) {
-                                    Method method = cls.getMethod("init", Context.class, String.class);
-                                    method.invoke(spider, null, ext);
-                                } else {
-                                    spider.init(null);
-                                }
-                                String category = spider.homeContent(false);
-                                System.out.println(category);
-                                try {
-                                    showCategory(spider, category, 0);
-                                    k++;
-                                } catch (Exception e) {
-
-                                }
-
-                                if (StringUtils.isNotEmpty(category)) {
-                                    JSONObject jsonObject = new JSONObject(category);
-                                    JSONArray classes = jsonObject.optJSONArray("class");
-                                    for (int j = 0; j < classes.length(); j++) {
-                                        String tid = classes.getJSONObject(j).optString("type_id");
-                                        System.out.println(tid);
-                                        //org.seimicrawler.xpath.core.function;
-                                        category = spider.categoryContent(tid, "1", false, null);
-                                        System.out.println(category);
-                                        try {
-                                            showCategory(spider, category, 0);
-                                            k++;
-                                        } catch (Exception e) {
-
-                                        }
-                                    }
-                                }
-                                String[] keys = {"钢铁侠", "熊出没", "柯南"};
-                                for (String key : keys) {
-                                    category = spider.searchContent(key, false);
-                                    System.out.println(category);
-                                    if (StringUtils.isNotEmpty(category)) {
-                                        try {
-                                            showCategory(spider, category, 0);
-                                            k++;
-                                        } catch (Exception e) {
-
-                                        }
-                                    }
-                                }
-                            }
+                            cls = Class.forName("com.github.catvod.spider." + api.substring(4));
+                            spider = (Spider) cls.newInstance();
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
+                        }
+                        if (spider == null) {
+                            continue;
+                        }
+                        if (StringUtils.isNotEmpty(ext)) {
+                            Method method = cls.getMethod("init", Context.class, String.class);
+                            method.invoke(spider, null, ext);
+                        } else {
+                            spider.init(null);
+                        }
+                        String category = spider.homeContent(false);
+                        System.out.println(category);
+                        try {
+                            String playUrl = showCategory(spider, category, 0);
+                            playUrls.put(playUrl);
+                            k++;
                         } catch (Exception e) {
                             SpiderDebug.log(e);
                         }
-                        if (k > 0)
-                            trueSites.put(site);
+
+                        if (StringUtils.isNotEmpty(category)) {
+                            JSONObject jsonObject = new JSONObject(category);
+                            JSONArray classes = jsonObject.optJSONArray("class");
+                            for (int j = 0; j < 2; j++) {
+                                String tid = classes.getJSONObject(j).optString("type_id");
+                                System.out.println(tid);
+                                //org.seimicrawler.xpath.core.function;
+                                category = spider.categoryContent(tid, "1", false, null);
+                                System.out.println(category);
+                                try {
+                                    String playUrl = showCategory(spider, category, 0);
+                                    playUrls.put(playUrl);
+                                    k++;
+                                } catch (Exception e) {
+                                    SpiderDebug.log(e);
+                                }
+                            }
+                        }
+                        String[] keys = {"钢铁侠", "熊出没", "柯南"};
+                        for (String key : keys) {
+                            category = spider.searchContent(key, false);
+                            System.out.println(category);
+                            if (StringUtils.isNotEmpty(category)) {
+                                try {
+                                    String playUrl = showCategory(spider, category, 0);
+                                    playUrls.put(playUrl);
+                                    k++;
+                                } catch (Exception e) {
+                                    SpiderDebug.log(e);
+                                }
+                            }
+                        }
                     }
-                    System.out.println(trueSites.toString(4));
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    SpiderDebug.log(e);
                 }
+                if (k > 0)
+                    trueSites.put(site);
             }
-
-            @Override
-            public void onFailure(int errorCode, String msg) {
-
-            }
-        });
+            System.out.println(trueSites.toString(4));
+            System.out.println(playUrls.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Test
     public void testSites() {
-        HttpParser.parseSearchUrlForHtml("https://mao.guibiaoguo.tk/212757_debug.json", new HttpParser.OnSearchCallBack() {
-            @Override
-            public void onSuccess(String url, SpiderReqResult s) {
-                try {
-                    AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
-                    analyzeRule.setContent(s.content, url);
-                    analyzeRule.setRedirectUrl(url);
-                    List lives = analyzeRule.getElements("$.lives[*]");
-                    JSONArray c4 = new JSONArray();
-                    for (Object live : lives) {
-                        JSONObject c3 = new JSONObject();
-                        analyzeRule.setContent(live.toString());
-                        List channels = analyzeRule.getElements("$.channels");
-                        String group = analyzeRule.getString("$.group");
-                        JSONArray c2 = new JSONArray();
-                        for (Object channel : channels) {
-                            analyzeRule.setContent(channel.toString());
-                            List urls = analyzeRule.getElements("$.urls");
-                            JSONObject c = new JSONObject();
-                            String name = analyzeRule.getString("$.name");
-                            JSONArray urls1 = new JSONArray();
-                            urls.forEach(url1 -> {
-                                HttpParser.parseSearchUrlForHtml(url1.toString(), new HttpParser.OnSearchCallBack() {
-                                    @Override
-                                    public void onSuccess(String url, SpiderReqResult s) {
-                                        if (s.content.contains("#EXTM3U"))
-                                            urls1.put(url);
-                                        System.out.println(url);
-                                    }
-
-                                    @Override
-                                    public void onFailure(int errorCode, String msg) {
-
-                                    }
-                                });
-                            });
-                            if (urls1.length() > 0)
-                                c.put("name", name);
-                                c.put("urls", urls1);
-                            if(c.length() > 0)
-                                c2.put(c);
+        String s = OkHttpUtil.string("https://mao.guibiaoguo.tk/212757_debug.json", getHeaders(""));
+        try {
+            AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
+            analyzeRule.setContent(s);
+            analyzeRule.setRedirectUrl("");
+            List lives = analyzeRule.getElements("$.lives[*]");
+            JSONArray c4 = new JSONArray();
+            for (Object live : lives) {
+                JSONObject c3 = new JSONObject();
+                analyzeRule.setContent(live.toString());
+                List channels = analyzeRule.getElements("$.channels");
+                String group = analyzeRule.getString("$.group");
+                JSONArray c2 = new JSONArray();
+                for (Object channel : channels) {
+                    analyzeRule.setContent(channel.toString());
+                    List urls = analyzeRule.getElements("$.urls");
+                    JSONObject c = new JSONObject();
+                    String name = analyzeRule.getString("$.name");
+                    JSONArray urls1 = new JSONArray();
+                    urls.forEach(url1 -> {
+                        String content = OkHttpUtil.string(url1.toString(), getHeaders(""));
+                        if (StringUtils.contains(content, "#EXTM3U")) {
+                            urls1.put(url1.toString());
+                            System.out.println(url1);
                         }
-                        if (c2.length() > 0) {
-                            c3.put("channels", c2);
-                            c3.put("group", group);
-                        }
-                        if(c3.length() > 0)
-                            c4.put(c3);
+                    });
+                    if (urls1.length() > 0) {
+                        c.put("name", name);
+                        c.put("urls", urls1);
                     }
-                    System.out.println(c4.toString(4));
-                } catch (Exception e) {
-
+                    if (c.length() > 0)
+                        c2.put(c);
                 }
+                if (c2.length() > 0) {
+                    c3.put("channels", c2);
+                    c3.put("group", group);
+                }
+                if (c3.length() > 0)
+                    c4.put(c3);
             }
+            System.out.println(c4.toString(4));
+        } catch (Exception e) {
 
-            @Override
-            public void onFailure(int errorCode, String msg) {
-
-            }
-        });
+        }
     }
 
     @Test
     public void testM3u8() {
-        HttpParser.parseSearchUrlForHtml("https://mao.guibiaoguo.tk/212757.json", new HttpParser.OnSearchCallBack() {
-            @Override
-            public void onSuccess(String url, SpiderReqResult s) {
-                try {
-                    AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
-                    analyzeRule.setContent(s.content, url);
-                    analyzeRule.setRedirectUrl(url);
-                    List lives = analyzeRule.getElements("$.lives[*]");
-                    JSONArray c4 = new JSONArray();
-                    StringBuilder builderM3U8 = new StringBuilder("#EXTM3U").append("\n");
-                    StringBuilder builderTXT = new StringBuilder();
-                    for (Object live : lives) {
-                        JSONObject c3 = new JSONObject();
-                        analyzeRule.setContent(live.toString());
-                        List channels = analyzeRule.getElements("$.channels");
-                        String group = analyzeRule.getString("$.group");
-                        JSONArray c2 = new JSONArray();
-                        builderTXT.append(group).append(",#genre#").append("\n");
-                        for (Object channel : channels) {
-                            analyzeRule.setContent(channel.toString());
-                            List urls = analyzeRule.getElements("$.urls");
-                            JSONObject c = new JSONObject();
-                            String name = analyzeRule.getString("$.name");
-                            c.put("name", name);
-                            JSONArray urls1 = new JSONArray();
-                            urls.forEach(url1 -> {
-                                builderM3U8.append("#EXTINF:-1 group-title=\"" + group + "\"," + name).append("\n");
-                                builderM3U8.append(url1).append("\n");
-                                builderTXT.append(name).append(",").append(url1).append("\n");
-                            });
+        String s = OkHttpUtil.string("https://mao.guibiaoguo.tk/212757.json", getHeaders(""));
+        try {
+            AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
+            analyzeRule.setContent(s, "");
+            analyzeRule.setRedirectUrl("");
+            List lives = analyzeRule.getElements("$.lives[*]");
+            JSONArray c4 = new JSONArray();
+            StringBuilder builderM3U8 = new StringBuilder("#EXTM3U").append("\n");
+            StringBuilder builderTXT = new StringBuilder();
+            for (Object live : lives) {
+                JSONObject c3 = new JSONObject();
+                analyzeRule.setContent(live.toString());
+                List channels = analyzeRule.getElements("$.channels");
+                String group = analyzeRule.getString("$.group");
+                JSONArray c2 = new JSONArray();
+                builderTXT.append(group).append(",#genre#").append("\n");
+                for (Object channel : channels) {
+                    analyzeRule.setContent(channel.toString());
+                    List urls = analyzeRule.getElements("$.urls");
+                    JSONObject c = new JSONObject();
+                    String name = analyzeRule.getString("$.name");
+                    c.put("name", name);
+                    JSONArray urls1 = new JSONArray();
+                    urls.forEach(url1 -> {
+                        builderM3U8.append("#EXTINF:-1 group-title=\"" + group + "\"," + name).append("\n");
+                        builderM3U8.append(url1).append("\n");
+                        builderTXT.append(name).append(",").append(url1).append("\n");
+                    });
 
-                            c.put("urls", urls1);
-                            c2.put(c);
-                        }
-                        c3.put("channels", c2);
-                        c3.put("group", group);
-                        c4.put(c3);
-                    }
-                    System.out.println(c4.toString(4));
-                    System.out.println(builderM3U8.toString());
-                } catch (Exception e) {
-
+                    c.put("urls", urls1);
+                    c2.put(c);
                 }
+                c3.put("channels", c2);
+                c3.put("group", group);
+                c4.put(c3);
             }
+            System.out.println(c4.toString(4));
+            System.out.println(builderM3U8.toString());
+        } catch (Exception e) {
 
-            @Override
-            public void onFailure(int errorCode, String msg) {
-
-            }
-        });
+        }
     }
 
     @Test
@@ -1214,95 +1159,78 @@ public class CatTest {
 
     @Test
     public void testM3U8Sites() {
-        HttpParser.parseSearchUrlForHtml("https://gitee.com/shentong_012/HikerRules/raw/master/%E8%A7%86%E7%95%8C.m3u8", new HttpParser.OnSearchCallBack() {
-            @Override
-            public void onSuccess(String url, SpiderReqResult s) {
-                try {
-                    AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
-                    analyzeRule.setContent(s.content, url);
-                    analyzeRule.setRedirectUrl(url);
-                    List channels = analyzeRule.getElements(":#EX(TINF):-1 group-title=\"(.*)\",(.*)\\s(.*)");
-                    Map<String,List> c3;
-                    Map<String,Map<String,List>> c1 = new HashMap<>();
-                    int i = 0;
-                    for (Object channel : channels) {
+        String s = OkHttpUtil.string("https://gitee.com/shentong_012/HikerRules/raw/master/%E8%A7%86%E7%95%8C.m3u8", getHeaders(""));
+        try {
+            AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
+            analyzeRule.setContent(s, "");
+            analyzeRule.setRedirectUrl("");
+            List channels = analyzeRule.getElements(":#EX(TINF):-1 group-title=\"(.*)\",(.*)\\s(.*)");
+            Map<String, List> c3;
+            Map<String, Map<String, List>> c1 = new HashMap<>();
+            int i = 0;
+            for (Object channel : channels) {
 //                        if(i>=300){
 //                            break;
 //                        }
-                        analyzeRule.setContent(channel);
+                analyzeRule.setContent(channel);
 
-                        String url1 = analyzeRule.getString("$3");
-                        String name = analyzeRule.getString("$2");;
-                        String group = analyzeRule.getString("$1");;
-                        if(c1.get(group) == null){
-                            c3=new HashMap<>();
-                            c1.put(group,c3);
-                        } else {
-                            c3 = c1.get(group);
-                        }
-                        List urls1 ;
-                        if(c3.get(name) == null){
-                            urls1 = new ArrayList();
-                            c3.put(name,urls1);
-                        } else {
-                            urls1 = c3.get(name);
-                        }
-                        if(url1.endsWith(".m3u8")){
-                            HttpParser.parseSearchUrlForHtml(url1, new HttpParser.OnSearchCallBack() {
-                                @Override
-                                public void onSuccess(String url, SpiderReqResult s) {
-                                    if (s.content.contains("#EXTM3U"))
-                                        urls1.add(url);
-                                    System.out.println(url);
-                                }
-
-                                @Override
-                                public void onFailure(int errorCode, String msg) {
-
-                                }
-                            });
-                        }
-                        i++;
+                String url1 = analyzeRule.getString("$3");
+                String name = analyzeRule.getString("$2");
+                String group = analyzeRule.getString("$1");
+                if (c1.get(group) == null) {
+                    c3 = new HashMap<>();
+                    c1.put(group, c3);
+                } else {
+                    c3 = c1.get(group);
+                }
+                List urls1;
+                if (c3.get(name) == null) {
+                    urls1 = new ArrayList();
+                    c3.put(name, urls1);
+                } else {
+                    urls1 = c3.get(name);
+                }
+                if (url1.endsWith(".m3u8")) {
+                    String content = OkHttpUtil.string(url1, getHeaders(""));
+                    if (StringUtils.contains(content, "#EXTM3U")) {
+                        urls1.add(url1);
+                        System.out.println(url1);
                     }
-                    System.out.println(new JSONObject(c1).toString(4));
+                }
+                i++;
+            }
+            System.out.println(new JSONObject(c1).toString(4));
 
-                    JSONArray e1 = new JSONArray();
-                    c1.forEach((key,value)->{
-                        JSONObject d1 = new JSONObject();
+            JSONArray e1 = new JSONArray();
+            c1.forEach((key, value) -> {
+                JSONObject d1 = new JSONObject();
+                try {
+                    JSONArray d2 = new JSONArray();
+                    value.forEach((key1, value1) -> {
                         try {
-                            JSONArray d2 = new JSONArray();
-                            value.forEach((key1,value1)->{
-                                try {
 
-                                    if(!value1.isEmpty()){
-                                        JSONObject d3 = new JSONObject();
-                                        d3.put("name",key1);
-                                        d3.put("urls",value1);
-                                        d2.put(d3);
-                                    }
-                                } catch (Exception e) {
-
-                                }
-                            });
-                            d1.put("group",key);
-                            d1.put("channels",d2);
-                            e1.put(d1);
-                        }catch (Exception e) {
+                            if (!value1.isEmpty()) {
+                                JSONObject d3 = new JSONObject();
+                                d3.put("name", key1);
+                                d3.put("urls", value1);
+                                d2.put(d3);
+                            }
+                        } catch (Exception e) {
 
                         }
-
                     });
-                    System.out.println(e1.toString(4));
+                    d1.put("group", key);
+                    d1.put("channels", d2);
+                    e1.put(d1);
                 } catch (Exception e) {
 
                 }
-            }
 
-            @Override
-            public void onFailure(int errorCode, String msg) {
+            });
+            System.out.println(e1.toString(4));
+        } catch (Exception e) {
 
-            }
-        });
+        }
     }
 
     @Test
@@ -1321,61 +1249,68 @@ public class CatTest {
 
     @Test
     public void testCatLegddo() {
-        HttpParser.parseSearchUrlForHtml("https://mao.guibiaoguo.tk/212757.json", new HttpParser.OnSearchCallBack() {
-            @Override
-            public void onSuccess(String url, SpiderReqResult s) {
+        String s = OkHttpUtil.string("https://mao.guibiaoguo.tk/212757.json", getHeaders(""));
+        try {
+            JSONObject mao = new JSONObject(s);
+            JSONArray sites = mao.optJSONArray("sites");
+            JSONArray trueSites = new JSONArray();
+            for (int i = 36; i < 43; i++) {
+                int k = 0;
+                JSONObject site = sites.optJSONObject(i);
                 try {
-                    JSONObject mao = new JSONObject(s.content);
-                    JSONArray sites = mao.optJSONArray("sites");
-                    JSONArray trueSites = new JSONArray();
-                    for (int i = 36; i < 43; i++) {
-                        int k = 0;
-                        JSONObject site = sites.optJSONObject(i);
-                        try {
-                            Spider spider = null;
-                            String api = site.optString("api");
-                            String ext = site.optString("ext");
-                            if (site.optInt("type") == 0) {
-                                if (StringUtil.isAbsUrl(api)) {
-                                    HttpParser.parseSearchUrlForHtml(api, new HttpParser.OnSearchCallBack() {
-                                        @Override
-                                        public void onSuccess(String url, SpiderReqResult s) {
-                                            trueSites.put(site);
-                                        }
-
-                                        @Override
-                                        public void onFailure(int errorCode, String msg) {
-
-                                        }
-                                    });
-                                } else {
-                                    trueSites.put(site);
-                                }
-                                continue;
+                    Spider spider = null;
+                    String api = site.optString("api");
+                    String ext = site.optString("ext");
+                    if (site.optInt("type") == 0) {
+                        if (StringUtil.isAbsUrl(api)) {
+                            String content = OkHttpUtil.string(api, getHeaders(""));
+                            if (StringUtils.isNotEmpty(content)) {
+                                trueSites.put(site);
                             }
+                        } else {
+                            trueSites.put(site);
+                        }
+                        continue;
+                    }
 
-                            if (!StringUtil.isAbsUrl(api)) {
-                                Class cls = null;
-                                try {
-                                    if(api.contains("XPath")) {
-                                        cls = Class.forName("com.github.catvod.spider.Legado");
-                                    } else {
-                                        cls = Class.forName("com.github.catvod.spider." + api.substring(4));
-                                    }
-                                    spider = (Spider) cls.newInstance();
-                                } catch (Exception e) {
-                                    System.out.println(e.getMessage());
-                                }
-                                if (spider == null) {
-                                    continue;
-                                }
-                                if (StringUtils.isNotEmpty(ext)) {
-                                    Method method = cls.getMethod("init", Context.class, String.class);
-                                    method.invoke(spider, null, ext);
-                                } else {
-                                    spider.init(null);
-                                }
-                                String category = spider.homeContent(false);
+                    if (!StringUtil.isAbsUrl(api)) {
+                        Class cls = null;
+                        try {
+                            if (api.contains("XPath")) {
+                                cls = Class.forName("com.github.catvod.spider.Legado");
+                            } else {
+                                cls = Class.forName("com.github.catvod.spider." + api.substring(4));
+                            }
+                            spider = (Spider) cls.newInstance();
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
+                        }
+                        if (spider == null) {
+                            continue;
+                        }
+                        if (StringUtils.isNotEmpty(ext)) {
+                            Method method = cls.getMethod("init", Context.class, String.class);
+                            method.invoke(spider, null, ext);
+                        } else {
+                            spider.init(null);
+                        }
+                        String category = spider.homeContent(false);
+                        System.out.println(category);
+                        try {
+                            showCategory(spider, category, 0);
+                            k++;
+                        } catch (Exception e) {
+
+                        }
+
+                        if (StringUtils.isNotEmpty(category)) {
+                            JSONObject jsonObject = new JSONObject(category);
+                            JSONArray classes = jsonObject.optJSONArray("class");
+                            for (int j = 0; j < classes.length(); j++) {
+                                String tid = classes.getJSONObject(j).optString("type_id");
+                                System.out.println(tid);
+                                //org.seimicrawler.xpath.core.function;
+                                category = spider.categoryContent(tid, "1", false, null);
                                 System.out.println(category);
                                 try {
                                     showCategory(spider, category, 0);
@@ -1383,61 +1318,32 @@ public class CatTest {
                                 } catch (Exception e) {
 
                                 }
+                            }
+                        }
+                        String[] keys = {"名侦探柯南 普通话"};
+                        for (String key : keys) {
+                            category = spider.searchContent(key, false);
+                            System.out.println(category);
+                            if (StringUtils.isNotEmpty(category)) {
+                                try {
+                                    showCategory(spider, category, 0);
+                                    k++;
+                                } catch (Exception e) {
 
-                                if (StringUtils.isNotEmpty(category)) {
-                                    JSONObject jsonObject = new JSONObject(category);
-                                    JSONArray classes = jsonObject.optJSONArray("class");
-                                    for (int j = 0; j < classes.length(); j++) {
-                                        String tid = classes.getJSONObject(j).optString("type_id");
-                                        System.out.println(tid);
-                                        //org.seimicrawler.xpath.core.function;
-                                        category = spider.categoryContent(tid, "1", false, null);
-                                        System.out.println(category);
-                                        try {
-                                            showCategory(spider, category, 0);
-                                            k++;
-                                        } catch (Exception e) {
-
-                                        }
-                                    }
-                                }
-                                String[] keys = {"名侦探柯南 普通话"};
-                                for (String key : keys) {
-                                    category = spider.searchContent(key, false);
-                                    System.out.println(category);
-                                    if (StringUtils.isNotEmpty(category)) {
-                                        try {
-                                            showCategory(spider, category, 0);
-                                            k++;
-                                        } catch (Exception e) {
-
-                                        }
-                                    }
                                 }
                             }
-                        } catch (Exception e) {
-                            SpiderDebug.log(e);
                         }
-                        if (k > 0)
-                            trueSites.put(site);
                     }
-                    System.out.println(trueSites.toString(4));
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    SpiderDebug.log(e);
                 }
+                if (k > 0)
+                    trueSites.put(site);
             }
-
-            @Override
-            public void onFailure(int errorCode, String msg) {
-
-            }
-        });
-    }
-
-    @Test
-    public void testHD() throws Exception{
-        String s1 = new String(Base64.getUrlDecoder().decode("JTdCJTIycGFyZW50X25hbWUlMjI6JTIyOzAwMS0xMDA7MDAxLTEwMCUyMiwlMjJmb2xkZXJfaWQlMjI6JTIyNjE3NDgxYTAyNmI1M2EwZDA1Zjg0Y2RjYTU3NjljMDVkODhmNmU3ZiUyMiwlMjJmaWxlX2lkJTIyOiUyMjYxNzQ4MWEwMDBlNWQ3ZGQzNTFjNGJhMWI0NjM1YmY3MDljM2QwOGYlMjIsJTIyZmlsZV9uYW1lJTIyOiUyMiVFNSU5MCU4RCVFNCVCRSVBNiVFNiU4RSVBMiVFNiU5RiVBRiVFNSU4RCU5Ny5FUDAwMS4lRTYlOTklQUUlRTklODAlOUElRTglQUYlOUQuJUU3JUFDJUFDMDAxJUU4JUFGJTlELiVFNCVCQSU5MSVFOSU5QyU4NCVFOSVBMyU5RSVFOCVCRCVBNiVFNiU5RCU4MCVFNCVCQSVCQSVFNCVCQSU4QiVFNCVCQiVCNi5tcDQlMjIsJTIyc2hhcmVfaWQlMjI6JTIyaGlSc3d2WmlKd0glMjIsJTIyc2hhcmVfcHdkJTIyOiUyMiUyMiwlMjJleHBpcmF0aW9uJTIyOiUyMiUyMiU3RA=="));
-        System.out.println(s1);
+            System.out.println(trueSites.toString(4));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Test
@@ -1822,30 +1728,32 @@ public class CatTest {
     @Test
     public void testDouban() throws Exception {
         int page = 1;
-        int count =100;
-        String weburl = "https://frodo.douban.com/api/v2/movie/movie_showing？？area=全部&" + "playable=0&sort=recommend&score_range=0,10" + "&start=0"+"&count="+count+"&loc_id=108288&apikey=0dad551ec0f84ed02907ff5c42e8ec70?host=frodo.douban.com;post;{User-Agent@Rexxar-Core/0.1.3 api-client/1 com.douban.frodo/7.9.0.beta2(215) Android/25 product/TAS-AL00 vendor/HUAWEI model/TAS-AL00  rom/android  network/wifi  platform/mobile com.douban.frodo/7.9.0.beta2(215) Rexxar/1.2.151  platform/mobile 1.2.151}";
+        int count = 100;
+        String weburl = "https://frodo.douban.com/api/v2/movie/movie_showing？？area=全部&" + "playable=0&sort=recommend&score_range=0,10" + "&start=0" + "&count=" + count + "&loc_id=108288&apikey=0dad551ec0f84ed02907ff5c42e8ec70?host=frodo.douban.com;post;{User-Agent@Rexxar-Core/0.1.3 api-client/1 com.douban.frodo/7.9.0.beta2(215) Android/25 product/TAS-AL00 vendor/HUAWEI model/TAS-AL00  rom/android  network/wifi  platform/mobile com.douban.frodo/7.9.0.beta2(215) Rexxar/1.2.151  platform/mobile 1.2.151}";
         //weburl = "https://frodo.douban.com/api/v2/movie/35376457？？apikey=0dad551ec0f84ed02907ff5c42e8ec70?host=frodo.douban.com;post;{User-Agent@Rexxar-Core/0.1.3 api-client/1 com.douban.frodo/7.9.0.beta2(215) Android/25 product/TAS-AL00 vendor/HUAWEI model/TAS-AL00  rom/android  network/wifi  platform/mobile com.douban.frodo/7.9.0.beta2(215) Rexxar/1.2.151  platform/mobile 1.2.151}";
         weburl = "https://frodo.douban.com/api/v2/subject_collection/tv_hot/items？？playable=1&sort=recommend&score_range=0,10&start=0&count=100&apikey=0dad551ec0f84ed02907ff5c42e8ec70?host=frodo.douban.com;post;{User-Agent@Rexxar-Core/0.1.3 api-client/1 com.douban.frodo/7.9.0.beta2(215) Android/25 product/TAS-AL00 vendor/HUAWEI model/TAS-AL00  rom/android  network/wifi  platform/mobile com.douban.frodo/7.9.0.beta2(215) Rexxar/1.2.151  platform/mobile 1.2.151}";
         weburl = "https://frodo.douban.com/api/v2/movie/tag？？start=0&count=30&q=电影,美国&sort=recommend&score_range=0,10&start=0&count=100&apikey=0dad551ec0f84ed02907ff5c42e8ec70?host=frodo.douban.com;post;{User-Agent@Rexxar-Core/0.1.3 api-client/1 com.douban.frodo/7.9.0.beta2(215) Android/25 product/TAS-AL00 vendor/HUAWEI model/TAS-AL00  rom/android  network/wifi  platform/mobile com.douban.frodo/7.9.0.beta2(215) Rexxar/1.2.151  platform/mobile 1.2.151}";
         System.out.println(weburl);
-        HttpParser.parseSearchUrlForHtml(weburl, new HttpParser.OnSearchCallBack() {
+        HttpParser.parseSearchUrlForHtml(weburl, new OKCallBack.OKCallBackString() {
             @Override
-            public void onSuccess(String url, SpiderReqResult s) {
-                try {
-                    System.out.println(s.content);
-                    JSONObject jsonObject = new JSONObject(s.content);
-                    jsonObject.optInt("count");
-                } catch (Exception e) {
-                    onFailure(300,e.getMessage());
-                }
+            protected void onFailure(Call call, Exception e) {
+
             }
 
             @Override
-            public void onFailure(int errorCode, String msg) {
+            protected void onResponse(String content) {
+                try {
+                    System.out.println(content);
+                    JSONObject jsonObject = new JSONObject(content);
+                    jsonObject.optInt("count");
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
 
             }
         });
     }
+
     @Test
     public void qindou() throws Exception {
         Spider spider = new Legado();
@@ -1873,52 +1781,33 @@ public class CatTest {
     @Test
     public void testTV() throws Exception {
         String weburl = "https://movie.douban.com/subject/35332289/episode/1/";
-        HttpParser.parseSearchUrlForHtml(weburl, new HttpParser.OnSearchCallBack() {
-            @Override
-            public void onSuccess(String url, SpiderReqResult s) {
-                AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
-                analyzeRule.setContent(s.content,url);
-                analyzeRule.getString("@css:#footer~script@html");
-            }
-
-            @Override
-            public void onFailure(int errorCode, String msg) {
-
-            }
-        });
+        String s = OkHttpUtil.string(weburl, getHeaders(""));
+        AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
+        analyzeRule.setContent(s, "");
+        analyzeRule.getString("@css:#footer~script@html");
     }
 
     @Test
     public void testHtml() throws Exception {
-        for (int i=1;i<=15;i++) {
-            String weburl = "https://movie.douban.com/subject/35332289/episode/"+i+"/";
-            HttpParser.parseSearchUrlForHtml(weburl, new HttpParser.OnSearchCallBack() {
-                @Override
-                public void onSuccess(String url, SpiderReqResult s) {
-                    AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
-                    analyzeRule.setContent(s.content);
-                    System.out.println(analyzeRule.getString("@css:#wrapper+script@src"));
-                    System.out.println(analyzeRule.getString("all##body##"));
-                    System.out.println(analyzeRule.getString("all##[\\s\\S]*videos = (.*)]},[\\s\\S]*##$1]}<js></js>@Json:$.data[*].play_link[0]##.*url=(.*)##$1<js></js>@Fun:urlDecode"));
-
-                }
-
-                @Override
-                public void onFailure(int errorCode, String msg) {
-
-                }
-            });
+        for (int i = 1; i <= 15; i++) {
+            String weburl = "https://movie.douban.com/subject/35332289/episode/" + i + "/";
+            String s = OkHttpUtil.string(weburl, getHeaders(""));
+            AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
+            analyzeRule.setContent(s);
+            System.out.println(analyzeRule.getString("@css:#wrapper+script@src"));
+            System.out.println(analyzeRule.getString("all##body##"));
+            System.out.println(analyzeRule.getString("all##[\\s\\S]*videos = (.*)]},[\\s\\S]*##$1]}<js></js>@Json:$.data[*].play_link[0]##.*url=(.*)##$1<js></js>@Fun:urlDecode"));
         }
     }
 
     @Test
     public void testMath() throws Exception {
-        System.out.println(Math.addExact(2,35));
+        System.out.println(Math.addExact(2, 35));
         Method method = Math.class.getMethod("addExact", int.class, int.class);
         method.invoke(Math.class, 1, 2);
-        Math.subtractExact(5,2);
-        Math.multiplyExact(5,2);
-        System.out.println(method.invoke(Math.class,2,5));
+        Math.subtractExact(5, 2);
+        Math.multiplyExact(5, 2);
+        System.out.println(method.invoke(Math.class, 2, 5));
         AnalyzeByFunction analyzeByFunction = new AnalyzeByFunction(2);
         System.out.println(analyzeByFunction.getString("math#subtractExact#1&&math#multiplyExact#30"));
         AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
@@ -1947,11 +1836,11 @@ public class CatTest {
                 String type_id = classes.optString(i);
                 JSONArray jsonArray = new JSONArray();
                 JSONArray names = itemsObject.names();
-                for (int j=0;j<names.length();j++) {
+                for (int j = 0; j < names.length(); j++) {
                     JSONObject t1 = new JSONObject();
                     JSONArray t2 = new JSONArray();
                     JSONArray itemData = itemsObject.optJSONArray(names.optString(j));
-                    for (int k=0;k<itemData.length();k++) {
+                    for (int k = 0; k < itemData.length(); k++) {
                         JSONObject t3 = new JSONObject();
                         String v = itemData.optString(k);
                         String n = itemData.optString(k);
@@ -1960,7 +1849,7 @@ public class CatTest {
                         t2.put(t3);
                     }
                     t1.put("key", names.optString(i));
-                    t1.put("name", itemsObject.optJSONArray(names.optString(j)).optString(0).replaceAll("全部",""));
+                    t1.put("name", itemsObject.optJSONArray(names.optString(j)).optString(0).replaceAll("全部", ""));
                     t1.put("value", t2);
                     jsonArray.put(t1);
                 }
@@ -1970,6 +1859,19 @@ public class CatTest {
         } catch (Exception e) {
             System.out.println(e);
         }
+    }
+
+    @Test
+    public void proxy() throws Exception  {
+        Proxy spider = new Proxy();
+        Map<String,String> params = new HashMap<>();
+        params.put("do", "live");
+        params.put("type", "txt");
+        String url = "https://gitee.com/shentong_012/HikerRules/raw/master/%E8%A7%86%E7%95%8C.txt";
+        String ext = Base64.encodeToString(url.getBytes("UTF-8"), com.github.catvod.utils.Base64.DEFAULT | com.github.catvod.utils.Base64.URL_SAFE | com.github.catvod.utils.Base64.NO_WRAP);
+        System.out.println(ext);
+        params.put("ext", ext);
+        spider.proxy(params);
     }
 }
 

@@ -1,28 +1,26 @@
 package com.github.catvod.spider;
 
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.crawler.SpiderReq;
-import com.github.catvod.crawler.SpiderReqResult;
-import com.github.catvod.crawler.SpiderUrl;
 
 import com.github.catvod.utils.Base64;
-import com.github.catvod.utils.SpiderOKClient;
 import com.github.catvod.utils.StringUtil;
+import com.github.catvod.utils.okhttp.OKCallBack;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import okhttp3.Call;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import rxhttp.wrapper.annotations.NonNull;
@@ -89,8 +87,9 @@ public class XPathAli extends XPath {
             matcher = aliyunShort.matcher(link);
             if (matcher.find()) {
                 shareId = matcher.group(1);
-                SpiderReqResult resp = SpiderReq.get(SpiderOKClient.noRedirectClient(), new SpiderUrl("https://alywp.net/" + shareId, null));
-                shareId = SpiderOKClient.getRedirectLocation(resp.headers);
+                Map<String, List<String>> respHeaders = new TreeMap<>();
+                String content = OkHttpUtil.stringNoRedirect("https://alywp.net/" + shareId, null, respHeaders);
+                shareId = OkHttpUtil.getRedirectLocation(respHeaders);
                 if (shareId != null) {
                     matcher = aliyun.matcher(shareId);
                     if (matcher.find()) {
@@ -134,41 +133,54 @@ public class XPathAli extends XPath {
                 HashMap<String, String> headers = new HashMap<>();
                 headers.put("x-share-token", shareTk);
                 headers.put("authorization", accessTk);
+                OKCallBack.OKCallBackString callback = new OKCallBack.OKCallBackString() {
+                    @Override
+                    protected void onFailure(Call call, Exception e) {
 
-                headers.put("User-Agent","Mozilla/5.0 (Linux; Android 11; Mi 10 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Mobile Safari/537.36");
-                SpiderReqResult srr = SpiderReq.postBody("https://api.aliyundrive.com/v2/file/get_share_link_video_preview_play_info", RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json.toString()), headers);
-                JSONObject object = new JSONObject(srr.content);
-                if(object.optString("code").equals("AccessTokenInvalid")) {
-                    accessTk = "";
-                    playerContent(flag,id,vipFlags);
-                } else if(object.optString("code").equals("ShareLinkTokenInvalid")) {
-                    playerContent(flag,id,vipFlags);
-                } else {
-                    JSONArray playList = object.getJSONObject("video_preview_play_info").getJSONArray("live_transcoding_task_list");
-                    String videoUrl = "";
-                    String templateId = "";
-                    for (int i = 0; i < playList.length(); i++) {
-                        JSONObject obj = playList.getJSONObject(i);
-                        if (obj.optString("template_id").equals(infos[2])) {
-                            videoUrl = "http://116.85.31.19:3000/apis/yun-play/" + infos[3] + '/' + accessTk + '/' + shareTk + '/' + infos[2] + "/index.m3u8";
-                            break;
-                        } else {
-                            templateId = obj.optString("template_id");
+                    }
+
+                    @Override
+                    protected void onResponse(String response) {
+                        try {
+                            JSONObject object = new JSONObject(response);
+                            if(object.optString("code").equals("AccessTokenInvalid")) {
+                                accessTk = "";
+                                playerContent(flag,id,vipFlags);
+                            } else if(object.optString("code").equals("ShareLinkTokenInvalid")) {
+                                playerContent(flag,id,vipFlags);
+                            } else {
+                                JSONArray playList = object.getJSONObject("video_preview_play_info").getJSONArray("live_transcoding_task_list");
+                                String videoUrl = "";
+                                String templateId = "";
+                                for (int i = 0; i < playList.length(); i++) {
+                                    JSONObject obj = playList.getJSONObject(i);
+                                    if (obj.optString("template_id").equals(infos[2])) {
+                                        videoUrl = "http://116.85.31.19:3000/apis/yun-play/" + infos[3] + '/' + accessTk + '/' + shareTk + '/' + infos[2] + "/index.m3u8";
+                                        break;
+                                    } else {
+                                        templateId = obj.optString("template_id");
+                                    }
+                                }
+
+                                if (videoUrl.isEmpty() && playList.length() > 0) {
+                                    videoUrl = "http://116.85.31.19:3000/apis/yun-play/" + infos[1] + '/' + infos[0] + '/' + accessTk + '/' + shareTk + '/' + templateId + "/index.m3u8";
+                                }
+                                JSONObject headerObj = new JSONObject();
+                                headerObj.put("User-Agent","Mozilla/5.0 (Linux; Android 11; Mi 10 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Mobile Safari/537.36");
+                                JSONObject result = new JSONObject();
+                                result.put("parse", 0);
+                                result.put("playUrl", "");
+                                result.put("url", videoUrl);
+                                result.put("header", headerObj.toString());
+                                setResult(result.toString(4));
+                            }
+                        } catch (JSONException e) {
+                            SpiderDebug.log(e);
                         }
                     }
-
-                    if (videoUrl.isEmpty() && playList.length() > 0) {
-                        videoUrl = "http://116.85.31.19:3000/apis/yun-play/" + infos[1] + '/' + infos[0] + '/' + accessTk + '/' + shareTk + '/' + templateId + "/index.m3u8";
-                    }
-                    JSONObject headerObj = new JSONObject();
-                    headerObj.put("User-Agent","Mozilla/5.0 (Linux; Android 11; Mi 10 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Mobile Safari/537.36");
-                    JSONObject result = new JSONObject();
-                    result.put("parse", 0);
-                    result.put("playUrl", "");
-                    result.put("url", videoUrl);
-                    result.put("header", headerObj.toString());
-                    return result.toString(4);
-                }
+                };
+                OkHttpUtil.postJson(OkHttpUtil.defaultClient(), "https://api.aliyundrive.com/v2/file/get_share_link_video_preview_play_info", json.toString(), headers, callback);
+                return callback.getResult();
             }
         } catch (Exception e) {
             SpiderDebug.log(e);
@@ -192,8 +204,8 @@ public class XPathAli extends XPath {
             try {
                 HashMap<String, String> headers = new HashMap<>();
                 headers.put("User-Agent", "okhttp/4.5.0");
-                SpiderReqResult srr = SpiderReq.get(new SpiderUrl("http://81.68.244.5/tv/alitk", headers));
-                aliTk = new JSONObject(srr.content).optString("alitk");
+                String srr = OkHttpUtil.string("http://81.68.244.5/tv/alitk", headers);
+                aliTk = new JSONObject(srr).optString("alitk");
             } catch (JSONException e) {
                 SpiderDebug.log(e);
             }
@@ -204,10 +216,22 @@ public class XPathAli extends XPath {
         fetchAliTk();
         if (!aliTk.isEmpty() && accessTk.isEmpty()) {
             try {
-                HashMap<String, String> json = new HashMap<>();
+                JSONObject json = new JSONObject();
                 json.put("refresh_token", aliTk);
-                SpiderReqResult srr = SpiderReq.postJson("https://api.aliyundrive.com/token/refresh", json, new HashMap<>());
-                JSONObject obj = new JSONObject(srr.content);
+                OKCallBack.OKCallBackString callback = new OKCallBack.OKCallBackString() {
+                    @Override
+                    protected void onFailure(Call call, Exception e) {
+
+                    }
+
+                    @Override
+                    protected void onResponse(String response) {
+                        setResult(response);
+                    }
+                };
+                OkHttpUtil.postJson(OkHttpUtil.defaultClient(),"https://api.aliyundrive.com/token/refresh",json.toString(),callback);
+                String srr = callback.getResult();
+                JSONObject obj = new JSONObject(srr);
                 accessTk = obj.getString("access_token");
             } catch (JSONException e) {
                 SpiderDebug.log(e);
@@ -217,11 +241,23 @@ public class XPathAli extends XPath {
 
     private String getShareTk(String shareId, String sharePwd) {
         try {
-            HashMap<String, String> json = new HashMap<>();
+            JSONObject json = new JSONObject();
             json.put("share_id", shareId);
             json.put("share_pwd", "");
-            SpiderReqResult srr = SpiderReq.postJson("https://api.aliyundrive.com/v2/share_link/get_share_token", json, new HashMap<>());
-            return new JSONObject(srr.content).optString("share_token");
+            OKCallBack.OKCallBackString callBack = new OKCallBack.OKCallBackString() {
+                @Override
+                protected void onFailure(Call call, Exception e) {
+
+                }
+
+                @Override
+                protected void onResponse(String response) {
+                    setResult(response);
+                }
+            };
+            OkHttpUtil.postJson(OkHttpUtil.defaultClient(),"https://api.aliyundrive.com/v2/share_link/get_share_token",json.toString(),callBack);
+            String srr = callBack.getResult();
+            return new JSONObject(srr).optString("share_token");
         } catch (JSONException e) {
             SpiderDebug.log(e);
         }
@@ -244,8 +280,20 @@ public class XPathAli extends XPath {
             json.put("order_direction", "ASC");
             HashMap<String, String> headers = new HashMap<>();
             headers.put("x-share-token", shareTk);
-            SpiderReqResult srr = SpiderReq.postBody("https://api.aliyundrive.com/adrive/v3/file/list", RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json.toString()), headers);
-            JSONArray rootList = new JSONObject(srr.content).optJSONArray("items");
+            OKCallBack.OKCallBackString callBack = new OKCallBack.OKCallBackString() {
+                @Override
+                protected void onFailure(Call call, Exception e) {
+
+                }
+
+                @Override
+                protected void onResponse(String response) {
+                    setResult(response);
+                }
+            };
+            OkHttpUtil.postJson(OkHttpUtil.defaultClient(),"https://api.aliyundrive.com/adrive/v3/file/list",json.toString(),callBack);
+            String srr = callBack.getResult();
+            JSONArray rootList = new JSONObject(srr).optJSONArray("items");
             if (rootList != null && rootList.length() > 0) {
                 for (int i = 0; i < rootList.length(); i++) {
                     JSONObject item = rootList.getJSONObject(i);

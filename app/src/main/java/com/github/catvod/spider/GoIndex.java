@@ -4,10 +4,9 @@ import android.content.Context;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.crawler.SpiderReq;
-import com.github.catvod.crawler.SpiderReqResult;
-import com.github.catvod.crawler.SpiderUrl;
 import com.github.catvod.utils.Misc;
+import com.github.catvod.utils.okhttp.OKCallBack;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 import com.github.catvod.xpath.XPathRule;
 
 import org.apache.commons.lang3.StringUtils;
@@ -15,9 +14,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.seimicrawler.xpath.JXDocument;
-import org.seimicrawler.xpath.JXNode;
-
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import okhttp3.Call;
 import rxhttp.wrapper.annotations.NonNull;
 
 public class GoIndex extends Spider {
@@ -78,12 +75,17 @@ public class GoIndex extends Spider {
                 }
             }
             String webUrl = rule.getHomeUrl();
-            HttpParser.parseSearchUrlForHtml(webUrl, new HttpParser.OnSearchCallBack() {
+            HttpParser.parseSearchUrlForHtml(webUrl, new OKCallBack.OKCallBackString() {
                 @Override
-                public void onSuccess(String url, SpiderReqResult s) {
+                protected void onFailure(Call call, Exception e) {
+
+                }
+
+                @Override
+                protected void onResponse(String s) {
                     try {
                         if (rule.getCateManual().size() == 0) {
-                            JSONArray navNodes = getVods(s.content, rule.getCateNode());
+                            JSONArray navNodes = getVods(s, rule.getCateNode());
                             for (int i = 0; i < navNodes.length(); i++) {
                                 JSONObject navNode = navNodes.optJSONObject(i);
                                 String name = getValue(navNode, rule.getCateName());
@@ -99,7 +101,7 @@ public class GoIndex extends Spider {
                         if (!rule.getHomeVodNode().isEmpty()) {
                             try {
                                 JSONArray videos = new JSONArray();
-                                JSONArray vodNodes = getVods(s.content, rule.getHomeVodNode());
+                                JSONArray vodNodes = getVods(s, rule.getHomeVodNode());
                                 for (int i = 0; i < vodNodes.length(); i++) {
                                     JSONObject vodNode = vodNodes.optJSONObject(i);
                                     String name = getValue(vodNode, rule.getHomeVodName());
@@ -118,7 +120,7 @@ public class GoIndex extends Spider {
                                         }
                                     }
                                     JSONObject v = new JSONObject();
-                                    v.put("vod_id", url + id);
+                                    v.put("vod_id", webUrl + id);
                                     v.put("vod_name", name);
                                     v.put("vod_pic", pic);
                                     v.put("vod_remarks", mark);
@@ -132,12 +134,6 @@ public class GoIndex extends Spider {
                     } catch (Exception e) {
                         SpiderDebug.log(e);
                     }
-
-                }
-
-                @Override
-                public void onFailure(int errorCode, String msg) {
-
                 }
             });
             result.put("class", classes);
@@ -161,14 +157,19 @@ public class GoIndex extends Spider {
             fetchRule();
             JSONObject result = new JSONObject();
             String webUrl = categoryUrl(tid, pg, filter, extend);
-            HttpParser.parseSearchUrlForHtml(webUrl, new HttpParser.OnSearchCallBack() {
+            HttpParser.parseSearchUrlForHtml(webUrl, new OKCallBack.OKCallBackString() {
                 @Override
-                public void onSuccess(String url, SpiderReqResult s) {
+                protected void onFailure(Call call, Exception e) {
+
+                }
+
+                @Override
+                protected void onResponse(String s) {
                     try {
                         if (!rule.getCateVodNode().isEmpty()) {
                             try {
                                 JSONArray videos = new JSONArray();
-                                JSONArray vodNodes = getVods(s.content, rule.getCateVodNode());
+                                JSONArray vodNodes = getVods(s, rule.getCateVodNode());
                                 for (int i = 0; i < vodNodes.length(); i++) {
                                     JSONObject vodNode = vodNodes.optJSONObject(i);
                                     String name = getValue(vodNode, rule.getCateVodName());
@@ -187,7 +188,7 @@ public class GoIndex extends Spider {
                                         }
                                     }
                                     JSONObject v = new JSONObject();
-                                    v.put("vod_id", url + id);
+                                    v.put("vod_id", webUrl + id);
                                     v.put("vod_name", name);
                                     v.put("vod_pic", pic);
                                     v.put("vod_remarks", mark);
@@ -201,12 +202,6 @@ public class GoIndex extends Spider {
                     } catch (Exception e) {
                         SpiderDebug.log(e);
                     }
-
-                }
-
-                @Override
-                public void onFailure(int errorCode, String msg) {
-
                 }
             });
             result.put("page", pg);
@@ -224,8 +219,7 @@ public class GoIndex extends Spider {
         if (rule == null) {
             if (ext != null) {
                 if (ext.startsWith("http")) {
-                    SpiderUrl su = new SpiderUrl(ext, null);
-                    String json = SpiderReq.get(su).content;
+                    String json = OkHttpUtil.string(ext, getHeaders(ext));
                     rule = XPathRule.fromJson(json);
                     loadRuleExt(json);
                 } else {
@@ -241,29 +235,29 @@ public class GoIndex extends Spider {
     }
 
     public void getNfo(JSONObject vod, String weburl) {
-        HttpParser.parseSearchUrlForHtml(weburl, new HttpParser.OnSearchCallBack() {
+        HttpParser.parseSearchUrlForHtml(weburl, new OKCallBack.OKCallBackString() {
             @Override
-            public void onSuccess(String url, SpiderReqResult s) {
+            protected void onFailure(Call call, Exception e) {
+
+            }
+
+            @Override
+            protected void onResponse(String s) {
                 try {
-                    Document document = Jsoup.parse(s.content);
-                    System.out.println(s.content);
+                    Document document = Jsoup.parse(s);
+                    System.out.println(s);
                     vod.put("vod_name", document.select("title").text());
                     vod.put("vod_pic", document.select("[aspect=\"poster\"]").text());
                     vod.put("type_name", document.select("genre").text());
                     vod.put("vod_year", document.select("year").text());
                     vod.put("vod_area", document.select("country").text());
-                    vod.put("vod_remarks", document.select("title") == null ? "" : document.select("title").text());
+                    vod.put("vod_remarks", document.select("title").text());
                     vod.put("vod_actor", document.select("actor>name").text());
                     vod.put("vod_director", document.select("director").text());
                     vod.put("vod_content", document.select("plot").text());
                 } catch (Exception e) {
                     SpiderDebug.log(e);
                 }
-            }
-
-            @Override
-            public void onFailure(int errorCode, String msg) {
-
             }
         });
     }
@@ -275,13 +269,18 @@ public class GoIndex extends Spider {
             fetchRule();
             String webUrl = rule.getDetailUrl().replace("{vid}", ids.get(0));
             JSONObject result = new JSONObject();
-            HttpParser.parseSearchUrlForHtml(webUrl, new HttpParser.OnSearchCallBack() {
+            HttpParser.parseSearchUrlForHtml(webUrl, new OKCallBack.OKCallBackString() {
                 @Override
-                public void onSuccess(String url, SpiderReqResult s) {
-                    try {
-                        JSONObject doc = new JSONObject(s.content);
+                protected void onFailure(Call call, Exception e) {
 
-                        String cover = "", title = "", desc = "", category = "", area = "", year = "", remark = "", director = "", actor = "";
+                }
+
+                @Override
+                protected void onResponse(String s) {
+                    try {
+                        JSONObject doc = new JSONObject(s);
+
+                        String cover, title, desc = "", category = "", area = "", year = "", remark = "", director = "", actor = "";
 
                         title = getValue(doc, rule.getDetailName());
                         title = rule.getDetailNameR(title);
@@ -358,7 +357,7 @@ public class GoIndex extends Spider {
                         vod.put("vod_director", director);
                         vod.put("vod_content", desc);
 
-                        JSONArray urlListNodes = getVods(s.content, rule.getDetailUrlNode());
+                        JSONArray urlListNodes = getVods(s, rule.getDetailUrlNode());
                         Map<String, List<String>> vod_play = new HashMap<>();
                         vod_play.put("workerdev", new ArrayList<>());
                         for (int i = 0; i < urlListNodes.length(); i++) {
@@ -370,9 +369,9 @@ public class GoIndex extends Spider {
                             if (urlNode.optString("mimeType").equals("application/vnd.google-apps.folder"))
                                 getFileList(id + "/?page_index={catePg};post", vod_play);
                             else if (urlNode.optString("mimeType").equals("video/x-matroska")) {
-                                vod_play.get("workerdev").add(name + "$" + url + id);
+                                vod_play.get("workerdev").add(name + "$" + webUrl + id);
                             } else if (urlNode.optString("mimeType").equals("text/xml") && StringUtils.contains(name, ".nfo")) {
-                                getNfo(vod, url + id);
+                                getNfo(vod, webUrl + id);
                             }
                         }
                         if (vod_play.size() > 0) {
@@ -388,18 +387,13 @@ public class GoIndex extends Spider {
                             vod.put("vod_play_url", vod_play_url);
                         }
 
-                        detailContentExt(s.content, vod);
+                        detailContentExt(s, vod);
                         JSONArray list = new JSONArray();
                         list.put(vod);
                         result.put("list", list);
                     } catch (Exception e) {
                         SpiderDebug.log(e);
                     }
-                }
-
-                @Override
-                public void onFailure(int errorCode, String msg) {
-
                 }
             });
             return result.toString();
@@ -457,11 +451,16 @@ public class GoIndex extends Spider {
 
     private void getFileList(String root, Map<String, List<String>> data) {
         try {
-            HttpParser.parseSearchUrlForHtml(root + "/?page_index={catePg};post", new HttpParser.OnSearchCallBack() {
+            HttpParser.parseSearchUrlForHtml(root + "/?page_index={catePg};post", new OKCallBack.OKCallBackString() {
                 @Override
-                public void onSuccess(String url, SpiderReqResult s) {
+                protected void onFailure(Call call, Exception e) {
+
+                }
+
+                @Override
+                protected void onResponse(String s) {
                     try {
-                        JSONArray rootList = getVods(s.content, rule.getDetailUrlNode());
+                        JSONArray rootList = getVods(s, rule.getDetailUrlNode());
                         if (rootList != null && rootList.length() > 0) {
                             for (int i = 0; i < rootList.length(); i++) {
                                 JSONObject item = rootList.optJSONObject(i);
@@ -482,7 +481,6 @@ public class GoIndex extends Spider {
                                             vodLists = data.get(templateId);
                                         }
                                         vodLists.add(fileName + "$" + fileId + "+" + templateId);
-
                                     }
                                 }
                             }
@@ -490,12 +488,6 @@ public class GoIndex extends Spider {
                     } catch (Exception e) {
                         SpiderDebug.log(e);
                     }
-
-                }
-
-                @Override
-                public void onFailure(int errorCode, String msg) {
-
                 }
             });
             // 取文件列表
@@ -513,15 +505,20 @@ public class GoIndex extends Spider {
             }
             String webUrl = rule.getSearchUrl().replace("{wd}", URLEncoder.encode(key,"utf-8"));
             JSONObject result = new JSONObject();
-            HttpParser.parseSearchUrlForHtml(webUrl, new HttpParser.OnSearchCallBack() {
+            HttpParser.parseSearchUrlForHtml(webUrl, new OKCallBack.OKCallBackString() {
                 @Override
-                public void onSuccess(String url, SpiderReqResult s) {
+                protected void onFailure(Call call, Exception e) {
+
+                }
+
+                @Override
+                protected void onResponse(String s) {
                     try {
                         JSONArray videos = new JSONArray();
                         // add maccms suggest search api support
                         if (rule.getSearchVodNode().startsWith("json:")) {
                             String[] node = rule.getSearchVodNode().substring(5).split(">");
-                            JSONObject data = new JSONObject(s.content);
+                            JSONObject data = new JSONObject(s);
                             for (int i = 0; i < node.length; i++) {
                                 if (i == node.length - 1) {
                                     JSONArray vodArray = data.getJSONArray(node[i]);
@@ -552,11 +549,6 @@ public class GoIndex extends Spider {
                     } catch (Exception e) {
                         SpiderDebug.log(e);
                     }
-                }
-
-                @Override
-                public void onFailure(int errorCode, String msg) {
-
                 }
             });
             return result.toString();
