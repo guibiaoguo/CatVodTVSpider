@@ -16,6 +16,9 @@ public class Proxy extends Spider {
             if (what.equals("nekk")) {
                 String pic = params.get("pic");
                 return Nekk.loadPic(pic);
+            } else if(what.equals("legado")){
+                String pic = params.get("pic");
+                return Legado.loadPic(pic);
             } else if (what.equals("live")) {
                 String type = params.get("type");
                 if (type.equals("txt")) {

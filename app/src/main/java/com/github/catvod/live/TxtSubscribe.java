@@ -119,7 +119,9 @@ public class TxtSubscribe {
     public static Object[] load(String ext) {
         try {
             LinkedHashMap<String, LinkedHashMap<String, ArrayList<String>>> allLives = new LinkedHashMap<>();
-            TxtSubscribe.subscribe(allLives, ext, null);
+            for (String ex :ext.split(";")) {
+                TxtSubscribe.subscribe(allLives, ex, null);
+            }
             String json = TxtSubscribe.live2Json(allLives);
             Object[] result = new Object[3];
             result[0] = 200;

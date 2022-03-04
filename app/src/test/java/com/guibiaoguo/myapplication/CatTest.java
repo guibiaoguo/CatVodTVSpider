@@ -53,6 +53,8 @@ import org.junit.Test;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -878,7 +880,7 @@ public class CatTest {
             JSONArray sites = mao.optJSONArray("sites");
             JSONArray trueSites = new JSONArray();
             JSONArray playUrls = new JSONArray();
-            for (int i = 210; i < sites.length(); i++) {
+            for (int i = 0; i < sites.length(); i++) {
                 int k = 0;
                 JSONObject site = sites.optJSONObject(i);
                 try {
@@ -1867,11 +1869,19 @@ public class CatTest {
         Map<String,String> params = new HashMap<>();
         params.put("do", "live");
         params.put("type", "txt");
-        String url = "https://gitee.com/shentong_012/HikerRules/raw/master/%E8%A7%86%E7%95%8C.txt";
+        String url = "https://gitee.com/shentong_012/HikerRules/raw/master/11.txt";
         String ext = Base64.encodeToString(url.getBytes("UTF-8"), com.github.catvod.utils.Base64.DEFAULT | com.github.catvod.utils.Base64.URL_SAFE | com.github.catvod.utils.Base64.NO_WRAP);
         System.out.println(ext);
-        params.put("ext", ext);
+        params.put("ext", "aHR0cHM6Ly9tYW8uZ3VpYmlhb2d1by50ay9oc2NrMS50eHQ7aHR0cHM6Ly9naXRlZS5jb20vc2hlbnRvbmdfMDEyL0hpa2VyUnVsZXMvcmF3L21hc3Rlci8lRTglQTclODYlRTclOTUlOEMudHh0");
         spider.proxy(params);
+    }
+
+    @Test
+    public void date() {
+        Calendar calendar = Calendar.getInstance();
+        System.out.println(calendar.get(1));
+        System.out.println(calendar.get(2)+1);
+        System.out.println(calendar.get(Calendar.DATE));
     }
 }
 

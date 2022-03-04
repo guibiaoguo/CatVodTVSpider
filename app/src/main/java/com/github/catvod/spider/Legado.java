@@ -12,9 +12,11 @@ import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 
 import com.github.catvod.legado.LegadoRule;
+import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.Misc;
 import com.github.catvod.utils.StringUtil;
 import com.github.catvod.utils.okhttp.OKCallBack;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 
 import org.apache.commons.lang3.StringUtils;
@@ -31,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 
 import okhttp3.Call;
+import okhttp3.Headers;
 import okhttp3.Response;
 
 /**
@@ -40,7 +43,7 @@ import okhttp3.Response;
 public class Legado extends Spider {
 
     private String ext;
-    private LegadoRule rule;
+    private static LegadoRule rule;
     private AnalyzeRule analyzeRule;
     private RuleDataInterface error;
     private RuleDataInterface ruleData;
@@ -1001,6 +1004,43 @@ public class Legado extends Spider {
         });
     }
 
+    public static Object[] loadPic(String pic) {
+        try {
+            pic = new String(Base64.decode(pic, Base64.DEFAULT | Base64.URL_SAFE | Base64.NO_WRAP), "UTF-8");
+            Map<String,String> nekkPicHeader = new HashMap<>();
+            nekkPicHeader.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36");
+            nekkPicHeader.put("referer", rule.getHomeUrl() + "/");
+            OKCallBack.OKCallBackDefault callBack = new OKCallBack.OKCallBackDefault() {
+                @Override
+                protected void onFailure(Call call, Exception e) {
+
+                }
+
+                @Override
+                protected void onResponse(Response response) {
+
+                }
+            };
+            OkHttpUtil.get(OkHttpUtil.defaultClient(), pic, null, nekkPicHeader, callBack);
+            if (callBack.getResult().code() == 200) {
+                Headers headers = callBack.getResult().headers();
+                String type = headers.get("Content-Type");
+                if (type == null) {
+                    type = "application/octet-stream";
+                }
+                Object[] result = new Object[3];
+                result[0] = 200;
+                result[1] = type;
+                System.out.println(pic);
+                System.out.println(type);
+                result[2] = callBack.getResult().body().byteStream();
+                return result;
+            }
+        } catch (Throwable th) {
+            th.printStackTrace();
+        }
+        return null;
+    }
 
     private List<Object> getNodes(AnalyzeRule analyzeRule, String cateNode) {
         return analyzeRule.getElements(cateNode);
