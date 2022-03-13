@@ -3,6 +3,7 @@ package com.github.catvod.spider;
 import android.util.Log;
 
 
+import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.StringUtil;
 import com.github.catvod.utils.okhttp.OKCallBack;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
@@ -10,11 +11,19 @@ import com.github.catvod.utils.okhttp.OkHttpUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import okhttp3.Call;
+import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 /**
  * 作者：By hdy
@@ -28,58 +37,110 @@ public class HttpParser {
     private static final String PC_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36";
     private static final String MOBILE_UA = "";
 
-    public static void parseSearchUrlForHtml(String sourceUrl, OKCallBack callBack) {
-        String[] d = sourceUrl.split(";");
-        if (d.length == 1) {
-            get(d[0], null, null, callBack);
-        } else if (d.length == 2) {
-            if ("get".equalsIgnoreCase(d[1]) || "*".equals(d[1])) {
-                get(d[0], null, getHeaders(sourceUrl), callBack);
-            } else if ("post".equalsIgnoreCase(d[1])) {
-                String[] ss = StringUtil.splitUrlByQuestionMark(d[0]);
-                String[] sss;
-                if (ss.length > 1) {
-                    sss = ss[1].split("&");
-                } else {
-                    sss = new String[]{};
+    public static OKCallBack parseSearchUrlForHtml(String sourceUrl) {
+        if (StringUtils.startsWith(sourceUrl, "proxy://")) {
+            OKCallBack callBack = new OKCallBack.OKCallBackDefault() {
+                @Override
+                protected void onFailure(Call call, Exception e) {
+                    onResponse(null);
                 }
-                HashMap params = new HashMap();
-                for (int i = 0; i < sss.length; i++) {
-                    if (StringUtils.isEmpty(sss[i])) {
-                        continue;
-                    }
-                    String[] kk = sss[i].split("=");
-                    if (kk.length >= 2) {
-                        params.put(kk[0], StringUtil.arrayToString(kk, 1, "="));
+
+                @Override
+                protected void onResponse(Response response) {
+                    try {
+                        Map<String, String> params = StringUtil.getParameter(sourceUrl, "proxy://");
+                        String pic = params.get("pic");
+                        String selector = params.get("selector");
+                        Object[] result = Legado.loadPic(pic, selector);
+                        InputStream inputStream = (InputStream) result[2];
+                        ByteArrayOutputStream bf = new ByteArrayOutputStream();
+                        byte[] buffer = new byte[1024];
+                        int length;
+                        while ((length = inputStream.read(buffer)) != -1) {
+                            bf.write(buffer, 0, length);
+                        }
+                        Response.Builder builder = new Response.Builder();
+                        ResponseBody responseBody = ResponseBody.create(null,bf.toString());
+                        Request request = new Request.Builder().url("http://localhost"+sourceUrl).build();
+                        builder.request(request);
+                        builder.body(responseBody);
+                        builder.message("");
+                        builder.code(200);
+                        builder.request(request);
+                        builder.protocol(Protocol.HTTP_1_1);
+                        setResult(builder.build());
+                    } catch (Exception e) {
+                        SpiderDebug.log(e);
                     }
                 }
-                post(ss[0], null, getHeaders(sourceUrl), params, callBack);
-            } else {
-                get(d[0], d[1], getHeaders(sourceUrl), callBack);
-            }
+            };
+            OkHttpUtil.get(OkHttpUtil.defaultClient(), "http://localhost/" + sourceUrl, callBack);
+            return callBack;
         } else {
-            if ("post".equalsIgnoreCase(d[1])) {
-                String[] ss = StringUtil.splitUrlByQuestionMark(d[0]);
-                String[] sss;
-                if (ss.length > 1) {
-                    sss = ss[1].split("&");
+            OKCallBack callBack = new OKCallBack.OKCallBackDefault() {
+                @Override
+                protected void onFailure(Call call, Exception e) {
+
+                }
+
+                @Override
+                protected void onResponse(Response response) {
+                    setResult(response);
+                }
+            };
+            String[] d = sourceUrl.split(";");
+            if (d.length == 1) {
+                get(d[0], null, null, callBack);
+            } else if (d.length == 2) {
+                if ("get".equalsIgnoreCase(d[1]) || "*".equals(d[1])) {
+                    get(d[0], "utf-8", getHeaders(sourceUrl), callBack);
+                } else if ("post".equalsIgnoreCase(d[1])) {
+                    String[] ss = StringUtil.splitUrlByQuestionMark(d[0]);
+                    String[] sss;
+                    if (ss.length > 1) {
+                        sss = ss[1].split("&");
+                    } else {
+                        sss = new String[]{};
+                    }
+                    HashMap params = new HashMap();
+                    for (String s : sss) {
+                        if (StringUtils.isEmpty(s)) {
+                            continue;
+                        }
+                        String[] kk = s.split("=");
+                        if (kk.length >= 2) {
+                            params.put(kk[0], StringUtil.arrayToString(kk, 1, "="));
+                        }
+                    }
+                    post(ss[0], null, getHeaders(sourceUrl), params, callBack);
                 } else {
-                    sss = new String[]{};
+                    get(d[0], d[1], getHeaders(sourceUrl), callBack);
                 }
-                HashMap params = new HashMap();
-                for (int i = 0; i < sss.length; i++) {
-                    if (StringUtils.isEmpty(sss[i])) {
-                        continue;
-                    }
-                    String[] kk = sss[i].split("=");
-                    if (kk.length >= 2) {
-                        params.put(kk[0], StringUtil.arrayToString(kk, 1, "="));
-                    }
-                }
-                post(ss[0], d[2], getHeaders(sourceUrl), params, callBack);
             } else {
-                get(d[0], d[2], getHeaders(sourceUrl), callBack);
+                if ("post".equalsIgnoreCase(d[1])) {
+                    String[] ss = StringUtil.splitUrlByQuestionMark(d[0]);
+                    String[] sss;
+                    if (ss.length > 1) {
+                        sss = ss[1].split("&");
+                    } else {
+                        sss = new String[]{};
+                    }
+                    HashMap params = new HashMap();
+                    for (String s : sss) {
+                        if (StringUtils.isEmpty(s)) {
+                            continue;
+                        }
+                        String[] kk = s.split("=");
+                        if (kk.length >= 2) {
+                            params.put(kk[0], StringUtil.arrayToString(kk, 1, "="));
+                        }
+                    }
+                    post(ss[0], d[2], getHeaders(sourceUrl), params, callBack);
+                } else {
+                    get(d[0], d[2], getHeaders(sourceUrl), callBack);
+                }
             }
+            return callBack;
         }
     }
 
@@ -191,9 +252,9 @@ public class HttpParser {
             }
             if (headers.get("redirect") != null) {
                 Map<String, List<String>> respHeaders = new TreeMap<>();
-                OkHttpUtil.get(OkHttpUtil.noRedirectClient(),finalUrl,callBack);
+                OkHttpUtil.get(OkHttpUtil.noRedirectClient(), finalUrl, callBack);
             } else {
-                OkHttpUtil.get(OkHttpUtil.defaultClient(),finalUrl,callBack);
+                OkHttpUtil.get(OkHttpUtil.defaultClient(), finalUrl, null, headers, callBack);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -211,21 +272,21 @@ public class HttpParser {
                 headers.put("User-Agent", PC_UA);
             }
             JSONObject jsonObject = new JSONObject();
-            for (Map.Entry<String,String> entry:params.entrySet()) {
+            for (Map.Entry<String, String> entry : params.entrySet()) {
                 jsonObject.put(entry.getKey(), entry.getValue());
             }
             if (headers.get("redirect") != null) {
-                OkHttpUtil.post(OkHttpUtil.noRedirectClient(),finalUrl,params,headers,callBack);
+                OkHttpUtil.post(OkHttpUtil.noRedirectClient(), finalUrl, params, headers, callBack);
             } else if (headers.get("redirect") != null && headers.get("json") != null) {
-                OkHttpUtil.postJson(OkHttpUtil.noRedirectClient(),finalUrl,jsonObject.toString(),headers,callBack);
+                OkHttpUtil.postJson(OkHttpUtil.noRedirectClient(), finalUrl, jsonObject.toString(), headers, callBack);
             } else if (headers.get("json") != null) {
-                OkHttpUtil.postJson(OkHttpUtil.defaultClient(),finalUrl,jsonObject.toString(),headers,callBack);
+                OkHttpUtil.postJson(OkHttpUtil.defaultClient(), finalUrl, jsonObject.toString(), headers, callBack);
             } else if (headers.get("redirect") != null && params.get("jsonBody") != null) {
-                OkHttpUtil.postJson(OkHttpUtil.noRedirectClient(),finalUrl,params.get("jsonBody"),headers,callBack);
+                OkHttpUtil.postJson(OkHttpUtil.noRedirectClient(), finalUrl, params.get("jsonBody"), headers, callBack);
             } else if (params.get("jsonBody") != null) {
-                OkHttpUtil.postJson(OkHttpUtil.defaultClient(),finalUrl,params.get("jsonBody"),headers,callBack);
+                OkHttpUtil.postJson(OkHttpUtil.defaultClient(), finalUrl, params.get("jsonBody"), headers, callBack);
             } else {
-                OkHttpUtil.post(OkHttpUtil.defaultClient(),finalUrl,params,headers,callBack);
+                OkHttpUtil.post(OkHttpUtil.defaultClient(), finalUrl, params, headers, callBack);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -320,11 +381,11 @@ public class HttpParser {
         } else {
             sss = new String[]{};
         }
-        for (int i = 0; i < sss.length; i++) {
-            if (StringUtils.isEmpty(sss[i])) {
+        for (String s : sss) {
+            if (StringUtils.isEmpty(s)) {
                 continue;
             }
-            String[] kk = sss[i].split("=");
+            String[] kk = s.split("=");
             if (kk.length >= 2) {
                 params.put(kk[0], StringUtil.decodeConflictStr(StringUtil.arrayToString(kk, 1, "=")));
             }

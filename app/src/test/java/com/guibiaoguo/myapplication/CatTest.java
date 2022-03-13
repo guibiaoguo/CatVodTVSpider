@@ -11,6 +11,7 @@ import com.github.catvod.analyzeRules.AnalyzeByRegex;
 import com.github.catvod.analyzeRules.RuleAnalyzer;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
+import com.github.catvod.parser.MixSpiderJX;
 import com.github.catvod.spider.Aidi;
 
 
@@ -52,17 +53,22 @@ import org.jsoup.select.Elements;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import okhttp3.Call;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+
+import okhttp3.Response;
 
 public class CatTest {
 
@@ -114,7 +120,6 @@ public class CatTest {
         for (int i = 0; i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
-            //org.seimicrawler.xpath.core.function;
             category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
             showCategory(spider, category, 0);
@@ -134,7 +139,6 @@ public class CatTest {
         for (int i = 0; i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
-            //org.seimicrawler.xpath.core.function;
             category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
             showCategory(spider, category, 0);
@@ -156,7 +160,6 @@ public class CatTest {
         for (int i = 0; i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
-            //org.seimicrawler.xpath.core.function;
             String category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
             List<String> ids = new ArrayList<>();
@@ -201,7 +204,6 @@ public class CatTest {
         for (int i = 0; i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
-            //org.seimicrawler.xpath.core.function;
             String category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
             List<String> ids = new ArrayList<>();
@@ -250,7 +252,6 @@ public class CatTest {
         for (int i = 0; i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
-            //org.seimicrawler.xpath.core.function;
             String category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
             List<String> ids = new ArrayList<>();
@@ -287,12 +288,12 @@ public class CatTest {
         spider(new Nekk());
     }
 
-//    @Test
+    //    @Test
     public void nfx() throws Exception {
         spider(new Nfx());
     }
 
-//    @Test
+    //    @Test
     public void ysgc() throws Exception {
         spider(new Ysgc());
     }
@@ -312,7 +313,6 @@ public class CatTest {
         for (int i = 0; i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
-            //org.seimicrawler.xpath.core.function;
             String category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
             List<String> ids = new ArrayList<>();
@@ -369,7 +369,6 @@ public class CatTest {
         JSONArray classes = jsonObject.optJSONArray("class");
         String tid = classes.getJSONObject(1).optString("type_id");
         System.out.println(tid);
-        //org.seimicrawler.xpath.core.function;
         String category = spider.categoryContent(tid, "2", false, null);
         System.out.println(category);
         List<String> ids = new ArrayList<>();
@@ -588,7 +587,7 @@ public class CatTest {
             if (!playurls.equals("")) {
                 String playurl = playurls.split("#")[0].split("\\$")[1];
                 System.out.println(playurl);
-                if(!StringUtils.contains(playurl,".m3u8"))
+                if (!StringUtils.contains(playurl, ".m3u8"))
                     System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[0].split("\\$")[1], new ArrayList<>()));
 //                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[1].split("\\$")[1], new ArrayList<>()));
 //                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[2].split("\\$")[1], new ArrayList<>()));
@@ -622,7 +621,6 @@ public class CatTest {
 //        for (int i = 0; i < classes.length(); i++) {
 //            String tid = classes.getJSONObject(i).optString("type_id");
 //            System.out.println(tid);
-//            //org.seimicrawler.xpath.core.function;
 //            String category = spider.categoryContent(tid, "1", false, null);
 //            System.out.println(category);
 //            if (StringUtils.isNotEmpty(category))
@@ -648,7 +646,6 @@ public class CatTest {
 //        for (int i = 0; i < classes.length(); i++) {
 //            String tid = classes.getJSONObject(i).optString("type_id");
 //            System.out.println(tid);
-//            //org.seimicrawler.xpath.core.function;
 //            category = spider.categoryContent(tid, "1", false, null);
 //            System.out.println(category);
         List<String> ids = new ArrayList<>();
@@ -701,26 +698,19 @@ public class CatTest {
         System.out.println(analyzeRule.getElement("$.ua"));
         String webUrl = analyzeRule.getString("@fun:{base64Encode:'$.homeUrl'}");
         System.out.println(webUrl);
-        HttpParser.parseSearchUrlForHtml(webUrl, new OKCallBack.OKCallBackString() {
-            @Override
-            protected void onFailure(Call call, Exception e) {
-
-            }
-
-            @Override
-            protected void onResponse(String content) {
-                AnalyzeRule analyzeRule1 = new AnalyzeRule(new RuleData());
-                analyzeRule1.setContent(content);
-                Object nodes = analyzeRule1.getStringList("$.data.files[1]%%$.data.files[3]");
-                System.out.println(nodes.toString());
-                if (nodes instanceof JSONArray) {
-                    for (int i = 0; i < ((JSONArray) nodes).length(); i++) {
-                        analyzeRule1.setContent(((JSONArray) nodes).opt(i).toString());
-                        System.out.println(analyzeRule1.getString("$.name"));
-                    }
+        OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(webUrl);
+        if (callBack.getResult().code() == 200) {
+            AnalyzeRule analyzeRule1 = new AnalyzeRule(new RuleData());
+            analyzeRule1.setContent(content);
+            Object nodes = analyzeRule1.getStringList("$.data.files[1]%%$.data.files[3]");
+            System.out.println(nodes.toString());
+            if (nodes instanceof JSONArray) {
+                for (int i = 0; i < ((JSONArray) nodes).length(); i++) {
+                    analyzeRule1.setContent(((JSONArray) nodes).opt(i).toString());
+                    System.out.println(analyzeRule1.getString("$.name"));
                 }
             }
-        });
+        }
         String s = OkHttpUtil.string("https://www.zqystv.com/zqys/dydq.html", getHeaders("https://www.zqystv.com/zqys/dydq.html"));
         analyzeRule = new AnalyzeRule(new RuleData());
         analyzeRule.setContent(s, "https://www.zqystv.com/zqys/dydq.html");
@@ -731,7 +721,7 @@ public class CatTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws Exception {
         String queue = "[test}";
         System.out.println(queue.charAt(0));
         RuleAnalyzer analyzer = new RuleAnalyzer("{$.name}||{$.id}", false);
@@ -749,20 +739,14 @@ public class CatTest {
         json = OkHttpUtil.string(ext, null);
         System.out.println(new AnalyzeByJSonPath(json).getString("{$.homeUrl}/test"));
         System.out.println(new AnalyzeByJSonPath(json).getString("$.ua"));
-        HttpParser.parseSearchUrlForHtml(new AnalyzeByJSonPath(json).getString("$.homeUrl"), new OKCallBack.OKCallBackString() {
-            @Override
-            protected void onFailure(Call call, Exception e) {
-
-            }
-
-            @Override
-            protected void onResponse(String content) {
-                System.out.println(new AnalyzeByJSonPath(content).getString("$.data.files[1]"));
-                System.out.println(new AnalyzeByJSonPath(content).getString("$.data.files[*]"));
-                System.out.println(new AnalyzeByJSonPath(content).getString("$.data.files[1:3]"));
-                System.out.println(new AnalyzeByJSonPath(content).getString("$.data.files[1]"));
-            }
-        });
+        OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(new AnalyzeByJSonPath(json).getString("$.homeUrl"));
+        if (callBack.getResult().code() == 200) {
+            String content = callBack.getResult().body().string();
+            System.out.println(new AnalyzeByJSonPath(content).getString("$.data.files[1]"));
+            System.out.println(new AnalyzeByJSonPath(content).getString("$.data.files[*]"));
+            System.out.println(new AnalyzeByJSonPath(content).getString("$.data.files[1:3]"));
+            System.out.println(new AnalyzeByJSonPath(content).getString("$.data.files[1]"));
+        }
         String s = OkHttpUtil.string("http://www.paper027.com/home/chapter/lists/id/77485.html", getHeaders("http://www.paper027.com/home/chapter/lists/id/77485.html"));
         System.out.println(new AnalyzeByJSoup(s).getElements("@css:.chapterTitle"));
         s = OkHttpUtil.string("https://www.zqystv.com/zqys/dydq.html", getHeaders("https://www.zqystv.com/zqys/dydq.html"));
@@ -827,7 +811,6 @@ public class CatTest {
         for (int i = 0; i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
-            //org.seimicrawler.xpath.core.function;
             category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
             showCategory(spider, category, 0);
@@ -846,7 +829,6 @@ public class CatTest {
         for (int i = 0; i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
-            //org.seimicrawler.xpath.core.function;
             category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
             showCategory(spider, category, 0);
@@ -865,7 +847,6 @@ public class CatTest {
 //        for (int i = 0; i < classes.length(); i++) {
 //            String tid = classes.getJSONObject(i).optString("type_id");
 //            System.out.println(tid);
-//            //org.seimicrawler.xpath.core.function;
 //            category = spider.categoryContent(tid, "1", false, null);
 //            System.out.println(category);
 //            showCategory(spider, category, 0);
@@ -880,7 +861,7 @@ public class CatTest {
             JSONArray sites = mao.optJSONArray("sites");
             JSONArray trueSites = new JSONArray();
             JSONArray playUrls = new JSONArray();
-            for (int i = 0; i < sites.length(); i++) {
+            for (int i = 319; i < sites.length(); i++) {
                 int k = 0;
                 JSONObject site = sites.optJSONObject(i);
                 try {
@@ -890,7 +871,7 @@ public class CatTest {
                     if (site.optInt("type") == 0) {
                         if (StringUtil.isAbsUrl(api)) {
                             String content = OkHttpUtil.string(api, getHeaders(""));
-                            if (StringUtils.isNotEmpty(content)) {
+                            if (StringUtils.startsWith(content, "<?xml") || StringUtil.isJson(content)) {
                                 System.out.println(api);
                                 trueSites.put(site);
                             }
@@ -933,7 +914,6 @@ public class CatTest {
                             for (int j = 0; j < 2; j++) {
                                 String tid = classes.getJSONObject(j).optString("type_id");
                                 System.out.println(tid);
-                                //org.seimicrawler.xpath.core.function;
                                 category = spider.categoryContent(tid, "1", false, null);
                                 System.out.println(category);
                                 try {
@@ -945,7 +925,7 @@ public class CatTest {
                                 }
                             }
                         }
-                        String[] keys = {"钢铁侠", "熊出没", "柯南"};
+                        String[] keys = {"熊出没", "名侦探柯南"};
                         for (String key : keys) {
                             category = spider.searchContent(key, false);
                             System.out.println(category);
@@ -1078,7 +1058,6 @@ public class CatTest {
         for (int i = 0; i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
-            //org.seimicrawler.xpath.core.function;
             category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
             showCategory(spider, category, 0);
@@ -1097,21 +1076,20 @@ public class CatTest {
         for (int i = 0; i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
-            //org.seimicrawler.xpath.core.function;
             category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
             showCategory(spider, category, 0);
         }
+        category = spider.searchContent("ABP", false);
+        System.out.println(category);
+        showCategory(spider, category, 0);
     }
 
     @Test
     public void alipanso() throws Exception {
         Spider spider = new Legado();
-        spider.init(null, "http://185.205.12.38:4004/alipanso.json");
+        spider.init(null, "http://mao.guibiaoguo.tk/alipanso.json");
         String category = "";
-        category = spider.searchContent("火影忍者 4K", false);
-        System.out.println(category);
-        showCategory(spider, category, 0);
         category = spider.homeContent(false);
         System.out.println(category);
         showCategory(spider, category, 0);
@@ -1120,11 +1098,36 @@ public class CatTest {
         for (int i = 0; i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
-            //org.seimicrawler.xpath.core.function;
             category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
             showCategory(spider, category, 0);
         }
+        category = spider.searchContent("火影忍者疾风传", false);
+        System.out.println(category);
+        showCategory(spider, category, 0);
+        System.out.println("ends");
+    }
+
+    @Test
+    public void affhs_legado() throws Exception {
+        Spider spider = new Legado();
+        spider.init(null, "http://mao.guibiaoguo.tk/ahhfs.json");
+        String category = "";
+        category = spider.homeContent(false);
+        System.out.println(category);
+        showCategory(spider, category, 0);
+        JSONObject jsonObject = new JSONObject(category);
+        JSONArray classes = jsonObject.optJSONArray("class");
+        for (int i = 0; i < classes.length(); i++) {
+            String tid = classes.getJSONObject(i).optString("type_id");
+            System.out.println(tid);
+            category = spider.categoryContent(tid, "1", false, null);
+            System.out.println(category);
+            showCategory(spider, category, 0);
+        }
+        category = spider.searchContent("火影忍者疾风传", false);
+        System.out.println(category);
+        showCategory(spider, category, 0);
         System.out.println("ends");
     }
 
@@ -1311,7 +1314,6 @@ public class CatTest {
                             for (int j = 0; j < classes.length(); j++) {
                                 String tid = classes.getJSONObject(j).optString("type_id");
                                 System.out.println(tid);
-                                //org.seimicrawler.xpath.core.function;
                                 category = spider.categoryContent(tid, "1", false, null);
                                 System.out.println(category);
                                 try {
@@ -1706,11 +1708,8 @@ public class CatTest {
     @Test
     public void myalipan() throws Exception {
         Spider spider = new Legado();
-        spider.init(null, "http://185.205.12.38:4004/myalipan.json");
+        spider.init(null, "http://mao.guibiaoguo.tk/myalipan.json");
         String category = "";
-//        category = spider.searchContent("名侦探柯南TV版 国语", false);
-//        System.out.println(category);
-//        showCategory(spider, category, 0);
         category = spider.homeContent(false);
         System.out.println(category);
         showCategory(spider, category, 0);
@@ -1719,11 +1718,13 @@ public class CatTest {
         for (int i = 0; i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
-            //org.seimicrawler.xpath.core.function;
             category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
             showCategory(spider, category, 0);
         }
+        category = spider.searchContent("熊出没", false);
+        System.out.println(category);
+        showCategory(spider, category, 0);
         System.out.println("ends");
     }
 
@@ -1736,24 +1737,18 @@ public class CatTest {
         weburl = "https://frodo.douban.com/api/v2/subject_collection/tv_hot/items？？playable=1&sort=recommend&score_range=0,10&start=0&count=100&apikey=0dad551ec0f84ed02907ff5c42e8ec70?host=frodo.douban.com;post;{User-Agent@Rexxar-Core/0.1.3 api-client/1 com.douban.frodo/7.9.0.beta2(215) Android/25 product/TAS-AL00 vendor/HUAWEI model/TAS-AL00  rom/android  network/wifi  platform/mobile com.douban.frodo/7.9.0.beta2(215) Rexxar/1.2.151  platform/mobile 1.2.151}";
         weburl = "https://frodo.douban.com/api/v2/movie/tag？？start=0&count=30&q=电影,美国&sort=recommend&score_range=0,10&start=0&count=100&apikey=0dad551ec0f84ed02907ff5c42e8ec70?host=frodo.douban.com;post;{User-Agent@Rexxar-Core/0.1.3 api-client/1 com.douban.frodo/7.9.0.beta2(215) Android/25 product/TAS-AL00 vendor/HUAWEI model/TAS-AL00  rom/android  network/wifi  platform/mobile com.douban.frodo/7.9.0.beta2(215) Rexxar/1.2.151  platform/mobile 1.2.151}";
         System.out.println(weburl);
-        HttpParser.parseSearchUrlForHtml(weburl, new OKCallBack.OKCallBackString() {
-            @Override
-            protected void onFailure(Call call, Exception e) {
+        OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(weburl);
 
+        if (callBack.getResult().code() == 200) {
+            try {
+                String content = callBack.getResult().body().string();
+                System.out.println(content);
+                JSONObject jsonObject = new JSONObject(content);
+                jsonObject.optInt("count");
+            } catch (Exception e) {
+                System.out.println(e);
             }
-
-            @Override
-            protected void onResponse(String content) {
-                try {
-                    System.out.println(content);
-                    JSONObject jsonObject = new JSONObject(content);
-                    jsonObject.optInt("count");
-                } catch (Exception e) {
-                    System.out.println(e);
-                }
-
-            }
-        });
+        }
     }
 
     @Test
@@ -1772,7 +1767,6 @@ public class CatTest {
         for (int i = 0; i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
-            //org.seimicrawler.xpath.core.function;
             category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
             showCategory(spider, category, 0);
@@ -1864,9 +1858,9 @@ public class CatTest {
     }
 
     @Test
-    public void proxy() throws Exception  {
+    public void proxy() throws Exception {
         Proxy spider = new Proxy();
-        Map<String,String> params = new HashMap<>();
+        Map<String, String> params = new HashMap<>();
         params.put("do", "live");
         params.put("type", "txt");
         String url = "https://gitee.com/shentong_012/HikerRules/raw/master/11.txt";
@@ -1877,11 +1871,177 @@ public class CatTest {
     }
 
     @Test
+    public void proxy_aimg() {
+        Proxy spider = new Proxy();
+        Map<String, String> params = new HashMap<>();
+        String url = "proxy://do=legado&selector=JC5pdGVtc1sqXS50aHVtYm5haWwjIyguKj8pCi4qIyMkMTtnZXQ7dXRmLTg7e3JlZmVyZXJAaHR0cHM6Ly93d3cuYWxpeXVuZHJpdmUuY29tL30jIyN9&pic=aHR0cHM6Ly9hcGkuYWxpeXVuZHJpdmUuY29tL2Fkcml2ZS92My9maWxlL2xpc3Q_anNvbkJvZHk9eyJzaGFyZV9pZCI6IkVMOG9waDRIQXJYIiwiaW1hZ2VfdXJsX3Byb2Nlc3MiOiJpbWFnZS9yZXNpemUsd18xOTIwL2Zvcm1hdCxqcGVnIiwicGFyZW50X2ZpbGVfaWQiOiI2MjFkYmY0YWMwYjVhMjQzNjRiZTQ3YWZhMjg5ODczZTU1MGY1MWJmIiwibGltaXQiOjIwMCwib3JkZXJfYnkiOiJuYW1lIiwib3JkZXJfZGlyZWN0aW9uIjoiQVNDIiwidmlkZW9fdGh1bWJuYWlsX3Byb2Nlc3MiOiJ2aWRlby9zbmFwc2hvdCx0XzEwMDAsZl9qcGcsYXJfYXV0byx3XzMwMCIsImltYWdlX3RodW1ibmFpbF9wcm9jZXNzIjoiaW1hZ2UvcmVzaXplLHdfMTYwL2Zvcm1hdCxqcGVnIn07cG9zdDt1dGYtODt7eC1zaGFyZS10b2tlbkBleUpoYkdjaU9pSlNVekkxTmlJc0luUjVjQ0k2SWtwWFZDSjkuZXlKamRYTjBiMjFLYzI5dUlqb2llMXdpWkc5dFlXbHVYMmxrWENJNlhDSmlhakk1WENJc1hDSnphR0Z5WlY5cFpGd2lPbHdpUlV3NGIzQm9ORWhCY2xoY0lpeGNJbU55WldGMGIzSmNJanBjSWpnM056VTBOekJsTVRFNFpEUmpaR1U1TlRCa1pUUTNPVEZoT0dKak9UZG1YQ0lzWENKMWMyVnlYMmxrWENJNlhDSmhibTl1ZVcxdmRYTmNJbjBpTENKamRYTjBiMjFVZVhCbElqb2ljMmhoY21WZmJHbHVheUlzSW1WNGNDSTZNVFkwTmpjMk1qUTBOU3dpYVdGMElqb3hOalEyTnpVMU1UZzFmUS51RUJ1MjctUVdXMlV2bU9oTEszN3JWQVdkUTllNTljajlzVXdzNkx0RXphemk0QTMwVW56TFl0T0RBR19SM0YzbDc2eE9Pd0FuZTdnTXlwZFZzWjZhMWF0ZVJrdV95NXdHYTBybHRpWElWcWpzYUJfbVFTYWEweW9ZUFBIQ1BGVXNjMmJDNzZaNTVZdWw3cUpCTm51bEljbGg3b1B1NFRtbF96Um00QXZGZ3N9";
+        for (String p : url.substring(8).split("&")) {
+            params.put(p.split("=")[0], p.split("=")[1]);
+        }
+        spider.proxy(params);
+    }
+
+    @Test
+    public void proxy_maimg() {
+        Proxy spider = new Proxy();
+        Map<String, String> params = new HashMap<>();
+        String url = "proxy://do=legado&selector=JC5pdGVtc1sqXS50aHVtYm5haWwjIyguKj8pCi4qIyMkMTtnZXQ7dXRmLTg7e3JlZmVyZXJAaHR0cHM6Ly93d3cuYWxpeXVuZHJpdmUuY29tL30jIyN9&pic=aHR0cHM6Ly9hcGkuYWxpeXVuZHJpdmUuY29tL2Fkcml2ZS92My9maWxlL2xpc3Q_anNvbkJvZHk9eyJzaGFyZV9pZCI6IkVMOG9waDRIQXJYIiwiaW1hZ2VfdXJsX3Byb2Nlc3MiOiJpbWFnZS9yZXNpemUsd18xOTIwL2Zvcm1hdCxqcGVnIiwicGFyZW50X2ZpbGVfaWQiOiI2MjFkYmY0YWMwYjVhMjQzNjRiZTQ3YWZhMjg5ODczZTU1MGY1MWJmIiwibGltaXQiOjIwMCwib3JkZXJfYnkiOiJuYW1lIiwib3JkZXJfZGlyZWN0aW9uIjoiQVNDIiwidmlkZW9fdGh1bWJuYWlsX3Byb2Nlc3MiOiJ2aWRlby9zbmFwc2hvdCx0XzEwMDAsZl9qcGcsYXJfYXV0byx3XzMwMCIsImltYWdlX3RodW1ibmFpbF9wcm9jZXNzIjoiaW1hZ2UvcmVzaXplLHdfMTYwL2Zvcm1hdCxqcGVnIn07cG9zdDt1dGYtODt7eC1zaGFyZS10b2tlbkBleUpoYkdjaU9pSlNVekkxTmlJc0luUjVjQ0k2SWtwWFZDSjkuZXlKamRYTjBiMjFLYzI5dUlqb2llMXdpWkc5dFlXbHVYMmxrWENJNlhDSmlhakk1WENJc1hDSnphR0Z5WlY5cFpGd2lPbHdpUlV3NGIzQm9ORWhCY2xoY0lpeGNJbU55WldGMGIzSmNJanBjSWpnM056VTBOekJsTVRFNFpEUmpaR1U1TlRCa1pUUTNPVEZoT0dKak9UZG1YQ0lzWENKMWMyVnlYMmxrWENJNlhDSmhibTl1ZVcxdmRYTmNJbjBpTENKamRYTjBiMjFVZVhCbElqb2ljMmhoY21WZmJHbHVheUlzSW1WNGNDSTZNVFkwTmpjMU5UazFNQ3dpYVdGMElqb3hOalEyTnpRNE5qa3dmUS5OMEl0a0FVWjZiVUFaZlBOV3J6NGxLbjV5RkNYdTZINFVwWjZVYUU1dVBocDB5UW1mM1VkdGNxWWE5T3ZrVER2ZDdXZzlfR3k3eDdtMWNHaFNjZ2ppX0VSdkpDZ2hBX3huSmhNUGY4TUN0ZjRZZFFXSEloNXVjVTQ1Wl85b0N4aXlZZGl3cEJrc3J4ZWRBWWNhbFpETmFQNWhtWmZIY09iWWVwUTIwZlZ2c1F9";
+        for (String p : url.substring(8).split("&")) {
+            params.put(p.split("=")[0], p.split("=")[1]);
+        }
+        spider.proxy(params);
+    }
+
+    @Test
+    public void proxy_txt() {
+        Proxy spider = new Proxy();
+        Map<String, String> params = new HashMap<>();
+        String url = "proxy://do=legado&selector=eyQuZG93bmxvYWRfdXJsfTtnZXQ7dXRmLTg7e3JlZmVyZXJAaHR0cHM6Ly93d3cuYWxpeXVuZHJpdmUuY29tL30=&pic=aHR0cHM6Ly9hcGkuYWxpeXVuZHJpdmUuY29tL3YyL2ZpbGUvZ2V0X3NoYXJlX2xpbmtfZG93bmxvYWRfdXJsP2pzb25Cb2R5PXsic2hhcmVfaWQiOiJFTDhvcGg0SEFyWCIsImZpbGVfaWQiOiI2MjFkYmZhODYxOWRmNjhlYjI4NDRkNDJiMzhiYzg1ODBkMzQ2ODYxIn07cG9zdDt1dGYtODt7eC1zaGFyZS10b2tlbkBleUpoYkdjaU9pSlNVekkxTmlJc0luUjVjQ0k2SWtwWFZDSjkuZXlKamRYTjBiMjFLYzI5dUlqb2llMXdpWkc5dFlXbHVYMmxrWENJNlhDSmlhakk1WENJc1hDSnphR0Z5WlY5cFpGd2lPbHdpUlV3NGIzQm9ORWhCY2xoY0lpeGNJbU55WldGMGIzSmNJanBjSWpnM056VTBOekJsTVRFNFpEUmpaR1U1TlRCa1pUUTNPVEZoT0dKak9UZG1YQ0lzWENKMWMyVnlYMmxrWENJNlhDSmhibTl1ZVcxdmRYTmNJbjBpTENKamRYTjBiMjFVZVhCbElqb2ljMmhoY21WZmJHbHVheUlzSW1WNGNDSTZNVFkwTmpnMU9EVXdPQ3dpYVdGMElqb3hOalEyT0RVeE1qUTRmUS5IREdZclZsS2JYMF9SaTZIUnFDYWUyQW9tSWFENmtoWEZfUjZtM2VvQmhvbnc2ZWFKalR6Y1YxSzFtZDBkeGV0QjczMEF5UUdoY003RVdxTGRrdmlKZXhUOHFReENVWVhnSXo0bHZzTjMtSkFWRkZUUkpSb1h3d2IyX3dJc19jaGZnWEx1RmhuTk1YRXllWUdxZ2NDZ25wVERHeDNxNktmU2lyYmdrQlhXTVkmJmF1dGhvcml6YXRpb25AZXlKaGJHY2lPaUpTVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjFjMlZ5U1dRaU9pSTRNelExWldJNE9HWTBZVGswWVRneFlqa3dNRE5sTmpnMVpURmlaVFJsTlNJc0ltTjFjM1J2YlVwemIyNGlPaUo3WENKamJHbGxiblJKWkZ3aU9sd2lNalZrZWxnemRtSlpjV3QwVm5oNVdGd2lMRndpWkc5dFlXbHVTV1JjSWpwY0ltSnFNamxjSWl4Y0luTmpiM0JsWENJNlcxd2lSRkpKVmtVdVFVeE1YQ0lzWENKVFNFRlNSUzVCVEV4Y0lpeGNJa1pKVEVVdVFVeE1YQ0lzWENKVlUwVlNMa0ZNVEZ3aUxGd2lWa2xGVnk1QlRFeGNJaXhjSWxOVVQxSkJSMFV1UVV4TVhDSXNYQ0pUVkU5U1FVZEZSa2xNUlM1TVNWTlVYQ0lzWENKQ1FWUkRTRndpTEZ3aVQwRlZWRWd1UVV4TVhDSXNYQ0pKVFVGSFJTNUJURXhjSWl4Y0lrbE9Wa2xVUlM1QlRFeGNJaXhjSWtGRFEwOVZUbFF1UVV4TVhDSmRMRndpY205c1pWd2lPbHdpZFhObGNsd2lMRndpY21WbVhDSTZYQ0pvZEhSd2N6b3ZMM2QzZHk1aGJHbDVkVzVrY21sMlpTNWpiMjB2WENJc1hDSmtaWFpwWTJWZmFXUmNJanBjSWpGbU5XUmpabVZqT1dReU56Um1OelU0TmpWbVpUQTRaRGMyTmpkaVlUQTNYQ0o5SWl3aVpYaHdJam94TmpRMk9EVTROVEEzTENKcFlYUWlPakUyTkRZNE5URXlORGQ5LlZ6RnpyT3BJVk9Fb2h2eWktQkhOTDdrVTlGVFEzWm9lQjdYdld2am9YWFkyWEJNVUNyX3JhRmVRbmdYZFEzdWdXRnFPeFV3RFJteS1QOU04V2d6Q20wQkxpV29BZ1ZnX3pKbzRVMGJIeE9ORVFtN2JWTEZmbnVTdVpOODZyNndhdDhyMFpaMzduN0NKdW9TM01LeE9uRktfRnlseXR3WkNQQnY4dUJuSnFIRSYmVXNlci1BZ2VudEBQQ19VQX0=";
+        spider.proxy(StringUtil.getParameter(url, "proxy://"));
+    }
+
+    @Test
+    public void proxy_myaimg() {
+        Proxy spider = new Proxy();
+        Map<String, String> params = new HashMap<>();
+        String url = "proxy://do=legado&selector=JC5pdGVtc1sqXS50aHVtYm5haWwjIyguKj8pCi4qIyMkMTtnZXQ7dXRmLTg7e3JlZmVyZXJAaHR0cHM6Ly93d3cuYWxpeXVuZHJpdmUuY29tL30jIyN9&pic=aHR0cHM6Ly9hcGkuYWxpeXVuZHJpdmUuY29tL2Fkcml2ZS92My9maWxlL2xpc3Q_anNvbkJvZHk9eyJkcml2ZV9pZCI6IjIwNDg5MjAzMCIsImltYWdlX3VybF9wcm9jZXNzIjoiaW1hZ2UvcmVzaXplLHdfMTkyMC9mb3JtYXQsanBlZyIsInBhcmVudF9maWxlX2lkIjoiNjFkNTlmZTVhZDlhNjUzN2U1NmY0MjcwOGQ4ZTJjOTYyZDFhMGZmOCIsImxpbWl0IjoyMDAsIm9yZGVyX2J5IjoibmFtZSIsIm9yZGVyX2RpcmVjdGlvbiI6IkFTQyIsInZpZGVvX3RodW1ibmFpbF9wcm9jZXNzIjoidmlkZW8vc25hcHNob3QsdF8xMDAwLGZfanBnLGFyX2F1dG8sd18zMDAiLCJpbWFnZV90aHVtYm5haWxfcHJvY2VzcyI6ImltYWdlL3Jlc2l6ZSx3XzE2MC9mb3JtYXQsanBlZyJ9O3Bvc3Q7dXRmLTg7e2F1dGhvcml6YXRpb25AZXlKaGJHY2lPaUpTVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjFjMlZ5U1dRaU9pSTBNVGRpWXprNU5UbGxaRGswTjJNM1ltUXpORGd6TXpKbE9EZzNZbUkyTVNJc0ltTjFjM1J2YlVwemIyNGlPaUo3WENKamJHbGxiblJKWkZ3aU9sd2lNalZrZWxnemRtSlpjV3QwVm5oNVdGd2lMRndpWkc5dFlXbHVTV1JjSWpwY0ltSnFNamxjSWl4Y0luTmpiM0JsWENJNlcxd2lSRkpKVmtVdVFVeE1YQ0lzWENKVFNFRlNSUzVCVEV4Y0lpeGNJa1pKVEVVdVFVeE1YQ0lzWENKVlUwVlNMa0ZNVEZ3aUxGd2lWa2xGVnk1QlRFeGNJaXhjSWxOVVQxSkJSMFV1UVV4TVhDSXNYQ0pUVkU5U1FVZEZSa2xNUlM1TVNWTlVYQ0lzWENKQ1FWUkRTRndpTEZ3aVQwRlZWRWd1UVV4TVhDSXNYQ0pKVFVGSFJTNUJURXhjSWl4Y0lrbE9Wa2xVUlM1QlRFeGNJaXhjSWtGRFEwOVZUbFF1UVV4TVhDSmRMRndpY205c1pWd2lPbHdpZFhObGNsd2lMRndpY21WbVhDSTZYQ0pvZEhSd2N6b3ZMM2QzZHk1aGJHbDVkVzVrY21sMlpTNWpiMjB2WENJc1hDSmtaWFpwWTJWZmFXUmNJanBjSW1Zek1qVTNZamc0WldVeFpUUXlPVGRoTUdVME9Ea3lNamN4WVRVNE9UWmtYQ0o5SWl3aVpYaHdJam94TmpRMk56WXpNemMyTENKcFlYUWlPakUyTkRZM05UWXhNVFo5LlZ0SUhZLTlKdFpHaVVlTkVCcWNHQWF4WExLSVRBX2Z6VzBCVnpjRWpkcDk4NlNGTFhoR3V6ZmZoUlJsSnFDYkprYTdHbkk4bnJsNl9CeG92c3RjUl8zWTY1dDNZMi1Lal92TENfRFR0VTB0YzZOVzY5TDhlVFlsTElaUDRPMHE3UmE3VVh0TUx0NjRNQjhZZGhtdmFON19qVlVocjhkWlR0QkxILUdJa3pod30=";
+        for (String p : url.substring(8).split("&")) {
+            params.put(p.split("=")[0], p.split("=")[1]);
+        }
+        spider.proxy(params);
+    }
+
+    @Test
     public void date() {
         Calendar calendar = Calendar.getInstance();
         System.out.println(calendar.get(1));
-        System.out.println(calendar.get(2)+1);
+        System.out.println(calendar.get(2) + 1);
         System.out.println(calendar.get(Calendar.DATE));
+    }
+
+    @Test
+    public void jx() throws Exception {
+        String s = OkHttpUtil.string("https://yisiclub.cn/1725/.html", null);
+        AnalyzeRule analyzeRule = new AnalyzeRule();
+        analyzeRule.setContent(s);
+        List<Object> elements = analyzeRule.getElements(".u-text-format p:has(a)");
+        JSONArray jsonArray = new JSONArray();
+        for (Object element : elements) {
+            analyzeRule.setContent(element);
+            String title = analyzeRule.getString("tag.p@text##——.*");
+            System.out.println(title);
+            String url = analyzeRule.getString("tag.a@href");
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("url", url);
+            jsonObject.put("name", title);
+            jsonObject.put("type", 0);
+            jsonArray.put(jsonObject);
+//            String html = OkHttpUtil.string(url+"https://v.qq.com/x/cover/mzc00200oeu0yf4.html", null);
+//            System.out.println(url);
+//            System.out.println(html);
+//            System.out.println(element.toString());
+        }
+        System.out.println(jsonArray.toString(4));
+    }
+
+    @Test
+    public void spiderJX() throws Exception {
+        LinkedHashMap<String, HashMap<String, String>> jx = new LinkedHashMap<>();
+        HashMap<String, String> data = new HashMap<>();
+        data.put("data", "解析爬虫");
+        data.put("type", "4");
+        data.put("url", "spiderJX");
+        JSONObject jsonObject = new JSONObject();
+        JSONArray jsonArray = new JSONArray();
+        JSONObject jsonObject1 = new JSONObject();
+        jsonObject1.put("url", "https://yisiclub.cn/1725/.html");
+        jsonObject1.put("urlNode", ".u-text-format p:has(a)");
+        jsonObject1.put("urlName", "tag.p@text##——.*");
+        jsonObject1.put("urlId", "tag.a@href");
+        JSONArray flags = new JSONArray();
+        flags.put("qq");
+        jsonObject1.put("flag", flags);
+        jsonArray.put(jsonObject1);
+        jsonObject.put("jx", jsonArray);
+        data.put("ext", jsonObject.toString());
+        jx.put("spiderJx", data);
+        MixSpiderJX.parse(jx, "", "qq", "https://v.qq.com/x/cover/mzc00200oeu0yf4.html");
+    }
+
+    public String a(String str, String str2) {
+        try {
+            if (str2 == null) {
+                System.out.print("Key为空null");
+                return null;
+            } else if (str2.length() != 16) {
+                System.out.print("Key长度不是16位");
+                return null;
+            } else {
+                SecretKeySpec secretKeySpec = new SecretKeySpec(str2.getBytes("utf-8"), "AES");
+                Cipher instance = Cipher.getInstance("AES/ECB/PKCS5Padding");
+                instance.init(2, secretKeySpec);
+                try {
+                    return new String(instance.doFinal(Base64.decode(str, 0)), "utf-8");
+                } catch (Exception e) {
+                    System.out.println(e.toString());
+                    return null;
+                }
+            }
+        } catch (Exception e2) {
+            System.out.println(e2.toString());
+            return null;
+        }
+    }
+
+    public static String a(String str) {
+        if (StringUtils.isEmpty(str)) {
+            return "";
+        }
+        try {
+            byte[] digest = MessageDigest.getInstance("MD5").digest(str.getBytes());
+            String str2 = "";
+            for (byte b2 : digest) {
+                String hexString = Integer.toHexString(b2 & 255);
+                if (hexString.length() == 1) {
+                    hexString = "0" + hexString;
+                }
+                str2 = str2 + hexString;
+            }
+            return str2;
+        } catch (NoSuchAlgorithmException e) {
+
+        }
+        return "";
+    }
+
+    @Test
+    public void escape() {
+        String json = a("YE1WsGtz7/W3K4SYBJH9AbP4g0rlxg+JfKJAvGRnLCa4yyrZCV0BEezcRKWKMa0eTIYHEbycTmOBGNaXaMiRFyTVP+9rfHAh4FZ7niPtfCcKHbX6ykXCEv/eg2sF2FBZqiWZVma0HSgOzgdSJRed00L3V/ispTDMMi4/YB3v1SlDFOhlCRP6PmFQJBcWl39DYFFtG5pXlQYerz/5bwhQEcCUpZo//ZiyGGNMqfFFzfbM/AtUl21IVYoJdtCgo4h+9568JHYE5ZdZD38VVlBaMrkq+PfNOAaUX0Fhd3Lku5XbsoW2mRKLJqZSQZZ7jbl6lkpis14twDVzdHjy33JFDCoA1JGBLQM/mNSjT8vOAQCSLwxEtNtE+vVu62c9Ps9qU9Wtqf8wABZpqMr4mHGGGGflO1GwVS4B5Uzjg4+SiHAAOcGwgjMM/grdTDz0SgfuripOhQg8UsKdAqjD4+yAc/HGPdxyFq+il4c+lzIS2DBWEHZGwaFkL0HdPhzcrbL6VF1cTwG2t0NXnSMVOLZCQX3CyUDLaIBRFLrYj8++xreec+3vjhdCeGG+wgaB+87vx9waFobm02+W8HkPJIQmGvxwXpGzw4kd9aGVpDulZpM80r3tmc4T/7rjoXSGe753tRCTTutkmHF5e3YVXbCq4AoBavBEvcytSI0V9DW6vcAyS55KP8Wmia9yXjASKZMxZG7JkM/yPhAHsj59IoParqVgSN+S3Aj4oCEQn/QE6zx4f0kExoHT3fOujP2ESHdZ6VJ0EmwEM8LUc3/ppQrLubqYUNATVi5ndmQ6qLdWsdXxnMJ7fD7bf6usQ8EZPXVuM3VeEzSJnikyS7sKtKv4a39ZYrb+VLAUrITgKnXefycjNVvDvmtT/lDkzzajZOE1npsii9WIQFeF+JQZTMzohrkqdYsqE2elXAwRE5KKxlOmme0ppu0rQXpT3awnBXkRRgU+a3bL0d0Ix0jrR3bWI/3ZVDXwOPF37Bf+/0sKPV40ipJ396yl9Ncl5WTV67DbTbBL/972SvAmhV5xJBzO78IJX0dwo03rAXUYDXZ/DIuVZfnUMxQnbqUHLtlDvOydUsH4arbiMlnCHBMhdtz5FB/4nsgPYl/jErIUpzUv7ruIojfbJhslxy2bvGBPwziLmZfWbDUfsEgaLwLqCWO9k7A2Zl/YL3nmmuODYjaK13csxDwQBRFOWSv7HRNQsRGPV3ILHJH9b1aJpphqcrix0ZcASGp3gMloHaENEQCU+TxCOGQQTYk1FtQmkDnjyx/ZRP1L8uQuCti3S/Yad64f5m/FbHZKGqqEJavfzqvB0V2qIkPRT7Tw2EYihIkTGQ3+yV8rKCT3WNlcUroAChr+xEYUpsH5EaoVhHMUUS/coAF/xs2IemB5trkjOzm5mRZpAUshPcnZMbA1+oJqaDazlE6sRj4TkJrn8bdXcz2KOdtf1rMFOWfqsHHZIn1gR/tc3i7yAv5BM2j25oEgc9Bn2JnfpAq415v7m8BY4ZhEHJegB/hPUYbHeAOGgwL56EjbGdNlfbb44G/WnwNhacx8esak+2We7tkpfVIaM8h1Va6UnlER1rC/+Lzlt3/LlrDiRdQfNFCEqKwO0OtEr0IygDg16oD2l87cLUEkPxZ1dX4MYTMxKRXV7Txu2GQ5jElsisLyW4e3cOjbWNus6QrrFoHipqC90K03nqe+fxKZ23VWBKz7EJwxwRV92lG5pSWLOJl4rfZ6+Uk519B/bEYTZ7R5SUN+TB0gadMQ1f+bP3QFjiELIC4Z6C3hi6tbD0awlXT2Vnpc7iRRtviTU3D7tVeyNUhmGXxPtZ3vRmr4xRUdACeDkUs6cREDRT8dGRsqXE8kKux4Me/AuiPGwfHSKc9AV2lQS/zs0nv51qIqZop+CkFMOZ+WcXyh6LuI5uB7", "8b4ea708438bc0442d76281c86a3a71f".substring(5, 21));
+        System.out.println(json);
+    }
+
+    @Test
+    public void datescape() {
+        String json = a("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".replace("A9SZzkKb5bJKldYrCBa3", ""), "8b4ea708438bc0442d76281c86a3a71f".substring(5, 21));
+        System.out.println(json);
+    }
+
+    @Test
+    public void bmd5() {
+        String md5 = a("8b4ea708438bc0442d76281c86a3a71f" + "6d7caa26b6de5941e3b24fd7c573d0bb");
+        System.out.println(md5);
+    }
+
+    @Test
+    public void test3() throws Exception {
+        JSONArray jsonArray = new JSONArray();
+        System.out.println(jsonArray);
+    }
+
+    @Test
+    public void test_img() {
+        OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml("https://bj29.cn-beijing.data.alicloudccp.com/5fe9b26213ecc67347f04acc9e1966ab5cfcefe5%2F5fe9b2623ca64d4b919a4589bedac0437f484770?x-oss-access-key-id=LTAIsE5mAn2F493Q&x-oss-additional-headers=referer&x-oss-expires=1646745292&x-oss-process=video%2Fsnapshot%2Ct_120000%2Cf_jpg%2Cw_480%2Car_auto%2Cm_fast&x-oss-signature=FCOjYQ29HM6vfUfcZydSyJPV%2Bpa0w6p11va13yieQjQ%3D&x-oss-signature-version=OSS2;get;utf-8;{referer@https://www.aliyundrive.com/&&User-Agent@PC_UA}");
+        System.out.println(callBack.getResult().code());
     }
 }
 

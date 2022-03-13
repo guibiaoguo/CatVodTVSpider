@@ -11,6 +11,7 @@ import org.jsoup.nodes.Entities;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -494,7 +495,10 @@ public class AnalyzeRule {
     }
 
     private List<SourceRule> splitSourceRule(String rule, boolean allInOne) {
-        if (StringUtils.isEmpty(rule)) return new ArrayList<>();
+        if (StringUtil.isBase64(rule))
+            rule = new String(Base64.decode(rule, Base64.DEFAULT | Base64.URL_SAFE | Base64.NO_WRAP));
+        if (StringUtils.isEmpty(rule))
+            return new ArrayList<>();
         List<SourceRule> ruleList = new ArrayList<>();
         Mode mMode = Mode.Default;
         int start = 0;

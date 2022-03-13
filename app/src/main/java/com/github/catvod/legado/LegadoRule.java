@@ -34,7 +34,7 @@ public class LegadoRule {
     /**
      * 手动指定 分类 如果有则不从homeUrl中获取分类
      */
-    private LinkedHashMap<String, String> cateManual = new LinkedHashMap<>();
+    private final LinkedHashMap<String, String> cateManual = new LinkedHashMap<>();
 
     /**
      * 筛选
@@ -96,10 +96,6 @@ public class LegadoRule {
      * 详情页面
      */
     private String dtUrl;
-    /**
-     * 详情节点 xpath
-     */
-    private String dtNode;
     /**
      * 详情 视频名 xpath
      */
@@ -346,8 +342,6 @@ public class LegadoRule {
 
     private Boolean decodeVipFlag;
 
-    private Boolean decodeSCFlag;
-
     private String decodeValue;
 
     private String actorNfo;
@@ -362,6 +356,12 @@ public class LegadoRule {
     private String urlNfo;
     private Boolean nfoFlag;
     private String nextPage;
+
+    private String pageCount;
+
+    public String getPageCount() {
+        return pageCount;
+    }
 
     public String getNextPage() {
         return nextPage;
@@ -411,15 +411,11 @@ public class LegadoRule {
         return plotNfo;
     }
 
-    public Boolean getDecodeSCFlag() {
-        return decodeSCFlag;
-    }
-
     public String getDecodeValue() {
         return decodeValue;
     }
 
-    private LinkedHashMap<String, String> infoMap = new LinkedHashMap<>();
+    private final LinkedHashMap<String, String> infoMap = new LinkedHashMap<>();
 
     private JSONArray preParamMaps;
 
@@ -468,10 +464,6 @@ public class LegadoRule {
         return decodeVipFlag;
     }
 
-    public void setDecodeVipFlag(Boolean decodeVipFlag) {
-        this.decodeVipFlag = decodeVipFlag;
-    }
-
     public Integer getParse() {
         return parse;
     }
@@ -484,64 +476,28 @@ public class LegadoRule {
         return scPage;
     }
 
-    public void setScPage(String scPage) {
-        this.scPage = scPage;
-    }
-
-    public boolean isDecodeFlag() {
-        return decodeFlag;
-    }
-
-    public void setDecodeFlag(boolean decodeFlag) {
-        this.decodeFlag = decodeFlag;
-    }
-
     public String getDecodePlay() {
         return decodePlay;
-    }
-
-    public void setDecodePlay(String decodePlay) {
-        this.decodePlay = decodePlay;
     }
 
     public String getNodeUrl() {
         return nodeUrl;
     }
 
-    public void setNodeUrl(String nodeUrl) {
-        this.nodeUrl = nodeUrl;
-    }
-
     public String getDefaultFrom() {
         return defaultFrom;
-    }
-
-    public void setDefaultFrom(String defaultFrom) {
-        this.defaultFrom = defaultFrom;
     }
 
     public String getNodeValue() {
         return nodeValue;
     }
 
-    public void setNodeValue(String nodeValue) {
-        this.nodeValue = nodeValue;
-    }
-
     public String getLeaf() {
         return leaf;
     }
 
-    public void setLeaf(String leaf) {
-        this.leaf = leaf;
-    }
-
     public String getLeafValue() {
         return leafValue;
-    }
-
-    public void setLeafValue(String leafValue) {
-        this.leafValue = leafValue;
     }
 
     public String getItemUrlNode() {
@@ -626,7 +582,6 @@ public class LegadoRule {
                 rule.cateVodMark += "##"+rule.cateVodMarkR+"##$1";
             }
             rule.dtUrl = jsonObj.optString("dtUrl");
-            rule.dtNode = jsonObj.optString("dtNode");
             rule.dtName = jsonObj.optString("dtName");
             rule.dtNameR = jsonObj.optString("dtNameR").trim();
             if(StringUtils.isNotEmpty(rule.dtNameR)) {
@@ -741,7 +696,6 @@ public class LegadoRule {
             rule.parse = jsonObj.optInt("parse");
             rule.jx = jsonObj.optInt("jx");
             rule.decodeVipFlag = jsonObj.optBoolean("decodeVipFlag");
-            rule.decodeSCFlag = jsonObj.optBoolean("decodeSCFlag");
             rule.decodeValue = jsonObj.optString("decodeValue");
             navs = jsonObj.optJSONObject("info");
             if (navs != null) {
@@ -799,6 +753,7 @@ public class LegadoRule {
                 rule.urlNfo = rule.getDetailUrlId();
             }
             rule.nextPage = jsonObj.optString("nextPage");
+            rule.pageCount = jsonObj.optString("pageCount");
             return rule;
         } catch (Exception e) {
             SpiderDebug.log(e);
@@ -880,10 +835,6 @@ public class LegadoRule {
 
     public String getDetailUrl() {
         return dtUrl;
-    }
-
-    public String getDetailNode() {
-        return dtNode;
     }
 
     public String getDetailName() {

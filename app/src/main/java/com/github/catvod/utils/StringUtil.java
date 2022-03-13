@@ -8,8 +8,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -500,7 +502,7 @@ public class StringUtil {
             return false;
         }
         String url = str.toLowerCase();
-        return url.startsWith("http") || url.startsWith("file://") || url.startsWith("ftp");
+        return url.startsWith("http") || url.startsWith("file://") || url.startsWith("ftp") || url.startsWith("proxy://");
     }
 
 
@@ -562,13 +564,13 @@ public class StringUtil {
     }
 
     public static Boolean isJson(String content) {
-        if(content == null) {
+        if (content == null) {
             return false;
         }
         content = content.trim();
-        if(content.startsWith("{") && content.endsWith("}"))
+        if (content.startsWith("{") && content.endsWith("}"))
             return true;
-        if(content.startsWith("[") && content.endsWith("]"))
+        if (content.startsWith("[") && content.endsWith("]"))
             return true;
         return false;
     }
@@ -586,6 +588,7 @@ public class StringUtil {
     public static String join(CharSequence delimiter, String[] tokens) {
         return join(delimiter, Arrays.asList(tokens));
     }
+
     public static String join(CharSequence delimiter, Iterable tokens) {
         final Iterator<?> it = tokens.iterator();
         if (!it.hasNext()) {
@@ -599,36 +602,63 @@ public class StringUtil {
         }
         return sb.toString();
     }
+
     public static String encode(String name) {
-        return encode(name,"utf-8");
+        return encode(name, "utf-8");
     }
 
     public static String decode(String name) {
-        return decode(name,"utf-8");
+        return decode(name, "utf-8");
     }
 
-    public static String decode(String str,String charset) {
+    public static String decode(String str, String charset) {
         try {
-            str = URLDecoder.decode(str,charset);
-        }catch (Exception e) {
+            str = URLDecoder.decode(str, charset);
+        } catch (Exception e) {
 
         }
         return str;
     }
 
-    public static String encode(String name,String charset) {
+    public static String encode(String name, String charset) {
         try {
-            name = URLEncoder.encode(name,charset)
-                    .replaceAll("%2F","/")
-                    .replaceAll("%3F","?")
-                    .replaceAll("%3D","=")
-                    .replaceAll("%3B",";")
-                    .replaceAll("%3A",":")
-                    .replaceAll("%2C",",")
-                    .replaceAll("\\+","%20");
+            name = URLEncoder.encode(name, charset)
+                    .replaceAll("%2F", "/")
+                    .replaceAll("%3F", "?")
+                    .replaceAll("%3D", "=")
+                    .replaceAll("%3B", ";")
+                    .replaceAll("%3A", ":")
+                    .replaceAll("%2C", ",")
+                    .replaceAll("\\+", "%20");
         } catch (Exception e) {
 
         }
         return name;
+    }
+
+
+    public static boolean isBase64(String str) {
+        String base64Pattern = "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$";
+        return Pattern.matches(base64Pattern, str);
+    }
+
+    public static Map<String, String> getParameter(String url, String prefix) {
+        Map<String, String> map = new HashMap<String, String>();
+        try {
+            final String charset = "utf-8";
+            url = URLDecoder.decode(url, charset);
+            if (url.indexOf(prefix) != -1) {
+                final String contents = url.substring(url.indexOf(prefix) + prefix.length());
+                String[] keyValues = contents.split("&");
+                for (int i = 0; i < keyValues.length; i++) {
+                    String key = keyValues[i].substring(0, keyValues[i].indexOf("="));
+                    String value = keyValues[i].substring(keyValues[i].indexOf("=") + 1);
+                    map.put(key, value);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return map;
     }
 }

@@ -56,9 +56,9 @@ public class AnalyzeByFunction {
     public String base64Encode(String content,String rule) throws Exception {
         String[] rules = rule.split("#");
         if(rules.length == 1) {
-            return Base64.encodeToString(content.getBytes("utf-8"),Base64.NO_WRAP);
+            return new String(Base64.encode(content.getBytes(), Base64.DEFAULT | Base64.URL_SAFE | Base64.NO_WRAP), "UTF-8");
         } else if(rules.length == 2) {
-            return Base64.encodeToString(content.getBytes(rules[1]),Base64.NO_WRAP);
+            return new String(Base64.encode(content.getBytes(), Base64.DEFAULT | Base64.URL_SAFE | Base64.NO_WRAP), rules[1]);
         }
         return "";
     }
@@ -66,9 +66,9 @@ public class AnalyzeByFunction {
     public String base64Decode(String content,String rule) throws Exception {
         String[] rules = rule.split("#");
         if(rules.length == 1) {
-            return new String(Base64.decode(content,Base64.NO_WRAP));
+            return new String(Base64.decode(content, Base64.DEFAULT | Base64.URL_SAFE | Base64.NO_WRAP), "UTF-8");
         } else if(rules.length == 2) {
-            return new String(Base64.decode(content,Base64.NO_WRAP),rules[1]);
+            return new String(Base64.decode(content, Base64.DEFAULT | Base64.URL_SAFE | Base64.NO_WRAP), rules[1]);
         }
         return "";
     }

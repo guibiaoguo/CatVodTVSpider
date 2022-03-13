@@ -14,6 +14,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +25,8 @@ import java.util.Map;
 import java.util.Set;
 
 import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
 import rxhttp.wrapper.annotations.NonNull;
 
 public class GoIndex extends Spider {
@@ -75,67 +78,61 @@ public class GoIndex extends Spider {
                 }
             }
             String webUrl = rule.getHomeUrl();
-            HttpParser.parseSearchUrlForHtml(webUrl, new OKCallBack.OKCallBackString() {
-                @Override
-                protected void onFailure(Call call, Exception e) {
-
-                }
-
-                @Override
-                protected void onResponse(String s) {
-                    try {
-                        if (rule.getCateManual().size() == 0) {
-                            JSONArray navNodes = getVods(s, rule.getCateNode());
-                            for (int i = 0; i < navNodes.length(); i++) {
-                                JSONObject navNode = navNodes.optJSONObject(i);
-                                String name = getValue(navNode, rule.getCateName());
-                                name = rule.getCateNameR(name);
-                                String id = getValue(navNode, rule.getCateId());
-                                id = URLEncoder.encode(rule.getCateIdR(id),"utf-8");
-                                JSONObject jsonObject = new JSONObject();
-                                jsonObject.put("type_id", id);
-                                jsonObject.put("type_name", name);
-                                classes.put(jsonObject);
-                            }
+            OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(webUrl);
+            if (callBack.getResult().code() == 200) {
+                try {
+                    String s = callBack.getResult().body().string();
+                    if (rule.getCateManual().size() == 0) {
+                        JSONArray navNodes = getVods(s, rule.getCateNode());
+                        for (int i = 0; i < navNodes.length(); i++) {
+                            JSONObject navNode = navNodes.optJSONObject(i);
+                            String name = getValue(navNode, rule.getCateName());
+                            name = rule.getCateNameR(name);
+                            String id = getValue(navNode, rule.getCateId());
+                            id = URLEncoder.encode(rule.getCateIdR(id), "utf-8");
+                            JSONObject jsonObject = new JSONObject();
+                            jsonObject.put("type_id", id);
+                            jsonObject.put("type_name", name);
+                            classes.put(jsonObject);
                         }
-                        if (!rule.getHomeVodNode().isEmpty()) {
-                            try {
-                                JSONArray videos = new JSONArray();
-                                JSONArray vodNodes = getVods(s, rule.getHomeVodNode());
-                                for (int i = 0; i < vodNodes.length(); i++) {
-                                    JSONObject vodNode = vodNodes.optJSONObject(i);
-                                    String name = getValue(vodNode, rule.getHomeVodName());
-                                    name = rule.getHomeVodNameR(name);
-                                    String id = getValue(vodNode, rule.getHomeVodId());
-                                    id = URLEncoder.encode(rule.getHomeVodIdR(id),"utf-8");
-                                    String pic = getValue(vodNode, rule.getHomeVodImg());
-                                    pic = rule.getHomeVodImgR(pic);
-                                    String mark = "";
-                                    if (!rule.getHomeVodMark().isEmpty()) {
-                                        try {
-                                            mark = getValue(vodNode, rule.getHomeVodMark());
-                                            mark = rule.getHomeVodMarkR(mark);
-                                        } catch (Exception e) {
-                                            SpiderDebug.log(e);
-                                        }
-                                    }
-                                    JSONObject v = new JSONObject();
-                                    v.put("vod_id", webUrl + id);
-                                    v.put("vod_name", name);
-                                    v.put("vod_pic", pic);
-                                    v.put("vod_remarks", mark);
-                                    videos.put(v);
-                                }
-                                result.put("list", videos);
-                            } catch (Exception e) {
-                                SpiderDebug.log(e);
-                            }
-                        }
-                    } catch (Exception e) {
-                        SpiderDebug.log(e);
                     }
+                    if (!rule.getHomeVodNode().isEmpty()) {
+                        try {
+                            JSONArray videos = new JSONArray();
+                            JSONArray vodNodes = getVods(s, rule.getHomeVodNode());
+                            for (int i = 0; i < vodNodes.length(); i++) {
+                                JSONObject vodNode = vodNodes.optJSONObject(i);
+                                String name = getValue(vodNode, rule.getHomeVodName());
+                                name = rule.getHomeVodNameR(name);
+                                String id = getValue(vodNode, rule.getHomeVodId());
+                                id = URLEncoder.encode(rule.getHomeVodIdR(id), "utf-8");
+                                String pic = getValue(vodNode, rule.getHomeVodImg());
+                                pic = rule.getHomeVodImgR(pic);
+                                String mark = "";
+                                if (!rule.getHomeVodMark().isEmpty()) {
+                                    try {
+                                        mark = getValue(vodNode, rule.getHomeVodMark());
+                                        mark = rule.getHomeVodMarkR(mark);
+                                    } catch (Exception e) {
+                                        SpiderDebug.log(e);
+                                    }
+                                }
+                                JSONObject v = new JSONObject();
+                                v.put("vod_id", webUrl + id);
+                                v.put("vod_name", name);
+                                v.put("vod_pic", pic);
+                                v.put("vod_remarks", mark);
+                                videos.put(v);
+                            }
+                            result.put("list", videos);
+                        } catch (Exception e) {
+                            SpiderDebug.log(e);
+                        }
+                    }
+                } catch (Exception e) {
+                    SpiderDebug.log(e);
                 }
-            });
+            }
             result.put("class", classes);
             if (filter && rule.getFilter() != null) {
                 result.put("filters", rule.getFilter());
@@ -157,53 +154,47 @@ public class GoIndex extends Spider {
             fetchRule();
             JSONObject result = new JSONObject();
             String webUrl = categoryUrl(tid, pg, filter, extend);
-            HttpParser.parseSearchUrlForHtml(webUrl, new OKCallBack.OKCallBackString() {
-                @Override
-                protected void onFailure(Call call, Exception e) {
-
-                }
-
-                @Override
-                protected void onResponse(String s) {
-                    try {
-                        if (!rule.getCateVodNode().isEmpty()) {
-                            try {
-                                JSONArray videos = new JSONArray();
-                                JSONArray vodNodes = getVods(s, rule.getCateVodNode());
-                                for (int i = 0; i < vodNodes.length(); i++) {
-                                    JSONObject vodNode = vodNodes.optJSONObject(i);
-                                    String name = getValue(vodNode, rule.getCateVodName());
-                                    name = rule.getCateVodNameR(name);
-                                    String id = getValue(vodNode, rule.getCateVodId());
-                                    id = URLEncoder.encode(rule.getCateVodIdR(id),"utf-8");
-                                    String pic = getValue(vodNode, rule.getCateVodImg());
-                                    pic = rule.getCateVodImgR(pic);
-                                    String mark = "";
-                                    if (!rule.getCateVodMark().isEmpty()) {
-                                        try {
-                                            mark = getValue(vodNode, rule.getCateVodMark());
-                                            mark = rule.getCateVodMarkR(mark);
-                                        } catch (Exception e) {
-                                            SpiderDebug.log(e);
-                                        }
+            OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(webUrl);
+            if (callBack.getResult().code() == 200) {
+                try {
+                    String s = callBack.getResult().body().string();
+                    if (!rule.getCateVodNode().isEmpty()) {
+                        try {
+                            JSONArray videos = new JSONArray();
+                            JSONArray vodNodes = getVods(s, rule.getCateVodNode());
+                            for (int i = 0; i < vodNodes.length(); i++) {
+                                JSONObject vodNode = vodNodes.optJSONObject(i);
+                                String name = getValue(vodNode, rule.getCateVodName());
+                                name = rule.getCateVodNameR(name);
+                                String id = getValue(vodNode, rule.getCateVodId());
+                                id = URLEncoder.encode(rule.getCateVodIdR(id), "utf-8");
+                                String pic = getValue(vodNode, rule.getCateVodImg());
+                                pic = rule.getCateVodImgR(pic);
+                                String mark = "";
+                                if (!rule.getCateVodMark().isEmpty()) {
+                                    try {
+                                        mark = getValue(vodNode, rule.getCateVodMark());
+                                        mark = rule.getCateVodMarkR(mark);
+                                    } catch (Exception e) {
+                                        SpiderDebug.log(e);
                                     }
-                                    JSONObject v = new JSONObject();
-                                    v.put("vod_id", webUrl + id);
-                                    v.put("vod_name", name);
-                                    v.put("vod_pic", pic);
-                                    v.put("vod_remarks", mark);
-                                    videos.put(v);
                                 }
-                                result.put("list", videos);
-                            } catch (Exception e) {
-                                SpiderDebug.log(e);
+                                JSONObject v = new JSONObject();
+                                v.put("vod_id", webUrl + id);
+                                v.put("vod_name", name);
+                                v.put("vod_pic", pic);
+                                v.put("vod_remarks", mark);
+                                videos.put(v);
                             }
+                            result.put("list", videos);
+                        } catch (Exception e) {
+                            SpiderDebug.log(e);
                         }
-                    } catch (Exception e) {
-                        SpiderDebug.log(e);
                     }
+                } catch (Exception e) {
+                    SpiderDebug.log(e);
                 }
-            });
+            }
             result.put("page", pg);
             result.put("pagecount", Integer.MAX_VALUE);
             result.put("limit", 90);
@@ -235,31 +226,25 @@ public class GoIndex extends Spider {
     }
 
     public void getNfo(JSONObject vod, String weburl) {
-        HttpParser.parseSearchUrlForHtml(weburl, new OKCallBack.OKCallBackString() {
-            @Override
-            protected void onFailure(Call call, Exception e) {
-
+        OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(weburl);
+        if (callBack.getResult().code() == 200) {
+            try {
+                String s = callBack.getResult().body().string();
+                Document document = Jsoup.parse(s);
+                System.out.println(s);
+                vod.put("vod_name", document.select("title").text());
+                vod.put("vod_pic", document.select("[aspect=\"poster\"]").text());
+                vod.put("type_name", document.select("genre").text());
+                vod.put("vod_year", document.select("year").text());
+                vod.put("vod_area", document.select("country").text());
+                vod.put("vod_remarks", document.select("title").text());
+                vod.put("vod_actor", document.select("actor>name").text());
+                vod.put("vod_director", document.select("director").text());
+                vod.put("vod_content", document.select("plot").text());
+            } catch (Exception e) {
+                SpiderDebug.log(e);
             }
-
-            @Override
-            protected void onResponse(String s) {
-                try {
-                    Document document = Jsoup.parse(s);
-                    System.out.println(s);
-                    vod.put("vod_name", document.select("title").text());
-                    vod.put("vod_pic", document.select("[aspect=\"poster\"]").text());
-                    vod.put("type_name", document.select("genre").text());
-                    vod.put("vod_year", document.select("year").text());
-                    vod.put("vod_area", document.select("country").text());
-                    vod.put("vod_remarks", document.select("title").text());
-                    vod.put("vod_actor", document.select("actor>name").text());
-                    vod.put("vod_director", document.select("director").text());
-                    vod.put("vod_content", document.select("plot").text());
-                } catch (Exception e) {
-                    SpiderDebug.log(e);
-                }
-            }
-        });
+        }
     }
 
 
@@ -269,133 +254,127 @@ public class GoIndex extends Spider {
             fetchRule();
             String webUrl = rule.getDetailUrl().replace("{vid}", ids.get(0));
             JSONObject result = new JSONObject();
-            HttpParser.parseSearchUrlForHtml(webUrl, new OKCallBack.OKCallBackString() {
-                @Override
-                protected void onFailure(Call call, Exception e) {
+            OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(webUrl);
+            if (callBack.getResult().code() == 200) {
+                try {
+                    String s = callBack.getResult().body().string();
+                    JSONObject doc = new JSONObject(s);
 
-                }
+                    String cover, title, desc = "", category = "", area = "", year = "", remark = "", director = "", actor = "";
 
-                @Override
-                protected void onResponse(String s) {
-                    try {
-                        JSONObject doc = new JSONObject(s);
+                    title = getValue(doc, rule.getDetailName());
+                    title = rule.getDetailNameR(title);
 
-                        String cover, title, desc = "", category = "", area = "", year = "", remark = "", director = "", actor = "";
+                    cover = getValue(doc, rule.getDetailImg());
+                    cover = rule.getDetailImgR(cover);
 
-                        title = getValue(doc, rule.getDetailName());
-                        title = rule.getDetailNameR(title);
-
-                        cover = getValue(doc, rule.getDetailImg());
-                        cover = rule.getDetailImgR(cover);
-
-                        if (!rule.getDetailCate().isEmpty()) {
-                            try {
-                                category = getValue(doc, rule.getDetailCate());
-                                category = rule.getDetailCateR(category);
-                            } catch (Exception e) {
-                                SpiderDebug.log(e);
-                            }
+                    if (!rule.getDetailCate().isEmpty()) {
+                        try {
+                            category = getValue(doc, rule.getDetailCate());
+                            category = rule.getDetailCateR(category);
+                        } catch (Exception e) {
+                            SpiderDebug.log(e);
                         }
-                        if (!rule.getDetailYear().isEmpty()) {
-                            try {
-                                year = getValue(doc, rule.getDetailYear());
-                                year = rule.getDetailYearR(year);
-                            } catch (Exception e) {
-                                SpiderDebug.log(e);
-                            }
-                        }
-                        if (!rule.getDetailArea().isEmpty()) {
-                            try {
-                                area = getValue(doc, rule.getDetailArea());
-                                area = rule.getDetailAreaR(area);
-                            } catch (Exception e) {
-                                SpiderDebug.log(e);
-                            }
-                        }
-                        if (!rule.getDetailMark().isEmpty()) {
-                            try {
-                                remark = getValue(doc, rule.getDetailMark());
-                                remark = rule.getDetailMarkR(remark);
-                            } catch (Exception e) {
-                                SpiderDebug.log(e);
-                            }
-                        }
-                        if (!rule.getDetailActor().isEmpty()) {
-                            try {
-                                actor = getValue(doc, rule.getDetailActor());
-                                actor = rule.getDetailActorR(actor);
-                            } catch (Exception e) {
-                                SpiderDebug.log(e);
-                            }
-                        }
-                        if (!rule.getDetailDirector().isEmpty()) {
-                            try {
-                                director = getValue(doc, rule.getDetailDirector());
-                                director = rule.getDetailDirectorR(director);
-                            } catch (Exception e) {
-                                SpiderDebug.log(e);
-                            }
-                        }
-                        if (!rule.getDetailDesc().isEmpty()) {
-                            try {
-                                desc = getValue(doc, rule.getDetailDesc());
-                                desc = rule.getDetailDescR(desc);
-                            } catch (Exception e) {
-                                SpiderDebug.log(e);
-                            }
-                        }
-
-                        JSONObject vod = new JSONObject();
-                        vod.put("vod_id", ids.get(0));
-                        vod.put("vod_name", title);
-                        vod.put("vod_pic", cover);
-                        vod.put("type_name", category);
-                        vod.put("vod_year", year);
-                        vod.put("vod_area", area);
-                        vod.put("vod_remarks", remark);
-                        vod.put("vod_actor", actor);
-                        vod.put("vod_director", director);
-                        vod.put("vod_content", desc);
-
-                        JSONArray urlListNodes = getVods(s, rule.getDetailUrlNode());
-                        Map<String, List<String>> vod_play = new HashMap<>();
-                        vod_play.put("workerdev", new ArrayList<>());
-                        for (int i = 0; i < urlListNodes.length(); i++) {
-                            JSONObject urlNode = urlListNodes.optJSONObject(i);
-                            String name = getValue(urlNode, rule.getDetailUrlName());
-                            name = rule.getDetailUrlNameR(name);
-                            String id = getValue(urlNode, rule.getDetailUrlId());
-                            id = URLEncoder.encode(rule.getDetailUrlIdR(id),"utf-8");
-                            if (urlNode.optString("mimeType").equals("application/vnd.google-apps.folder"))
-                                getFileList(id + "/?page_index={catePg};post", vod_play);
-                            else if (urlNode.optString("mimeType").equals("video/x-matroska")) {
-                                vod_play.get("workerdev").add(name + "$" + webUrl + id);
-                            } else if (urlNode.optString("mimeType").equals("text/xml") && StringUtils.contains(name, ".nfo")) {
-                                getNfo(vod, webUrl + id);
-                            }
-                        }
-                        if (vod_play.size() > 0) {
-                            List vod_from = new ArrayList();
-                            List vod_plays = new ArrayList();
-                            for (Map.Entry<String, List<String>> entry : vod_play.entrySet()) {
-                                vod_from.add(entry.getKey());
-                                vod_plays.add(join("#", entry.getValue()));
-                            }
-                            String vod_play_from = join("$$$", vod_from);
-                            String vod_play_url = join("$$$", vod_plays);
-                            vod.put("vod_play_from", vod_play_from);
-                            vod.put("vod_play_url", vod_play_url);
-                        }
-
-                        detailContentExt(s, vod);
-                        JSONArray list = new JSONArray();
-                        list.put(vod);
-                        result.put("list", list);
-                    } catch (Exception e) {
-                        SpiderDebug.log(e);
                     }
+                    if (!rule.getDetailYear().isEmpty()) {
+                        try {
+                            year = getValue(doc, rule.getDetailYear());
+                            year = rule.getDetailYearR(year);
+                        } catch (Exception e) {
+                            SpiderDebug.log(e);
+                        }
+                    }
+                    if (!rule.getDetailArea().isEmpty()) {
+                        try {
+                            area = getValue(doc, rule.getDetailArea());
+                            area = rule.getDetailAreaR(area);
+                        } catch (Exception e) {
+                            SpiderDebug.log(e);
+                        }
+                    }
+                    if (!rule.getDetailMark().isEmpty()) {
+                        try {
+                            remark = getValue(doc, rule.getDetailMark());
+                            remark = rule.getDetailMarkR(remark);
+                        } catch (Exception e) {
+                            SpiderDebug.log(e);
+                        }
+                    }
+                    if (!rule.getDetailActor().isEmpty()) {
+                        try {
+                            actor = getValue(doc, rule.getDetailActor());
+                            actor = rule.getDetailActorR(actor);
+                        } catch (Exception e) {
+                            SpiderDebug.log(e);
+                        }
+                    }
+                    if (!rule.getDetailDirector().isEmpty()) {
+                        try {
+                            director = getValue(doc, rule.getDetailDirector());
+                            director = rule.getDetailDirectorR(director);
+                        } catch (Exception e) {
+                            SpiderDebug.log(e);
+                        }
+                    }
+                    if (!rule.getDetailDesc().isEmpty()) {
+                        try {
+                            desc = getValue(doc, rule.getDetailDesc());
+                            desc = rule.getDetailDescR(desc);
+                        } catch (Exception e) {
+                            SpiderDebug.log(e);
+                        }
+                    }
+
+                    JSONObject vod = new JSONObject();
+                    vod.put("vod_id", ids.get(0));
+                    vod.put("vod_name", title);
+                    vod.put("vod_pic", cover);
+                    vod.put("type_name", category);
+                    vod.put("vod_year", year);
+                    vod.put("vod_area", area);
+                    vod.put("vod_remarks", remark);
+                    vod.put("vod_actor", actor);
+                    vod.put("vod_director", director);
+                    vod.put("vod_content", desc);
+
+                    JSONArray urlListNodes = getVods(s, rule.getDetailUrlNode());
+                    Map<String, List<String>> vod_play = new HashMap<>();
+                    vod_play.put("workerdev", new ArrayList<>());
+                    for (int i = 0; i < urlListNodes.length(); i++) {
+                        JSONObject urlNode = urlListNodes.optJSONObject(i);
+                        String name = getValue(urlNode, rule.getDetailUrlName());
+                        name = rule.getDetailUrlNameR(name);
+                        String id = getValue(urlNode, rule.getDetailUrlId());
+                        id = URLEncoder.encode(rule.getDetailUrlIdR(id), "utf-8");
+                        if (urlNode.optString("mimeType").equals("application/vnd.google-apps.folder"))
+                            getFileList(id + "/?page_index={catePg};post", vod_play);
+                        else if (urlNode.optString("mimeType").equals("video/x-matroska")) {
+                            vod_play.get("workerdev").add(name + "$" + webUrl + id);
+                        } else if (urlNode.optString("mimeType").equals("text/xml") && StringUtils.contains(name, ".nfo")) {
+                            getNfo(vod, webUrl + id);
+                        }
+                    }
+                    if (vod_play.size() > 0) {
+                        List vod_from = new ArrayList();
+                        List vod_plays = new ArrayList();
+                        for (Map.Entry<String, List<String>> entry : vod_play.entrySet()) {
+                            vod_from.add(entry.getKey());
+                            vod_plays.add(join("#", entry.getValue()));
+                        }
+                        String vod_play_from = join("$$$", vod_from);
+                        String vod_play_url = join("$$$", vod_plays);
+                        vod.put("vod_play_from", vod_play_from);
+                        vod.put("vod_play_url", vod_play_url);
+                    }
+
+                    detailContentExt(s, vod);
+                    JSONArray list = new JSONArray();
+                    list.put(vod);
+                    result.put("list", list);
+                } catch (Exception e) {
+                    SpiderDebug.log(e);
                 }
-            });
+            }
             return result.toString();
         } catch (Exception e) {
             SpiderDebug.log(e);
@@ -451,45 +430,39 @@ public class GoIndex extends Spider {
 
     private void getFileList(String root, Map<String, List<String>> data) {
         try {
-            HttpParser.parseSearchUrlForHtml(root + "/?page_index={catePg};post", new OKCallBack.OKCallBackString() {
-                @Override
-                protected void onFailure(Call call, Exception e) {
+            OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(root + "/?page_index={catePg};post");
+            if (callBack.getResult().code() == 200) {
+                try {
+                    String s = callBack.getResult().body().string();
+                    JSONArray rootList = getVods(s, rule.getDetailUrlNode());
+                    if (rootList != null && rootList.length() > 0) {
+                        for (int i = 0; i < rootList.length(); i++) {
+                            JSONObject item = rootList.optJSONObject(i);
+                            if (item.optString("mimeType").equals("application/vnd.google-apps.folder")) {
+                                getFileList(root.replace("/?page_index={catePg};post", "") + item.optString(rule.getDetailUrlId()) + "/?page_index={catePg};post", data);
+                            } else {
+                                String[] types = {"video/x-matroska"};
+                                if (item.optString("mimeType").equals("file") && Arrays.asList(types).contains(item.optString("mimeType"))) {
+                                    String templateId = "workerdev";
+                                    List<String> vodLists;
+                                    String fileName = item.optString(rule.getDetailUrlName());
+                                    String fileId = root + fileName;
 
-                }
-
-                @Override
-                protected void onResponse(String s) {
-                    try {
-                        JSONArray rootList = getVods(s, rule.getDetailUrlNode());
-                        if (rootList != null && rootList.length() > 0) {
-                            for (int i = 0; i < rootList.length(); i++) {
-                                JSONObject item = rootList.optJSONObject(i);
-                                if (item.optString("mimeType").equals("application/vnd.google-apps.folder")) {
-                                    getFileList(root.replace("/?page_index={catePg};post", "") + item.optString(rule.getDetailUrlId()) + "/?page_index={catePg};post", data);
-                                } else {
-                                    String[] types = {"video/x-matroska"};
-                                    if (item.optString("mimeType").equals("file") && Arrays.asList(types).contains(item.optString("mimeType"))) {
-                                        String templateId = "workerdev";
-                                        List<String> vodLists;
-                                        String fileName = item.optString(rule.getDetailUrlName());
-                                        String fileId = root + fileName;
-
-                                        if (data.get(templateId) == null) {
-                                            vodLists = new ArrayList<>();
-                                            data.put(templateId, vodLists);
-                                        } else {
-                                            vodLists = data.get(templateId);
-                                        }
-                                        vodLists.add(fileName + "$" + fileId + "+" + templateId);
+                                    if (data.get(templateId) == null) {
+                                        vodLists = new ArrayList<>();
+                                        data.put(templateId, vodLists);
+                                    } else {
+                                        vodLists = data.get(templateId);
                                     }
+                                    vodLists.add(fileName + "$" + fileId + "+" + templateId);
                                 }
                             }
                         }
-                    } catch (Exception e) {
-                        SpiderDebug.log(e);
                     }
+                } catch (Exception e) {
+                    SpiderDebug.log(e);
                 }
-            });
+            }
             // 取文件列表
         } catch (Exception e) {
             SpiderDebug.log(e);
@@ -503,54 +476,48 @@ public class GoIndex extends Spider {
             if (rule.getSearchUrl().isEmpty()) {
                 return "";
             }
-            String webUrl = rule.getSearchUrl().replace("{wd}", URLEncoder.encode(key,"utf-8"));
+            String webUrl = rule.getSearchUrl().replace("{wd}", URLEncoder.encode(key, "utf-8"));
             JSONObject result = new JSONObject();
-            HttpParser.parseSearchUrlForHtml(webUrl, new OKCallBack.OKCallBackString() {
-                @Override
-                protected void onFailure(Call call, Exception e) {
-
-                }
-
-                @Override
-                protected void onResponse(String s) {
-                    try {
-                        JSONArray videos = new JSONArray();
-                        // add maccms suggest search api support
-                        if (rule.getSearchVodNode().startsWith("json:")) {
-                            String[] node = rule.getSearchVodNode().substring(5).split(">");
-                            JSONObject data = new JSONObject(s);
-                            for (int i = 0; i < node.length; i++) {
-                                if (i == node.length - 1) {
-                                    JSONArray vodArray = data.getJSONArray(node[i]);
-                                    for (int j = 0; j < vodArray.length(); j++) {
-                                        JSONObject vod = vodArray.getJSONObject(j);
-                                        String name = vod.optString(rule.getSearchVodName()).trim();
-                                        name = rule.getSearchVodNameR(name);
-                                        String id = vod.optString(rule.getSearchVodId()).trim();
-                                        id = rule.getSearchVodIdR(id);
-                                        String pic = vod.optString(rule.getSearchVodImg()).trim();
-                                        pic = rule.getSearchVodImgR(pic);
-                                        pic = Misc.fixUrl(webUrl, pic);
-                                        String mark = vod.optString(rule.getSearchVodMark()).trim();
-                                        mark = rule.getSearchVodMarkR(mark);
-                                        JSONObject v = new JSONObject();
-                                        v.put("vod_id", id);
-                                        v.put("vod_name", name);
-                                        v.put("vod_pic", pic);
-                                        v.put("vod_remarks", mark);
-                                        videos.put(v);
-                                    }
-                                } else {
-                                    data = data.getJSONObject(node[i]);
+            OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(webUrl);
+            if (callBack.getResult().code() == 200) {
+                try {
+                    String s = callBack.getResult().body().string();
+                    JSONArray videos = new JSONArray();
+                    // add maccms suggest search api support
+                    if (rule.getSearchVodNode().startsWith("json:")) {
+                        String[] node = rule.getSearchVodNode().substring(5).split(">");
+                        JSONObject data = new JSONObject(s);
+                        for (int i = 0; i < node.length; i++) {
+                            if (i == node.length - 1) {
+                                JSONArray vodArray = data.getJSONArray(node[i]);
+                                for (int j = 0; j < vodArray.length(); j++) {
+                                    JSONObject vod = vodArray.getJSONObject(j);
+                                    String name = vod.optString(rule.getSearchVodName()).trim();
+                                    name = rule.getSearchVodNameR(name);
+                                    String id = vod.optString(rule.getSearchVodId()).trim();
+                                    id = rule.getSearchVodIdR(id);
+                                    String pic = vod.optString(rule.getSearchVodImg()).trim();
+                                    pic = rule.getSearchVodImgR(pic);
+                                    pic = Misc.fixUrl(webUrl, pic);
+                                    String mark = vod.optString(rule.getSearchVodMark()).trim();
+                                    mark = rule.getSearchVodMarkR(mark);
+                                    JSONObject v = new JSONObject();
+                                    v.put("vod_id", id);
+                                    v.put("vod_name", name);
+                                    v.put("vod_pic", pic);
+                                    v.put("vod_remarks", mark);
+                                    videos.put(v);
                                 }
+                            } else {
+                                data = data.getJSONObject(node[i]);
                             }
-                            result.put("list", videos);
                         }
-                    } catch (Exception e) {
-                        SpiderDebug.log(e);
+                        result.put("list", videos);
                     }
+                } catch (Exception e) {
+                    SpiderDebug.log(e);
                 }
-            });
+            }
             return result.toString();
         } catch (
                 Exception e) {
