@@ -483,17 +483,17 @@ public class Legado extends Spider {
                                     vod.put("vod_pic", entry.getValue().get(0));
                             } else if (entry.getValue() != null && !entry.getValue().isEmpty()) {
                                 vod_from.add(entry.getKey());
-                                String[] vods = entry.getValue().toArray(new String[0]);
-                                if (vods.length > 200) {
-                                    Arrays.sort(vods, (o1, o2) -> {
-                                        Long n1 = extractNumber(o1.split("\\$")[0]);
-                                        Long n2 = extractNumber(o2.split("\\$")[0]);
-                                        String n3 = o1.split("\\$")[0].replaceAll("\\d", "");
-                                        String n4 = o2.split("\\$")[0].replaceAll("\\d", "");
-                                        return n1.compareTo(n2) + n3.compareTo(n4);
-                                    });
-                                }
-                                vod_plays.add(join("#", vods));
+//                                String[] vods = entry.getValue().toArray(new String[0]);
+//                                if (vods.length > 200) {
+//                                    Arrays.sort(vods, (o1, o2) -> {
+//                                        Long n1 = extractNumber(o1.split("\\$")[0]);
+//                                        Long n2 = extractNumber(o2.split("\\$")[0]);
+//                                        String n3 = o1.split("\\$")[0].replaceAll("\\d", "");
+//                                        String n4 = o2.split("\\$")[0].replaceAll("\\d", "");
+//                                        return StringUtils.compareIgnoreCase(o1 , o2);
+//                                    });
+//                                }
+                                vod_plays.add(join("#", entry.getValue()));
                             }
                         }
                         String vod_play_from = join("$$$", vod_from);
