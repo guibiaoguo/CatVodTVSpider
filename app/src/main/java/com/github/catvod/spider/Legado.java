@@ -30,6 +30,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import okhttp3.Headers;
 import okhttp3.Response;
@@ -45,6 +52,7 @@ public class Legado extends Spider {
     private AnalyzeRule analyzeRule;
     private RuleDataInterface error;
     private RuleDataInterface ruleData;
+    private  ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Override
     public void init(Context context) {
@@ -85,6 +93,7 @@ public class Legado extends Spider {
                 String url = param.optString("paramUrl");
                 String key = param.optString("paramKey");
                 String value = param.optString("paramValue");
+                String flag = param.optString("paramFlag");
                 String webUrl = analyzeRule.getString(url);
                 if (StringUtils.isNotEmpty(webUrl) && StringUtil.isWebUrl(webUrl)) {
                     final String finalUrl = getFinalUrl(webUrl);
@@ -95,7 +104,9 @@ public class Legado extends Spider {
                         analyzeRule.setRedirectUrl(finalUrl);
                         putHeaderMap(response.headers().toMultimap());
                         String value1 = analyzeRule.getString(value);
-                        if (StringUtils.isNotEmpty(value1)) {
+                        if (StringUtils.equalsIgnoreCase(flag,"list")) {
+                          ruleData.putVariable(key, ruleData.getVariable(key) + value1);
+                        } else if (StringUtils.isNotEmpty(value1)) {
                             ruleData.putVariable(key, value1);
                         }
                     } catch (Exception e) {
@@ -157,20 +168,16 @@ public class Legado extends Spider {
                     String s = callBack.getResult().body().string();
                     analyzeRule.setContent(s, finalUrl);
                     analyzeRule.setRedirectUrl(finalUrl);
+                    List<Object> nodes = getNodes(analyzeRule, rule.getCateNode());
                     List<Object> videoNodes = getNodes(analyzeRule, rule.getHomeVodNode());
-                    if (rule.getCateManual().size() == 0) {
-                        List<Object> nodes = getNodes(analyzeRule, rule.getCateNode());
-                        for (int i = 0; i < nodes.size(); i++) {
-                            analyzeRule.setContent(nodes.get(i));
-                            JSONObject jsonObject = new JSONObject();
-                            jsonObject.put("type_id", analyzeRule.getString(rule.getCateId()));
-                            jsonObject.put("type_name", analyzeRule.getString(rule.getCateName()));
-                            classes.put(jsonObject);
-                        }
+                    for (int i = 0; i < nodes.size(); i++) {
+                        analyzeRule.setContent(nodes.get(i));
+                        JSONObject jsonObject = new JSONObject();
+                        jsonObject.put("type_id", analyzeRule.getString(rule.getCateId()));
+                        jsonObject.put("type_name", analyzeRule.getString(rule.getCateName()));
+                        classes.put(jsonObject);
                     }
-
                     JSONArray videos = new JSONArray();
-
                     for (int i = 0; i < videoNodes.size(); i++) {
                         analyzeRule.setContent(videoNodes.get(i));
                         JSONObject v = new JSONObject();
@@ -446,7 +453,22 @@ public class Legado extends Spider {
                         for (int j = 0; j < urlSubNodes.size(); j++) {
                             analyzeRule.setContent(urlSubNodes.get(j));
                             analyzeRule.setRedirectUrl(finalUrl);
-                            getFileList(urlSubNodes.get(j).toString(), vod_play, defaultFrom);
+                            final String content = urlSubNodes.get(j).toString();
+                            String finalDefaultFrom = defaultFrom;
+                            FutureTask<String> futureTask = new FutureTask<>(new Callable<String>() {
+                                @Override
+                                public String call() throws Exception {
+                                    getFileList(content, vod_play, finalDefaultFrom);
+                                    return "";
+                                };
+                            });
+                            executorService.execute(futureTask);
+                            try {
+                                futureTask.get(20000, TimeUnit.MILLISECONDS);
+                            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                                //e.printStackTrace();
+                                futureTask.cancel(true);
+                            }
                         }
                     }
                     if (rule.getNfoFlag()) {

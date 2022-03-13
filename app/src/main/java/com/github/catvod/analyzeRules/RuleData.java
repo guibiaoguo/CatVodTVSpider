@@ -1,5 +1,7 @@
 package com.github.catvod.analyzeRules;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.HashMap;
 
 public class RuleData implements RuleDataInterface {
@@ -22,9 +24,13 @@ public class RuleData implements RuleDataInterface {
 
     @Override
     public String getVariable(String key) {
+        String value = "";
         if(key != null) {
-            return variableMap.get(key);
+            value = variableMap.get(key);
         }
-        return "";
+        if (StringUtils.isEmpty(value)) {
+            return "";
+        }
+        return value;
     }
 }

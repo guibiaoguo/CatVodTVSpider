@@ -13,6 +13,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -337,6 +338,9 @@ public class AnalyzeRule {
 //                result = funRule(sourceRule.funMap,result);
                 sourceRule.makeUpRule(sourceRule.rule);
                 switch (sourceRule.mode) {
+                    case List:
+                        result = Arrays.asList(sourceRule.rule.split("\n"));
+                        break;
                     case Regex:
                         result = AnalyzeByRegex.getElements(result.toString(), StringUtils.split(sourceRule.rule, "&&"));
                         break;
@@ -534,7 +538,7 @@ public class AnalyzeRule {
     }
 
     enum Mode {
-        XPath, Json, Default, Js, Regex,Function,Constant
+        XPath, Json, Default, Js, Regex,Function,Constant,List
 
     }
 
@@ -587,7 +591,10 @@ public class AnalyzeRule {
             } else if (StringUtils.startsWithIgnoreCase(ruleStr,"@XPath:")) {
                 this.mode = Mode.XPath;
                 this.rule = ruleStr.substring(7);
-            } else if (StringUtils.startsWithIgnoreCase(ruleStr,"@Js:")) {
+            } else if (StringUtils.startsWithIgnoreCase(ruleStr,"@List")) {
+                this.mode = Mode.List;
+                this.rule = ruleStr.substring(5);
+            }  else if (StringUtils.startsWithIgnoreCase(ruleStr,"@Js:")) {
                 this.mode = Mode.Js;
                 this.rule = ruleStr.substring(4);
             } else if (StringUtils.startsWithIgnoreCase(ruleStr,"@Json:")) {
@@ -616,7 +623,7 @@ public class AnalyzeRule {
             Matcher evalMatcher = evalPattern.matcher(rule);
             if (evalMatcher.find()) {
                 tmp = rule.substring(start, evalMatcher.start());
-                if (!isRule(tmp) && mode !=Mode.Function && mode != Mode.Js && mode != Mode.Regex && (evalMatcher.start() == 0 || !StringUtils.contains(tmp, "##"))) {
+                if (!isRule(tmp) && mode !=Mode.List && mode !=Mode.Function && mode != Mode.Js && mode != Mode.Regex && (evalMatcher.start() == 0 || !StringUtils.contains(tmp, "##"))) {
                     mode = Mode.Regex;
                 }
                 do {
