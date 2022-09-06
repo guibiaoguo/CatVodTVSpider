@@ -21,7 +21,7 @@ import java.util.Set;
  */
 public class Enlienli extends Spider {
 
-    private String siteUrl = "https://api.app.kongbuya.com";
+    private String siteUrl = "https://api.app.yanetflix.com";
 
     @Override
     public void init(Context context) {
@@ -53,12 +53,12 @@ public class Enlienli extends Spider {
                 newCls.put("type_name", typeName);
                 classes.put(newCls);
                 try {
-                    JSONArray typeExtend = jObj.getJSONArray("msg");
+                    JSONArray typeExtend = jObj.optJSONArray("msg");
                     JSONArray extendsAll = new JSONArray();
                     for (int j = 0; j < typeExtend.length(); j++) {
                         JSONObject typeExtendObj = typeExtend.optJSONObject(j);
                         String typeExtendKey = typeExtendObj.optString("name");
-                        JSONArray newTypeExtendKeys = typeExtendObj.getJSONArray("data");
+                        JSONArray newTypeExtendKeys = typeExtendObj.optJSONArray("data");
                         if (newTypeExtendKeys.length() <= 1)
                             continue;
                         String typeExtendName = newTypeExtendKeys.optString(0);
@@ -106,16 +106,16 @@ public class Enlienli extends Spider {
             JSONObject jsonObject = new JSONObject(OkHttpUtil.string(url, getHeaders(url)));
             JSONArray jsonArray = new JSONArray();
             if (jsonObject.has("tv")) {
-                JSONArray data = jsonObject.optJSONObject("tv").getJSONArray("data");
+                JSONArray data = jsonObject.optJSONObject("tv").optJSONArray("data");
                 for (int i = 0; i < data.length(); i++) {
                     jsonArray.put(data.optJSONObject(i));
                 }
             }
 
             if (jsonObject.has("video")) {
-                JSONArray vs = jsonObject.getJSONArray("video");
+                JSONArray vs = jsonObject.optJSONArray("video");
                 for (int i = 0; i < vs.length(); i++) {
-                    JSONArray data = vs.optJSONObject(i).getJSONArray("data");
+                    JSONArray data = vs.optJSONObject(i).optJSONArray("data");
                     for (int j = 0; j < data.length(); j++) {
                         jsonArray.put(data.optJSONObject(j));
                     }
@@ -232,7 +232,7 @@ public class Enlienli extends Spider {
         try {
             String url = siteUrl + "/api.php/provide/search_result?video_name=" + URLEncoder.encode(key);
             JSONObject jsonObject = new JSONObject(OkHttpUtil.string(url, getHeaders(url)));
-            JSONArray jsonArray = jsonObject.optJSONObject("result").getJSONArray("search_result");
+            JSONArray jsonArray = jsonObject.optJSONObject("result").optJSONArray("search_result");
             JSONArray videos = new JSONArray();
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject vObj = jsonArray.optJSONObject(i);

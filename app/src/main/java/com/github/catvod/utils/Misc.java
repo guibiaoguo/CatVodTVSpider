@@ -1,20 +1,29 @@
 package com.github.catvod.utils;
 
 import android.net.Uri;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
 
 import com.github.catvod.crawler.SpiderDebug;
+import com.github.catvod.spider.Init;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.nio.charset.Charset;
 import java.util.regex.Pattern;
 
 public class Misc {
+
+    public static Charset UTF8 = Charset.forName("UTF-8");
+    public static Charset GBK = Charset.forName("iso-8859-1");
+
     public static boolean isVip(String url) {
+
         // 适配2.0.6的调用应用内解析列表的支持, 需要配合直连分析一起使用，参考cjt影视和极品直连
         try {
             boolean isVip = false;
-            String host = Uri.parse(url).getHost();
+            String host = StringUtil.getDom(url);
             String[] vipWebsites = new String[]{"iqiyi.com", "v.qq.com", "youku.com", "le.com", "tudou.com", "mgtv.com", "sohu.com", "acfun.cn", "bilibili.com", "baofeng.com", "pptv.com"};
             for (int b = 0; b < vipWebsites.length; b++) {
                 if (host.contains(vipWebsites[b])) {
@@ -32,6 +41,7 @@ public class Misc {
             }
             return isVip;
         } catch (Exception e) {
+            SpiderDebug.log(e);
         }
         return false;
     }
@@ -119,4 +129,16 @@ public class Misc {
         taskResult.put("url", url);
         return taskResult;
     }
+
+    public static WebView dV() {
+        WebView webView = new WebView(Init.getContext());
+        webView.getSettings().setAllowFileAccess(true);
+        webView.getSettings().setAllowContentAccess(true);
+        webView.getSettings().setAppCacheEnabled(false);
+        webView.getSettings().setDomStorageEnabled(true);
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+        return webView;
+    }
+
 }

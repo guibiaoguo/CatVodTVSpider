@@ -312,8 +312,8 @@ public class Aidi extends Spider {
                 @Override
                 public int compare(String o1, String o2) {
                     try {
-                        int sort1 = playerConfig.getJSONObject(o1).getInt("or");
-                        int sort2 = playerConfig.getJSONObject(o2).getInt("or");
+                        int sort1 = playerConfig.optJSONObject(o1).getInt("or");
+                        int sort2 = playerConfig.optJSONObject(o2).getInt("or");
 
                         if (sort1 == sort2) {
                             return 1;
@@ -336,7 +336,7 @@ public class Aidi extends Spider {
                 boolean found = false;
 //                for (Iterator<String> it = playerConfig.keys(); it.hasNext(); ) {
 //                    String flag = it.next();
-//                    if (playerConfig.getJSONObject(flag).getString("sh").equals(sourceName)) {
+//                    if (playerConfig.optJSONObject(flag).optString("sh").equals(sourceName)) {
 //                        sourceName = flag;
 //                        found = true;
 //                        break;
@@ -404,10 +404,10 @@ public class Aidi extends Spider {
 //                    int end = scContent.lastIndexOf('}') + 1;
 //                    String json = scContent.substring(start, end);
 //                    JSONObject player = new JSONObject(json);
-//                    if (playerConfig.has(player.getString("from"))) {
-//                        JSONObject pCfg = playerConfig.getJSONObject(player.getString("from"));
-//                        String videoUrl = player.getString("url");
-//                        String playUrl = pCfg.getString("pu");
+//                    if (playerConfig.has(player.optString("from"))) {
+//                        JSONObject pCfg = playerConfig.optJSONObject(player.optString("from"));
+//                        String videoUrl = player.optString("url");
+//                        String playUrl = pCfg.optString("pu");
 //                        result.put("parse", pCfg.getInt("sn"));
 //                        result.put("playUrl", playUrl);
 //                        result.put("url", videoUrl);

@@ -56,21 +56,21 @@ public class Ysgc extends Spider {
         try {
             String url = siteUrl + "/xgapp.php/v1/nav?token=";
             JSONObject jsonObject = new JSONObject(OkHttpUtil.string(url, getHeaders(url)));
-            JSONArray jsonArray = jsonObject.getJSONArray("data");
+            JSONArray jsonArray = jsonObject.optJSONArray("data");
             JSONArray classes = new JSONArray();
             JSONObject filterConfig = new JSONObject();
             for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject jObj = jsonArray.getJSONObject(i);
-                String typeName = jObj.getString("type_name");
+                JSONObject jObj = jsonArray.optJSONObject(i);
+                String typeName = jObj.optString("type_name");
                 if (typeName.equals("电视直播"))
                     continue;
-                String typeId = jObj.getString("type_id");
+                String typeId = jObj.optString("type_id");
                 JSONObject newCls = new JSONObject();
                 newCls.put("type_id", typeId);
                 newCls.put("type_name", typeName);
                 classes.put(newCls);
                 try {
-                    JSONObject typeExtend = jObj.getJSONObject("type_extend");
+                    JSONObject typeExtend = jObj.optJSONObject("type_extend");
                     Iterator<String> typeExtendKeys = typeExtend.keys();
                     JSONArray extendsAll = new JSONArray();
                     while (typeExtendKeys.hasNext()) {
@@ -94,7 +94,7 @@ public class Ysgc extends Spider {
                             SpiderDebug.log(typeExtendKey);
                             continue;
                         }
-                        String typeExtendStr = typeExtend.getString(typeExtendKey);
+                        String typeExtendStr = typeExtend.optString(typeExtendKey);
                         if (typeExtendStr.trim().length() == 0)
                             continue;
                         String[] newTypeExtendKeys = typeExtendStr.split(",");
@@ -142,18 +142,18 @@ public class Ysgc extends Spider {
         try {
             String url = siteUrl + "/xgapp.php/v1/index_video?token=";
             JSONObject jsonObject = new JSONObject(OkHttpUtil.string(url, getHeaders(url)));
-            JSONArray jsonArray = jsonObject.getJSONArray("data");
+            JSONArray jsonArray = jsonObject.optJSONArray("data");
             JSONArray videos = new JSONArray();
             for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject jObj = jsonArray.getJSONObject(i);
-                JSONArray videoList = jObj.getJSONArray("vlist");
+                JSONObject jObj = jsonArray.optJSONObject(i);
+                JSONArray videoList = jObj.optJSONArray("vlist");
                 for (int j = 0; j < videoList.length() && j < 6; j++) {
-                    JSONObject vObj = videoList.getJSONObject(j);
+                    JSONObject vObj = videoList.optJSONObject(j);
                     JSONObject v = new JSONObject();
-                    v.put("vod_id", vObj.getString("vod_id"));
-                    v.put("vod_name", vObj.getString("vod_name"));
-                    v.put("vod_pic", vObj.getString("vod_pic"));
-                    v.put("vod_remarks", vObj.getString("vod_remarks"));
+                    v.put("vod_id", vObj.optString("vod_id"));
+                    v.put("vod_name", vObj.optString("vod_name"));
+                    v.put("vod_pic", vObj.optString("vod_pic"));
+                    v.put("vod_remarks", vObj.optString("vod_remarks"));
                     videos.put(v);
                 }
             }
@@ -175,15 +175,15 @@ public class Ysgc extends Spider {
                 url += "&" + key + "=" + URLEncoder.encode(extend.get(key));
             }
             JSONObject dataObject = new JSONObject(OkHttpUtil.string(url, getHeaders(url)));
-            JSONArray jsonArray = dataObject.getJSONArray("data");
+            JSONArray jsonArray = dataObject.optJSONArray("data");
             JSONArray videos = new JSONArray();
             for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject vObj = jsonArray.getJSONObject(i);
+                JSONObject vObj = jsonArray.optJSONObject(i);
                 JSONObject v = new JSONObject();
-                v.put("vod_id", vObj.getString("vod_id"));
-                v.put("vod_name", vObj.getString("vod_name"));
-                v.put("vod_pic", vObj.getString("vod_pic"));
-                v.put("vod_remarks", vObj.getString("vod_remarks"));
+                v.put("vod_id", vObj.optString("vod_id"));
+                v.put("vod_name", vObj.optString("vod_name"));
+                v.put("vod_pic", vObj.optString("vod_pic"));
+                v.put("vod_remarks", vObj.optString("vod_remarks"));
                 videos.put(v);
             }
             JSONObject result = new JSONObject();
@@ -208,32 +208,32 @@ public class Ysgc extends Spider {
         try {
             String url = siteUrl + "/xgapp.php/v1/video_detail?id=" + ids.get(0) + "&token=";
             JSONObject jsonObject = new JSONObject(OkHttpUtil.string(url, getHeaders(url)));
-            JSONObject dataObject = jsonObject.getJSONObject("data");
+            JSONObject dataObject = jsonObject.optJSONObject("data");
             if (dataObject.has("vod_info")) {
                 try {
-                    dataObject = dataObject.getJSONObject("vod_info");
+                    dataObject = dataObject.optJSONObject("vod_info");
                 } catch (Exception e) {
 
                 }
             }
             JSONObject vodList = new JSONObject();
-            vodList.put("vod_id", dataObject.getString("vod_id"));
-            vodList.put("vod_name", dataObject.getString("vod_name"));
-            vodList.put("vod_pic", dataObject.getString("vod_pic"));
-            vodList.put("type_name", dataObject.getString("vod_class"));
-            vodList.put("vod_year", dataObject.getString("vod_year"));
-            vodList.put("vod_area", dataObject.getString("vod_area"));
-            vodList.put("vod_remarks", dataObject.getString("vod_remarks"));
-            vodList.put("vod_actor", dataObject.getString("vod_actor"));
-            vodList.put("vod_director", dataObject.getString("vod_director"));
-            vodList.put("vod_content", dataObject.getString("vod_content"));
-            JSONArray playerList = dataObject.getJSONArray("vod_url_with_player");
+            vodList.put("vod_id", dataObject.optString("vod_id"));
+            vodList.put("vod_name", dataObject.optString("vod_name"));
+            vodList.put("vod_pic", dataObject.optString("vod_pic"));
+            vodList.put("type_name", dataObject.optString("vod_class"));
+            vodList.put("vod_year", dataObject.optString("vod_year"));
+            vodList.put("vod_area", dataObject.optString("vod_area"));
+            vodList.put("vod_remarks", dataObject.optString("vod_remarks"));
+            vodList.put("vod_actor", dataObject.optString("vod_actor"));
+            vodList.put("vod_director", dataObject.optString("vod_director"));
+            vodList.put("vod_content", dataObject.optString("vod_content"));
+            JSONArray playerList = dataObject.optJSONArray("vod_url_with_player");
             List<String> playFlags = new ArrayList<>();
             HashMap<String, String> playUrls = new HashMap<>();
             for (int i = 0; i < playerList.length(); i++) {
-                JSONObject playerListObj = playerList.getJSONObject(i);
-                String from = playerListObj.getString("code");
-                playUrls.put(from, playerListObj.getString("url"));
+                JSONObject playerListObj = playerList.optJSONObject(i);
+                String from = playerListObj.optString("code");
+                playUrls.put(from, playerListObj.optString("url"));
                 playerListObj.remove("url");
                 playerConfig.put(from, playerListObj);
                 playFlags.add(from);
@@ -252,8 +252,8 @@ public class Ysgc extends Spider {
                 }
             });
 
-            String[] vod_play_from_list = dataObject.getString("vod_play_from").split("\\$\\$\\$");
-            String[] vod_play_url_list = dataObject.getString("vod_play_url").split("\\$\\$\\$");
+            String[] vod_play_from_list = dataObject.optString("vod_play_from").split("\\$\\$\\$");
+            String[] vod_play_url_list = dataObject.optString("vod_play_url").split("\\$\\$\\$");
 
             for (int i = 0; i < vod_play_from_list.length; i++) {
                 String from = vod_play_from_list[i];
@@ -330,8 +330,8 @@ public class Ysgc extends Spider {
                     SpiderDebug.log(ee);
                 }
             }
-            JSONObject playerObj = playerConfig.getJSONObject(flag);
-            String parseUrl = playerObj.getString("parse_api") + id;
+            JSONObject playerObj = playerConfig.optJSONObject(flag);
+            String parseUrl = playerObj.optString("parse_api") + id;
             String content = OkHttpUtil.string(parseUrl, getHeaderJxs(parseUrl));
             JSONObject playerData = new JSONObject(content);
             JSONObject headers = new JSONObject();
@@ -346,7 +346,7 @@ public class Ysgc extends Spider {
             result.put("parse", 0);
             result.put("header", headers.toString());
             result.put("playUrl", "");
-            result.put("url", playerData.getString("url"));
+            result.put("url", playerData.optString("url"));
             return result.toString();
         } catch (Exception e) {
             SpiderDebug.log(e);
@@ -373,15 +373,15 @@ public class Ysgc extends Spider {
             String url = siteUrl + "/xgapp.php/v1/search?text=" + URLEncoder.encode(key) + "&pg=1";
             String content = OkHttpUtil.string(url, getHeaders(url));
             JSONObject dataObject = new JSONObject(content);
-            JSONArray jsonArray = dataObject.getJSONArray("data");
+            JSONArray jsonArray = dataObject.optJSONArray("data");
             JSONArray videos = new JSONArray();
             for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject vObj = jsonArray.getJSONObject(i);
+                JSONObject vObj = jsonArray.optJSONObject(i);
                 JSONObject v = new JSONObject();
-                v.put("vod_id", vObj.getString("vod_id"));
-                v.put("vod_name", vObj.getString("vod_name"));
-                v.put("vod_pic", vObj.getString("vod_pic"));
-                v.put("vod_remarks", vObj.getString("vod_remarks"));
+                v.put("vod_id", vObj.optString("vod_id"));
+                v.put("vod_name", vObj.optString("vod_name"));
+                v.put("vod_pic", vObj.optString("vod_pic"));
+                v.put("vod_remarks", vObj.optString("vod_remarks"));
                 videos.put(v);
             }
             JSONObject result = new JSONObject();

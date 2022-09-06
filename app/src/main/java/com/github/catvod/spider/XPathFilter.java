@@ -26,7 +26,7 @@ public class XPathFilter extends XPath {
             }
         }
         cateUrl = cateUrl.replace("{cateId}", tid).replace("{catePg}", pg);
-        Matcher m = Pattern.compile("\\{(.*?)\\}").matcher(cateUrl);
+        Matcher m = Pattern.compile("\\{(.*?)}").matcher(cateUrl);
         while (m.find()) {
             String n = m.group(0).replace("{", "").replace("}", "");
             cateUrl = cateUrl.replace(m.group(0), "").replace("/" + n + "/", "");

@@ -357,7 +357,7 @@ public class AnalyzeByJSoup {
                             step = 1;
                         }
                         if (end > start) {
-                            for (int i = start; i < end; i = i + step) {
+                            for (int i = start; i <= end; i = i + step) {
                                 indexSet.add(i);
                             }
                         } else {

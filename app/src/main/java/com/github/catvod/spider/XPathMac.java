@@ -1,8 +1,9 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
+
+import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.StringUtil;
-import android.util.Base64;
 
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Misc;
@@ -54,7 +55,7 @@ public class XPathMac extends XPath {
                 Iterator<String> keys = dcShow2Vip.keys();
                 while (keys.hasNext()) {
                     String name = keys.next();
-                    show2VipFlag.put(name.trim(), dcShow2Vip.getString(name).trim());
+                    show2VipFlag.put(name.trim(), dcShow2Vip.optString(name).trim());
                 }
             }
             playerConfigJs = jsonObj.optString("pCfgJs").trim();
@@ -99,14 +100,14 @@ public class XPathMac extends XPath {
         if (decodeVipFlag && result.length() > 0) {
             try {
                 JSONObject jsonObject = new JSONObject(result);
-                String playFrom[] = jsonObject.optJSONArray("list").getJSONObject(0).optString("vod_play_from").split("\\$\\$\\$");
+                String playFrom[] = jsonObject.optJSONArray("list").optJSONObject(0).optString("vod_play_from").split("\\$\\$\\$");
                 if (playFrom.length > 0) {
                     for (int i = 0; i < playFrom.length; i++) {
                         if (show2VipFlag.containsKey(playFrom[i])) {
                             playFrom[i] = show2VipFlag.get(playFrom[i]);
                         }
                     }
-                    jsonObject.optJSONArray("list").getJSONObject(0).put("vod_play_from", StringUtil.join("$$$", playFrom));
+                    jsonObject.optJSONArray("list").optJSONObject(0).put("vod_play_from", StringUtil.join("$$$", playFrom));
                     result = jsonObject.toString();
                 }
             } catch (Throwable th) {
@@ -134,14 +135,14 @@ public class XPathMac extends XPath {
                         int end = scContent.lastIndexOf('}') + 1;
                         String json = scContent.substring(start, end);
                         JSONObject player = new JSONObject(json);
-                        String videoUrlTmp = player.getString("url");
+                        String videoUrlTmp = player.optString("url");
                         if (player.has("encrypt")) {
                             int encrypt = player.getInt("encrypt");
                             if (encrypt == 1) {
-                                videoUrlTmp = URLDecoder.decode(videoUrlTmp);
+                                videoUrlTmp = URLDecoder.decode(videoUrlTmp,"utf-8");
                             } else if (encrypt == 2) {
                                 videoUrlTmp = new String(Base64.decode(videoUrlTmp, Base64.DEFAULT));
-                                videoUrlTmp = URLDecoder.decode(videoUrlTmp);
+                                videoUrlTmp = URLDecoder.decode(videoUrlTmp,"utf-8");
                             }
                         }
                         videoUrl = videoUrlTmp;

@@ -125,7 +125,49 @@ public class XPath extends Spider {
     public String homeVideoContent() {
         try {
             fetchRule();
-        } catch (Exception e) {
+            JSONObject result = new JSONObject();
+            try {
+                String webUrl = rule.getHomeUrl();
+                JXDocument doc = JXDocument.create(fetch(webUrl));
+                if (!rule.getHomeVodNode().isEmpty()) {
+                    try {
+                        JSONArray videos = new JSONArray();
+                        List<JXNode> vodNodes = doc.selN(rule.getHomeVodNode());
+                        for (int i = 0; i < vodNodes.size(); i++) {
+                            String name = vodNodes.get(i).selOne(rule.getHomeVodName()).asString().trim();
+                            name = rule.getHomeVodNameR(name);
+                            String id = vodNodes.get(i).selOne(rule.getHomeVodId()).asString().trim();
+                            id = rule.getHomeVodIdR(id);
+                            String pic = vodNodes.get(i).selOne(rule.getHomeVodImg()).asString().trim();
+                            pic = rule.getHomeVodImgR(pic);
+                            pic = Misc.fixUrl(webUrl, pic);
+                            String mark = "";
+                            if (!rule.getHomeVodMark().isEmpty()) {
+                                try {
+                                    mark = vodNodes.get(i).selOne(rule.getHomeVodMark()).asString().trim();
+                                    mark = rule.getHomeVodMarkR(mark);
+                                } catch (Exception e) {
+                                    SpiderDebug.log(e);
+                                }
+                            }
+                            JSONObject v = new JSONObject();
+                            v.put("vod_id", id);
+                            v.put("vod_name", name);
+                            v.put("vod_pic", pic);
+                            v.put("vod_remarks", mark);
+                            videos.put(v);
+                        }
+                        result.put("list", videos);
+                    } catch (Exception e) {
+                        SpiderDebug.log(e);
+                    }
+                }
+            } catch (Exception e) {
+                SpiderDebug.log(e);
+            }
+            return result.toString();
+        } catch (
+                Exception e) {
             SpiderDebug.log(e);
         }
         return "";
@@ -366,9 +408,9 @@ public class XPath extends Spider {
                 JSONObject data = new JSONObject(webContent);
                 for (int i = 0; i < node.length; i++) {
                     if (i == node.length - 1) {
-                        JSONArray vodArray = data.getJSONArray(node[i]);
+                        JSONArray vodArray = data.optJSONArray(node[i]);
                         for (int j = 0; j < vodArray.length(); j++) {
-                            JSONObject vod = vodArray.getJSONObject(j);
+                            JSONObject vod = vodArray.optJSONObject(j);
                             String name = vod.optString(rule.getSearchVodName()).trim();
                             name = rule.getSearchVodNameR(name);
                             String id = vod.optString(rule.getSearchVodId()).trim();
@@ -386,7 +428,7 @@ public class XPath extends Spider {
                             videos.put(v);
                         }
                     } else {
-                        data = data.getJSONObject(node[i]);
+                        data = data.optJSONObject(node[i]);
                     }
                 }
             } else {

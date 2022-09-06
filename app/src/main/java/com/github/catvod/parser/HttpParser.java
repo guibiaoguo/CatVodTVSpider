@@ -1,9 +1,10 @@
-package com.github.catvod.spider;
+package com.github.catvod.parser;
 
 import android.util.Log;
 
 
 import com.github.catvod.crawler.SpiderDebug;
+import com.github.catvod.spider.Legado;
 import com.github.catvod.utils.StringUtil;
 import com.github.catvod.utils.okhttp.OKCallBack;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
@@ -18,6 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import okhttp3.Call;
 import okhttp3.Protocol;
@@ -37,9 +40,9 @@ public class HttpParser {
     private static final String PC_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36";
     private static final String MOBILE_UA = "";
 
-    public static OKCallBack parseSearchUrlForHtml(String sourceUrl) {
+    public static OKCallBack<Response> parseSearchUrlForHtml(String sourceUrl) {
         if (StringUtils.startsWith(sourceUrl, "proxy://")) {
-            OKCallBack callBack = new OKCallBack.OKCallBackDefault() {
+            OKCallBack<Response> callBack = new OKCallBack.OKCallBackDefault() {
                 @Override
                 protected void onFailure(Call call, Exception e) {
                     onResponse(null);
@@ -49,25 +52,34 @@ public class HttpParser {
                 protected void onResponse(Response response) {
                     try {
                         Map<String, String> params = StringUtil.getParameter(sourceUrl, "proxy://");
-                        String pic = params.get("pic");
-                        String selector = params.get("selector");
-                        Object[] result = Legado.loadPic(pic, selector);
-                        InputStream inputStream = (InputStream) result[2];
-                        ByteArrayOutputStream bf = new ByteArrayOutputStream();
-                        byte[] buffer = new byte[1024];
-                        int length;
-                        while ((length = inputStream.read(buffer)) != -1) {
-                            bf.write(buffer, 0, length);
-                        }
+                        Object[] result = Legado.loadPic(params);
                         Response.Builder builder = new Response.Builder();
-                        ResponseBody responseBody = ResponseBody.create(null,bf.toString());
-                        Request request = new Request.Builder().url("http://localhost"+sourceUrl).build();
-                        builder.request(request);
-                        builder.body(responseBody);
-                        builder.message("");
-                        builder.code(200);
-                        builder.request(request);
-                        builder.protocol(Protocol.HTTP_1_1);
+                        if (result != null) {
+                            InputStream inputStream = (InputStream) result[2];
+                            ByteArrayOutputStream bf = new ByteArrayOutputStream();
+                            byte[] buffer = new byte[1024];
+                            int length;
+                            while ((length = inputStream.read(buffer)) != -1) {
+                                bf.write(buffer, 0, length);
+                            }
+                            ResponseBody responseBody = ResponseBody.create(null,bf.toString());
+                            Request request = new Request.Builder().url("http://localhost"+sourceUrl).build();
+                            builder.request(request);
+                            builder.body(responseBody);
+                            builder.message("");
+                            builder.code(200);
+                            builder.request(request);
+                            builder.protocol(Protocol.HTTP_1_1);
+                        } else {
+                            ResponseBody responseBody = ResponseBody.create(null,"404");
+                            Request request = new Request.Builder().url("http://localhost"+sourceUrl).build();
+                            builder.request(request);
+                            builder.body(responseBody);
+                            builder.message("404");
+                            builder.request(request);
+                            builder.protocol(Protocol.HTTP_1_1);
+                            builder.code(404);
+                        }
                         setResult(builder.build());
                     } catch (Exception e) {
                         SpiderDebug.log(e);
@@ -77,7 +89,7 @@ public class HttpParser {
             OkHttpUtil.get(OkHttpUtil.defaultClient(), "http://localhost/" + sourceUrl, callBack);
             return callBack;
         } else {
-            OKCallBack callBack = new OKCallBack.OKCallBackDefault() {
+            OKCallBack<Response> callBack = new OKCallBack.OKCallBackDefault() {
                 @Override
                 protected void onFailure(Call call, Exception e) {
 
@@ -102,7 +114,7 @@ public class HttpParser {
                     } else {
                         sss = new String[]{};
                     }
-                    HashMap params = new HashMap();
+                    HashMap<String,String> params = new HashMap<>();
                     for (String s : sss) {
                         if (StringUtils.isEmpty(s)) {
                             continue;
@@ -125,7 +137,7 @@ public class HttpParser {
                     } else {
                         sss = new String[]{};
                     }
-                    HashMap params = new HashMap();
+                    HashMap<String,String> params = new HashMap<>();
                     for (String s : sss) {
                         if (StringUtils.isEmpty(s)) {
                             continue;
@@ -148,8 +160,18 @@ public class HttpParser {
         if (StringUtils.isEmpty(searchUrl)) {
             return null;
         }
-        String[] d = searchUrl.split(";");
-        String code = null;
+        if (searchUrl.startsWith("proxy://")) {
+            return "UTF-8";
+        }
+        Pattern pattern = Pattern.compile("(.*);(\\{.*\\}$)");
+        Matcher matcher = pattern.matcher(searchUrl);
+        String[] d;
+        if (matcher.find()) {
+            d = matcher.group(1).split(";");
+        } else {
+            d = searchUrl.split(";");
+        }
+        String code = "UTF-8";
         if (d.length >= 3) {
             code = d[2];
         }
@@ -163,8 +185,15 @@ public class HttpParser {
         if (StringUtils.isEmpty(searchUrl)) {
             return null;
         }
-        String[] d = searchUrl.split(";");
-        String header = d[d.length - 1];
+        Pattern pattern = Pattern.compile("(.*);(\\{.*\\}$)");
+        Matcher matcher = pattern.matcher(searchUrl);
+        String header;
+        if (matcher.find()) {
+            header = matcher.group(2);
+        } else {
+            String[] d = searchUrl.split(";");
+            header = d[d.length -1];
+        }
         if (!header.startsWith("{") || !header.endsWith("}")) {
             return null;
         }
@@ -179,7 +208,7 @@ public class HttpParser {
                 if ("getTimeStamp()".equals(keyValue[1])) {
                     headers.put(keyValue[0], System.currentTimeMillis() + "");
                 } else {
-                    if ("cookie".equalsIgnoreCase(keyValue[0]) && StringUtil.containsChinese(keyValue[1])) {
+                    if ("cookie".equalsIgnoreCase(keyValue[0])) {
                         String[] ck = keyValue[1].split(";");
                         for (int i = 0; i < ck.length; i++) {
                             String[] kvs = ck[i].split("=");
@@ -391,6 +420,17 @@ public class HttpParser {
             }
         }
         return params;
+    }
+
+    public static String getContent(String url,byte[] content) {
+        String code = getCode(url);
+        try {
+            if (content.length > 0)
+                return new String(content, code);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 
 }

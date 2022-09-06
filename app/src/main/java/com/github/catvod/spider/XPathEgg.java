@@ -62,8 +62,8 @@ public class XPathEgg extends XPath {
                 public void onResponse(String response) {
                     try {
                         JSONObject obj = new JSONObject(response);
-                        vod.put("vod_play_from", obj.getString("vod_play_from"));
-                        vod.put("vod_play_url", obj.getString("vod_play_url"));
+                        vod.put("vod_play_from", obj.optString("vod_play_from"));
+                        vod.put("vod_play_url", obj.optString("vod_play_url"));
                     } catch (JSONException e) {
                     }
                 }

@@ -216,9 +216,20 @@ public class AnalyzeRule {
             if (result instanceof List) {
                 for (Object url : (List) result) {
                     try {
-                        String absoluteURL = NetworkUtils.INSTANCE.getAbsoluteURL(redirectUrl, url.toString());
-                        if (StringUtils.isNotEmpty(absoluteURL) && !urlList.contains(absoluteURL)) {
-                            urlList.add(absoluteURL);
+                        if (url == null || StringUtils.isBlank(url.toString())) {
+                            baseUrl = baseUrl == null ? "" : baseUrl;
+                            urlList.add(baseUrl);
+                        } else if(url != null && url.toString().startsWith("/")) {
+                            urlList.add(StringUtil.getBaseUrl(baseUrl) + url.toString());
+                        }else if(url != null && !url.toString().startsWith("http") && !StringUtil.isBase64(url.toString())) {
+                            try {
+                                String absoluteURL = NetworkUtils.INSTANCE.getAbsoluteURL(redirectUrl, url.toString());
+                                if (StringUtils.isNotEmpty(absoluteURL) && !urlList.contains(absoluteURL)) {
+                                    urlList.add(absoluteURL);
+                                }
+                            } catch (MalformedURLException e) {
+                                e.printStackTrace();
+                            }
                         }
                     } catch (Exception e) {
 
@@ -283,9 +294,11 @@ public class AnalyzeRule {
             if (StringUtils.isBlank(str)) {
                 baseUrl = baseUrl == null ? "" : baseUrl;
                 return baseUrl;
-            } else if(str.startsWith("/")){
+            } else if(str.startsWith("/")) {
+                return StringUtil.getBaseUrl(baseUrl) + str;
+            }else if(!str.startsWith("http") && !StringUtil.isBase64(str)) {
                 try {
-                    return NetworkUtils.INSTANCE.getAbsoluteURL(redirectUrl, str.substring(1));
+                    return NetworkUtils.INSTANCE.getAbsoluteURL(redirectUrl, str);
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                 }

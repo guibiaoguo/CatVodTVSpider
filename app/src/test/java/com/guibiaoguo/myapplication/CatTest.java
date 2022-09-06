@@ -21,7 +21,7 @@ import com.github.catvod.spider.Cokemv;
 import com.github.catvod.spider.Enlienli;
 import com.github.catvod.spider.GoIndex;
 import com.github.catvod.spider.Hsck;
-import com.github.catvod.spider.HttpParser;
+import com.github.catvod.parser.HttpParser;
 import com.github.catvod.spider.IQIYI;
 import com.github.catvod.spider.Imaple;
 import com.github.catvod.spider.Juhi;
@@ -37,6 +37,8 @@ import com.github.catvod.spider.XPathAli;
 import com.github.catvod.spider.Ysgc;
 import com.github.catvod.spider.YydsAli2;
 import com.github.catvod.utils.Base64;
+import com.github.catvod.utils.CipherUtil;
+import com.github.catvod.utils.Misc;
 import com.github.catvod.utils.StringUtil;
 import com.github.catvod.utils.okhttp.OKCallBack;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
@@ -52,6 +54,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -61,6 +64,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -128,27 +132,29 @@ public class CatTest {
 
     @Test
     public void jsonpath() throws Exception {
-        String ext = "https://mao.guibiaoguo.tk/jsonpath.json";
+        String ext = "https://mao.guibiaoguo.ml/jsonpath.json";
         Spider spider = new Legado();
         spider.init(null, ext);
-        String category = spider.homeContent(false);
-        System.out.println(category);
-        showCategory(spider, category, 2);
-        JSONObject jsonObject = new JSONObject(category);
-        JSONArray classes = jsonObject.optJSONArray("class");
-        for (int i = 0; i < classes.length(); i++) {
-            String tid = classes.getJSONObject(i).optString("type_id");
-            System.out.println(tid);
-            category = spider.categoryContent(tid, "1", false, null);
-            System.out.println(category);
-            showCategory(spider, category, 0);
-        }
+        showFilter(spider, true);
+    }
+
+    @Test
+    public void checkGetgbk() throws IOException {
+        OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml("https://wap.dulaidw.com");
+        System.out.println(HttpParser.getContent("https://wap.dulaidw.com;get;gbk",callBack.getResult().body().bytes()));
+    }
+
+    @Test
+    public void checkGBK() {
+        Map<String, String> headerMap = new HashMap<>();
+        headerMap.put("content-Type","charset=gbk");
+        System.out.println(OkHttpUtil.string("https://wap.dulaidw.com",headerMap));
     }
 
     @Test
     public void hsck() throws Exception {
         Spider spider = new Hsck();
-        spider.init(null, "https://www.buscdn.fun/");
+        spider.init(null, "https://www.javsee.men/");
         System.out.println(spider.searchContent("巨乳", false));
 //        System.out.println(spider.searchContent("小姨", false));
 //        System.out.println(spider.searchContent("百家", false));
@@ -587,7 +593,7 @@ public class CatTest {
             if (!playurls.equals("")) {
                 String playurl = playurls.split("#")[0].split("\\$")[1];
                 System.out.println(playurl);
-                if (!StringUtils.contains(playurl, ".m3u8"))
+                if (spider instanceof Legado || (!StringUtils.contains(playurl, ".m3u8") && !StringUtils.contains(playurl, "jiexi")))
                     System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[0].split("\\$")[1], new ArrayList<>()));
 //                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[1].split("\\$")[1], new ArrayList<>()));
 //                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[2].split("\\$")[1], new ArrayList<>()));
@@ -799,29 +805,62 @@ public class CatTest {
         System.out.println(rulestr);
     }
 
-    @Test
-    public void bagedvd() throws Exception {
-        Spider spider = new Legado();
-        spider.init(null, "https://mao.guibiaoguo.tk/bagedvd.json");
-        String category = spider.homeContent(false);
+    public void showFilter(Spider spider, boolean filter) throws Exception {
+        String category = spider.homeContent(filter);
         System.out.println(category);
         showCategory(spider, category, 0);
         JSONObject jsonObject = new JSONObject(category);
         JSONArray classes = jsonObject.optJSONArray("class");
+        JSONObject filterObject = jsonObject.optJSONObject("filters");
+
+        Random random = new Random();
         for (int i = 0; i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
-            category = spider.categoryContent(tid, "1", false, null);
-            System.out.println(category);
-            showCategory(spider, category, 0);
+            JSONArray jsonArray1 = filterObject.optJSONArray(tid);
+            if (jsonArray1.length() > 0) {
+                HashMap filterMap = new HashMap();
+                if (filter) {
+                    int num = random.nextInt(jsonArray1.length());
+                    JSONArray jsonArray2 = jsonArray1.optJSONObject(num).optJSONArray("value");
+                    String key = jsonArray1.optJSONObject(num).optString("key");
+                    num = random.nextInt(jsonArray2.length());
+                    String v = jsonArray2.optJSONObject(num).optString("v");
+                    filterMap.put(key, v);
+                }
+                int pg = random.nextInt(4) + 1;
+                category = spider.categoryContent(tid, pg + "", filter, filterMap);
+                System.out.println(category);
+                showCategory(spider, category, 0);
+            }
         }
+    }
+    @Test
+    public void bagedvd() throws Exception {
+        Spider spider = new Legado();
+        spider.init(null, "https://mao.guibiaoguo.ml/bagedvd.json");
+        showFilter(spider, true);
     }
 
     @Test
     public void zqystv() throws Exception {
         Spider spider = new Legado();
-        spider.init(null, "https://mao.guibiaoguo.tk/zqystv.json");
-        String category = spider.homeContent(false);
+        spider.init(null, "https://mao.guibiaoguo.ml/zqystv.json");
+        showFilter(spider, true);
+    }
+
+    @Test
+    public void m896050() throws Exception {
+        Spider spider = new Legado();
+        spider.init(null, "https://mao.guibiaoguo.ml/896050.json");
+        showFilter(spider, true);
+    }
+
+    @Test
+    public void goindx1() throws Exception {
+        Spider spider = new Legado();
+        spider.init(null, "https://mao.guibiaoguo.ml/jsonpath.json");
+        String category = spider.homeContent(true);
         System.out.println(category);
         showCategory(spider, category, 0);
         JSONObject jsonObject = new JSONObject(category);
@@ -829,49 +868,33 @@ public class CatTest {
         for (int i = 0; i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
-            category = spider.categoryContent(tid, "1", false, null);
+            category = spider.categoryContent(tid, "1", true, null);
             System.out.println(category);
             showCategory(spider, category, 0);
         }
     }
 
     @Test
-    public void goindx1() throws Exception {
-        Spider spider = new Legado();
-        spider.init(null, "https://mao.guibiaoguo.tk/jsonpath.json");
-        String category = spider.homeContent(false);
-        System.out.println(category);
-        showCategory(spider, category, 0);
-//        JSONObject jsonObject = new JSONObject(category);
-//        JSONArray classes = jsonObject.optJSONArray("class");
-//        for (int i = 0; i < classes.length(); i++) {
-//            String tid = classes.getJSONObject(i).optString("type_id");
-//            System.out.println(tid);
-//            category = spider.categoryContent(tid, "1", false, null);
-//            System.out.println(category);
-//            showCategory(spider, category, 0);
-//        }
-    }
-
-    @Test
     public void testCat() {
         try {
-            String s = OkHttpUtil.string("https://mao.guibiaoguo.tk/212757_debug.json", getHeaders(""));
+            String s = OkHttpUtil.string("https://mao.guibiaoguo.ml/212757_debug.json", getHeaders(""));
             JSONObject mao = new JSONObject(s);
             JSONArray sites = mao.optJSONArray("sites");
             JSONArray trueSites = new JSONArray();
+            JSONArray failSites = new JSONArray();
             JSONArray playUrls = new JSONArray();
-            for (int i = 319; i < sites.length(); i++) {
+            for (int i = 0; i < sites.length(); i++) {
                 int k = 0;
                 JSONObject site = sites.optJSONObject(i);
+                System.out.println(site.optString("name"));
                 try {
                     Spider spider = null;
                     String api = site.optString("api");
                     String ext = site.optString("ext");
-                    if (site.optInt("type") == 0) {
+                    if (site.optInt("type") == 0 || site.optInt("type") == 1) {
                         if (StringUtil.isAbsUrl(api)) {
                             String content = OkHttpUtil.string(api, getHeaders(""));
-                            if (StringUtils.startsWith(content, "<?xml") || StringUtil.isJson(content)) {
+                            if (StringUtils.startsWith(content,"<rss") || StringUtils.startsWith(content, "<?xml") || StringUtil.isJson(content)) {
                                 System.out.println(api);
                                 trueSites.put(site);
                             }
@@ -901,9 +924,18 @@ public class CatTest {
                         String category = spider.homeContent(false);
                         System.out.println(category);
                         try {
-                            String playUrl = showCategory(spider, category, 0);
-                            playUrls.put(playUrl);
-                            k++;
+                            String playUrl = "";
+                            if (new JSONObject(category).optJSONArray("list") == null) {
+                                String category1 = spider.homeVideoContent();
+                                System.out.println(category1);
+                                playUrl = showCategory(spider, category1, 0);
+                            } else {
+                                playUrl = showCategory(spider, category, 0);
+                            }
+                            if (StringUtil.isNotEmpty(playUrl)) {
+                                playUrls.put(playUrl);
+                                k++;
+                            }
                         } catch (Exception e) {
                             SpiderDebug.log(e);
                         }
@@ -911,8 +943,8 @@ public class CatTest {
                         if (StringUtils.isNotEmpty(category)) {
                             JSONObject jsonObject = new JSONObject(category);
                             JSONArray classes = jsonObject.optJSONArray("class");
-                            for (int j = 0; j < 2; j++) {
-                                String tid = classes.getJSONObject(j).optString("type_id");
+                            for (int j = 0; j < 1; j++) {
+                                String tid = classes.optJSONObject(j).optString("type_id");
                                 System.out.println(tid);
                                 category = spider.categoryContent(tid, "1", false, null);
                                 System.out.println(category);
@@ -925,7 +957,7 @@ public class CatTest {
                                 }
                             }
                         }
-                        String[] keys = {"熊出没", "名侦探柯南"};
+                        String[] keys = {"凡人"};
                         for (String key : keys) {
                             category = spider.searchContent(key, false);
                             System.out.println(category);
@@ -945,8 +977,11 @@ public class CatTest {
                 }
                 if (k > 0)
                     trueSites.put(site);
+                else
+                    failSites.put(site);
             }
             System.out.println(trueSites.toString(4));
+            System.out.println(failSites.toString(4));
             System.out.println(playUrls.toString());
         } catch (Exception e) {
             e.printStackTrace();
@@ -1049,7 +1084,7 @@ public class CatTest {
     @Test
     public void hsck1() throws Exception {
         Spider spider = new Legado();
-        spider.init(null, "https://mao.guibiaoguo.tk/hsck1.json");
+        spider.init(null, "https://mao.guibiaoguo.ml/hsck1.json");
         String category = spider.homeContent(false);
         System.out.println(category);
         showCategory(spider, category, 0);
@@ -1065,9 +1100,21 @@ public class CatTest {
     }
 
     @Test
+    public void descrpt() {
+        String body = "9TsgB+aGKkThCBR4vvr4tdiNUrbwsZ3om7U1sXKnXSbSQQibZHJ7qHPmVXtSk2aO7qo5V5OPg7C6vgaxpCxgnxSX7+sK+UnGp9he4XAsGtGpasErZ\\/+4uBL15duIr7Dh";
+        String key = "bf70a456195ae394";
+        String iv = "184b2e0b1b471cae";
+        System.out.println(CipherUtil.aes5(Base64.decode(body, 0),key.getBytes(),iv.getBytes()));
+        String token = "26c7037fd5f83d5a0ea2d311bb02482f";
+        String timestamp = "1661899198";
+        System.out.println(token);
+        System.out.println(CipherUtil.md5("1000300001dc431681b806089dac1153fb13960f874" + timestamp + "notice",Misc.UTF8));
+    }
+
+    @Test
     public void hsck2() throws Exception {
         Spider spider = new Legado();
-        spider.init(null, "https://mao.guibiaoguo.tk/hsck2.json");
+        spider.init(null, "https://mao.guibiaoguo.ml/hsck2.json");
         String category = spider.homeContent(false);
         System.out.println(category);
         showCategory(spider, category, 0);
@@ -1086,16 +1133,21 @@ public class CatTest {
     }
 
     @Test
+    public void base64() {
+        System.out.println(new String(Base64.encode("https://api.aliyundrive.com/adrive/v3/file/list?jsonBody={\"share_id\":\"@get:{share_id}\",\"image_url_process\":\"image/resize,w_1920/format,jpeg\",\"parent_file_id\":\"@get:{parent_file_id}\",\"limit\":200,\"order_by\":\"name\",\"order_direction\":\"ASC\",\"video_thumbnail_process\":\"video/snapshot,t_1000,f_jpg,ar_auto,w_300\",\"image_thumbnail_process\":\"image/resize,w_160/format,jpeg\"};post;utf-8;{x-share-token@{{$.share_token}}}@put:{'share_id':'QGdldDp7Y2xhc3N9IyMoLiopIyguKikjIyQx','parent_file_id':'QGdldDp7Y2xhc3N9IyMuKj8jKC4qKSMjJDE='}".getBytes(),Base64.DEFAULT | Base64.URL_SAFE | Base64.NO_WRAP)));
+    }
+
+    @Test
     public void alipanso() throws Exception {
         Spider spider = new Legado();
-        spider.init(null, "http://mao.guibiaoguo.tk/alipanso.json");
+        spider.init(null, "https://mao.guibiaoguo.ml/alipanso.json");
         String category = "";
-        category = spider.homeContent(false);
+        category = spider.homeContent(true);
         System.out.println(category);
-        showCategory(spider, category, 0);
+        showCategory(spider, category, 1);
         JSONObject jsonObject = new JSONObject(category);
         JSONArray classes = jsonObject.optJSONArray("class");
-        for (int i = 0; i < classes.length(); i++) {
+        for (int i = 9; classes != null && i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
             category = spider.categoryContent(tid, "1", false, null);
@@ -1111,11 +1163,11 @@ public class CatTest {
     @Test
     public void affhs_legado() throws Exception {
         Spider spider = new Legado();
-        spider.init(null, "http://mao.guibiaoguo.tk/ahhfs.json");
+        spider.init(null, "http://mao.guibiaoguo.ml/ahhfs.json");
         String category = "";
         category = spider.homeContent(false);
         System.out.println(category);
-        showCategory(spider, category, 0);
+        showCategory(spider, category, 1);
         JSONObject jsonObject = new JSONObject(category);
         JSONArray classes = jsonObject.optJSONArray("class");
         for (int i = 0; i < classes.length(); i++) {
@@ -1123,7 +1175,7 @@ public class CatTest {
             System.out.println(tid);
             category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
-            showCategory(spider, category, 0);
+            showCategory(spider, category, 1);
         }
         category = spider.searchContent("火影忍者疾风传", false);
         System.out.println(category);
@@ -1259,7 +1311,7 @@ public class CatTest {
             JSONObject mao = new JSONObject(s);
             JSONArray sites = mao.optJSONArray("sites");
             JSONArray trueSites = new JSONArray();
-            for (int i = 36; i < 43; i++) {
+            for (int i = 0; i < sites.length(); i++) {
                 int k = 0;
                 JSONObject site = sites.optJSONObject(i);
                 try {
@@ -1708,9 +1760,9 @@ public class CatTest {
     @Test
     public void myalipan() throws Exception {
         Spider spider = new Legado();
-        spider.init(null, "http://mao.guibiaoguo.tk/myalipan.json");
+        spider.init(null, "http://mao.guibiaoguo.ml/myalipan.json");
         String category = "";
-        category = spider.homeContent(false);
+        category = spider.homeContent(true);
         System.out.println(category);
         showCategory(spider, category, 0);
         JSONObject jsonObject = new JSONObject(category);
@@ -1718,7 +1770,7 @@ public class CatTest {
         for (int i = 0; i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
-            category = spider.categoryContent(tid, "1", false, null);
+            category = spider.categoryContent(tid, "1", true, null);
             System.out.println(category);
             showCategory(spider, category, 0);
         }
@@ -1754,7 +1806,7 @@ public class CatTest {
     @Test
     public void qindou() throws Exception {
         Spider spider = new Legado();
-        spider.init(null, "http://185.205.12.38:4004/qindou.json");
+        spider.init(null, "https://mao.guibiaoguo.ml/qindou.json");
         String category = "";
 //        category = spider.searchContent("名侦探柯南TV版 国语", false);
 //        System.out.println(category);
@@ -1866,7 +1918,7 @@ public class CatTest {
         String url = "https://gitee.com/shentong_012/HikerRules/raw/master/11.txt";
         String ext = Base64.encodeToString(url.getBytes("UTF-8"), com.github.catvod.utils.Base64.DEFAULT | com.github.catvod.utils.Base64.URL_SAFE | com.github.catvod.utils.Base64.NO_WRAP);
         System.out.println(ext);
-        params.put("ext", "aHR0cHM6Ly9tYW8uZ3VpYmlhb2d1by50ay9oc2NrMS50eHQ7aHR0cHM6Ly9naXRlZS5jb20vc2hlbnRvbmdfMDEyL0hpa2VyUnVsZXMvcmF3L21hc3Rlci8lRTglQTclODYlRTclOTUlOEMudHh0");
+        params.put("ext", "aHR0cHM6Ly9tYW8uZ3VpYmlhb2d1by50ay9oc2NrMS50eHQ=");
         spider.proxy(params);
     }
 
@@ -2041,6 +2093,12 @@ public class CatTest {
     @Test
     public void test_img() {
         OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml("https://bj29.cn-beijing.data.alicloudccp.com/5fe9b26213ecc67347f04acc9e1966ab5cfcefe5%2F5fe9b2623ca64d4b919a4589bedac0437f484770?x-oss-access-key-id=LTAIsE5mAn2F493Q&x-oss-additional-headers=referer&x-oss-expires=1646745292&x-oss-process=video%2Fsnapshot%2Ct_120000%2Cf_jpg%2Cw_480%2Car_auto%2Cm_fast&x-oss-signature=FCOjYQ29HM6vfUfcZydSyJPV%2Bpa0w6p11va13yieQjQ%3D&x-oss-signature-version=OSS2;get;utf-8;{referer@https://www.aliyundrive.com/&&User-Agent@PC_UA}");
+        System.out.println(callBack.getResult().code());
+    }
+
+    @Test
+    public void test_BBB() {
+        OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml("https://api.bilibili.com/x/web-interface/search/type?search_type=video&keyword=%E7%9B%B8%E5%A3%B0;get;utf-8;{cookie@_uuid=555CC917-FB7A-4C29-E9E9-1FAB7F64C34F35647infoc; buvid3=251BC434-0158-4CF2-9689-415B90DBFD8B167627infoc; b_nut=1639843737; blackside_state=1; rpdid=|(J|kYlJuJm)0J'uYRklkY~Yk; buvid_fp=4c5ef178dbfca047f6f761107813e366; buvid4=62069D91-F760-49DF-A5E3-620800017C4872307-022021107-Up95BNeOMznhkE74VzsPjQ%3D%3D; CURRENT_FNVAL=4048; nostalgia_conf=-1&&User-Agent@PC_UA}");
         System.out.println(callBack.getResult().code());
     }
 }

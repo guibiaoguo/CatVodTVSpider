@@ -1,6 +1,6 @@
 package com.github.catvod.utils;
 
-import android.text.TextUtils;
+import com.github.catvod.utils.StringUtil;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -214,7 +214,7 @@ public class StringUtil {
 
     public static boolean isHexStr(String str) {
         boolean flag = false;
-        if (TextUtils.isEmpty(str)) {
+        if (StringUtil.isEmpty(str)) {
             return false;
         }
         if (!str.startsWith("#")) {
@@ -257,7 +257,7 @@ public class StringUtil {
     }
 
     public static boolean isUrl(String str) {
-        if (TextUtils.isEmpty(str)) {
+        if (StringUtil.isEmpty(str)) {
             return false;
         }
         if (isWebUrl(str)) {
@@ -267,7 +267,7 @@ public class StringUtil {
     }
 
     public static String getDom(String url) {
-        if (TextUtils.isEmpty(url)) {
+        if (StringUtil.isEmpty(url)) {
             return url;
         }
         try {
@@ -283,7 +283,7 @@ public class StringUtil {
     }
 
     public static String removeDom(String url) {
-        if (TextUtils.isEmpty(url)) {
+        if (isEmpty(url)) {
             return url;
         }
         try {
@@ -349,7 +349,7 @@ public class StringUtil {
      * @return keyword
      */
     public static String escapeExprSpecialWord(String keyword) {
-        if (!TextUtils.isEmpty(keyword)) {
+        if (!isEmpty(keyword)) {
             String[] fbsArr = {"\\", "$", "(", ")", "*", "+", ".", "[", "]", "?", "^", "{", "}", "|"};
             for (String key : fbsArr) {
                 if (keyword.contains(key)) {
@@ -368,7 +368,7 @@ public class StringUtil {
      */
 
     public static String removeSpecialWord(String keyword) {
-        if (!TextUtils.isEmpty(keyword)) {
+        if (!isEmpty(keyword)) {
             String[] fbsArr = {"\\", "$", "(", ")", "*", "+", ".", "[", "]", "?", "^", "{", "}", "|"};
             for (String key : fbsArr) {
                 if (keyword.contains(key)) {
@@ -629,6 +629,7 @@ public class StringUtil {
                     .replaceAll("%3B", ";")
                     .replaceAll("%3A", ":")
                     .replaceAll("%2C", ",")
+                    .replaceAll("%23", "#")
                     .replaceAll("\\+", "%20");
         } catch (Exception e) {
 
@@ -638,7 +639,7 @@ public class StringUtil {
 
 
     public static boolean isBase64(String str) {
-        String base64Pattern = "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$";
+        String base64Pattern = "^([A-Za-z0-9+_/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$";
         return Pattern.matches(base64Pattern, str);
     }
 
@@ -661,4 +662,5 @@ public class StringUtil {
         }
         return map;
     }
+
 }

@@ -119,27 +119,33 @@ public class QQ extends Spider {
     @Override
     public String homeVideoContent() {
         try {
-            String url = siteUrl + "/api.php/app/index_video?token=";
+            JSONObject result = new JSONObject();
+            String url = siteUrl + "/x/bu/pagesheet/list?_all=1&append=1&channel=choice";
             String srr = OkHttpUtil.string(url, getHeaders(url));
-            JSONObject jsonObject = new JSONObject(srr);
-            JSONArray jsonArray = jsonObject.getJSONArray("list");
-            JSONArray videos = new JSONArray();
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject jObj = jsonArray.getJSONObject(i);
-                JSONArray videoList = jObj.getJSONArray("vlist");
-                for (int j = 0; j < videoList.length() && j < 6; j++) {
-                    JSONObject vObj = videoList.getJSONObject(j);
+            try {
+                Document doc = Jsoup.parse(srr);
+                // 取首页推荐视频列表
+                Elements list = doc.select(".list_item");
+                JSONArray videos = new JSONArray();
+                for (int i = 0; i < list.size(); i++) {
+                    Element vod = list.get(i);
+                    String title = vod.selectFirst("a").attr("title");
+                    String cover = vod.selectFirst("img").attr("src");
+                    cover=fixUrl(url,cover);
+                    String remark = vod.selectFirst(".figure_caption").text();
+                    String id = vod.selectFirst("a").attr("data-float");
                     JSONObject v = new JSONObject();
-                    v.put("vod_id", vObj.optString("vod_id"));
-                    v.put("vod_name", vObj.optString("vod_name"));
-                    v.put("vod_pic", vObj.optString("vod_pic"));
-                    v.put("vod_remarks", vObj.optString("vod_remarks"));
+                    v.put("vod_id", id);
+                    v.put("vod_name", title);
+                    v.put("vod_pic", cover);
+                    v.put("vod_remarks", remark);
                     videos.put(v);
                 }
+                result.put("list", videos);
+            } catch (Exception e) {
+                SpiderDebug.log(e);
             }
-            JSONObject result = new JSONObject();
-            result.put("list", videos);
-            return result.toString();
+            return result.toString(4);
         } catch (Exception e) {
             SpiderDebug.log(e);
         }
@@ -218,7 +224,7 @@ public class QQ extends Spider {
             vodList.put("vod_id", ids.get(0));
             vodList.put("vod_name", dataObject.optString("title"));
             vodList.put("vod_pic", fixUrl(url,dataObject.optString("pic")));
-            vodList.put("type_name", jsonObject.optJSONArray("typ").opt(0));
+            vodList.put("type_name", jsonObject.optJSONArray("typ").toString().replaceAll("\\[|\\]|\"",""));
             vodList.put("vod_year", dataObject.optString("year"));
             JSONObject people = jsonObject.optJSONObject("people");
             JSONArray main_charactor = jsonObject.optJSONArray("nam").optJSONArray(0);
@@ -228,12 +234,12 @@ public class QQ extends Spider {
                     charactors.add(main_charactor.opt(i));
                 }
             }
-//            vodList.put("vod_area", dataObject.getString("vod_area"));
-//            vodList.put("vod_remarks", dataObject.getString("vod_remarks"));
+            vodList.put("vod_area", "");
+            vodList.put("vod_remarks", "");
             vodList.put("vod_actor", join(",",charactors));
-//            vodList.put("vod_director", dataObject.getString("vod_director"));
+            vodList.put("vod_director", "");
             vodList.put("vod_content", dataObject.optString("description"));
-            JSONArray playerList = dataObject.getJSONArray("video_ids");
+            JSONArray playerList = dataObject.optJSONArray("video_ids");
             List<String> playFlags = new ArrayList<>();
             List<String> plays = new ArrayList<>();
             for (int i = 1; i <= playerList.length(); i++) {
@@ -241,9 +247,9 @@ public class QQ extends Spider {
                 if(i%30==0||i==playerList.length()) {
                     url = "https://union.video.qq.com/fcgi-bin/data?otype=json&tid=682&appid=20001238&appkey=6c03bbe9658448a4&union_platform=1&idlist=" + join(",", playFlags);
                     srr = OkHttpUtil.string(url, getHeaders(url));
-                    JSONArray results = new JSONObject(srr.substring(13, srr.length() - 1)).getJSONArray("results");
+                    JSONArray results = new JSONObject(srr.substring(13, srr.length() - 1)).optJSONArray("results");
                     for (int j = 0; j < results.length(); j++) {
-                        JSONObject data = results.getJSONObject(j).getJSONObject("fields");
+                        JSONObject data = results.optJSONObject(j).optJSONObject("fields");
                         if(!data.optString("title").contains("预告"))
                             plays.add(data.optString("title").replace(dataObject.optString("title")+"_","") + "$" + "https://v.qq.com/x/cover/" +ids.get(0) + "/" + data.optString("vid")+".html");
                     }
@@ -314,10 +320,10 @@ public class QQ extends Spider {
             String url = "http://node.video.qq.com/x/api/msearch?keyWord=" + key;
             String srr = OkHttpUtil.string(url, getHeaders(url));
             JSONObject dataObject = new JSONObject(srr);
-            JSONArray jsonArray = dataObject.getJSONArray("uiData");
+            JSONArray jsonArray = dataObject.optJSONArray("uiData");
             JSONArray videos = new JSONArray();
             for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject vObj = jsonArray.getJSONObject(i).getJSONArray("data").getJSONObject(0);
+                JSONObject vObj = jsonArray.optJSONObject(i).optJSONArray("data").optJSONObject(0);
                 JSONObject v = new JSONObject();
                 v.put("vod_id", vObj.optString("id"));
                 v.put("vod_name", vObj.optString("title"));

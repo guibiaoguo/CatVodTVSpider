@@ -34,8 +34,8 @@ import java.util.regex.Pattern;
 
 public class Jumi extends Spider {
 
-    private static final String siteUrl = "https://jumi.su";
-    private static final String siteHost = "jumi.su";
+    private static final String siteUrl = "https://jumi.one";
+    private static final String siteHost = "jumi.one";
 
     protected JSONObject playerConfig;
     protected JSONObject filterConfig;
@@ -308,8 +308,8 @@ public class Jumi extends Spider {
                 @Override
                 public int compare(String o1, String o2) {
                     try {
-                        int sort1 = playerConfig.getJSONObject(o1).getInt("or");
-                        int sort2 = playerConfig.getJSONObject(o2).getInt("or");
+                        int sort1 = playerConfig.optJSONObject(o1).getInt("or");
+                        int sort2 = playerConfig.optJSONObject(o2).getInt("or");
 
                         if (sort1 == sort2) {
                             return 1;
@@ -332,7 +332,7 @@ public class Jumi extends Spider {
                 boolean found = false;
                 for (Iterator<String> it = playerConfig.keys(); it.hasNext(); ) {
                     String flag = it.next();
-                    if (playerConfig.getJSONObject(flag).getString("sh").equals(sourceName)) {
+                    if (playerConfig.optJSONObject(flag).optString("sh").equals(sourceName)) {
                         sourceName = flag;
                         found = true;
                         break;
@@ -411,10 +411,10 @@ public class Jumi extends Spider {
                     int end = scContent.lastIndexOf('}') + 1;
                     String json = scContent.substring(start, end);
                     JSONObject player = new JSONObject(json);
-                    if (playerConfig.has(player.getString("from"))) {
-                        JSONObject pCfg = playerConfig.getJSONObject(player.getString("from"));
-                        String videoUrl = player.getString("url");
-                        String playUrl = pCfg.getString("pu");
+                    if (playerConfig.has(player.optString("from"))) {
+                        JSONObject pCfg = playerConfig.optJSONObject(player.optString("from"));
+                        String videoUrl = player.optString("url");
+                        String playUrl = pCfg.optString("pu");
                         result.put("parse", 0);
 //                        result.put("playUrl", playUrl);
                         result.put("url", videoUrl);
@@ -442,12 +442,12 @@ public class Jumi extends Spider {
             JSONObject result = new JSONObject();
             JSONArray videos = new JSONArray();
             if (searchResult.getInt("total") > 0) {
-                JSONArray lists = new JSONArray(searchResult.getString("list"));
+                JSONArray lists = new JSONArray(searchResult.optString("list"));
                 for (int i = 0; i < lists.length(); i++) {
-                    JSONObject vod = lists.getJSONObject(i);
-                    String id = vod.getString("id");
-                    String title = vod.getString("name");
-                    String cover = vod.getString("pic");
+                    JSONObject vod = lists.optJSONObject(i);
+                    String id = vod.optString("id");
+                    String title = vod.optString("name");
+                    String cover = vod.optString("pic");
                     JSONObject v = new JSONObject();
                     v.put("vod_id", id);
                     v.put("vod_name", title);

@@ -324,7 +324,7 @@ public class XPathRule {
 
     public static XPathRule fromJson(String json) {
         try {
-            JSONObject jsonObj = new JSONObject(json);
+            JSONObject jsonObj = new JSONObject(json.replaceAll(",\\s+//.*",",").replaceAll("^//.*","").replaceAll("[ ]+//.*",""));
             XPathRule rule = new XPathRule();
             rule.ua = jsonObj.optString("ua");
             rule.homeUrl = jsonObj.optString("homeUrl").trim();

@@ -1,7 +1,7 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
-import android.text.TextUtils;
+import com.github.catvod.utils.StringUtil;
 
 import com.github.catvod.utils.StringUtil;
 
@@ -47,15 +47,15 @@ public class YydsAli2 extends Spider {
             String url = siteUrl + "/api/categories";
             String content = OkHttpUtil.string(url, getHeaders(url));
             JSONObject jsonObject = new JSONObject(content);
-            JSONArray jsonArray = jsonObject.getJSONArray("data");
+            JSONArray jsonArray = jsonObject.optJSONArray("data");
             JSONArray classes = new JSONArray();
             for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject jObj = jsonArray.getJSONObject(i);
-                String typeName = jObj.getString("title");
+                JSONObject jObj = jsonArray.optJSONObject(i);
+                String typeName = jObj.optString("title");
                 if (typeName.equals("首页") || typeName.equals("热门精选")) {
                     continue;
                 }
-                String typeId = jObj.getString("id");
+                String typeId = jObj.optString("id");
                 JSONObject newCls = new JSONObject();
                 newCls.put("type_id", typeId);
                 newCls.put("type_name", typeName);
@@ -90,12 +90,12 @@ public class YydsAli2 extends Spider {
                     public void onResponse(String response) {
                         try {
                             JSONObject jsonObject = new JSONObject(response);
-                            JSONArray jsonArray = jsonObject.getJSONArray("data");
+                            JSONArray jsonArray = jsonObject.optJSONArray("data");
                             for (int i = 0; i < jsonArray.length(); i++) {
-                                JSONObject vObj = jsonArray.getJSONObject(i);
+                                JSONObject vObj = jsonArray.optJSONObject(i);
                                 JSONObject v = new JSONObject();
-                                v.put("vod_id", vObj.getString("id"));
-                                v.put("vod_name", vObj.getString("title"));
+                                v.put("vod_id", vObj.optString("id"));
+                                v.put("vod_name", vObj.optString("title"));
                                 v.put("vod_pic", vObj.optString("cover"));
                                 String mark = vObj.optString("subtitle");
                                 if (mark.equals("null"))
@@ -143,12 +143,12 @@ public class YydsAli2 extends Spider {
                 public void onResponse(String response) {
                     try {
                         JSONObject jsonObject = new JSONObject(response);
-                        JSONArray jsonArray = jsonObject.getJSONArray("data");
+                        JSONArray jsonArray = jsonObject.optJSONArray("data");
                         for (int i = 0; i < jsonArray.length(); i++) {
-                            JSONObject vObj = jsonArray.getJSONObject(i);
+                            JSONObject vObj = jsonArray.optJSONObject(i);
                             JSONObject v = new JSONObject();
-                            v.put("vod_id", vObj.getString("id"));
-                            v.put("vod_name", vObj.getString("title"));
+                            v.put("vod_id", vObj.optString("id"));
+                            v.put("vod_name", vObj.optString("title"));
                             v.put("vod_pic", vObj.optString("cover"));
                             String mark = vObj.optString("subtitle");
                             if (mark.equals("null"))
@@ -193,29 +193,29 @@ public class YydsAli2 extends Spider {
                 public void onResponse(String response) {
                     try {
                         JSONObject dataObject = new JSONObject(response);
-                        JSONObject vObj = dataObject.getJSONObject("data");
+                        JSONObject vObj = dataObject.optJSONObject("data");
 
-                        vodAtom.put("vod_id", vObj.getString("id"));
-                        vodAtom.put("vod_name", vObj.getString("title"));
-                        vodAtom.put("vod_pic", vObj.getString("cover"));
+                        vodAtom.put("vod_id", vObj.optString("id"));
+                        vodAtom.put("vod_name", vObj.optString("title"));
+                        vodAtom.put("vod_pic", vObj.optString("cover"));
                         vodAtom.put("type_name", "");
-                        vodAtom.put("vod_year", vObj.getString("year"));
-                        vodAtom.put("vod_area", vObj.getString("region"));
+                        vodAtom.put("vod_year", vObj.optString("year"));
+                        vodAtom.put("vod_area", vObj.optString("region"));
                         String mark = vObj.optString("subtitle");
                         if (mark.equals("null"))
                             mark = "";
                         vodAtom.put("vod_remarks", mark);
-                        vodAtom.put("vod_actor", vObj.getString("actors"));
-                        vodAtom.put("vod_director", vObj.getString("director"));
+                        vodAtom.put("vod_actor", vObj.optString("actors"));
+                        vodAtom.put("vod_director", vObj.optString("director"));
                         String desc = vObj.optString("desc");
                         if (desc.equals("null"))
                             desc = "";
                         vodAtom.put("vod_content", desc);
 
                         Map<String, String> vod_play = new LinkedHashMap<>();
-                        JSONArray jsonArray = vObj.getJSONArray("links");
+                        JSONArray jsonArray = vObj.optJSONArray("links");
                         for (int i = 0; i < jsonArray.length(); i++) {
-                            JSONObject obj = jsonArray.getJSONObject(i);
+                            JSONObject obj = jsonArray.optJSONObject(i);
                             String link = obj.optString("link", "");
                             updatePlaylist(link, vod_play);
                         }
@@ -223,8 +223,8 @@ public class YydsAli2 extends Spider {
                             updatePlaylist(vObj.optString("content"), vod_play);
                         }
                         if (vod_play.size() > 0) {
-                            String vod_play_from = TextUtils.join("$$$", vod_play.keySet());
-                            String vod_play_url = TextUtils.join("$$$", vod_play.values());
+                            String vod_play_from = StringUtil.join("$$$", vod_play.keySet());
+                            String vod_play_url = StringUtil.join("$$$", vod_play.values());
                             vodAtom.put("vod_play_from", vod_play_from);
                             vodAtom.put("vod_play_url", vod_play_url);
                         }
@@ -295,13 +295,13 @@ public class YydsAli2 extends Spider {
                     public void onResponse(String response) {
                         String videoUrl = "";
                         try {
-                            JSONArray playList = new JSONObject(response).getJSONObject("video_preview_play_info").getJSONArray("live_transcoding_task_list");
+                            JSONArray playList = new JSONObject(response).optJSONObject("video_preview_play_info").optJSONArray("live_transcoding_task_list");
                             String[] orders = new String[]{"FHD", "HD", "SD"};
                             for (String or : orders) {
                                 for (int i = 0; i < playList.length(); i++) {
-                                    JSONObject obj = playList.getJSONObject(i);
+                                    JSONObject obj = playList.optJSONObject(i);
                                     if (obj.optString("template_id").equals(or)) {
-                                        videoUrl = obj.getString("url");
+                                        videoUrl = obj.optString("url");
                                         break;
                                     }
                                 }
@@ -309,7 +309,7 @@ public class YydsAli2 extends Spider {
                                     break;
                             }
                             if (videoUrl.isEmpty() && playList.length() > 0) {
-                                videoUrl = playList.getJSONObject(0).getString("url");
+                                videoUrl = playList.optJSONObject(0).optString("url");
                             }
                         } catch (JSONException e) {
                         } finally {
@@ -318,14 +318,14 @@ public class YydsAli2 extends Spider {
                     }
                 };
                 OkHttpUtil.postJson(OkHttpUtil.defaultClient(), "https://api.aliyundrive.com/v2/file/get_share_link_video_preview_play_info", json.toString(), headers, callback);
-                JSONArray playList = new JSONObject(callback.getResult()).getJSONObject("video_preview_play_info").getJSONArray("live_transcoding_task_list");
+                JSONArray playList = new JSONObject(callback.getResult()).optJSONObject("video_preview_play_info").optJSONArray("live_transcoding_task_list");
                 String videoUrl = "";
                 String[] orders = new String[]{"FHD", "HD", "SD"};
                 for (String or : orders) {
                     for (int i = 0; i < playList.length(); i++) {
-                        JSONObject obj = playList.getJSONObject(i);
+                        JSONObject obj = playList.optJSONObject(i);
                         if (obj.optString("template_id").equals(or)) {
-                            videoUrl = obj.getString("url");
+                            videoUrl = obj.optString("url");
                             break;
                         }
                     }
@@ -333,7 +333,7 @@ public class YydsAli2 extends Spider {
                         break;
                 }
                 if (videoUrl.isEmpty() && playList.length() > 0) {
-                    videoUrl = playList.getJSONObject(0).getString("url");
+                    videoUrl = playList.optJSONObject(0).optString("url");
                 }
                 JSONObject headerObj = new JSONObject();
                 headerObj.put("user-agent", " Dalvik/2.1.0 (Linux; U; Android 7.0; ZTE BA520 Build/MRA58K)");
@@ -373,14 +373,14 @@ public class YydsAli2 extends Spider {
                     public void onResponse(String response) {
                         try {
                             JSONObject jsonObject = new JSONObject(response);
-                            JSONArray jsonArray = jsonObject.getJSONArray("data");
+                            JSONArray jsonArray = jsonObject.optJSONArray("data");
                             for (int i = 0; i < jsonArray.length(); i++) {
-                                JSONObject vObj = jsonArray.getJSONObject(i);
+                                JSONObject vObj = jsonArray.optJSONObject(i);
                                 JSONObject v = new JSONObject();
-                                v.put("vod_id", vObj.getString("id"));
-                                v.put("vod_name", vObj.getString("title"));
-                                v.put("vod_pic", vObj.getString("cover"));
-                                v.put("vod_remarks", vObj.getString("subtitle"));
+                                v.put("vod_id", vObj.optString("id"));
+                                v.put("vod_name", vObj.optString("title"));
+                                v.put("vod_pic", vObj.optString("cover"));
+                                v.put("vod_remarks", vObj.optString("subtitle"));
                                 videos.put(v);
                             }
                         } catch (JSONException e) {
@@ -432,7 +432,7 @@ public class YydsAli2 extends Spider {
                     public void onResponse(String response) {
                         try {
                             JSONObject obj = new JSONObject(response);
-                            accessTk = obj.getString("token_type") + " " + obj.getString("access_token");
+                            accessTk = obj.optString("token_type") + " " + obj.optString("access_token");
                         } catch (Exception e) {
                             SpiderDebug.log(e);
                         }
@@ -498,14 +498,14 @@ public class YydsAli2 extends Spider {
             JSONArray rootList = new JSONObject(callback.getResult()).optJSONArray("items");
             if (rootList != null && rootList.length() > 0) {
                 for (int i = 0; i < rootList.length(); i++) {
-                    JSONObject item = rootList.getJSONObject(i);
-                    if (item.getString("type").equals("folder")) {
-                        String dirId = item.getString("file_id");
+                    JSONObject item = rootList.optJSONObject(i);
+                    if (item.optString("type").equals("folder")) {
+                        String dirId = item.optString("file_id");
                         getFileList(shareTk, shareId, sharePwd, dirId, vodItems);
                     } else {
-                        if (item.getString("type").equals("file") && !item.getString("file_extension").equals("txt")) {
-                            String fileId = item.getString("file_id");
-                            String fileName = item.getString("name");
+                        if (item.optString("type").equals("file") && !item.optString("file_extension").equals("txt")) {
+                            String fileId = item.optString("file_id");
+                            String fileName = item.optString("name");
                             vodItems.add(fileName + "$" + shareId + "+" + fileId);
                         }
                     }

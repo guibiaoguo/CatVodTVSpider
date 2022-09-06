@@ -1,7 +1,7 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
-import android.text.TextUtils;
+import com.github.catvod.utils.StringUtil;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
@@ -47,11 +47,11 @@ public class AppYsV2 extends Spider {
                 String json = desc(OkHttpUtil.string(url, getHeaders(url)), (byte) 0);
                 JSONObject obj = new JSONObject(json);
                 if (obj.has("list") && obj.get("list") instanceof JSONArray) {
-                    jsonArray = obj.getJSONArray("list");
-                } else if (obj.has("data") && obj.get("data") instanceof JSONObject && obj.getJSONObject("data").has("list") && obj.getJSONObject("data").get("list") instanceof JSONArray) {
-                    jsonArray = obj.getJSONObject("data").getJSONArray("list");
+                    jsonArray = obj.optJSONArray("list");
+                } else if (obj.has("data") && obj.get("data") instanceof JSONObject && obj.optJSONObject("data").has("list") && obj.optJSONObject("data").get("list") instanceof JSONArray) {
+                    jsonArray = obj.optJSONObject("data").optJSONArray("list");
                 } else if (obj.has("data") && obj.get("data") instanceof JSONArray) {
-                    jsonArray = obj.getJSONArray("data");
+                    jsonArray = obj.optJSONArray("data");
                 }
             } else { // 通过filter列表读分类
                 String filterStr = getFilterTypes(url, null);
@@ -71,11 +71,11 @@ public class AppYsV2 extends Spider {
             JSONArray classes = new JSONArray();
             if (jsonArray != null) {
                 for (int i = 0; i < jsonArray.length(); i++) {
-                    JSONObject jObj = jsonArray.getJSONObject(i);
-                    String typeName = jObj.getString("type_name");
+                    JSONObject jObj = jsonArray.optJSONObject(i);
+                    String typeName = jObj.optString("type_name");
                     if (isBan(typeName))
                         continue;
-                    String typeId = jObj.getString("type_id");
+                    String typeId = jObj.optString("type_id");
                     JSONObject newCls = new JSONObject();
                     newCls.put("type_id", typeId);
                     newCls.put("type_name", typeName);
@@ -132,7 +132,7 @@ public class AppYsV2 extends Spider {
                         if (!result.has("filters")) {
                             result.put("filters", new JSONObject());
                         }
-                        result.getJSONObject("filters").put(typeId, filterArr);
+                        result.optJSONObject("filters").put(typeId, filterArr);
                     }
                     classes.put(newCls);
                 }
@@ -160,14 +160,14 @@ public class AppYsV2 extends Spider {
             JSONObject obj = new JSONObject(json);
             JSONArray videos = new JSONArray();
             if (isTV) {
-                JSONArray jsonArray = obj.getJSONArray("data");
+                JSONArray jsonArray = obj.optJSONArray("data");
                 for (int i = 0; i < jsonArray.length(); i++) {
-                    JSONObject vObj = jsonArray.getJSONObject(i);
+                    JSONObject vObj = jsonArray.optJSONObject(i);
                     JSONObject v = new JSONObject();
-                    v.put("vod_id", vObj.getString("nextlink"));
-                    v.put("vod_name", vObj.getString("title"));
-                    v.put("vod_pic", vObj.getString("pic"));
-                    v.put("vod_remarks", vObj.getString("state"));
+                    v.put("vod_id", vObj.optString("nextlink"));
+                    v.put("vod_name", vObj.optString("title"));
+                    v.put("vod_pic", vObj.optString("pic"));
+                    v.put("vod_remarks", vObj.optString("state"));
                     videos.put(v);
                 }
             } else {
@@ -179,16 +179,16 @@ public class AppYsV2 extends Spider {
                 List<String> ids = new ArrayList<>();
                 for (JSONArray jsonArray : arrays) {
                     for (int i = 0; i < jsonArray.length(); i++) {
-                        JSONObject vObj = jsonArray.getJSONObject(i);
-                        String vid = vObj.getString("vod_id");
+                        JSONObject vObj = jsonArray.optJSONObject(i);
+                        String vid = vObj.optString("vod_id");
                         if (ids.contains(vid))
                             continue;
                         ids.add(vid);
                         JSONObject v = new JSONObject();
                         v.put("vod_id", vid);
-                        v.put("vod_name", vObj.getString("vod_name"));
-                        v.put("vod_pic", vObj.getString("vod_pic"));
-                        v.put("vod_remarks", vObj.getString("vod_remarks"));
+                        v.put("vod_name", vObj.optString("vod_name"));
+                        v.put("vod_pic", vObj.optString("vod_pic"));
+                        v.put("vod_remarks", vObj.optString("vod_remarks"));
                         videos.put(v);
                     }
                 }
@@ -224,10 +224,10 @@ public class AppYsV2 extends Spider {
                 } else if (obj.has("pagecount") && obj.get("pagecount") instanceof Integer) {
                     totalPg = obj.getInt("pagecount");
                 } else if (obj.has("data") && obj.get("data") instanceof JSONObject &&
-                        (obj.getJSONObject("data").has("total") && obj.getJSONObject("data").get("total") instanceof Integer &&
-                                obj.getJSONObject("data").has("limit") && obj.getJSONObject("data").get("limit") instanceof Integer)) {
-                    int limit = obj.getJSONObject("data").getInt("limit");
-                    int total = obj.getJSONObject("data").getInt("total");
+                        (obj.optJSONObject("data").has("total") && obj.optJSONObject("data").get("total") instanceof Integer &&
+                                obj.optJSONObject("data").has("limit") && obj.optJSONObject("data").get("limit") instanceof Integer)) {
+                    int limit = obj.optJSONObject("data").getInt("limit");
+                    int total = obj.optJSONObject("data").getInt("total");
                     totalPg = total % limit == 0 ? (total / limit) : (total / limit + 1);
                 }
             } catch (Exception e) {
@@ -237,28 +237,28 @@ public class AppYsV2 extends Spider {
             JSONArray jsonArray = null;
             JSONArray videos = new JSONArray();
             if (obj.has("list") && obj.get("list") instanceof JSONArray) {
-                jsonArray = obj.getJSONArray("list");
-            } else if (obj.has("data") && obj.get("data") instanceof JSONObject && obj.getJSONObject("data").has("list") && obj.getJSONObject("data").get("list") instanceof JSONArray) {
-                jsonArray = obj.getJSONObject("data").getJSONArray("list");
+                jsonArray = obj.optJSONArray("list");
+            } else if (obj.has("data") && obj.get("data") instanceof JSONObject && obj.optJSONObject("data").has("list") && obj.optJSONObject("data").get("list") instanceof JSONArray) {
+                jsonArray = obj.optJSONObject("data").optJSONArray("list");
             } else if (obj.has("data") && obj.get("data") instanceof JSONArray) {
-                jsonArray = obj.getJSONArray("data");
+                jsonArray = obj.optJSONArray("data");
             }
             if (jsonArray != null) {
                 for (int i = 0; i < jsonArray.length(); i++) {
-                    JSONObject vObj = jsonArray.getJSONObject(i);
+                    JSONObject vObj = jsonArray.optJSONObject(i);
                     if (vObj.has("vod_id")) {
                         JSONObject v = new JSONObject();
-                        v.put("vod_id", vObj.getString("vod_id"));
-                        v.put("vod_name", vObj.getString("vod_name"));
-                        v.put("vod_pic", vObj.getString("vod_pic"));
-                        v.put("vod_remarks", vObj.getString("vod_remarks"));
+                        v.put("vod_id", vObj.optString("vod_id"));
+                        v.put("vod_name", vObj.optString("vod_name"));
+                        v.put("vod_pic", vObj.optString("vod_pic"));
+                        v.put("vod_remarks", vObj.optString("vod_remarks"));
                         videos.put(v);
                     } else {
                         JSONObject v = new JSONObject();
-                        v.put("vod_id", vObj.getString("nextlink"));
-                        v.put("vod_name", vObj.getString("title"));
-                        v.put("vod_pic", vObj.getString("pic"));
-                        v.put("vod_remarks", vObj.getString("state"));
+                        v.put("vod_id", vObj.optString("nextlink"));
+                        v.put("vod_name", vObj.optString("title"));
+                        v.put("vod_pic", vObj.optString("pic"));
+                        v.put("vod_remarks", vObj.optString("state"));
                         videos.put(v);
                     }
                 }
@@ -308,28 +308,28 @@ public class AppYsV2 extends Spider {
             JSONArray jsonArray = null;
             JSONArray videos = new JSONArray();
             if (obj.has("list") && obj.get("list") instanceof JSONArray) {
-                jsonArray = obj.getJSONArray("list");
-            } else if (obj.has("data") && obj.get("data") instanceof JSONObject && obj.getJSONObject("data").has("list") && obj.getJSONObject("data").get("list") instanceof JSONArray) {
-                jsonArray = obj.getJSONObject("data").getJSONArray("list");
+                jsonArray = obj.optJSONArray("list");
+            } else if (obj.has("data") && obj.get("data") instanceof JSONObject && obj.optJSONObject("data").has("list") && obj.optJSONObject("data").get("list") instanceof JSONArray) {
+                jsonArray = obj.optJSONObject("data").optJSONArray("list");
             } else if (obj.has("data") && obj.get("data") instanceof JSONArray) {
-                jsonArray = obj.getJSONArray("data");
+                jsonArray = obj.optJSONArray("data");
             }
             if (jsonArray != null) {
                 for (int i = 0; i < jsonArray.length(); i++) {
-                    JSONObject vObj = jsonArray.getJSONObject(i);
+                    JSONObject vObj = jsonArray.optJSONObject(i);
                     if (vObj.has("vod_id")) {
                         JSONObject v = new JSONObject();
-                        v.put("vod_id", vObj.getString("vod_id"));
-                        v.put("vod_name", vObj.getString("vod_name"));
-                        v.put("vod_pic", vObj.getString("vod_pic"));
-                        v.put("vod_remarks", vObj.getString("vod_remarks"));
+                        v.put("vod_id", vObj.optString("vod_id"));
+                        v.put("vod_name", vObj.optString("vod_name"));
+                        v.put("vod_pic", vObj.optString("vod_pic"));
+                        v.put("vod_remarks", vObj.optString("vod_remarks"));
                         videos.put(v);
                     } else {
                         JSONObject v = new JSONObject();
-                        v.put("vod_id", vObj.getString("nextlink"));
-                        v.put("vod_name", vObj.getString("title"));
-                        v.put("vod_pic", vObj.getString("pic"));
-                        v.put("vod_remarks", vObj.getString("state"));
+                        v.put("vod_id", vObj.optString("nextlink"));
+                        v.put("vod_name", vObj.optString("title"));
+                        v.put("vod_pic", vObj.optString("pic"));
+                        v.put("vod_remarks", vObj.optString("state"));
                         videos.put(v);
                     }
                 }
@@ -386,7 +386,7 @@ public class AppYsV2 extends Spider {
                 } else if (o instanceof JSONArray) {
                     JSONArray array = (JSONArray) o;
                     for (int i = 0; i < array.length(); i++) {
-                        findJsonArray(array.getJSONObject(i), match, result);
+                        findJsonArray(array.optJSONObject(i), match, result);
                     }
                 }
             } catch (JSONException e) {
@@ -396,15 +396,11 @@ public class AppYsV2 extends Spider {
     }
 
     private String jsonArr2Str(JSONArray array) {
-        try {
-            ArrayList<String> strings = new ArrayList<>();
-            for (int i = 0; i < array.length(); i++) {
-                strings.add(array.getString(i));
-            }
-            return TextUtils.join(",", strings);
-        } catch (JSONException e) {
+        ArrayList<String> strings = new ArrayList<>();
+        for (int i = 0; i < array.length(); i++) {
+            strings.add(array.optString(i));
         }
-        return "";
+        return StringUtil.join(",", strings);
     }
 
     private HashMap<String, String> getHeaders(String URL) {
@@ -500,7 +496,10 @@ public class AppYsV2 extends Spider {
         } else if (URL.contains(".vod")) {
             if (URL.contains("iopenyun.com")) {
                 return URL + "/list?type";
-            } else {
+            } else if (URL.contains("69mj.com") || URL.contains("aitee.cc") || URL.contains("aliys.cn")||URL.contains("naifei.org"))  {
+                return URL;
+            }
+            else {
                 return URL + "/types";
             }
         } else {
@@ -547,10 +546,7 @@ public class AppYsV2 extends Spider {
             while (typeExtendKeys.hasNext()) {
                 String key = typeExtendKeys.next();
                 if (key.equals("class") || key.equals("area") || key.equals("lang") || key.equals("year")) {
-                    try {
-                        str = str + "筛选" + key + "+全部=+" + typeExtend.getString(key).replace(",", "+") + "\n";
-                    } catch (JSONException e) {
-                    }
+                    str = str + "筛选" + key + "+全部=+" + typeExtend.optString(key).replace(",", "+") + "\n";
                 }
             }
         }
@@ -604,10 +600,10 @@ public class AppYsV2 extends Spider {
         ArrayList<String> playUrls = new ArrayList<>();
         ArrayList<String> playFlags = new ArrayList<>();
         if (URL.contains("api.php/app/")) {
-            JSONObject data = object.getJSONObject("data");
+            JSONObject data = object.optJSONObject("data");
             vod.put("vod_id", data.optString("vod_id", vid));
-            vod.put("vod_name", data.getString("vod_name"));
-            vod.put("vod_pic", data.getString("vod_pic"));
+            vod.put("vod_name", data.optString("vod_name"));
+            vod.put("vod_pic", data.optString("vod_pic"));
             vod.put("type_name", data.optString("vod_class"));
             vod.put("vod_year", data.optString("vod_year"));
             vod.put("vod_area", data.optString("vod_area"));
@@ -615,14 +611,14 @@ public class AppYsV2 extends Spider {
             vod.put("vod_actor", data.optString("vod_actor"));
             vod.put("vod_director", data.optString("vod_director"));
             vod.put("vod_content", data.optString("vod_content"));
-            JSONArray vodUrlWithPlayer = data.getJSONArray("vod_url_with_player");
+            JSONArray vodUrlWithPlayer = data.optJSONArray("vod_url_with_player");
             for (int i = 0; i < vodUrlWithPlayer.length(); i++) {
-                JSONObject from = vodUrlWithPlayer.getJSONObject(i);
+                JSONObject from = vodUrlWithPlayer.optJSONObject(i);
                 String flag = from.optString("code").trim();
                 if (flag.isEmpty())
-                    flag = from.getString("name").trim();
+                    flag = from.optString("name").trim();
                 playFlags.add(flag);
-                playUrls.add(from.getString("url"));
+                playUrls.add(from.optString("url"));
                 String purl = from.optString("parse_api").trim();
                 ArrayList<String> parseUrls = parseUrlMap.get(flag);
                 if (parseUrls == null) {
@@ -633,10 +629,10 @@ public class AppYsV2 extends Spider {
                     parseUrls.add(purl);
             }
         } else if (URL.contains("xgapp")) {
-            JSONObject data = object.getJSONObject("data").getJSONObject("vod_info");
+            JSONObject data = object.optJSONObject("data").optJSONObject("vod_info");
             vod.put("vod_id", data.optString("vod_id", vid));
-            vod.put("vod_name", data.getString("vod_name"));
-            vod.put("vod_pic", data.getString("vod_pic"));
+            vod.put("vod_name", data.optString("vod_name"));
+            vod.put("vod_pic", data.optString("vod_pic"));
             vod.put("type_name", data.optString("vod_class"));
             vod.put("vod_year", data.optString("vod_year"));
             vod.put("vod_area", data.optString("vod_area"));
@@ -644,14 +640,14 @@ public class AppYsV2 extends Spider {
             vod.put("vod_actor", data.optString("vod_actor"));
             vod.put("vod_director", data.optString("vod_director"));
             vod.put("vod_content", data.optString("vod_content"));
-            JSONArray vodUrlWithPlayer = data.getJSONArray("vod_url_with_player");
+            JSONArray vodUrlWithPlayer = data.optJSONArray("vod_url_with_player");
             for (int i = 0; i < vodUrlWithPlayer.length(); i++) {
-                JSONObject from = vodUrlWithPlayer.getJSONObject(i);
+                JSONObject from = vodUrlWithPlayer.optJSONObject(i);
                 String flag = from.optString("code").trim();
                 if (flag.isEmpty())
-                    flag = from.getString("name").trim();
+                    flag = from.optString("name").trim();
                 playFlags.add(flag);
-                playUrls.add(from.getString("url"));
+                playUrls.add(from.optString("url"));
                 String purl = from.optString("parse_api").trim();
                 ArrayList<String> parseUrls = parseUrlMap.get(flag);
                 if (parseUrls == null) {
@@ -662,10 +658,10 @@ public class AppYsV2 extends Spider {
                     parseUrls.add(purl);
             }
         } else if (/*urlPattern2.matcher(URL).find()*/URL.contains(".vod")) {
-            JSONObject data = object.getJSONObject("data");
+            JSONObject data = object.optJSONObject("data");
             vod.put("vod_id", data.optString("vod_id", vid));
-            vod.put("vod_name", data.getString("vod_name"));
-            vod.put("vod_pic", data.getString("vod_pic"));
+            vod.put("vod_name", data.optString("vod_name"));
+            vod.put("vod_pic", data.optString("vod_pic"));
             vod.put("type_name", data.optString("vod_class"));
             vod.put("vod_year", data.optString("vod_year"));
             vod.put("vod_area", data.optString("vod_area"));
@@ -673,18 +669,18 @@ public class AppYsV2 extends Spider {
             vod.put("vod_actor", data.optString("vod_actor"));
             vod.put("vod_director", data.optString("vod_director"));
             vod.put("vod_content", data.optString("vod_content"));
-            JSONArray vodUrlWithPlayer = data.getJSONArray("vod_play_list");
+            JSONArray vodUrlWithPlayer = data.optJSONArray("vod_play_list");
             for (int i = 0; i < vodUrlWithPlayer.length(); i++) {
-                JSONObject from = vodUrlWithPlayer.getJSONObject(i);
-                String flag = from.getJSONObject("player_info").optString("from").trim();
+                JSONObject from = vodUrlWithPlayer.optJSONObject(i);
+                String flag = from.optJSONObject("player_info").optString("from").trim();
                 if (flag.isEmpty())
-                    flag = from.getJSONObject("player_info").optString("show").trim();
+                    flag = from.optJSONObject("player_info").optString("show").trim();
                 playFlags.add(flag);
-                playUrls.add(from.getString("url"));
+                playUrls.add(from.optString("url"));
                 try {
                     ArrayList<String> parses = new ArrayList<>();
-                    String[] parse1 = from.getJSONObject("player_info").optString("parse").split(",");
-                    String[] parse2 = from.getJSONObject("player_info").optString("parse2").split(",");
+                    String[] parse1 = from.optJSONObject("player_info").optString("parse").split(",");
+                    String[] parse2 = from.optJSONObject("player_info").optString("parse2").split(",");
                     parses.addAll(Arrays.asList(parse1));
                     parses.addAll(Arrays.asList(parse2));
                     ArrayList<String> parseUrls = parseUrlMap.get(flag);
@@ -723,8 +719,8 @@ public class AppYsV2 extends Spider {
         } else if (urlPattern1.matcher(URL).find()) {
             JSONObject data = object;
             vod.put("vod_id", data.optString("vod_id", vid));
-            vod.put("vod_name", data.getString("title"));
-            vod.put("vod_pic", data.getString("img_url"));
+            vod.put("vod_name", data.optString("title"));
+            vod.put("vod_pic", data.optString("img_url"));
             vod.put("type_name", jsonArr2Str(data.optJSONArray("type")));
             vod.put("vod_year", data.optString("pubtime"));
             vod.put("vod_area", jsonArr2Str(data.optJSONArray("area")));
@@ -732,7 +728,7 @@ public class AppYsV2 extends Spider {
             vod.put("vod_actor", jsonArr2Str(data.optJSONArray("actor")));
             vod.put("vod_director", jsonArr2Str(data.optJSONArray("director")));
             vod.put("vod_content", data.optString("intro"));
-            JSONObject playList = data.getJSONObject("videolist");
+            JSONObject playList = data.optJSONObject("videolist");
             Iterator<String> playListKeys = playList.keys();
             while (playListKeys.hasNext()) {
                 String flag = playListKeys.next();
@@ -741,27 +737,27 @@ public class AppYsV2 extends Spider {
                     parseUrls = new ArrayList<>();
                     parseUrlMap.put(flag, parseUrls);
                 }
-                JSONArray playListUrls = playList.getJSONArray(flag);
+                JSONArray playListUrls = playList.optJSONArray(flag);
                 ArrayList<String> urls = new ArrayList<>();
                 for (int j = 0; j < playListUrls.length(); j++) {
-                    JSONObject urlObj = playListUrls.getJSONObject(j);
-                    String url = urlObj.getString("url");
+                    JSONObject urlObj = playListUrls.optJSONObject(j);
+                    String url = urlObj.optString("url");
                     if (url.contains("url=")) {
                         int spIdx = url.indexOf("url=") + 4;
                         String pUrl = url.substring(0, spIdx).trim();
                         if (!pUrl.isEmpty() && !parseUrls.contains(pUrl))
                             parseUrls.add(pUrl);
-                        urls.add(urlObj.getString("title") + "$" + url.substring(spIdx).trim());
+                        urls.add(urlObj.optString("title") + "$" + url.substring(spIdx).trim());
                     } else {
-                        urls.add(urlObj.getString("title") + "$" + url);
+                        urls.add(urlObj.optString("title") + "$" + url);
                     }
                 }
                 playFlags.add(flag);
-                playUrls.add(TextUtils.join("#", urls));
+                playUrls.add(StringUtil.join("#", urls));
             }
         }
-        vod.put("vod_play_from", TextUtils.join("$$$", playFlags));
-        vod.put("vod_play_url", TextUtils.join("$$$", playUrls));
+        vod.put("vod_play_from", StringUtil.join("$$$", playFlags));
+        vod.put("vod_play_url", StringUtil.join("$$$", playUrls));
     }
 
     // ######视频地址
@@ -779,7 +775,7 @@ public class AppYsV2 extends Spider {
 
             }
             if (tryJson != null && tryJson.has("url") && tryJson.has("header")) {
-                tryJson.put("header", tryJson.getJSONObject("header").toString());
+                tryJson.put("header", tryJson.optJSONObject("header").toString());
                 return tryJson;
             }
             if (content.contains("<html")) {

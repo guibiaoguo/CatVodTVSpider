@@ -2,12 +2,12 @@ package com.github.catvod.spider;
 
 import android.content.Context;
 import android.net.Uri;
-import android.util.Base64;
 
 import com.github.catvod.analyzeRules.RuleAnalyzer;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.crawler.SpiderReqResult;
+import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.apache.commons.lang3.StringUtils;
@@ -63,11 +63,11 @@ public class Hsck extends Spider {
 
     protected String getDomain() {
         try {
-            String ext = "https://user.seven301.xyz:8899/?u=" + siteUrl + "&p=/";
+            String ext = "https://sanic.guibiaoguo.ml/proxy/https://laotou.fqxsw.top:8899/?u=" + siteUrl + "&p=/";
             Map<String, List<String>> respHeaders = new TreeMap<>();
             String content = OkHttpUtil.stringNoRedirect(ext, getHeaders(ext), respHeaders);
             String redLoc = OkHttpUtil.getRedirectLocation(respHeaders);
-            return redLoc;
+            return "https://sanic.guibiaoguo.ml/proxy/"+ URLDecoder.decode(redLoc,"utf-8");
         } catch (Exception e) {
             return siteUrl;
         }
@@ -140,27 +140,33 @@ public class Hsck extends Spider {
     @Override
     public String homeVideoContent() {
         try {
-            String url = siteUrl + "/api.php/app/index_video?token=";
-            String srr = OkHttpUtil.string(url, getHeaders(url));
-            JSONObject jsonObject = new JSONObject(srr);
-            JSONArray jsonArray = jsonObject.getJSONArray("list");
-            JSONArray videos = new JSONArray();
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject jObj = jsonArray.getJSONObject(i);
-                JSONArray videoList = jObj.getJSONArray("vlist");
-                for (int j = 0; j < videoList.length() && j < 6; j++) {
-                    JSONObject vObj = videoList.getJSONObject(j);
+            String url = domain;
+            String srr = OkHttpUtil.string(url,getHeaders(url));
+            Document doc = Jsoup.parse(srr);
+            JSONObject result = new JSONObject();
+            try {
+                // 取首页推荐视频列表
+                Elements list = doc.select(".stui-vodlist>li");
+                JSONArray videos = new JSONArray();
+                for (int i = 0; i < list.size(); i++) {
+                    Element vod = list.get(i);
+                    String title = vod.selectFirst("h4>a").text();
+                    String cover = vod.selectFirst("a").attr("data-original");
+                    cover = fixUrl(url, cover);
+                    String remark = vod.selectFirst(".stui-vodlist__thumb").text();
+                    String id = vod.selectFirst("h4>a").attr("href");
                     JSONObject v = new JSONObject();
-                    v.put("vod_id", vObj.optString("vod_id"));
-                    v.put("vod_name", vObj.optString("vod_name"));
-                    v.put("vod_pic", vObj.optString("vod_pic"));
-                    v.put("vod_remarks", vObj.optString("vod_remarks"));
+                    v.put("vod_id", id + "#" + cover);
+                    v.put("vod_name", title);
+                    v.put("vod_pic", cover);
+                    v.put("vod_remarks", remark);
                     videos.put(v);
                 }
+                result.put("list", videos);
+            } catch (Exception e) {
+                SpiderDebug.log(e);
             }
-            JSONObject result = new JSONObject();
-            result.put("list", videos);
-            return result.toString();
+            return result.toString(4);
         } catch (Exception e) {
             SpiderDebug.log(e);
         }
@@ -289,14 +295,14 @@ public class Hsck extends Spider {
                 int end = scContent.lastIndexOf('}') + 1;
                 String json = scContent.substring(start, end);
                 JSONObject player = new JSONObject(json);
-                String videoUrlTmp = player.getString("url");
+                String videoUrlTmp = player.optString("url");
                 if (player.has("encrypt")) {
                     int encrypt = player.getInt("encrypt");
                     if (encrypt == 1) {
-                        videoUrlTmp = URLDecoder.decode(videoUrlTmp);
+                        videoUrlTmp = URLDecoder.decode(videoUrlTmp,"utf-8");
                     } else if (encrypt == 2) {
                         videoUrlTmp = new String(Base64.decode(videoUrlTmp, Base64.DEFAULT));
-                        videoUrlTmp = URLDecoder.decode(videoUrlTmp);
+                        videoUrlTmp = URLDecoder.decode(videoUrlTmp,"utf-8");
                     }
                 }
                 plays.add("1080P$" + videoUrlTmp);

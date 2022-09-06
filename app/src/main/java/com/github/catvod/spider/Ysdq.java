@@ -25,10 +25,10 @@ public class Ysdq extends Spider {
     protected void fetchRule() {
         if (sites.size() == 0) {
             try {
-                String json = OkHttpUtil.string("https://pj567.coding.net/p/source/d/source/git/raw/master/mobile/config.json", null);
+                String json = "";
                 JSONArray sources = new JSONObject(json).optJSONArray("source");
                 for (int i = 0; i < sources.length(); i++) {
-                    JSONObject obj = sources.getJSONObject(i);
+                    JSONObject obj = sources.optJSONObject(i);
                     String type = obj.optString("type");
                     if (type.equals("AppV0") || type.equals("AppTv") || type.equals("aiKanTv")) {
                         String scName = obj.optString("sourceName");
@@ -37,7 +37,7 @@ public class Ysdq extends Spider {
                     }
                 }
             } catch (Exception e) {
-
+                SpiderDebug.log(e);
             }
         }
     }
@@ -106,14 +106,14 @@ public class Ysdq extends Spider {
                     vod.put("vod_director", jsonArr2Str(obj.optJSONArray("director")));
                     vod.put("vod_content", obj.optString("intro"));
                     Map<String, String> vod_play = new LinkedHashMap<>();
-                    JSONObject playList = obj.getJSONObject("videolist");
+                    JSONObject playList = obj.optJSONObject("videolist");
                     Iterator<String> playListKeys = playList.keys();
                     while (playListKeys.hasNext()) {
                         String from = playListKeys.next();
-                        JSONArray playListUrls = playList.getJSONArray(from);
+                        JSONArray playListUrls = playList.optJSONArray(from);
                         ArrayList<String> urls = new ArrayList<>();
                         for (int j = 0; j < playListUrls.length(); j++) {
-                            JSONObject urlObj = playListUrls.getJSONObject(j);
+                            JSONObject urlObj = playListUrls.optJSONObject(j);
                             urls.add(urlObj.optString("title") + "$" + urlObj.optString("url"));
                         }
                         vod_play.put(from, StringUtil.join("#", urls));
@@ -139,9 +139,9 @@ public class Ysdq extends Spider {
                     vod.put("vod_content", obj.optString("vod_content"));
 
                     Map<String, String> vod_play = new LinkedHashMap<>();
-                    JSONArray playList = obj.getJSONArray("vod_play_list");
+                    JSONArray playList = obj.optJSONArray("vod_play_list");
                     for (int i = 0; i < playList.length(); i++) {
-                        JSONObject playListObj = playList.getJSONObject(i);
+                        JSONObject playListObj = playList.optJSONObject(i);
                         String from = playListObj.optString("from");
                         String playUrls = playListObj.optString("url");
                         if (playUrls.length() > 0) {
@@ -182,7 +182,7 @@ public class Ysdq extends Spider {
                     if (type.equals("AppV0")) {
                         JSONArray list = new JSONObject(json).optJSONArray("list");
                         for (int i = 0; i < list.length(); i++) {
-                            JSONObject obj = list.getJSONObject(i);
+                            JSONObject obj = list.optJSONObject(i);
                             JSONObject v = new JSONObject();
                             v.put("vod_id", obj.optString("vod_id"));
                             v.put("vod_name", obj.optString("vod_name"));
@@ -193,7 +193,7 @@ public class Ysdq extends Spider {
                     } else if (type.equals("AppTV")) {
                         JSONArray list = new JSONObject(json).optJSONArray("data");
                         for (int i = 0; i < list.length(); i++) {
-                            JSONObject obj = list.getJSONObject(i);
+                            JSONObject obj = list.optJSONObject(i);
                             JSONObject v = new JSONObject();
                             v.put("vod_id", obj.optString("nextlink"));
                             v.put("vod_name", obj.optString("title"));
@@ -204,7 +204,7 @@ public class Ysdq extends Spider {
                     } else if (type.equals("aiKanTv")) {
                         JSONArray list = new JSONObject(json).optJSONObject("data").optJSONArray("list");
                         for (int i = 0; i < list.length(); i++) {
-                            JSONObject obj = list.getJSONObject(i);
+                            JSONObject obj = list.optJSONObject(i);
                             JSONObject v = new JSONObject();
                             v.put("vod_id", obj.optString("vod_id"));
                             v.put("vod_name", obj.optString("vod_name"));

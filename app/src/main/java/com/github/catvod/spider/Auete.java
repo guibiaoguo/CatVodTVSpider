@@ -345,8 +345,8 @@ public class Auete extends Spider {
                 @Override
                 public int compare(String o1, String o2) {
                     try {
-                        int sort1 = playerConfig.getJSONObject(o1).getInt("or");
-                        int sort2 = playerConfig.getJSONObject(o2).getInt("or");
+                        int sort1 = playerConfig.optJSONObject(o1).getInt("or");
+                        int sort2 = playerConfig.optJSONObject(o2).getInt("or");
 
                         if (sort1 == sort2) {
                             return 1;
@@ -371,7 +371,7 @@ public class Auete extends Spider {
 //                boolean found = false;
 //                for (Iterator<String> it = playerConfig.keys(); it.hasNext(); ) {
 //                    String flag = it.next();
-//                    if (playerConfig.getJSONObject(flag).getString("sh").equals(sourceName)) {
+//                    if (playerConfig.optJSONObject(flag).optString("sh").equals(sourceName)) {
 //                        sourceName = flag;
 //                        found = true;
 //                        break;
@@ -468,9 +468,9 @@ public class Auete extends Spider {
                     }
                 }
                 if (StringUtils.isNotEmpty(player)) {
-//                    JSONObject pCfg = playerConfig.getJSONObject(pn);
+//                    JSONObject pCfg = playerConfig.optJSONObject(pn);
 //                    String videoUrl = player;
-//                    String playUrl = pCfg.getString("pu");
+//                    String playUrl = pCfg.optString("pu");
                     result.put("parse", 0);
                     result.put("playUrl", "");
                     result.put("url", player);

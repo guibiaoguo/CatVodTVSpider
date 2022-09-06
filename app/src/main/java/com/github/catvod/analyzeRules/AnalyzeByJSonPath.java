@@ -25,6 +25,8 @@ public class AnalyzeByJSonPath {
             ctx = (ReadContext) json;
         } else if (json instanceof String) {
             ctx = JsonPath.parse(json.toString());
+        } else if (json instanceof List) {
+            ctx = JsonPath.parse(StringUtil.join("\n",((ArrayList)json)));
         } else {
             ctx = JsonPath.parse(json);
         }

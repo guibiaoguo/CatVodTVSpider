@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
+import com.github.catvod.parser.HttpParser;
 import com.github.catvod.utils.Misc;
 import com.github.catvod.utils.okhttp.OKCallBack;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
@@ -24,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import okhttp3.Call;
-import okhttp3.Callback;
 import okhttp3.Response;
 import rxhttp.wrapper.annotations.NonNull;
 
@@ -50,9 +49,9 @@ public class GoIndex extends Spider {
         JSONArray vodArray = new JSONArray();
         for (int i = 0; i < node.length; i++) {
             if (i == node.length - 1) {
-                vodArray = data.getJSONArray(node[i]);
+                vodArray = data.optJSONArray(node[i]);
             } else {
-                data = data.getJSONObject(node[i]);
+                data = data.optJSONObject(node[i]);
             }
         }
         return vodArray;
@@ -81,7 +80,7 @@ public class GoIndex extends Spider {
             OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(webUrl);
             if (callBack.getResult().code() == 200) {
                 try {
-                    String s = callBack.getResult().body().string();
+                    String s = HttpParser.getContent(webUrl,callBack.getResult().body().bytes());
                     if (rule.getCateManual().size() == 0) {
                         JSONArray navNodes = getVods(s, rule.getCateNode());
                         for (int i = 0; i < navNodes.length(); i++) {
@@ -157,7 +156,7 @@ public class GoIndex extends Spider {
             OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(webUrl);
             if (callBack.getResult().code() == 200) {
                 try {
-                    String s = callBack.getResult().body().string();
+                    String s = HttpParser.getContent(webUrl,callBack.getResult().body().bytes());
                     if (!rule.getCateVodNode().isEmpty()) {
                         try {
                             JSONArray videos = new JSONArray();
@@ -225,11 +224,11 @@ public class GoIndex extends Spider {
 
     }
 
-    public void getNfo(JSONObject vod, String weburl) {
-        OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(weburl);
+    public void getNfo(JSONObject vod, String webUrl) {
+        OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(webUrl);
         if (callBack.getResult().code() == 200) {
             try {
-                String s = callBack.getResult().body().string();
+                String s = HttpParser.getContent(webUrl,callBack.getResult().body().bytes());
                 Document document = Jsoup.parse(s);
                 System.out.println(s);
                 vod.put("vod_name", document.select("title").text());
@@ -257,7 +256,7 @@ public class GoIndex extends Spider {
             OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(webUrl);
             if (callBack.getResult().code() == 200) {
                 try {
-                    String s = callBack.getResult().body().string();
+                    String s = HttpParser.getContent(webUrl,callBack.getResult().body().bytes());
                     JSONObject doc = new JSONObject(s);
 
                     String cover, title, desc = "", category = "", area = "", year = "", remark = "", director = "", actor = "";
@@ -430,10 +429,11 @@ public class GoIndex extends Spider {
 
     private void getFileList(String root, Map<String, List<String>> data) {
         try {
-            OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(root + "/?page_index={catePg};post");
+            String webUrl = root + "/?page_index={catePg};post";
+            OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(webUrl);
             if (callBack.getResult().code() == 200) {
                 try {
-                    String s = callBack.getResult().body().string();
+                    String s = HttpParser.getContent(webUrl,callBack.getResult().body().bytes());
                     JSONArray rootList = getVods(s, rule.getDetailUrlNode());
                     if (rootList != null && rootList.length() > 0) {
                         for (int i = 0; i < rootList.length(); i++) {
@@ -481,7 +481,7 @@ public class GoIndex extends Spider {
             OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(webUrl);
             if (callBack.getResult().code() == 200) {
                 try {
-                    String s = callBack.getResult().body().string();
+                    String s = HttpParser.getContent(webUrl,callBack.getResult().body().bytes());
                     JSONArray videos = new JSONArray();
                     // add maccms suggest search api support
                     if (rule.getSearchVodNode().startsWith("json:")) {
@@ -489,9 +489,9 @@ public class GoIndex extends Spider {
                         JSONObject data = new JSONObject(s);
                         for (int i = 0; i < node.length; i++) {
                             if (i == node.length - 1) {
-                                JSONArray vodArray = data.getJSONArray(node[i]);
+                                JSONArray vodArray = data.optJSONArray(node[i]);
                                 for (int j = 0; j < vodArray.length(); j++) {
-                                    JSONObject vod = vodArray.getJSONObject(j);
+                                    JSONObject vod = vodArray.optJSONObject(j);
                                     String name = vod.optString(rule.getSearchVodName()).trim();
                                     name = rule.getSearchVodNameR(name);
                                     String id = vod.optString(rule.getSearchVodId()).trim();
@@ -509,7 +509,7 @@ public class GoIndex extends Spider {
                                     videos.put(v);
                                 }
                             } else {
-                                data = data.getJSONObject(node[i]);
+                                data = data.optJSONObject(node[i]);
                             }
                         }
                         result.put("list", videos);

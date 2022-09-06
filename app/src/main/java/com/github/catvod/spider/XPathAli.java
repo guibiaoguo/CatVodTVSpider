@@ -48,7 +48,7 @@ public class XPathAli extends XPath {
         if (result.length() > 0) {
             try {
                 JSONObject jsonObject = new JSONObject(result);
-                String playUrl[] = jsonObject.optJSONArray("list").getJSONObject(0).optString("vod_play_url").split("\\$\\$\\$")[0].split("#");
+                String playUrl[] = jsonObject.optJSONArray("list").optJSONObject(0).optString("vod_play_url").split("\\$\\$\\$")[0].split("#");
                 if (playUrl.length > 0) {
                     Map<String, List<String>> vod_play = new HashMap<>();
                     for (int i = 0; i < playUrl.length; i++) {
@@ -149,11 +149,11 @@ public class XPathAli extends XPath {
                             } else if(object.optString("code").equals("ShareLinkTokenInvalid")) {
                                 playerContent(flag,id,vipFlags);
                             } else {
-                                JSONArray playList = object.getJSONObject("video_preview_play_info").getJSONArray("live_transcoding_task_list");
+                                JSONArray playList = object.optJSONObject("video_preview_play_info").optJSONArray("live_transcoding_task_list");
                                 String videoUrl = "";
                                 String templateId = "";
                                 for (int i = 0; i < playList.length(); i++) {
-                                    JSONObject obj = playList.getJSONObject(i);
+                                    JSONObject obj = playList.optJSONObject(i);
                                     if (obj.optString("template_id").equals(infos[2])) {
                                         videoUrl = "http://116.85.31.19:3000/apis/yun-play/" + infos[3] + '/' + accessTk + '/' + shareTk + '/' + infos[2] + "/index.m3u8";
                                         break;
@@ -232,7 +232,7 @@ public class XPathAli extends XPath {
                 OkHttpUtil.postJson(OkHttpUtil.defaultClient(),"https://api.aliyundrive.com/token/refresh",json.toString(),callback);
                 String srr = callback.getResult();
                 JSONObject obj = new JSONObject(srr);
-                accessTk = obj.getString("access_token");
+                accessTk = obj.optString("access_token");
             } catch (JSONException e) {
                 SpiderDebug.log(e);
             }
@@ -296,17 +296,17 @@ public class XPathAli extends XPath {
             JSONArray rootList = new JSONObject(srr).optJSONArray("items");
             if (rootList != null && rootList.length() > 0) {
                 for (int i = 0; i < rootList.length(); i++) {
-                    JSONObject item = rootList.getJSONObject(i);
-                    if (item.getString("type").equals("folder")) {
-                        String dirId = item.getString("file_id");
-                        foldname = item.getString("name");
-                        String name = root == "root"?"":parentName +";"+item.getString("name");
+                    JSONObject item = rootList.optJSONObject(i);
+                    if (item.optString("type").equals("folder")) {
+                        String dirId = item.optString("file_id");
+                        foldname = item.optString("name");
+                        String name = root == "root"?"":parentName +";"+item.optString("name");
                         getFileList(shareTk, shareId, sharePwd, dirId,name,foldname,data);
                     } else {
                         String[] types = {"3G2", "3GP", "3GP2", "3GPP", "AMV", "ASF", "AVI", "DIVX", "DPG", "DVR-MS", "EVO", "F4V", "FLV", "IFO", "K3G", "M1V", "M2T", "M2TS", "M2V", "M4B", "M4P", "M4V", "MKV", "MOV", "MP2V", "MP4", "MPE", "MPEG", "MPG", "MPV2", "MTS", "MXF", "NSR", "NSV", "OGM", "OGV", "QT", "RAM", "RM", "RMVB", "RPM", "SKM", "TP", "TPR", "TRP", "TS", "VOB", "WEBM", "WM", "WMP", "WMV", "WTV"};
-                        if (item.getString("type").equals("file") && Arrays.asList(types).contains(item.getString("file_extension").toUpperCase())) {
-                            String fileId = item.getString("file_id");
-                            String fileName = item.getString("name");
+                        if (item.optString("type").equals("file") && Arrays.asList(types).contains(item.optString("file_extension").toUpperCase())) {
+                            String fileId = item.optString("file_id");
+                            String fileName = item.optString("name");
                             String[] templateIds = {"FHD", "HD", "SD", "LD"};
                             List<String> vodLists = new ArrayList<>();
                             for (String templateId : templateIds) {
@@ -320,7 +320,7 @@ public class XPathAli extends XPath {
                                 jsonObject.put("parent_name",parentName+";"+foldname);
                                 jsonObject.put("folder_id",root);
                                 jsonObject.put("file_id",fileId);
-                                jsonObject.put("file_name",item.getString("name"));
+                                jsonObject.put("file_name",item.optString("name"));
                                 jsonObject.put("share_id",shareId);
                                 jsonObject.put("share_pwd",sharePwd);
                                 jsonObject.put("expiration","");

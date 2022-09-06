@@ -1,8 +1,7 @@
 package com.github.catvod.spider;
 
-import android.util.Base64;
-
 import com.github.catvod.crawler.SpiderDebug;
+import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.okhttp.OKCallBack;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 

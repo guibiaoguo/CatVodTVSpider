@@ -358,6 +358,7 @@ public class LegadoRule {
     private String nextPage;
 
     private String pageCount;
+    private String subtitle;
 
     public String getPageCount() {
         return pageCount;
@@ -431,6 +432,12 @@ public class LegadoRule {
     private JSONArray playerParamMaps;
 
     private JSONArray searchParamMaps;
+
+    private JSONArray filterParamMaps;
+
+    public JSONArray getFilterParamMaps() {
+        return filterParamMaps;
+    }
 
     public JSONArray getSearchParamMaps() {
         return searchParamMaps;
@@ -512,9 +519,13 @@ public class LegadoRule {
         return itemUrlId;
     }
 
+    public String getSubtitle() {
+        return subtitle;
+    }
+
     public static LegadoRule fromJson(String json) {
         try {
-            JSONObject jsonObj = new JSONObject(json);
+            JSONObject jsonObj = new JSONObject(json.replaceAll(",\\s+//.*",",").replaceAll("^//.*","").replaceAll("[ ]+//.*",""));
             LegadoRule rule = new LegadoRule();
             rule.ua = jsonObj.optString("ua");
             rule.homeUrl = jsonObj.optString("homeUrl").trim();
@@ -711,6 +722,7 @@ public class LegadoRule {
             rule.detailParamMaps = jsonObj.optJSONArray("detailParamMaps");
             rule.playerParamMaps = jsonObj.optJSONArray("playerParamMaps");
             rule.searchParamMaps = jsonObj.optJSONArray("searchParamMaps");
+            rule.filterParamMaps = jsonObj.optJSONArray("filterParamMaps");
             rule.titleNfo = jsonObj.optString("titleNfo");
             if(StringUtils.isEmpty(rule.titleNfo)) {
                 rule.titleNfo = "tag.title@text";
@@ -754,6 +766,8 @@ public class LegadoRule {
             }
             rule.nextPage = jsonObj.optString("nextPage");
             rule.pageCount = jsonObj.optString("pageCount");
+            rule.subtitle = jsonObj.optString("subtitle");
+
             return rule;
         } catch (Exception e) {
             SpiderDebug.log(e);
