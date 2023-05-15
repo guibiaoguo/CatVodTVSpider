@@ -1,5 +1,6 @@
-package com.github.catvod.analyzeRules;
+package com.github.catvod.parser;
 
+import com.github.catvod.parser.RuleAnalyzer;
 import com.github.catvod.utils.StringUtil;
 
 import org.apache.commons.lang3.StringUtils;
@@ -13,12 +14,7 @@ import org.seimicrawler.xpath.JXNode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-
-import rxhttp.wrapper.annotations.NonNull;
 
 public class AnalyzeByJSoup {
 

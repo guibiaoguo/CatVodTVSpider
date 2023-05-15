@@ -80,7 +80,7 @@ public class GoIndex extends Spider {
             OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(webUrl);
             if (callBack.getResult().code() == 200) {
                 try {
-                    String s = HttpParser.getContent(webUrl,callBack.getResult().body().bytes());
+                    String s = HttpParser.getContent(webUrl,callBack.getResult().body());
                     if (rule.getCateManual().size() == 0) {
                         JSONArray navNodes = getVods(s, rule.getCateNode());
                         for (int i = 0; i < navNodes.length(); i++) {
@@ -156,7 +156,7 @@ public class GoIndex extends Spider {
             OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(webUrl);
             if (callBack.getResult().code() == 200) {
                 try {
-                    String s = HttpParser.getContent(webUrl,callBack.getResult().body().bytes());
+                    String s = HttpParser.getContent(webUrl,callBack.getResult().body());
                     if (!rule.getCateVodNode().isEmpty()) {
                         try {
                             JSONArray videos = new JSONArray();
@@ -228,7 +228,7 @@ public class GoIndex extends Spider {
         OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(webUrl);
         if (callBack.getResult().code() == 200) {
             try {
-                String s = HttpParser.getContent(webUrl,callBack.getResult().body().bytes());
+                String s = HttpParser.getContent(webUrl,callBack.getResult().body());
                 Document document = Jsoup.parse(s);
                 System.out.println(s);
                 vod.put("vod_name", document.select("title").text());
@@ -256,7 +256,7 @@ public class GoIndex extends Spider {
             OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(webUrl);
             if (callBack.getResult().code() == 200) {
                 try {
-                    String s = HttpParser.getContent(webUrl,callBack.getResult().body().bytes());
+                    String s = HttpParser.getContent(webUrl,callBack.getResult().body());
                     JSONObject doc = new JSONObject(s);
 
                     String cover, title, desc = "", category = "", area = "", year = "", remark = "", director = "", actor = "";
@@ -433,7 +433,7 @@ public class GoIndex extends Spider {
             OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(webUrl);
             if (callBack.getResult().code() == 200) {
                 try {
-                    String s = HttpParser.getContent(webUrl,callBack.getResult().body().bytes());
+                    String s = HttpParser.getContent(webUrl,callBack.getResult().body());
                     JSONArray rootList = getVods(s, rule.getDetailUrlNode());
                     if (rootList != null && rootList.length() > 0) {
                         for (int i = 0; i < rootList.length(); i++) {
@@ -481,7 +481,7 @@ public class GoIndex extends Spider {
             OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(webUrl);
             if (callBack.getResult().code() == 200) {
                 try {
-                    String s = HttpParser.getContent(webUrl,callBack.getResult().body().bytes());
+                    String s = HttpParser.getContent(webUrl,callBack.getResult().body());
                     JSONArray videos = new JSONArray();
                     // add maccms suggest search api support
                     if (rule.getSearchVodNode().startsWith("json:")) {

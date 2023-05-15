@@ -422,12 +422,12 @@ public class HttpParser {
         return params;
     }
 
-    public static String getContent(String url,byte[] content) {
+    public static String getContent(String url,ResponseBody content) {
         String code = getCode(url);
         try {
-            if (content.length > 0)
-                return new String(content, code);
-        } catch (UnsupportedEncodingException e) {
+            if (content != null)
+                return new String(content.bytes(), code);
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return "";

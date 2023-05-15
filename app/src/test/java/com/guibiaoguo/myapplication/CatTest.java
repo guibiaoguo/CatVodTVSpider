@@ -2,13 +2,13 @@ package com.guibiaoguo.myapplication;
 
 import android.content.Context;
 
-import com.github.catvod.analyzeRules.AnalyzeByFunction;
-import com.github.catvod.analyzeRules.AnalyzeRule;
-import com.github.catvod.analyzeRules.RuleData;
-import com.github.catvod.analyzeRules.AnalyzeByJSonPath;
-import com.github.catvod.analyzeRules.AnalyzeByJSoup;
-import com.github.catvod.analyzeRules.AnalyzeByRegex;
-import com.github.catvod.analyzeRules.RuleAnalyzer;
+import com.github.catvod.parser.AnalyzeByFunction;
+import com.github.catvod.parser.AnalyzeRule;
+import com.github.catvod.parser.RuleData;
+import com.github.catvod.parser.AnalyzeByJSonPath;
+import com.github.catvod.parser.AnalyzeByJSoup;
+import com.github.catvod.parser.AnalyzeByRegex;
+import com.github.catvod.parser.RuleAnalyzer;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.parser.MixSpiderJX;
@@ -56,13 +56,19 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
@@ -72,6 +78,7 @@ import java.util.regex.Pattern;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
+import okhttp3.Call;
 import okhttp3.Response;
 
 public class CatTest {
@@ -141,7 +148,7 @@ public class CatTest {
     @Test
     public void checkGetgbk() throws IOException {
         OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml("https://wap.dulaidw.com");
-        System.out.println(HttpParser.getContent("https://wap.dulaidw.com;get;gbk",callBack.getResult().body().bytes()));
+        System.out.println(HttpParser.getContent("https://wap.dulaidw.com;get;gbk",callBack.getResult().body()));
     }
 
     @Test
@@ -580,6 +587,9 @@ public class CatTest {
     public String showCategory(Spider spider, String category, int index) throws JSONException {
         JSONObject jsonObject = new JSONObject(category);
         JSONArray categorys = jsonObject.optJSONArray("list");
+        if (categorys == null) {
+            categorys = new JSONObject(spider.homeVideoContent()).optJSONArray("list");
+        }
         if (categorys.length() > index) {
             List<String> ids = new ArrayList<>();
             ids.add(categorys.getJSONObject(index).optString("vod_id"));
@@ -589,12 +599,15 @@ public class CatTest {
             System.out.println(detail);
             jsonObject = new JSONObject(detail);
             JSONArray details = jsonObject.optJSONArray("list");
-            String playurls = details.getJSONObject(0).optString("vod_play_url");
+            if (details == null || details.optJSONObject(0) == null)  {
+                return detail;
+            }
+            String playurls = details.optJSONObject(0).optString("vod_play_url");
             if (!playurls.equals("")) {
                 String playurl = playurls.split("#")[0].split("\\$")[1];
                 System.out.println(playurl);
                 if (spider instanceof Legado || (!StringUtils.contains(playurl, ".m3u8") && !StringUtils.contains(playurl, "jiexi")))
-                    System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[0].split("\\$")[1], new ArrayList<>()));
+                    System.out.println(spider.playerContent(details.optJSONObject(0).optString("vod_play_from"), playurls.split("#")[0].split("\\$")[1], new ArrayList<>()));
 //                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[1].split("\\$")[1], new ArrayList<>()));
 //                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[2].split("\\$")[1], new ArrayList<>()));
 //                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[3].split("\\$")[1], new ArrayList<>()));
@@ -818,7 +831,7 @@ public class CatTest {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
             JSONArray jsonArray1 = filterObject.optJSONArray(tid);
-            if (jsonArray1.length() > 0) {
+            if (jsonArray1 != null && jsonArray1.length() > 0) {
                 HashMap filterMap = new HashMap();
                 if (filter) {
                     int num = random.nextInt(jsonArray1.length());
@@ -865,7 +878,7 @@ public class CatTest {
         showCategory(spider, category, 0);
         JSONObject jsonObject = new JSONObject(category);
         JSONArray classes = jsonObject.optJSONArray("class");
-        for (int i = 0; i < classes.length(); i++) {
+        for (int i = 1; i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
             category = spider.categoryContent(tid, "1", true, null);
@@ -1147,7 +1160,7 @@ public class CatTest {
         showCategory(spider, category, 1);
         JSONObject jsonObject = new JSONObject(category);
         JSONArray classes = jsonObject.optJSONArray("class");
-        for (int i = 9; classes != null && i < classes.length(); i++) {
+        for (int i = 0; classes != null && i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
             category = spider.categoryContent(tid, "1", false, null);
@@ -1167,7 +1180,7 @@ public class CatTest {
         String category = "";
         category = spider.homeContent(false);
         System.out.println(category);
-        showCategory(spider, category, 1);
+        showCategory(spider, category, 0);
         JSONObject jsonObject = new JSONObject(category);
         JSONArray classes = jsonObject.optJSONArray("class");
         for (int i = 0; i < classes.length(); i++) {
@@ -1758,23 +1771,39 @@ public class CatTest {
     }
 
     @Test
+    public void testStringArray(){
+        String[] s1 = new String[3];
+        Arrays.fill(s1,"");
+        for (String s:s1){
+            System.out.println(s);
+        }
+    }
+
+    @Test
+    public void myalipanFilter() throws Exception {
+        Spider spider = new Legado();
+        spider.init(null, "http://mao.guibiaoguo.ml/myalipan.json");
+        showFilter(spider,true);
+    }
+
+    @Test
     public void myalipan() throws Exception {
         Spider spider = new Legado();
         spider.init(null, "http://mao.guibiaoguo.ml/myalipan.json");
         String category = "";
-        category = spider.homeContent(true);
+        category = spider.homeContent(false);
         System.out.println(category);
         showCategory(spider, category, 0);
         JSONObject jsonObject = new JSONObject(category);
         JSONArray classes = jsonObject.optJSONArray("class");
-        for (int i = 0; i < classes.length(); i++) {
+        for (int i = 0; classes != null && i < classes.length(); i++) {
             String tid = classes.getJSONObject(i).optString("type_id");
             System.out.println(tid);
-            category = spider.categoryContent(tid, "1", true, null);
+            category = spider.categoryContent(tid, "1", false, null);
             System.out.println(category);
             showCategory(spider, category, 0);
         }
-        category = spider.searchContent("熊出没", false);
+        category = spider.searchContent("火影忍者疾风传", false);
         System.out.println(category);
         showCategory(spider, category, 0);
         System.out.println("ends");
@@ -1807,23 +1836,7 @@ public class CatTest {
     public void qindou() throws Exception {
         Spider spider = new Legado();
         spider.init(null, "https://mao.guibiaoguo.ml/qindou.json");
-        String category = "";
-//        category = spider.searchContent("名侦探柯南TV版 国语", false);
-//        System.out.println(category);
-//        showCategory(spider, category, 0);
-        category = spider.homeContent(false);
-        System.out.println(category);
-        showCategory(spider, category, 0);
-        JSONObject jsonObject = new JSONObject(category);
-        JSONArray classes = jsonObject.optJSONArray("class");
-        for (int i = 0; i < classes.length(); i++) {
-            String tid = classes.getJSONObject(i).optString("type_id");
-            System.out.println(tid);
-            category = spider.categoryContent(tid, "1", false, null);
-            System.out.println(category);
-            showCategory(spider, category, 0);
-        }
-        System.out.println("ends");
+        showFilter(spider, true);
     }
 
     @Test
@@ -1918,7 +1931,7 @@ public class CatTest {
         String url = "https://gitee.com/shentong_012/HikerRules/raw/master/11.txt";
         String ext = Base64.encodeToString(url.getBytes("UTF-8"), com.github.catvod.utils.Base64.DEFAULT | com.github.catvod.utils.Base64.URL_SAFE | com.github.catvod.utils.Base64.NO_WRAP);
         System.out.println(ext);
-        params.put("ext", "aHR0cHM6Ly9tYW8uZ3VpYmlhb2d1by50ay9oc2NrMS50eHQ=");
+        params.put("ext", "aHR0cHM6Ly9tYW8uZ3VpYmlhb2d1by5tbC9oc2NrMS50eHQ7aHR0cHM6Ly81bGEuZ2l0aHViLmlvL3YvdG9wbGl2ZS50eHQ=");
         spider.proxy(params);
     }
 
@@ -1926,7 +1939,7 @@ public class CatTest {
     public void proxy_aimg() {
         Proxy spider = new Proxy();
         Map<String, String> params = new HashMap<>();
-        String url = "proxy://do=legado&selector=JC5pdGVtc1sqXS50aHVtYm5haWwjIyguKj8pCi4qIyMkMTtnZXQ7dXRmLTg7e3JlZmVyZXJAaHR0cHM6Ly93d3cuYWxpeXVuZHJpdmUuY29tL30jIyN9&pic=aHR0cHM6Ly9hcGkuYWxpeXVuZHJpdmUuY29tL2Fkcml2ZS92My9maWxlL2xpc3Q_anNvbkJvZHk9eyJzaGFyZV9pZCI6IkVMOG9waDRIQXJYIiwiaW1hZ2VfdXJsX3Byb2Nlc3MiOiJpbWFnZS9yZXNpemUsd18xOTIwL2Zvcm1hdCxqcGVnIiwicGFyZW50X2ZpbGVfaWQiOiI2MjFkYmY0YWMwYjVhMjQzNjRiZTQ3YWZhMjg5ODczZTU1MGY1MWJmIiwibGltaXQiOjIwMCwib3JkZXJfYnkiOiJuYW1lIiwib3JkZXJfZGlyZWN0aW9uIjoiQVNDIiwidmlkZW9fdGh1bWJuYWlsX3Byb2Nlc3MiOiJ2aWRlby9zbmFwc2hvdCx0XzEwMDAsZl9qcGcsYXJfYXV0byx3XzMwMCIsImltYWdlX3RodW1ibmFpbF9wcm9jZXNzIjoiaW1hZ2UvcmVzaXplLHdfMTYwL2Zvcm1hdCxqcGVnIn07cG9zdDt1dGYtODt7eC1zaGFyZS10b2tlbkBleUpoYkdjaU9pSlNVekkxTmlJc0luUjVjQ0k2SWtwWFZDSjkuZXlKamRYTjBiMjFLYzI5dUlqb2llMXdpWkc5dFlXbHVYMmxrWENJNlhDSmlhakk1WENJc1hDSnphR0Z5WlY5cFpGd2lPbHdpUlV3NGIzQm9ORWhCY2xoY0lpeGNJbU55WldGMGIzSmNJanBjSWpnM056VTBOekJsTVRFNFpEUmpaR1U1TlRCa1pUUTNPVEZoT0dKak9UZG1YQ0lzWENKMWMyVnlYMmxrWENJNlhDSmhibTl1ZVcxdmRYTmNJbjBpTENKamRYTjBiMjFVZVhCbElqb2ljMmhoY21WZmJHbHVheUlzSW1WNGNDSTZNVFkwTmpjMk1qUTBOU3dpYVdGMElqb3hOalEyTnpVMU1UZzFmUS51RUJ1MjctUVdXMlV2bU9oTEszN3JWQVdkUTllNTljajlzVXdzNkx0RXphemk0QTMwVW56TFl0T0RBR19SM0YzbDc2eE9Pd0FuZTdnTXlwZFZzWjZhMWF0ZVJrdV95NXdHYTBybHRpWElWcWpzYUJfbVFTYWEweW9ZUFBIQ1BGVXNjMmJDNzZaNTVZdWw3cUpCTm51bEljbGg3b1B1NFRtbF96Um00QXZGZ3N9";
+        String url = "proxy://do=legado&selector=JC5pdGVtc1sqXS50aHVtYm5haWwjIyguKj8pCi4qIyMkMTtnZXQ7dXRmLTg7e3JlZmVyZXJAaHR0cHM6Ly93d3cuYWxpeXVuZHJpdmUuY29tL30jIyN9&pic=aHR0cHM6Ly9hcGkuYWxpeXVuZHJpdmUuY29tL2Fkcml2ZS92My9maWxlL2xpc3Q/anNvbkJvZHk9eyJzaGFyZV9pZCI6IjZFOUtmUFlxWlNDIiwiaW1hZ2VfdXJsX3Byb2Nlc3MiOiJpbWFnZS9yZXNpemUsd18xOTIwL2Zvcm1hdCxqcGVnIiwicGFyZW50X2ZpbGVfaWQiOiI2MjMwNDg1ODRmZWMyMjBhYWFjMTQxYTJhOWE5NDU1ZDBmMTAzNTk0IiwibGltaXQiOjIwMCwib3JkZXJfYnkiOiJuYW1lIiwib3JkZXJfZGlyZWN0aW9uIjoiQVNDIiwidmlkZW9fdGh1bWJuYWlsX3Byb2Nlc3MiOiJ2aWRlby9zbmFwc2hvdCx0XzEwMDAsZl9qcGcsYXJfYXV0byx3XzMwMCIsImltYWdlX3RodW1ibmFpbF9wcm9jZXNzIjoiaW1hZ2UvcmVzaXplLHdfMTYwL2Zvcm1hdCxqcGVnIn07cG9zdDt1dGYtODt7eC1zaGFyZS10b2tlbkBleUpoYkdjaU9pSlNVekkxTmlJc0luUjVjQ0k2SWtwWFZDSjkuZXlKamRYTjBiMjFLYzI5dUlqb2llMXdpWkc5dFlXbHVYMmxrWENJNlhDSmlhakk1WENJc1hDSnphR0Z5WlY5cFpGd2lPbHdpTmtVNVMyWlFXWEZhVTBOY0lpeGNJbU55WldGMGIzSmNJanBjSWpJME0ySTJZakV6TnpReE1UUXpObUk0WVRFM1kySXhPV1JrTVdNd1l6VmtYQ0lzWENKMWMyVnlYMmxrWENJNlhDSmhibTl1ZVcxdmRYTmNJbjBpTENKamRYTjBiMjFVZVhCbElqb2ljMmhoY21WZmJHbHVheUlzSW1WNGNDSTZNVFkyTWpRMk1UQXlPQ3dpYVdGMElqb3hOall5TkRVek56WTRmUS5DUTB0VkFXM3Q5RnFNU0FnblZoSDFNa25FLXRseE9zTlh3R2FqbnlJSWtsOW1Kd3VzVzFsMk9IcWFRb3NPRXNPMl84YmJhVDdvSGZGWmZucHhCN1B4Q3BocUhIM1ZYMmViNW9iZU9lT3QxRm1kZnVfWUhhMHNGU190Mm8yQ2VEbHU2ZnZmQUtWaUNKWGFwWnowenpVMDJiX2xVNUtERjZ1Y25nQ3RoUVlDbmt9";
         for (String p : url.substring(8).split("&")) {
             params.put(p.split("=")[0], p.split("=")[1]);
         }
@@ -2100,6 +2113,154 @@ public class CatTest {
     public void test_BBB() {
         OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml("https://api.bilibili.com/x/web-interface/search/type?search_type=video&keyword=%E7%9B%B8%E5%A3%B0;get;utf-8;{cookie@_uuid=555CC917-FB7A-4C29-E9E9-1FAB7F64C34F35647infoc; buvid3=251BC434-0158-4CF2-9689-415B90DBFD8B167627infoc; b_nut=1639843737; blackside_state=1; rpdid=|(J|kYlJuJm)0J'uYRklkY~Yk; buvid_fp=4c5ef178dbfca047f6f761107813e366; buvid4=62069D91-F760-49DF-A5E3-620800017C4872307-022021107-Up95BNeOMznhkE74VzsPjQ%3D%3D; CURRENT_FNVAL=4048; nostalgia_conf=-1&&User-Agent@PC_UA}");
         System.out.println(callBack.getResult().code());
+    }
+
+    /**
+     * 转为大写
+     * @param key
+     * @return
+     */
+    public String chineseToNum(String key) {
+        Map<String, String> chnNumChar = new HashMap();
+        chnNumChar.put("零", "0");
+        chnNumChar.put("一", "1");
+        chnNumChar.put("二", "2");
+        chnNumChar.put("三", "3");
+        chnNumChar.put("四", "4");
+        chnNumChar.put("五", "5");
+        chnNumChar.put("六", "6");
+        chnNumChar.put("七", "7");
+        chnNumChar.put("八", "8");
+        chnNumChar.put("九", "9");
+        chnNumChar.put("十", "10");
+        chnNumChar.put("百", "100");
+        chnNumChar.put("千", "1000");
+        chnNumChar.put("万", "10000");
+        chnNumChar.put("亿", "100000000");
+        return chnNumChar.get(key);
+    }
+
+    public String conver(String input) {
+        Pattern pattern = Pattern.compile("([零一二三四五六七八九十百千万亿])",Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(input);
+        StringBuilder a = new StringBuilder();
+        int start = 0;
+
+        if (matcher.find()) {
+            do {
+                if (matcher.start() > start) {
+                    a.append(input.substring(start, matcher.start()));
+                    System.out.println(input.substring(start, matcher.start()));
+                }
+                System.out.println(matcher.group());
+                a.append(chineseToNum(matcher.group()));
+                start = matcher.end();
+            } while (matcher.find());
+        }
+        if (input.length() > start) {
+            a.append(input.substring(start));
+        }
+        return a.toString();
+    }
+
+    @Test
+    public void test_cn() throws Exception {
+        String a = "名侦探柯南第1";
+        String b = "名侦探柯南第10";
+        System.out.println(a);
+        System.out.println(b);
+        Comparator<String> comparator = new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                o1 = conver(o1);
+                o2 = conver(o2);
+                Pattern NUMBER = Pattern.compile("(?<=\\D)(?=\\d)|(?<=\\d)(?=\\D)");
+                String[] split1 = NUMBER.split(o1);
+                String[] split2 = NUMBER.split(o2);
+                for (int i = 0; i < Math.min(split1.length,split2.length); i++) {
+                    int c1 = split1[i].codePointAt(0);
+                    int c2 = split2[i].codePointAt(0);
+                    int cmp = 0;
+                    int zeroCharCode = "0".codePointAt(0);
+                    int nineCharCode = "9".codePointAt(0);
+                    if (c1 >= zeroCharCode && c1 <= nineCharCode && c2 >= zeroCharCode && c2 <= nineCharCode) {
+                        cmp = new BigInteger(split1[i]).compareTo(new BigInteger(split2[i]));
+                    }
+                    if (cmp == 0) {
+                        String regex = "[a-zA-Z0-9]";
+                        if (Pattern.matches(regex,split1[i]) || Pattern.matches(regex, split2[i])) {
+                            cmp = split1[i].compareTo(split2[i]);
+                        } else {
+                            cmp = Collator.getInstance(Locale.CHINESE).compare(split1[i],split2[i]);
+                        }
+                    }
+
+                    if (cmp != 0) {
+                        return cmp;
+                    }
+                }
+                int lengthCmp = split1.length - split2.length;
+                return lengthCmp;
+            }
+        };
+        List<String> names = new ArrayList<>();
+        OkHttpUtil.postJson(OkHttpUtil.defaultClient(), "https://alist.guibiaoguo.ml/api/public/path", "{\"path\":\"/阿里2/来自分享/火影忍者(2002) [4K收藏版 720集全]\",\"password\":\"\",\"page_num\":1,\"page_size\":30}", new OKCallBack.OKCallBackString() {
+            @Override
+            protected void onFailure(Call call, Exception e) {
+
+            }
+
+            @Override
+            protected void onResponse(String json) {
+                try {
+                    JSONObject jsonObject = new JSONObject(json);
+                    JSONArray jsonArray = jsonObject.optJSONObject("data").getJSONArray("files");
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        names.add(jsonArray.optJSONObject(i).optString("name"));
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        System.out.println(names);
+        Collections.sort(names,comparator);
+        System.out.println(names);
+        System.out.println(nameCompare(a,b));
+    }
+
+    public int nameCompare(String a, String b) throws Exception {
+        a = conver(a);
+        b = conver(b);
+        Pattern NUMBER = Pattern.compile("(?<=\\D)(?=\\d)|(?<=\\d)(?=\\D)");
+        String[] split1 = NUMBER.split(a);
+        String[] split2 = NUMBER.split(b);
+        System.out.println(new JSONArray(split1).toString());
+        System.out.println(new JSONArray(split2).toString());
+        for (int i = 0; i < Math.min(split1.length,split2.length); i++) {
+            int c1 = split1[i].codePointAt(0);
+            int c2 = split2[i].codePointAt(0);
+            int cmp = 0;
+            int zeroCharCode = "0".codePointAt(0);
+            int nineCharCode = "9".codePointAt(0);
+            if (c1 >= zeroCharCode && c1 <= nineCharCode && c2 >= zeroCharCode && c2 <= nineCharCode) {
+                cmp = new BigInteger(split1[i]).compareTo(new BigInteger(split2[i]));
+            }
+            if (cmp == 0) {
+                String regex = "[a-zA-Z0-9]";
+                if (Pattern.matches(regex,split1[i]) || Pattern.matches(regex, split2[i])) {
+                    cmp = split1[i].compareTo(split2[i]);
+                } else {
+                    cmp = Collator.getInstance(Locale.CHINESE).compare(split1[i],split2[i]);
+                }
+            }
+
+            if (cmp != 0) {
+                return cmp;
+            }
+        }
+        int lengthCmp = split1.length - split2.length;
+        return lengthCmp;
     }
 }
 

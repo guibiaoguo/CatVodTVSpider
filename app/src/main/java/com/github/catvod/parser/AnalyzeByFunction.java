@@ -1,4 +1,4 @@
-package com.github.catvod.analyzeRules;
+package com.github.catvod.parser;
 
 import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.StringUtil;

@@ -1,4 +1,4 @@
-package com.github.catvod.analyzeRules;
+package com.github.catvod.parser;
 
 
 import java.util.ArrayList;

@@ -6,7 +6,7 @@ buildscript {
 //        ext.kotlin_version = '1.6.10'
         miniSdkVersion = 16
         compileSdkVersion = 30
-        targetSdkVersion = 26
+        targetSdkVersion = 30
 
         jsoup_version = "1.14.1"
         jsoupxpath_version = "2.5.0"
@@ -25,7 +25,7 @@ buildscript {
         maven { url 'https://jitpack.io' }
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:4.2.1"
+        classpath 'com.android.tools.build:gradle:7.4.2'
         classpath "gradle.plugin.ru.cleverpumpkin.proguard-dictionaries-generator:plugin:1.0.8"
 //        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }

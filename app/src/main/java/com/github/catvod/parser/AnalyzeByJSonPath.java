@@ -1,5 +1,6 @@
-package com.github.catvod.analyzeRules;
+package com.github.catvod.parser;
 
+import com.github.catvod.parser.RuleAnalyzer;
 import com.github.catvod.utils.StringUtil;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;

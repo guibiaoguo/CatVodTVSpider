@@ -360,6 +360,10 @@ public class LegadoRule {
     private String pageCount;
     private String subtitle;
 
+    private Boolean sort;
+
+    private JSONObject headers;
+
     public String getPageCount() {
         return pageCount;
     }
@@ -767,12 +771,21 @@ public class LegadoRule {
             rule.nextPage = jsonObj.optString("nextPage");
             rule.pageCount = jsonObj.optString("pageCount");
             rule.subtitle = jsonObj.optString("subtitle");
-
+            rule.sort = jsonObj.optBoolean("sort");
+            rule.headers = jsonObj.optJSONObject("headers");
             return rule;
         } catch (Exception e) {
             SpiderDebug.log(e);
         }
         return null;
+    }
+
+    public JSONObject getHeaders() {
+        return headers;
+    }
+
+    public Boolean getSort() {
+        return sort;
     }
 
     public String getUa() {

@@ -1,8 +1,12 @@
 package com.github.catvod.utils;
 
+import com.github.catvod.crawler.SpiderDebug;
+import com.github.catvod.legado.LegadoData;
 import com.github.catvod.utils.StringUtil;
 
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -585,22 +589,49 @@ public class StringUtil {
         return isAbsUrl;
     }
 
-    public static String join(CharSequence delimiter, String[] tokens) {
+    public static String join(CharSequence delimiter, String[] tokens)  {
         return join(delimiter, Arrays.asList(tokens));
     }
 
     public static String join(CharSequence delimiter, Iterable tokens) {
-        final Iterator<?> it = tokens.iterator();
-        if (!it.hasNext()) {
-            return "";
+        try {
+            final Iterator<?> it = tokens.iterator();
+            if (!it.hasNext()) {
+                return "";
+            }
+            final StringBuilder sb = new StringBuilder();
+            Object d = it.next();
+            if (d instanceof String)
+                sb.append(d);
+            else if (d instanceof LegadoData) {
+                LegadoData legadoData = (LegadoData) d;
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("play_url",legadoData.fileUrl);
+                jsonObject.put("subtitle",legadoData.subtitle);
+                jsonObject.put("subtitleName",legadoData.subtitleName);
+                jsonObject.put("from",legadoData.from);
+                sb.append(legadoData.name).append("$").append(Base64.encodeToString(jsonObject.toString().getBytes(),Base64.NO_WRAP));
+            }
+            while (it.hasNext()) {
+                sb.append(delimiter);
+                d = it.next();
+                if (d instanceof String)
+                    sb.append(d);
+                else if (d instanceof LegadoData) {
+                    LegadoData legadoData = (LegadoData) d;
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put("play_url",legadoData.fileUrl);
+                    jsonObject.put("subtitle",legadoData.subtitle);
+                    jsonObject.put("subtitleName",legadoData.subtitleName);
+                    jsonObject.put("from",legadoData.from);
+                    sb.append(legadoData.name).append("$").append(Base64.encodeToString(jsonObject.toString().getBytes(),Base64.NO_WRAP));
+                }
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            SpiderDebug.log(e);
         }
-        final StringBuilder sb = new StringBuilder();
-        sb.append(it.next());
-        while (it.hasNext()) {
-            sb.append(delimiter);
-            sb.append(it.next());
-        }
-        return sb.toString();
+        return "";
     }
 
     public static String encode(String name) {
@@ -630,6 +661,12 @@ public class StringUtil {
                     .replaceAll("%3A", ":")
                     .replaceAll("%2C", ",")
                     .replaceAll("%23", "#")
+                    .replaceAll("%7B", "{")
+                    .replaceAll("%7D", "}")
+                    .replaceAll("%26","&")
+                    .replaceAll("%40","@")
+                    .replaceAll("%22","\"")
+                    .replaceAll("%EF%BC%9F","？")
                     .replaceAll("\\+", "%20");
         } catch (Exception e) {
 

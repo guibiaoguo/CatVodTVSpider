@@ -1,6 +1,4 @@
-package com.github.catvod.analyzeRules;
-
-import android.os.Build;
+package com.github.catvod.parser;
 
 import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.StringUtil;
@@ -11,10 +9,8 @@ import org.jsoup.nodes.Entities;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -160,7 +156,7 @@ public class AnalyzeRule {
     }
 
     public List<String> getStringList(String rule, Object mContent, boolean isUrl) {
-        if (StringUtils.isNotEmpty(rule)) return null;
+        if (StringUtils.isEmpty(rule)) return null;
         List<SourceRule> ruleList = splitSourceRule(rule, false);
         return getStringList(ruleList, mContent, isUrl);
     }
@@ -177,7 +173,7 @@ public class AnalyzeRule {
             for (SourceRule sourceRule : ruleList) {
                 putRule(sourceRule.putMap);
 //                result = funRule(sourceRule.funMap,result);
-                sourceRule.makeUpRule(result);
+                sourceRule.makeUpRule(result,true);
                 if (StringUtils.isNotEmpty(sourceRule.rule)) {
                     switch (sourceRule.mode) {
                         case Json:
@@ -196,6 +192,9 @@ public class AnalyzeRule {
                             result = sourceRule.rule;
                     }
                 }
+                if (result instanceof String) {
+                    result = Arrays.asList(StringUtils.split(result.toString(), "\n"));
+                }
                 if (StringUtils.isNotEmpty(sourceRule.replaceRegex) && result instanceof List) {
                     List<String> newList = new ArrayList<>();
                     for (Object item : (List) result) {
@@ -209,7 +208,7 @@ public class AnalyzeRule {
         }
         if (result == null) return null;
         if (result instanceof String) {
-            result = StringUtils.split(result.toString(), "\n");
+            result = Arrays.asList(StringUtils.split(result.toString(), "\n"));
         }
         if (isUrl) {
             List<String> urlList = new ArrayList<>();
@@ -222,14 +221,14 @@ public class AnalyzeRule {
                         } else if(url != null && url.toString().startsWith("/")) {
                             urlList.add(StringUtil.getBaseUrl(baseUrl) + url.toString());
                         }else if(url != null && !url.toString().startsWith("http") && !StringUtil.isBase64(url.toString())) {
-                            try {
-                                String absoluteURL = NetworkUtils.INSTANCE.getAbsoluteURL(redirectUrl, url.toString());
-                                if (StringUtils.isNotEmpty(absoluteURL) && !urlList.contains(absoluteURL)) {
-                                    urlList.add(absoluteURL);
-                                }
-                            } catch (MalformedURLException e) {
-                                e.printStackTrace();
-                            }
+//                            try {
+//                                String absoluteURL = NetworkUtils.INSTANCE.getAbsoluteURL(redirectUrl, url.toString());
+//                                if (StringUtils.isNotEmpty(absoluteURL) && !urlList.contains(absoluteURL)) {
+//                                    urlList.add(absoluteURL);
+//                                }
+//                            } catch (MalformedURLException e) {
+//                                e.printStackTrace();
+//                            }
                         }
                     } catch (Exception e) {
 
@@ -296,13 +295,14 @@ public class AnalyzeRule {
                 return baseUrl;
             } else if(str.startsWith("/")) {
                 return StringUtil.getBaseUrl(baseUrl) + str;
-            }else if(!str.startsWith("http") && !StringUtil.isBase64(str)) {
-                try {
-                    return NetworkUtils.INSTANCE.getAbsoluteURL(redirectUrl, str);
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
             }
+//            else if(!str.startsWith("http") && !StringUtil.isBase64(str)) {
+//                try {
+//                    return NetworkUtils.INSTANCE.getAbsoluteURL(redirectUrl, str);
+//                } catch (MalformedURLException e) {
+//                    e.printStackTrace();
+//                }
+//            }
         }
         return str;
     }
@@ -513,7 +513,7 @@ public class AnalyzeRule {
 
     private List<SourceRule> splitSourceRule(String rule, boolean allInOne) {
         if (StringUtil.isBase64(rule))
-            rule = new String(Base64.decode(rule, Base64.DEFAULT | Base64.URL_SAFE | Base64.NO_WRAP));
+            rule = new String(Base64.decode(rule, Base64.NO_WRAP));
         if (StringUtils.isEmpty(rule))
             return new ArrayList<>();
         List<SourceRule> ruleList = new ArrayList<>();
@@ -696,6 +696,9 @@ public class AnalyzeRule {
         }
 
         public void makeUpRule(Object result) {
+            makeUpRule(result,false);
+        }
+        public void makeUpRule(Object result,boolean listFlag) {
             StringBuilder infoVal = new StringBuilder();
             if (ruleParam != null && !ruleParam.isEmpty()) {
                 for (int index = ruleParam.size() - 1; index >= 0; --index) {
@@ -709,6 +712,9 @@ public class AnalyzeRule {
                             infoVal.insert(0, ruleParam.get(index));
                         }
                     } else if(regType == jsRuleType){
+                        if (listFlag) {
+                            infoVal.insert(0, "\n$$");
+                        }
                         if(isRule(ruleParam.get(index))) {
                             infoVal.insert(0,getString(ruleParam.get(index)));
                         }
@@ -721,7 +727,11 @@ public class AnalyzeRule {
                 rule = infoVal.toString();
             }
             String[] ruleStrs = rule.split("##");
-            rule = StringUtils.trim(ruleStrs[0]);
+            if (listFlag) {
+                String[] ruleList = ruleStrs[0].split("\\$\\$");
+                rule = ruleList[0].replaceAll("\\n",ruleList[1]+"\n").trim();
+            } else
+                rule = StringUtils.trim(ruleStrs[0]);
             if (ruleStrs.length > 1) {
                 replaceRegex = ruleStrs[1];
             }

@@ -1,6 +1,5 @@
 package com.github.catvod.parser;
 
-import com.github.catvod.analyzeRules.AnalyzeRule;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
