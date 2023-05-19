@@ -2,12 +2,11 @@ package com.github.catvod.parser;
 
 import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.StringUtil;
+import com.google.gson.Gson;
 
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONObject;
 import org.jsoup.nodes.Entities;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -437,18 +436,8 @@ public class AnalyzeRule {
         Matcher putMatcher = putPattern.matcher(vRuleStr);
         while (putMatcher.find()) {
             vRuleStr = vRuleStr.replace(putMatcher.group(), "");
-            try {
-                JSONObject navs = new JSONObject(putMatcher.group(1));
-                if (navs != null) {
-                    Iterator<String> keys = navs.keys();
-                    while (keys.hasNext()) {
-                        String name = keys.next();
-                        putMap.put(name.trim(), navs.optString(name).trim().replaceAll("%7B","{").replaceAll("%7D","}"));
-                    }
-                }
-            } catch (Exception e) {
-
-            }
+            Map<String, String> data = new Gson().fromJson(putMatcher.group(1).replaceAll("%7B","{").replaceAll("%7D","}"), Map.class);
+            putMap.putAll(data);
         }
         return vRuleStr;
     }

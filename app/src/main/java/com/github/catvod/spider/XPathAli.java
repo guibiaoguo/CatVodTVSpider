@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 import okhttp3.Call;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
-import rxhttp.wrapper.annotations.NonNull;
+
 
 public class XPathAli extends XPath {
 
@@ -104,7 +104,7 @@ public class XPathAli extends XPath {
         }
     }
 
-    public String join(@NonNull CharSequence delimiter, @NonNull Iterable tokens) {
+    public String join(CharSequence delimiter, Iterable tokens) {
         final Iterator<?> it = tokens.iterator();
         if (!it.hasNext()) {
             return "";

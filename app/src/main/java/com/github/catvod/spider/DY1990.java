@@ -341,7 +341,7 @@ public class DY1990 extends Spider {
     }
 
     @Override
-    public String playerContent(String flag, String id, List<String> vipFlags) {
+    public String playerContent(String flag, String id, List<String> vipFlags) throws Exception {
         String webUrl = "https://dy1990.com/vodplay/" + id + ".html";
         String videoUrl = null;
         // 尝试分析直连

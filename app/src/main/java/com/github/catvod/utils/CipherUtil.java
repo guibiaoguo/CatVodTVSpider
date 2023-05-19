@@ -55,7 +55,7 @@ public class CipherUtil {
     private static Cipher g(int i, String str) {
         try {
             SecretKey generateSecret = SecretKeyFactory.getInstance("DES").generateSecret(new DESKeySpec(str.getBytes()));
-            Cipher instance = Cipher.getInstance("DES/ECB/PKCS7Padding");
+            Cipher instance = Cipher.getInstance("DES/ECB/PKCS5Padding");
             instance.init(i, generateSecret);
             return instance;
         } catch (Exception e) {

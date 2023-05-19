@@ -156,7 +156,7 @@ public class Jumi extends Spider {
     @Override
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) {
         try {
-            String url = siteUrl + "/show/";
+            String url = siteUrl + "/type/";
             if (extend != null && extend.size() > 0 && extend.containsKey("tid") && extend.get("tid").length() > 0) {
                 url += extend.get("tid");
             } else {

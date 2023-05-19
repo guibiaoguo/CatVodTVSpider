@@ -1,13 +1,17 @@
 package com.github.catvod.parser;
 
-import com.github.catvod.parser.RuleAnalyzer;
+import android.text.TextUtils;
+
 import com.github.catvod.utils.StringUtil;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
 import com.jayway.jsonpath.ReadContext;
+import com.jayway.jsonpath.spi.json.GsonJsonProvider;
 
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONArray;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,11 +29,11 @@ public class AnalyzeByJSonPath {
         if (json instanceof ReadContext) {
             ctx = (ReadContext) json;
         } else if (json instanceof String) {
-            ctx = JsonPath.parse(json.toString());
+            ctx = JsonPath.using(Configuration.builder().jsonProvider(new GsonJsonProvider()).build()).parse(json.toString());
         } else if (json instanceof List) {
-            ctx = JsonPath.parse(StringUtil.join("\n",((ArrayList)json)));
+            ctx = JsonPath.using(Configuration.builder().jsonProvider(new GsonJsonProvider()).build()).parse(StringUtil.join("\n",((ArrayList)json)));
         } else {
-            ctx = JsonPath.parse(json);
+            ctx = JsonPath.using(Configuration.builder().jsonProvider(new GsonJsonProvider()).build()).parse(json);
         }
         return ctx;
     }
@@ -54,13 +58,8 @@ public class AnalyzeByJSonPath {
                     //st为空，表明无成功替换的内嵌规则
                     try {
                         Object obj = this.ctx.read(rule);
-                        if(obj instanceof JSONArray) {
-                            JSONArray jsonArray = (JSONArray) obj;
-                            List tmp = new ArrayList();
-                            for (int i = 0; i < jsonArray.length(); i++) {
-                                tmp.add(jsonArray.opt(i).toString());
-                            }
-                            result = StringUtil.join("\n",tmp);
+                        if(obj instanceof JsonArray) {
+                            result = TextUtils.join("\n", (JsonArray)obj);
                         } else {
                             result = obj.toString();
                         }
@@ -102,11 +101,8 @@ public class AnalyzeByJSonPath {
                 //st为空，表明无成功替换的内嵌规则
                 try {
                     Object obj = this.ctx.read(rule);
-                    if (obj instanceof JSONArray) {
-                        JSONArray jsonArray = (JSONArray) obj;
-                        for (int i = 0; i < jsonArray.length(); i++) {
-                            result.add(jsonArray.opt(i).toString());
-                        }
+                    if (obj instanceof JsonArray) {
+                        result.addAll(new Gson().fromJson(obj.toString(), List.class));
                     } else {
                         result.add(obj.toString());
                     }
@@ -165,11 +161,8 @@ public class AnalyzeByJSonPath {
         if (rules.size() == 1) {
             try {
                 Object obj = this.ctx.read(rules.get(0).toString());
-                if (obj instanceof JSONArray) {
-                    JSONArray jsonArray = (JSONArray) obj;
-                    for (int i = 0; i < jsonArray.length(); i++) {
-                        result.add(jsonArray.opt(i).toString());
-                    }
+                if (obj instanceof JsonArray) {
+                    result.addAll(new Gson().fromJson(obj.toString(), List.class));
                 } else {
                     result.add(obj.toString());
                 }

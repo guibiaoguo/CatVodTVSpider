@@ -44,7 +44,7 @@ public class DiDuan extends Spider {
             instance.removeAllCookies(null);
             instance.removeSessionCookies(null);
         } else {
-            CookieSyncManager createInstance = CookieSyncManager.createInstance(Init.getContext());
+            CookieSyncManager createInstance = CookieSyncManager.createInstance(Init.context());
             createInstance.startSync();
             instance.removeAllCookie();
             instance.removeSessionCookie();

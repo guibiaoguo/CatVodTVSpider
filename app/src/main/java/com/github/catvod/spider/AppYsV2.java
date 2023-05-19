@@ -1,23 +1,35 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
+import android.text.TextUtils;
+
+import com.github.catvod.bean.Result;
+import com.github.catvod.bean.Vod;
+import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.StringUtil;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Misc;
+import com.github.catvod.utils.Trans;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -282,15 +294,87 @@ public class AppYsV2 extends Spider {
             String apiUrl = getApiUrl();
             String url = getPlayUrlPrefix(apiUrl) + ids.get(0);
             SpiderDebug.log(url);
-            String json = desc(OkHttpUtil.string(url, getHeaders(url)), (byte) 3);
-            JSONObject obj = new JSONObject(json);
-            JSONObject result = new JSONObject();
-            JSONObject vod = new JSONObject();
-            genPlayList(apiUrl, obj, json, vod, ids.get(0));
-            JSONArray list = new JSONArray();
-            list.put(vod);
-            result.put("list", list);
-            return result.toString();
+            if (url.contains("app.bl210.com")) {
+                Document doc = Jsoup.parse(OkHttp.string("https://app.bl210.com/index.php/vod/detail/id/".concat(ids.get(0)).concat(".html"), getHeaders("")));
+                // 取基本数据
+                String img = doc.selectFirst(".stui-content__thumb img").attr("data-original");
+                String name = doc.selectFirst("div.stui-content__detail h3.title").text();
+                String content = Jsoup.parse(doc.selectFirst("meta[name=description]").attr("content")).text();
+                String type = "", area = "", year = "", remarks = "", director = "", actor = "";
+                Elements span_text_muted = doc.select("div.stui-content__detail span");
+                for (int i = 0; i < span_text_muted.size(); i++) {
+                    Element text = span_text_muted.get(i);
+                    String info = text.text();
+                    switch (info) {
+                        case "类型：":
+                            type = text.nextElementSibling().text();
+                            break;
+                        case "年份：":
+                            year = text.nextElementSibling().text();
+                            break;
+                        case "地区：":
+                            area = text.nextElementSibling().text();
+                            break;
+                        case "状态：":
+                            remarks = text.nextElementSibling().text();
+                            break;
+                        case "导演：": {
+                            director = text.nextSibling().toString();
+                            break;
+                        }
+                        case "主演：": {
+                            actor = text.nextSibling().toString();
+                            break;
+                        }
+                    }
+                }
+
+                Vod vod = new Vod();
+                vod.setVodId(ids.get(0));
+                vod.setVodPic(img);
+                vod.setVodYear(year);
+                vod.setVodName(name);
+                vod.setVodArea(area);
+                vod.setVodActor(actor);
+                vod.setVodRemarks(remarks);
+                vod.setVodContent(content);
+                vod.setVodDirector(director);
+                vod.setTypeName(type);
+
+                Map<String, String> sites = new LinkedHashMap<>();
+                // 取播放列表数据
+                Elements sources = doc.select(".stui-pannel__head:has(span) h3");
+                Elements sourceList = doc.select(".stui-content__playlist");
+                for (int i = 0; i < sources.size(); i++) {
+                    Element source = sources.get(i);
+                    String sourceName = source.text();
+                    Elements playList = sourceList.get(i).select("a");
+                    List<String> vodItems = new ArrayList<>();
+                    for (int j = 0; j < playList.size(); j++) {
+                        Element e = playList.get(j);
+                        String playURL = StringUtil.getBaseUrl(url) + e.attr("href");
+                        vodItems.add(Trans.get(e.text()) + "$" + playURL);
+                    }
+                    if (vodItems.size() > 0) {
+                        sites.put(sourceName, TextUtils.join("#", vodItems));
+                    }
+                }
+                if (sites.size() > 0) {
+                    vod.setVodPlayFrom(TextUtils.join("$$$", sites.keySet()));
+                    vod.setVodPlayUrl(TextUtils.join("$$$", sites.values()));
+                }
+                return Result.string(vod);
+            } else {
+                String json = desc(OkHttpUtil.string(url, getHeaders(url)), (byte) 3);
+                JSONObject obj = new JSONObject(json);
+                JSONObject result = new JSONObject();
+                JSONObject vod = new JSONObject();
+                genPlayList(apiUrl, obj, json, vod, ids.get(0));
+                JSONArray list = new JSONArray();
+                list.put(vod);
+                result.put("list", list);
+                return result.toString();
+            }
         } catch (Exception e) {
             SpiderDebug.log(e);
         }
@@ -467,7 +551,7 @@ public class AppYsV2 extends Spider {
     private static final Pattern parsePattern1 = Pattern.compile(".*(url|v|vid|php\\?id)=");
     private static final Pattern parsePattern2 = Pattern.compile("https?://[^/]*");
 
-    private static final Pattern[] htmlVideoKeyMatch = new Pattern[]{
+    protected static final Pattern[] htmlVideoKeyMatch = new Pattern[]{
             Pattern.compile("player=new"),
             Pattern.compile("<div id=\"video\""),
             Pattern.compile("<div id=\"[^\"]*?player\""),
@@ -761,7 +845,7 @@ public class AppYsV2 extends Spider {
     }
 
     // ######视频地址
-    private JSONObject getFinalVideo(String flag, ArrayList<String> parseUrls, String url) throws JSONException {
+    protected JSONObject getFinalVideo(String flag, ArrayList<String> parseUrls, String url) throws JSONException {
         String htmlPlayUrl = "";
         for (String parseUrl : parseUrls) {
             if (parseUrl.isEmpty() || parseUrl.equals("null"))
@@ -829,4 +913,5 @@ public class AppYsV2 extends Spider {
         }
         return src;
     }
+
 }

@@ -1,17 +1,18 @@
 plugins {
     id 'com.android.application'
     id 'ru.cleverpumpkin.proguard-dictionaries-generator'
-//    id 'kotlin-android'
 }
+
 android {
-    compileSdkVersion rootProject.compileSdkVersion
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.github.catvod.demo"
-        minSdkVersion rootProject.miniSdkVersion
-        targetSdkVersion rootProject.targetSdkVersion
-        versionCode rootProject.appVersionCode
-        versionName rootProject.appVersionName
+        minSdk 17
+        targetSdk 29
+        ndk { abiFilters "armeabi-v7a" }
+        buildConfigField("String", "APP_ID", "\"${appId}\"")
+        buildConfigField("String", "CLIENT_ID", "\"${clientId}\"")
     }
 
     buildTypes {
@@ -19,34 +20,48 @@ android {
             minifyEnabled true
             proguardFiles 'proguard-rules.pro'
             proguardDictionaries {
-                dictionaryNames = [
-                        "build/class-dictionary",
-                        "build/package-dictionary",
-                        "build/obfuscation-dictionary"
-                ]
+                dictionaryNames = ["build/class-dictionary", "build/package-dictionary", "build/obfuscation-dictionary"]
                 minLineLength 1
                 maxLineLength 3
                 linesCountInDictionary 100000
             }
         }
     }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+            unitTests.returnDefaultValues = true
+        }
     }
 }
 
 dependencies {
-    implementation "org.jsoup:jsoup:$jsoup_version"
-    implementation "cn.wanghaomiao:JsoupXpath:$jsoupxpath_version"
-    implementation "com.squareup.okhttp3:okhttp:$okhttp_version"
-    implementation ("com.github.liujingxing.rxhttp:rxhttp:$rxhttp_version") {
-        exclude group: "com.squareup.okhttp3"
-    }
-    annotationProcessor "com.github.liujingxing.rxhttp:rxhttp-compiler:$rxhttp_version"
-
-//    testImplementation group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.32'
-    //无依赖单元测试用，打包删除
-	testImplementation 'junit:junit:4.12'
+    //Debug For HTTP/3
+    debugImplementation 'org.chromium.net:cronet-embedded:101.4951.41'
+    implementation 'com.starkbank.ellipticcurve:starkbank-ecdsa:1.0.2'
+    implementation 'com.google.net.cronet:cronet-okhttp:0.1.0'
+    implementation 'androidx.annotation:annotation:1.5.0'
+    implementation 'com.squareup.okhttp3:okhttp:3.12.13'
+    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'cn.wanghaomiao:JsoupXpath:2.5.1'
+    implementation 'com.google.zxing:core:3.3.0'
+    implementation 'org.jsoup:jsoup:1.15.3'
+    implementation 'com.jayway.jsonpath:json-path:2.8.0'
+    //junit 打包删除
     implementation group: 'org.json', name: 'json', version: '20190722'
+    testImplementation 'junit:junit:4.13.2'
+    //mockito
+    testImplementation "org.mockito:mockito-core:3.3.3"
+    //powermock
+    testImplementation "org.powermock:powermock-module-junit4:2.0.9"
+    testImplementation "org.powermock:powermock-module-junit4-rule:2.0.9"
+    testImplementation "org.powermock:powermock-api-mockito2:2.0.9"
+    testImplementation "org.powermock:powermock-classloading-xstream:2.0.9"
+//    testImplementation 'org.robolectric:robolectric:4.9'
 }

@@ -36,7 +36,7 @@ public class XPathGaze extends XPathFilter {
             while (matcher.find()) {
                 sb.append((CharSequence) V, i, matcher.start());
                 StringBuilder sb2 = new StringBuilder();
-                sb2.append(Proxy.localProxyUrl());
+                sb2.append(Proxy.getUrl());
                 sb2.append("?do=gaze&type=key&url=");
                 sb2.append(Base64.encodeToString(matcher.group(0).getBytes(Misc.GBK), 10));
                 sb.append((CharSequence) sb2);
@@ -86,7 +86,7 @@ public class XPathGaze extends XPathFilter {
 
     private String q3(String str, String str2) {
         try {
-            Cipher instance = Cipher.getInstance("AES/CBC/PKCS7Padding");
+            Cipher instance = Cipher.getInstance("AES/CBC/PKCS5Padding");
             IvParameterSpec ivParameterSpec = new IvParameterSpec("1234567890123456".getBytes(Misc.UTF8));
             byte[] bytes = str.getBytes(Misc.UTF8);
             instance.init(2, new SecretKeySpec(bytes, 0, bytes.length, "AES"), ivParameterSpec);

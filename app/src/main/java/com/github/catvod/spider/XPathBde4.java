@@ -2,6 +2,7 @@ package com.github.catvod.spider;
 
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Base64;
+import com.github.catvod.utils.Utils;
 import com.github.catvod.utils.okhttp.OKCallBack;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
@@ -130,5 +131,11 @@ public class XPathBde4 extends XPath {
             SpiderDebug.log(e);
         }
         return "";
+    }
+
+    protected HashMap<String, String> getHeaders(String url) {
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("User-Agent", rule.getUa().isEmpty() ? Utils.CHROME : rule.getUa());
+        return headers;
     }
 }

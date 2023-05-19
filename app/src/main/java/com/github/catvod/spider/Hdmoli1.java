@@ -1,8 +1,10 @@
 package com.github.catvod.spider;
 
 import com.github.catvod.crawler.SpiderDebug;
+import com.github.catvod.utils.Utils;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import org.json.JSONObject;
@@ -84,5 +86,11 @@ public class Hdmoli1 extends XPathFilter {
             SpiderDebug.log(e);
             return "";
         }
+    }
+
+    protected HashMap<String, String> getHeaders(String url) {
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("User-Agent", rule.getUa().isEmpty() ? Utils.CHROME : rule.getUa());
+        return headers;
     }
 }

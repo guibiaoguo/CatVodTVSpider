@@ -34,7 +34,6 @@ public class XPathEgg extends XPath {
         return (rule.getCateUrl() + "index_{catePg}.html").replace("{cateId}", tid).replace("{catePg}", pg);
     }
 
-    @Override
     protected void detailContentExt(String content, JSONObject vod) {
         try {
             String startFlag = "infoid=";

@@ -1,19 +1,28 @@
 package com.github.catvod.spider;
 
+import android.text.TextUtils;
+
+import com.github.catvod.bean.Class;
+import com.github.catvod.bean.Filter;
+import com.github.catvod.bean.Result;
+import com.github.catvod.bean.Vod;
 import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.StringUtil;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.CipherUtil;
-import com.github.catvod.utils.Misc;
+import com.github.catvod.utils.Trans;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.TreeMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.json.JSONArray;
@@ -25,17 +34,20 @@ import org.jsoup.select.Elements;
 
 /* loaded from: classes.dex */
 public class Bttoo extends Spider {
-    private final String O = "{}";
-    private final Pattern G = Pattern.compile("https://www.bttwoo.com/(\\S+)");
-    private final Pattern n = Pattern.compile("https://www.bttwoo.com/movie/(\\d+).html");
-    private final Pattern Ur = Pattern.compile("https://www.bttwoo.com/v_play/(\\S+).html");
-    private final Pattern eA = Pattern.compile("https://www.bttwoo.com/\\S+/page/(\\d+)");
+
+    private final String siteUrl = "https://www.bttwo.net";
+    private final String filterConfig = "{\"Movie\":[{\"key\":0,\"name\":\"分类\",\"value\":[{\"n\":\"全部\",\"v\":\"\"},{\"n\":\"喜剧片\",\"v\":\"xjp\"},{\"n\":\"动作片\",\"v\":\"dzp\"},{\"n\":\"爱情片\",\"v\":\"aqp\"},{\"n\":\"科幻片\",\"v\":\"khp\"},{\"n\":\"恐怖片\",\"v\":\"kbp\"},{\"n\":\"惊悚片\",\"v\":\"jsp\"},{\"n\":\"战争片\",\"v\":\"zzp\"},{\"n\":\"剧情片\",\"v\":\"jqp\"}]}],\"Tv\":[{\"key\":0,\"name\":\"分类\",\"value\":[{\"n\":\"全部\",\"v\":\"\"},{\"n\":\"美剧\",\"v\":\"oumei\"},{\"n\":\"韩剧\",\"v\":\"hanju\"},{\"n\":\"日剧\",\"v\":\"riju\"},{\"n\":\"泰剧\",\"v\":\"yataiju\"},{\"n\":\"网剧\",\"v\":\"wangju\"},{\"n\":\"台剧\",\"v\":\"taiju\"},{\"n\":\"国产\",\"v\":\"neidi\"},{\"n\":\"港剧\",\"v\":\"tvbgj\"}]}],\"Zy\":[{\"key\":0,\"name\":\"分类\",\"value\":[{\"n\":\"全部\",\"v\":\"\"},{\"n\":\"国综\",\"v\":\"guozong\"},{\"n\":\"韩综\",\"v\":\"hanzong\"},{\"n\":\"美综\",\"v\":\"meizong\"}]}],\"Dm\":[{\"key\":0,\"name\":\"分类\",\"value\":[{\"n\":\"全部\",\"v\":\"\"},{\"n\":\"动画\",\"v\":\"donghua\"},{\"n\":\"日漫\",\"v\":\"riman\"},{\"n\":\"国漫\",\"v\":\"guoman\"},{\"n\":\"美漫\",\"v\":\"meiman\"}]}],\"qita\":[{\"key\":0,\"name\":\"分类\",\"value\":[{\"n\":\"全部\",\"v\":\"\"},{\"n\":\"纪录片\",\"v\":\"Jlp\"},{\"n\":\"经典片\",\"v\":\"Jdp\"},{\"n\":\"经典剧\",\"v\":\"Jdj\"},{\"n\":\"网大电影\",\"v\":\"wlp\"},{\"n\":\"国产老电影\",\"v\":\"laodianying\"}]}]}";
+    private final Pattern regexCategory = Pattern.compile("^/(\\S+)");
+    private final Pattern regexVid = Pattern.compile("https://www.bttwo.net/movie/(\\d+).html");
+    private final Pattern regexPlay = Pattern.compile("https://www.bttwo.net/v_play/(\\S+).html");
+    private final Pattern regexPage = Pattern.compile("https://www.bttwo.net/\\S+/page/(\\d+)");
     private final Pattern o = Pattern.compile("=\"(.*?)\";var");
     private final Pattern F = Pattern.compile("parse\\(\"(.*?)\"\\);var iv");
     private final Pattern Cp = Pattern.compile("iv=md5\\.enc\\.Utf8\\.parse\\((.*?)\\);var decrypted");
     private final Pattern JC = Pattern.compile("url: \"(.*?)\"");
 
-    protected HashMap<String, String> O(String str) {
+    private final Pattern regexDetail = Pattern.compile("(.*)[:|：](.*)");
+    protected HashMap<String, String> getHeaders(String str) {
         HashMap<String, String> hashMap = new HashMap<>();
         hashMap.put("method", "GET");
         if (!StringUtil.isEmpty(str)) {
@@ -45,353 +57,265 @@ public class Bttoo extends Spider {
         return hashMap;
     }
 
-    public String categoryContent(String str, String str2, boolean z, HashMap<String, String> hashMap) {
-        int i;
-        String str3;
-        try {
-            String str4 = "https://www.bttwoo.com/" + str + "/page/" + str2;
-            String V = OkHttpUtil.string(str4, O(str4));
-            Document g = Jsoup.parse(V);
-            JSONObject jSONObject = new JSONObject();
-            Matcher matcher = this.eA.matcher(g.select("div.pagenavi_txt > a.extend").attr("href"));
-            int i2 = 1;
-            int parseInt = matcher.find() ? Integer.parseInt(matcher.group(1).trim()) : 1;
-            Elements o = g.select("div.pagenavi_txt > a ");
-            int i3 = 0;
-            if (o.size() > 0) {
-                i = 1;
-                for (int i4 = 0; i4 < o.size(); i4++) {
-                    Element Xq = o.get(i4).selectFirst("a");
-                    if (Xq != null) {
-                        Xq.text().trim();
-                        if (Xq.hasClass("current")) {
-                            Matcher matcher2 = this.eA.matcher(Xq.attr("href"));
-                            if (matcher2.find()) {
-                                i = Integer.parseInt(matcher2.group(1).trim());
-                            }
-                        }
-                    }
+    /**
+     * 获取分类信息数据
+     *
+     * @param tid    分类id
+     * @param pg     页数
+     * @param filter 同homeContent方法中的filter
+     * @param extend 筛选参数{k:v, k1:v1}
+     * @return
+     */
+    @Override
+    public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) {
+        String url = siteUrl + "/";
+        List<Vod> list = new ArrayList<>();
+        if (extend != null && extend.size() > 0 && extend.containsKey("tid") && extend.get("tid").length() > 0) {
+            url += extend.get("tid");
+        } else {
+            url += tid;
+        }
+        if (extend != null && extend.size() > 0) {
+            for (Iterator<String> it = extend.keySet().iterator(); it.hasNext(); ) {
+                String key = it.next();
+                String value = extend.get(key);
+                if (value.length() > 0) {
+                    url += "/" + key + "/" + URLEncoder.encode(value);
                 }
-            } else {
-                i = 1;
             }
-            JSONArray jSONArray = new JSONArray();
-            if (!V.contains("没有找到您想要的结果哦")) {
-                Elements o2 = g.select("div.bt_img > ul > li");
-                while (i3 < o2.size()) {
-                    Element ik = o2.get(i3);
-                    String H = ik.selectFirst("h3.dytit > a").text();
-                    String dV = ik.selectFirst("a > img ").attr("data-original");
-                    Element Xq2 = ik.selectFirst("div.jidi > span");
-                    if (Xq2 != null) {
-                        str3 = Xq2.text();
+        }
+        url += "/page/" + pg + "/";
+        //System.out.println(url);
+        String html = OkHttpUtil.string(url, getHeaders(url));
+        Document doc = Jsoup.parse(html);
+        int pageCount = 0;
+        int page = -1;
+
+        // 取页码相关信息
+        Elements pageInfo = doc.select("div.pagenavi_txt > a");
+        if (pageInfo.size() == 0) {
+            page = Integer.parseInt(pg);
+            pageCount = page;
+        } else {
+            for (int i = 0; i < pageInfo.size(); i++) {
+                Element li = pageInfo.get(i);
+                Element a = li.selectFirst("a");
+                if (a == null)
+                    continue;
+                String name = a.text();
+                //System.out.println("名称"+name);
+                if (page == -1 && li.hasClass("current")) {
+                    Matcher matcher = regexPage.matcher(a.attr("href"));
+                    if (matcher.find()) {
+                        //System.out.println("哈哈"+matcher.group(1));
+                        page = Integer.parseInt(matcher.group(1));
                     } else {
-                        str3 = "";
+                        page = Integer.parseInt(name);
                     }
-                    Matcher matcher3 = this.n.matcher(ik.selectFirst("h3.dytit > a").attr("href"));
-                    if (matcher3.find()) {
-                        String group = matcher3.group(i2);
-                        JSONObject jSONObject2 = new JSONObject();
-                        jSONObject2.put("vod_id", group);
-                        jSONObject2.put("vod_name", H);
-                        jSONObject2.put("vod_pic", dV);
-                        jSONObject2.put("vod_remarks", str3);
-                        jSONArray.put(jSONObject2);
+                }
+                if (li.hasClass("extend")) {
+                    Matcher matcher = regexPage.matcher(a.attr("href"));
+                    if (matcher.find()) {
+                        //System.out.println("尾页" + matcher.group(1));
+                        pageCount = Integer.parseInt(matcher.group(1));
+                    } else {
+                        pageCount = 0;
                     }
-                    i3++;
-                    i2 = 1;
-                }
-            }
-            jSONObject.put("page", i);
-            jSONObject.put("pagecount", parseInt);
-            jSONObject.put("limit", 24);
-            jSONObject.put("total", parseInt <= 1 ? jSONArray.length() : parseInt * 24);
-            jSONObject.put("list", jSONArray);
-            return jSONObject.toString();
-        } catch (Exception e) {
-            SpiderDebug.log(e);
-            return "";
-        }
-    }
-
-    public String detailContent(List<String> list) {
-        String str;
-        Exception e;
-        Document g = null;
-        JSONObject jSONObject = null;
-        JSONObject jSONObject2 = null;
-        String dV = null;
-        String H = null;
-        String H2 = null;
-        Elements o = null;
-        String str2 = null;
-        String str3 = null;
-        String str4 = null;
-        String str5 = null;
-        String str6 = null;
-        String str7 = null;
-        int i = 0;
-        String str8;
-        String str9 = "$$$";
-        String str10 = "";
-        try {
-            String str11 = "https://www.bttwoo.com/movie/" + list.get(0) + ".html";
-            g = Jsoup.parse(OkHttpUtil.string(str11, O(str11)));
-            jSONObject = new JSONObject();
-            jSONObject2 = new JSONObject();
-            dV = g.selectFirst("div.dyimg > img").attr("src");
-            H = g.selectFirst("div.moviedteail_tt > h1").text();
-            H2 = Jsoup.parse(g.selectFirst("meta[name=description]").attr("content")).text();
-            o = g.select("ul.moviedteail_list > li");
-            str2 = str10;
-            str3 = str2;
-            str4 = str3;
-            str5 = str4;
-            str6 = str5;
-            str7 = str6;
-            i = 0;
-        } catch (Exception e2) {
-            e = e2;
-            str = str10;
-        }
-        while (true) {
-            str = str10;
-            if (i >= o.size()) {
-                break;
-            }
-            try {
-                Element ik = o.get(i);
-                String H3 = ik.text();
-                if (H3.contains("类型：")) {
-                    str2 = ik.child(0).text();
-                } else if (H3.contains("年份：")) {
-                    str3 = ik.child(0).text();
-                } else if (H3.contains("地区：")) {
-                    str4 = ik.child(0).text();
-                } else if (H3.contains("上映：")) {
-                    str5 = ik.child(0).text();
-                } else {
-                    str8 = str9;
-                    if (H3.contains("导演：")) {
-                        ArrayList arrayList = new ArrayList();
-                        Elements o2 = ik.select("a");
-                        for (int i2 = 0; i2 < o2.size(); i2++) {
-                            arrayList.add(o2.get(i2).text());
-                        }
-                        str7 = StringUtil.join(",", arrayList);
-                    } else if (H3.contains("主演：")) {
-                        ArrayList arrayList2 = new ArrayList();
-                        Elements o3 = ik.select("a");
-                        for (int i3 = 0; i3 < o3.size(); i3++) {
-                            arrayList2.add(o3.get(i3).text());
-                        }
-                        str6 = StringUtil.join(",", arrayList2);
-                    }
-                    i++;
-                    str10 = str;
-                    o = o;
-                    jSONObject = jSONObject;
-                    str9 = str8;
-                }
-                str8 = str9;
-                i++;
-                str10 = str;
-                o = o;
-                jSONObject = jSONObject;
-                str9 = str8;
-            } catch (Exception e3) {
-                e = e3;
-            }
-            return str;
-        }
-        try {
-            jSONObject2.put("vod_id", list.get(0));
-            jSONObject2.put("vod_name", H);
-            jSONObject2.put("vod_pic", dV);
-            jSONObject2.put("type_name", str2);
-            jSONObject2.put("vod_year", str3);
-            jSONObject2.put("vod_area", str4);
-            jSONObject2.put("vod_remarks", str5);
-            jSONObject2.put("vod_actor", str6);
-            jSONObject2.put("vod_director", str7);
-            jSONObject2.put("vod_content", H2);
-        } catch (Exception e1) {
-            SpiderDebug.log(e1);
-        }
-
-        TreeMap treeMap = new TreeMap();
-        Elements o4 = g.select("div.mi_paly_box > div > div.ypxingq_t");
-        Elements o5 = g.select("div.paly_list_btn ");
-        for (int i4 = 0; i4 < o4.size(); i4++) {
-            String H4 = o4.get(i4).child(0).text();
-            Elements o6 = o5.get(i4).select("a");
-            ArrayList arrayList3 = new ArrayList();
-            for (int i5 = 0; i5 < o6.size(); i5++) {
-                Element ik2 = o6.get(i5);
-                Matcher matcher = this.Ur.matcher(ik2.attr("href"));
-                if (matcher.find()) {
-                    arrayList3.add(ik2.text() + "$" + matcher.group(1));
-                }
-            }
-            String join = arrayList3.size() > 0 ? StringUtil.join("#", arrayList3) : str;
-            if (join.length() != 0) {
-                treeMap.put(H4, join);
-            }
-        }
-        try {
-            if (treeMap.size() > 0) {
-                String join2 = StringUtil.join(str9, treeMap.keySet());
-                String join3 = StringUtil.join(str9, treeMap.values());
-                jSONObject2.put("vod_play_from", join2);
-                jSONObject2.put("vod_play_url", join3);
-            }
-            JSONArray jSONArray = new JSONArray();
-            jSONArray.put(jSONObject2);
-            jSONObject.put("list", jSONArray);
-        } catch (Exception e2) {
-            SpiderDebug.log(e2);
-        }
-
-        return jSONObject.toString();
-    }
-
-    public String homeContent(boolean z) {
-        int i;
-        String str;
-        try {
-            Document g = Jsoup.parse(OkHttpUtil.string("https://www.bttwoo.com/", O("https://www.bttwoo.com")));
-            Elements o = g.select("ul.navlist > li > a");
-            JSONArray jSONArray = new JSONArray();
-            Iterator<Element> it = o.iterator();
-            while (true) {
-                i = 0;
-                if (!it.hasNext()) {
                     break;
                 }
-                Element next = it.next();
-                String H = next.text();
-                if (H.equals("最新电影")) {
-                    H = "电影";
-                }
-                if (H.equals("电影") || H.equals("国产剧") || H.equals("日韩剧") || H.equals("美剧")) {
-                    i = 1;
-                }
-                if (i != 0) {
-                    Matcher matcher = this.G.matcher(next.attr("href"));
-                    if (matcher.find()) {
-                        String trim = matcher.group(1).trim();
-                        JSONObject jSONObject = new JSONObject();
-                        jSONObject.put("type_id", trim);
-                        jSONObject.put("type_name", H);
-                        jSONArray.put(jSONObject);
-                    }
-                }
             }
-            JSONObject jSONObject2 = new JSONObject();
-            if (z) {
-                jSONObject2.put("filters", new JSONObject("{}"));
-            }
-            jSONObject2.put("class", jSONArray);
-            try {
-                Elements o2 = g.select("div.leibox > ul > li ");
-                JSONArray jSONArray2 = new JSONArray();
-                while (i < o2.size()) {
-                    Element ik = o2.get(i);
-                    String H2 = ik.selectFirst("h3.dytit > a").text();
-                    String dV = ik.selectFirst("a > img").attr("data-original");
-                    Element Xq = ik.selectFirst("div.jidi > span ");
-                    if (Xq != null) {
-                        str = Xq.text();
-                    } else {
-                        str = "";
-                    }
-                    Matcher matcher2 = this.n.matcher(ik.selectFirst("h3.dytit > a").attr("href"));
-                    if (matcher2.find()) {
-                        String group = matcher2.group(1);
-                        JSONObject jSONObject3 = new JSONObject();
-                        jSONObject3.put("vod_id", group);
-                        jSONObject3.put("vod_name", H2);
-                        jSONObject3.put("vod_pic", dV);
-                        jSONObject3.put("vod_remarks", str);
-                        jSONArray2.put(jSONObject3);
-                    }
-                    i++;
-                }
-                jSONObject2.put("list", jSONArray2);
-            } catch (Exception e) {
-                SpiderDebug.log(e);
-            }
-            return jSONObject2.toString();
-        } catch (Exception e2) {
-            SpiderDebug.log(e2);
-            return "";
         }
+        int limit = 90;
+        for (Element element : doc.select("div.bt_img > ul > li")) {
+            String name = element.selectFirst("h3.dytit > a").text();
+            String img = element.selectFirst("a img").attr("data-original");
+            String remark = element.selectFirst("div.jidi > span").text();
+            Matcher matcher = regexVid.matcher(element.selectFirst("a").attr("href"));
+            if (!matcher.find())
+                continue;
+            String id = matcher.group(1);
+            list.add(new Vod(id, name, img, remark));
+        }
+        limit = list.size();
+        return Result.get().vod(list).page(Integer.parseInt(pg), pageCount, limit,  pageCount > 0 && pageCount == 1 ? list.size() : pageCount * limit).string();
     }
 
-    public String playerContent(String str, String str2, List<String> list) {
-        try {
-            String str3 = "https://www.bttwoo.com/v_play/" + str2 + ".html";
-            Document g = Jsoup.parse(OkHttpUtil.string(str3, O(str3)));
-            JSONObject jSONObject = new JSONObject();
-            Matcher matcher = this.o.matcher(g.toString());
-            Matcher matcher2 = this.F.matcher(g.toString());
-            Matcher matcher3 = this.Cp.matcher(g.toString());
-            if (matcher.find() && matcher2.find() && matcher3.find()) {
-                Matcher matcher4 = this.JC.matcher(CipherUtil.aes5(Base64.decode(matcher.group(1), 0), matcher2.group(1).getBytes(), matcher3.group(1).getBytes()));
-                if (matcher4.find()) {
-                    String group = matcher4.group(1);
-                    HashMap hashMap = new HashMap();
-                    hashMap.put("User-Agent", " Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36");
-                    jSONObject.put("url", group);
-                    jSONObject.put("header", new JSONObject(hashMap).toString());
-                    jSONObject.put("parse", "0");
-                    jSONObject.put("palyUrl", "");
-                }
+    /**
+     * 视频详情信息
+     *
+     * @param ids 视频id
+     * @return
+     */
+    @Override
+    public String detailContent(List<String> ids) {
+        // 视频详情url
+        String url = siteUrl + "/movie/" + ids.get(0) + ".html";
+        Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
+        // 取基本数据
+        String img = doc.selectFirst("div.dyimg > img").attr("src");
+        String name = doc.selectFirst("div.moviedteail_tt > h1").text();
+        String type = "", area = "", year = "", remarks = "", director = "", actor = "", content = "";
+        Elements span_text_muted = doc.select("ul.moviedteail_list > li");
+        for (int i = 0; i < span_text_muted.size(); i++) {
+            Element text = span_text_muted.get(i);
+            String info = text.text();
+            Matcher m = regexDetail.matcher(info);
+            String info1 = info;
+            String info2 = info;
+            if (m.find()) {
+                info1 = m.group(1);
+                info2 = m.group(2);
             }
-            return jSONObject.toString();
-        } catch (Exception e) {
-            SpiderDebug.log(e);
-            return "";
+            if (info1.contains("类型") || info.contains("分类")) {
+                type = info2;
+            } else if(info1.contains("年份")){
+                year = info2;
+            } else if(info1.contains("地区")) {
+                area = info2;
+            } else if(info1.contains("状态") || info1.contains("备注")) {
+                remarks = info2;
+            } else if (info1.contains("导演")) {
+                director = info2;
+            } else if(info1.contains("主演")) {
+                actor = info2;
+            } else if(info.contains("简介")) {
+                content = text.nextElementSibling().nextElementSibling().text();
+            }
         }
+        content = doc.selectFirst(".yp_context").text();
+        Vod vod = new Vod();
+        vod.setVodId(ids.get(0));
+        vod.setVodPic(img);
+        vod.setVodYear(year);
+        vod.setVodName(name);
+        vod.setVodArea(area);
+        vod.setVodActor(actor);
+        vod.setVodRemarks(remarks);
+        vod.setVodContent(content);
+        vod.setVodDirector(director);
+        vod.setTypeName(type);
+
+        Map<String, String> sites = new LinkedHashMap<>();
+        // 取播放列表数据
+        Elements sources = doc.select(".mi_paly_box .ypxingq_t");
+        Elements sourceList = doc.select(".paly_list_btn");
+        for (int i = 0; i < sources.size(); i++) {
+            Element source = sources.get(i);
+            String sourceName = source.text();
+            Elements playList = sourceList.get(i).select("a");
+            List<String> vodItems = new ArrayList<>();
+            for (int j = 0; j < playList.size(); j++) {
+                Element e = playList.get(j);
+                Matcher matcher = regexPlay.matcher(e.attr("href"));
+                if (!matcher.find())
+                    continue;
+                String playURL = matcher.group(1);
+                vodItems.add(Trans.get(e.text()) + "$" + playURL);
+            }
+            if (vodItems.size() > 0) {
+                sites.put(sourceName, TextUtils.join("#", vodItems));
+            }
+        }
+        if (sites.size() > 0) {
+            vod.setVodPlayFrom(TextUtils.join("$$$", sites.keySet()));
+            vod.setVodPlayUrl(TextUtils.join("$$$", sites.values()));
+        }
+        return Result.string(vod);
     }
 
-    public String searchContent(String str, boolean z) {
-        String str2;
-        if (z) {
-            return "";
-        }
-        try {
-            String str3 = "https://www.bttwoo.com/xssearch?q=" + URLEncoder.encode(str) + "&f=_all&p=1";
-            Document g = Jsoup.parse(OkHttpUtil.string(str3, O(str3)));
-            JSONObject jSONObject = new JSONObject();
-            JSONArray jSONArray = new JSONArray();
-            Elements o = g.select("div.mi_ne_kd > ul > li");
-            for (int i = 0; i < o.size(); i++) {
-                Element ik = o.get(i);
-                String trim = ik.selectFirst("img").attr("alt").trim();
-                String dV = ik.selectFirst("img ").attr("data-original");
-                Element Xq = ik.selectFirst("div.jidi > span");
-                if (Xq != null) {
-                    str2 = Xq.text();
-                } else {
-                    str2 = "";
-                }
-                Matcher matcher = this.n.matcher(ik.selectFirst("a").attr("href"));
-                if (matcher.find()) {
-                    String group = matcher.group(1);
-                    JSONObject jSONObject2 = new JSONObject();
-                    jSONObject2.put("vod_id", group);
-                    jSONObject2.put("vod_name", trim);
-                    jSONObject2.put("vod_pic", dV);
-                    jSONObject2.put("vod_remarks", str2);
-                    jSONArray.put(jSONObject2);
-                }
+    /**
+     * 获取分类数据 + 首页最近更新视频列表数据
+     *
+     * @param filter 是否开启筛选 关联的是 软件设置中 首页数据源里的筛选开关
+     * @return
+     */
+    @Override
+    public String homeContent(boolean filter) {
+        List<Vod> list = new ArrayList<>();
+        List<Class> classes = new ArrayList<>();
+        LinkedHashMap<String, List<Filter>> filters = null;
+        Document doc = Jsoup.parse(OkHttpUtil.string(siteUrl, getHeaders(siteUrl)));
+        // 分类节点
+        Elements elements = doc.select("ul.navlist > li > a");
+        for (Element element: elements) {
+            String name = element.text();
+            boolean show = name.equals("最新电影") ||
+                    name.equals("热门下载") ||
+                    name.equals("本月热门") ||
+                    name.equals("国产剧") ||
+                    name.equals("美剧") ||
+                    name.equals("日韩剧");
+            if (show) {
+                Matcher mather = regexCategory.matcher(element.attr("href"));
+                if (!mather.find())
+                    continue;
+                // 把分类的id和名称取出来加到列表里
+                String id = mather.group(1).trim();
+                classes.add(new Class(id, name));
             }
-            jSONObject.put("list", jSONArray);
-            return jSONObject.toString();
-        } catch (Exception e) {
-            SpiderDebug.log(e);
-            return "";
         }
+        for (Element element : doc.select("div.leibox > ul > li ")) {
+            String name = element.selectFirst("h3.dytit > a").text();
+            String img = element.selectFirst("a img").attr("data-original");
+            String remark = element.select("div.jidi").text();
+            Matcher matcher = regexVid.matcher(element.selectFirst("a").attr("href"));
+            if (!matcher.find())
+                continue;
+            String id = matcher.group(1);
+            list.add(new Vod(id, name, img, remark));
+        }
+        if (filter) {
+            filters = new Gson().fromJson(filterConfig, new TypeToken<LinkedHashMap<String, List<Filter>>>(){}.getType());
+        }
+        return Result.string(classes, list, filters);
+    }
+
+    /**
+     * 获取视频播放信息
+     *
+     * @param flag     播放源
+     * @param id       视频id
+     * @param vipFlags 所有可能需要vip解析的源
+     */
+    @Override
+    public String playerContent(String flag, String id, List<String> vipFlags) {
+        String url = siteUrl + "/v_play/" + id + ".html";
+        Document g = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
+        Matcher matcher = this.o.matcher(g.toString());
+        Matcher matcher2 = this.F.matcher(g.toString());
+        Matcher matcher3 = this.Cp.matcher(g.toString());
+        if (matcher.find() && matcher2.find() && matcher3.find()) {
+            Matcher matcher4 = this.JC.matcher(CipherUtil.aes5(Base64.decode(matcher.group(1), 0), matcher2.group(1).getBytes(), matcher3.group(1).getBytes()));
+            if (matcher4.find()) {
+                String group = matcher4.group(1);
+                return Result.get().url(group).parse(0).string();
+            }
+        }
+        return Result.get().url(url).parse().string();
+    }
+
+    /**
+     * 搜索
+     *
+     * @param key
+     * @param quick 是否播放页的快捷搜索
+     * @return
+     */
+    @Override
+    public String searchContent(String key, boolean quick) {
+        List<Vod> list = new ArrayList<>();
+        String url = siteUrl + "/xssearch?q=" + StringUtil.encode(key) + "&f=_all&p=1";
+        Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
+        for (Element element : doc.select("div.mi_ne_kd > ul > li")) {
+            String name = element.selectFirst("h3.dytit > a").text();
+            String img = element.selectFirst("a img").attr("data-original");
+            String remark = element.select("div.jidi").text();
+            Matcher matcher = regexVid.matcher(element.selectFirst("a").attr("href"));
+            if (!matcher.find())
+                continue;
+            String id = matcher.group(1);
+            list.add(new Vod(id, name, img, remark));
+        }
+        return Result.string(list);
     }
 }

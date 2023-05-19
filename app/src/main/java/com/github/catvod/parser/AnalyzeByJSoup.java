@@ -1,6 +1,5 @@
 package com.github.catvod.parser;
 
-import com.github.catvod.parser.RuleAnalyzer;
 import com.github.catvod.utils.StringUtil;
 
 import org.apache.commons.lang3.StringUtils;

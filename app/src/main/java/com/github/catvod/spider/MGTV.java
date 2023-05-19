@@ -5,8 +5,6 @@ import android.net.Uri;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.crawler.SpiderReqResult;
-import com.github.catvod.crawler.SpiderUrl;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.json.JSONArray;
@@ -20,8 +18,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-
-import rxhttp.wrapper.annotations.NonNull;
 
 /**
  * bill
@@ -239,7 +235,7 @@ public class MGTV extends Spider {
         return "";
     }
 
-    public String join(@NonNull CharSequence delimiter, @NonNull Iterable tokens) {
+    public String join(CharSequence delimiter, Iterable tokens) {
         final Iterator<?> it = tokens.iterator();
         if (!it.hasNext()) {
             return "";

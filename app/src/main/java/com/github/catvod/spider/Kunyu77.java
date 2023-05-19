@@ -1,11 +1,15 @@
 package com.github.catvod.spider;
 
 import android.os.Build;
-import com.github.catvod.utils.StringUtil;
+import android.text.TextUtils;
+
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Misc;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -13,432 +17,354 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import java.util.Set;
 
+
+/**
+ * Author: @SDL
+ */
 public class Kunyu77 extends Spider {
-    private String X = "Dalvik/2.1.0 (Linux; U; Android " + Build.VERSION.RELEASE + "; " + Build.MODEL + " Build/" + Build.ID + ")";
+    private static final String siteUrl = "http://api.kunyu77.com";
 
-    private HashMap<String, String> K(String str) {
-        HashMap<String, String> hashMap = new HashMap<>();
-        hashMap.put("Referer",str);
-        hashMap.put("user-agent", this.X);
-        return hashMap;
+    private String uAgent = "Dalvik/2.1.0 (Linux; U; Android " + Build.VERSION.RELEASE + "; " + Build.MODEL + " Build/" + Build.ID + ")";
+
+    private HashMap<String, String> getHeaders(String url) {
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("user-agent", uAgent);
+        return headers;
     }
 
-    public String categoryContent(String str, String str2, boolean z, HashMap<String, String> hashMap) {
+    @Override
+    public String homeContent(boolean filter) {
         try {
-            String str3 = "http://api.kunyu77.com/api.php/provide/searchFilter?type_id=" + str + "&pagenum=" + str2 + "&pagesize=24";
-            for (String str4 : hashMap.keySet()) {
-                String trim = hashMap.get(str4).trim();
-                if (trim.length() != 0) {
-                    str3 = str3 + "&" + str4 + "=" + URLEncoder.encode(trim);
-                }
-            }
-            JSONObject jSONObject = new JSONObject(OkHttpUtil.string(str3, K(str3))).optJSONObject("data");
-            JSONArray jSONArray = jSONObject.optJSONArray("result");
-            JSONArray jSONArray2 = new JSONArray();
-            for (int i = 0; i < jSONArray.length(); i++) {
-                JSONObject jSONObject2 = jSONArray.optJSONObject(i);
-                JSONObject jSONObject3 = new JSONObject();
-                jSONObject3.put("vod_id", jSONObject2.optString("id"));
-                jSONObject3.put("vod_name", jSONObject2.optString("title"));
-                jSONObject3.put("vod_pic", jSONObject2.optString("videoCover"));
-                jSONObject3.put("vod_remarks", jSONObject2.optString("msg"));
-                jSONArray2.put(jSONObject3);
-            }
-            JSONObject jSONObject4 = new JSONObject();
-            int parseInt = Integer.parseInt(jSONObject.optString("page"));
-            int i2 = jSONObject.getInt("total");
-            int i3 = jSONObject.getInt("pagesize");
-            jSONObject4.put("page", parseInt);
-            jSONObject4.put("pagecount", i3);
-            jSONObject4.put("limit", 24);
-            jSONObject4.put("total", i2);
-            jSONObject4.put("list", jSONArray2);
-            return jSONObject4.toString();
-        } catch (Throwable unused) {
-            return "";
-        }
-    }
-
-    public String detailContent(List<String> list) {
-        try {
-            String str = "http://api.kunyu77.com/api.php/provide/videoDetail?ids=" + list.get(0);
-            JSONObject jSONObject = new JSONObject(OkHttpUtil.string(str, K(str))).optJSONObject("data");
-            JSONObject jSONObject2 = new JSONObject();
-            JSONArray jSONArray = new JSONArray();
-            JSONObject jSONObject3 = new JSONObject();
-            String string = jSONObject.optString("videoName");
-            jSONObject3.put("vod_id", jSONObject.optString("id"));
-            jSONObject3.put("vod_name", string);
-            jSONObject3.put("vod_pic", jSONObject.optString("videoCover"));
-            jSONObject3.put("type_name", jSONObject.optString("subCategory"));
-            jSONObject3.put("vod_year", jSONObject.optString("year"));
-            jSONObject3.put("vod_area", jSONObject.optString("area"));
-            jSONObject3.put("vod_remarks", jSONObject.optString("msg"));
-            jSONObject3.put("vod_actor", jSONObject.optString("actor"));
-            jSONObject3.put("vod_director", jSONObject.optString("director"));
-            jSONObject3.put("vod_content", jSONObject.optString("brief").trim());
-            String str2 = "http://api.kunyu77.com/api.php/provide/videoPlaylist?ids=" + list.get(0);
-            JSONArray jSONArray2 = new JSONObject(OkHttpUtil.string(str2, K(str2))).optJSONObject("data").optJSONArray("episodes");
-            LinkedHashMap<String,ArrayList> linkedHashMap = new LinkedHashMap();
-            for (int i = 0; i < jSONArray2.length(); i++) {
-                JSONArray jSONArray3 = jSONArray2.optJSONObject(i).optJSONArray("playurls");
-                for (int i2 = 0; i2 < jSONArray3.length(); i2++) {
-                    JSONObject jSONObject4 = jSONArray3.optJSONObject(i2);
-                    String string2 = jSONObject4.optString("playfrom");
-                    ArrayList arrayList = (ArrayList) linkedHashMap.get(string2);
-                    if (arrayList == null) {
-                        arrayList = new ArrayList();
-                        linkedHashMap.put(string2, arrayList);
-                    }
-                    String trim = jSONObject4.optString("title").replace(string, "").trim();
-                    if (trim.isEmpty()) {
-                        trim = (i + 1) + "";
-                    }
-                    arrayList.add(trim + "$" + jSONObject4.optString("playurl"));
-                }
-            }
-            String join = StringUtil.join("$$$", linkedHashMap.keySet());
-            StringBuilder sb = new StringBuilder();
-            short size = (short) linkedHashMap.size();
-            for (ArrayList arrayList2 : linkedHashMap.values()) {
-                size = (short) (size - 1);
-                sb.append(StringUtil.join("#", arrayList2));
-                if (size > 0) {
-                    sb.append("$$$");
-                }
-            }
-            jSONObject3.put("vod_play_from", join);
-            jSONObject3.put("vod_play_url", sb.toString());
-            jSONArray.put(jSONObject3);
-            jSONObject2.put("list", jSONArray);
-            return jSONObject2.toString();
-        } catch (Throwable unused) {
-            return "";
-        }
-    }
-
-    public String homeContent(boolean z) {
-        JSONArray jSONArray = null;
-        String str = null;
-        String str2;
-        String str3;
-        JSONObject jSONObject;
-        Kunyu77 kunyu77 = this;
-        String str4 = "2021";
-        String str5 = "2022";
-        String str6 = "data";
-        try {
-            JSONObject jSONObject2 = new JSONObject(OkHttpUtil.string("http://api.kunyu77.com/api.php/provide/filter", kunyu77.K("http://api.kunyu77.com/api.php/provide/filter"))).optJSONObject(str6);
-            Iterator<String> keys = jSONObject2.keys();
-            JSONArray jSONArray2 = new JSONArray();
-            JSONObject jSONObject3 = new JSONObject();
-            JSONArray jSONArray3 = null;
+            String url = siteUrl + "/api.php/provide/filter";
+            String content = OkHttpUtil.string(url, getHeaders(url));
+            JSONObject jsonObject = new JSONObject(decryptResponse(content)).getJSONObject("data");
+            Iterator<String> keys = jsonObject.keys();
+            JSONArray classes = new JSONArray();
+            JSONObject filterConfig = new JSONObject();
+            JSONArray extendsAll = null;
             while (keys.hasNext()) {
-                String next = keys.next();
-                String string = jSONObject2.optJSONArray(next).optJSONObject(0).optString("cat");
-                JSONObject jSONObject4 = new JSONObject();
-                jSONObject4.put("type_id", next);
-                jSONObject4.put("type_name", string);
-                jSONArray2.put(jSONObject4);
-                if (jSONArray3 == null) {
-                    try {
-                        JSONObject jSONObject5 = new JSONObject(OkHttpUtil.string("http://api.kunyu77.com/api.php/provide/searchFilter?type_id=0&pagenum=1&pagesize=1", kunyu77.K("http://api.kunyu77.com/api.php/provide/searchFilter?type_id=0&pagenum=1&pagesize=1"))).optJSONObject(str6).optJSONObject("conditions");
-                        JSONArray jSONArray4 = new JSONArray();
-                        try {
-                            JSONObject jSONObject6 = new JSONObject();
-                            jSONObject6.put("key", "year");
-                            jSONObject6.put("name", "年份");
-                            JSONArray jSONArray5 = new JSONArray();
-                            JSONObject jSONObject7 = new JSONObject();
-                            jSONObject7.put("n", "全部");
-                            jSONObject7.put("v", "");
-                            jSONArray5.put(jSONObject7);
-                            JSONObject jSONObject8 = new JSONObject();
-                            jSONObject8.put("n", str5);
-                            jSONObject8.put("v", str5);
-                            jSONArray5.put(jSONObject8);
-                            JSONObject jSONObject9 = new JSONObject();
-                            jSONObject9.put("n", str4);
-                            jSONObject9.put("v", str4);
-                            jSONArray5.put(jSONObject9);
-                            JSONArray jSONArray6 = jSONObject5.optJSONArray("y");
-                            str3 = str4;
-                            str2 = str5;
-                            int i = 0;
-                            while (true) {
-                                try {
-                                    str = str6;
-                                    if (i >= jSONArray6.length()) {
-                                        break;
-                                    }
-                                    try {
-                                        JSONObject jSONObject10 = jSONArray6.optJSONObject(i);
-                                        JSONObject jSONObject11 = new JSONObject();
-                                        jSONArray = jSONArray2;
-                                        try {
-                                            jSONObject11.put("n", jSONObject10.optString("name"));
-                                            jSONObject11.put("v", jSONObject10.optString("value"));
-                                            jSONArray5.put(jSONObject11);
-                                            i++;
-                                            str6 = str;
-                                            jSONArray6 = jSONArray6;
-                                            jSONArray2 = jSONArray;
-                                        } catch (Exception e) {
-                                            e = e;
-                                            jSONArray3 = jSONArray4;
-                                            jSONObject = jSONObject3;
-                                            SpiderDebug.log(e);
-                                            jSONObject3 = jSONObject;
-                                            keys = keys;
-                                            jSONObject2 = jSONObject2;
-                                            str4 = str3;
-                                            str5 = str2;
-                                            str6 = str;
-                                            jSONArray2 = jSONArray;
-                                            kunyu77 = this;
-                                        }
-                                    } catch (Exception e2) {
-                                        jSONArray = jSONArray2;
-                                        jSONArray3 = jSONArray4;
-                                        jSONObject = jSONObject3;
-                                        SpiderDebug.log(e2);
-                                        jSONObject3 = jSONObject;
-                                        keys = keys;
-                                        jSONObject2 = jSONObject2;
-                                        str4 = str3;
-                                        str5 = str2;
-                                        str6 = str;
-                                        jSONArray2 = jSONArray;
-                                        kunyu77 = this;
-                                    }
-                                } catch (Exception e3) {
-                                    str = str6;
-                                    jSONArray = jSONArray2;
-                                    jSONArray3 = jSONArray4;
-                                    jSONObject = jSONObject3;
-                                    SpiderDebug.log(e3);
-                                    jSONObject3 = jSONObject;
-                                    keys = keys;
-                                    jSONObject2 = jSONObject2;
-                                    str4 = str3;
-                                    str5 = str2;
-                                    str6 = str;
-                                    jSONArray2 = jSONArray;
-                                    kunyu77 = this;
-                                }
-                            }
-                            jSONArray = jSONArray2;
-                            jSONObject6.put("value", jSONArray5);
-                            jSONArray4.put(jSONObject6);
-                            JSONObject jSONObject12 = new JSONObject();
-                            jSONObject12.put("key", "area");
-                            jSONObject12.put("name", "地区");
-                            JSONArray jSONArray7 = new JSONArray();
-                            JSONObject jSONObject13 = new JSONObject();
-                            jSONObject13.put("n", "全部");
-                            jSONObject13.put("v", "");
-                            jSONArray7.put(jSONObject13);
-                            int i2 = 0;
-                            for (JSONArray jSONArray8 = jSONObject5.optJSONArray("a"); i2 < jSONArray8.length(); jSONArray8 = jSONArray8) {
-                                JSONObject jSONObject14 = jSONArray8.optJSONObject(i2);
-                                JSONObject jSONObject15 = new JSONObject();
-                                jSONObject15.put("n", jSONObject14.optString("name"));
-                                jSONObject15.put("v", jSONObject14.optString("value"));
-                                jSONArray7.put(jSONObject15);
-                                i2++;
-                            }
-                            jSONObject12.put("value", jSONArray7);
-                            jSONArray4.put(jSONObject12);
-                            JSONObject jSONObject16 = new JSONObject();
-                            jSONObject16.put("key", "category");
-                            jSONObject16.put("name", "类型");
-                            JSONArray jSONArray9 = new JSONArray();
-                            JSONObject jSONObject17 = new JSONObject();
-                            jSONObject17.put("n", "全部");
-                            jSONObject17.put("v", "");
-                            jSONArray9.put(jSONObject17);
-                            JSONArray jSONArray10 = jSONObject5.optJSONArray("scat");
-                            for (int i3 = 0; i3 < jSONArray10.length(); i3++) {
-                                JSONObject jSONObject18 = jSONArray10.optJSONObject(i3);
-                                JSONObject jSONObject19 = new JSONObject();
-                                jSONObject19.put("n", jSONObject18.optString("name"));
-                                jSONObject19.put("v", jSONObject18.optString("value"));
-                                jSONArray9.put(jSONObject19);
-                            }
-                            jSONObject16.put("value", jSONArray9);
-                            jSONArray4.put(jSONObject16);
-                            jSONArray3 = jSONArray4;
-                        } catch (Exception e4) {
-                            SpiderDebug.log(e4);
-                            str3 = str4;
-                            str2 = str5;
-                        }
-                    } catch (Exception e5) {
-                        SpiderDebug.log(e5);
-                        str3 = str4;
-                        str2 = str5;
-                        str = str6;
-                        jSONArray = jSONArray2;
-                    }
-                } else {
-                    str3 = str4;
-                    str2 = str5;
-                    str = str6;
-                    jSONArray = jSONArray2;
-                }
+                String typeId = keys.next();
+                String typeName = jsonObject.getJSONArray(typeId).getJSONObject(0).getString("cat");
+                JSONObject newCls = new JSONObject();
+                newCls.put("type_id", typeId);
+                newCls.put("type_name", typeName);
+                classes.put(newCls);
                 try {
-                    if (jSONArray3.length() > 0) {
-                        jSONObject = jSONObject3;
-                        try {
-                            jSONObject.put(next, jSONArray3);
-                        } catch (Exception e6) {
-                            SpiderDebug.log(e6);
-                            jSONObject3 = jSONObject;
-                            keys = keys;
-                            jSONObject2 = jSONObject2;
-                            str4 = str3;
-                            str5 = str2;
-                            str6 = str;
-                            jSONArray2 = jSONArray;
-                            kunyu77 = this;
+                    if (extendsAll == null) {
+                        String filterUrl = siteUrl + "/api.php/provide/searchFilter?type_id=0&pagenum=1&pagesize=1";
+                        String filterContent = OkHttpUtil.string(filterUrl, getHeaders(filterUrl));
+                        JSONObject filterObj = new JSONObject(filterContent).getJSONObject("data").getJSONObject("conditions");
+                        extendsAll = new JSONArray();
+                        // 年份
+                        JSONObject newTypeExtend = new JSONObject();
+                        newTypeExtend.put("key", "year");
+                        newTypeExtend.put("name", "年份");
+                        JSONArray newTypeExtendKV = new JSONArray();
+                        JSONObject kv = new JSONObject();
+                        kv.put("n", "全部");
+                        kv.put("v", "");
+                        newTypeExtendKV.put(kv);
+                        kv = new JSONObject();
+                        kv.put("n", "2022");
+                        kv.put("v", "2022");
+                        newTypeExtendKV.put(kv);
+                        kv = new JSONObject();
+                        kv.put("n", "2021");
+                        kv.put("v", "2021");
+                        newTypeExtendKV.put(kv);
+                        JSONArray years = filterObj.getJSONArray("y");
+                        for (int j = 0; j < years.length(); j++) {
+                            JSONObject child = years.getJSONObject(j);
+                            kv = new JSONObject();
+                            kv.put("n", child.getString("name"));
+                            kv.put("v", child.getString("value"));
+                            newTypeExtendKV.put(kv);
                         }
-                    } else {
-                        jSONObject = jSONObject3;
+                        newTypeExtend.put("value", newTypeExtendKV);
+                        extendsAll.put(newTypeExtend);
+                        // 地区
+                        newTypeExtend = new JSONObject();
+                        newTypeExtend.put("key", "area");
+                        newTypeExtend.put("name", "地区");
+                        newTypeExtendKV = new JSONArray();
+                        kv = new JSONObject();
+                        kv.put("n", "全部");
+                        kv.put("v", "");
+                        newTypeExtendKV.put(kv);
+                        JSONArray areas = filterObj.getJSONArray("a");
+                        for (int j = 0; j < areas.length(); j++) {
+                            JSONObject child = areas.getJSONObject(j);
+                            kv = new JSONObject();
+                            kv.put("n", child.getString("name"));
+                            kv.put("v", child.getString("value"));
+                            newTypeExtendKV.put(kv);
+                        }
+                        newTypeExtend.put("value", newTypeExtendKV);
+                        extendsAll.put(newTypeExtend);
+                        // 类型
+                        newTypeExtend = new JSONObject();
+                        newTypeExtend.put("key", "category");
+                        newTypeExtend.put("name", "类型");
+                        newTypeExtendKV = new JSONArray();
+                        kv = new JSONObject();
+                        kv.put("n", "全部");
+                        kv.put("v", "");
+                        newTypeExtendKV.put(kv);
+                        JSONArray scat = filterObj.getJSONArray("scat");
+                        for (int j = 0; j < scat.length(); j++) {
+                            JSONObject child = scat.getJSONObject(j);
+                            kv = new JSONObject();
+                            kv.put("n", child.getString("name"));
+                            kv.put("v", child.getString("value"));
+                            newTypeExtendKV.put(kv);
+                        }
+                        newTypeExtend.put("value", newTypeExtendKV);
+                        extendsAll.put(newTypeExtend);
                     }
-                } catch (Exception e7) {
-                    jSONObject = jSONObject3;
-                    SpiderDebug.log(e7);
-                    jSONObject3 = jSONObject;
-                    keys = keys;
-                    jSONObject2 = jSONObject2;
-                    str4 = str3;
-                    str5 = str2;
-                    str6 = str;
-                    jSONArray2 = jSONArray;
-                    kunyu77 = this;
+                    if (extendsAll != null && extendsAll.length() > 0) {
+                        filterConfig.put(typeId, extendsAll);
+                    }
+                } catch (Exception e) {
+                    SpiderDebug.log(e);
                 }
-                jSONObject3 = jSONObject;
-                keys = keys;
-                jSONObject2 = jSONObject2;
-                str4 = str3;
-                str5 = str2;
-                str6 = str;
-                jSONArray2 = jSONArray;
-                kunyu77 = this;
             }
-            JSONObject jSONObject20 = new JSONObject();
-            jSONObject20.put("class", jSONArray2);
-            if (z) {
-                jSONObject20.put("filters", jSONObject3);
+            JSONObject result = new JSONObject();
+            result.put("class", classes);
+            if (filter) {
+                result.put("filters", filterConfig);
             }
-            return jSONObject20.toString();
-        } catch (Throwable unused) {
-            return "";
+            return result.toString();
+        } catch (Throwable th) {
+
         }
+        return "";
     }
 
+    @Override
     public String homeVideoContent() {
         try {
-            JSONArray jSONArray = new JSONArray();
+            JSONArray videos = new JSONArray();
             try {
-                JSONArray jSONArray2 = new JSONObject(OkHttpUtil.string("http://api.kunyu77.com/api.php/provide/homeBlock?type_id=0", K("http://api.kunyu77.com/api.php/provide/homeBlock?type_id=0"))).optJSONObject("data").optJSONArray("blocks");
-                for (int i = 0; i < jSONArray2.length(); i++) {
-                    JSONObject jSONObject = jSONArray2.optJSONObject(i);
-                    if (jSONObject.optString("block_name").startsWith("热播")) {
-                        JSONArray jSONArray3 = jSONObject.optJSONArray("contents");
-                        int i2 = 0;
-                        while (i2 < jSONArray3.length()) {
-                            JSONObject jSONObject2 = jSONArray3.optJSONObject(i2);
-                            JSONObject jSONObject3 = new JSONObject();
-                            jSONObject3.put("vod_id", jSONObject2.optInt("id"));
-                            jSONObject3.put("vod_name", jSONObject2.optString("title"));
-                            jSONObject3.put("vod_pic", jSONObject2.optString("videoCover"));
-                            jSONObject3.put("vod_remarks", jSONObject2.optString("msg"));
-                            jSONArray.put(jSONObject3);
-                            i2++;
-                        }
+                String url = siteUrl + "/api.php/provide/homeBlock?type_id=0";
+                String content = OkHttpUtil.string(url, getHeaders(url));
+                JSONObject jsonObject = new JSONObject(decryptResponse(content));
+                JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("blocks");
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject blockObj = jsonArray.getJSONObject(i);
+                    String blockName = blockObj.getString("block_name");
+                    if (!blockName.startsWith("热播")) {
+                        continue;
+                    }
+                    JSONArray contents = blockObj.getJSONArray("contents");
+                    for (int j = 0; j < contents.length() && j < 3; j++) {
+                        JSONObject vObj = contents.getJSONObject(j);
+                        JSONObject v = new JSONObject();
+                        v.put("vod_id", vObj.getString("id"));
+                        v.put("vod_name", vObj.getString("title"));
+                        v.put("vod_pic", vObj.getString("videoCover"));
+                        v.put("vod_remarks", vObj.getString("msg"));
+                        videos.put(v);
                     }
                 }
             } catch (Exception e) {
-                SpiderDebug.log(e);
+
             }
-            JSONObject jSONObject4 = new JSONObject();
-            jSONObject4.put("list", jSONArray);
-            return jSONObject4.toString();
-        } catch (Throwable unused2) {
-            return "";
+            JSONObject result = new JSONObject();
+            result.put("list", videos);
+            return result.toString();
+        } catch (Throwable th) {
+
         }
+        return "";
     }
 
-    public String playerContent(String str, String str2, List<String> list) {
+    @Override
+    public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) {
         try {
-            String str3 = "http://api.kunyu77.com/api.php/provide/parserUrl?url=" + str2;
-            JSONObject jSONObject = new JSONObject(OkHttpUtil.string(str3, K(str3))).optJSONObject("data");
-            JSONObject optJSONObject = jSONObject.optJSONObject("playHeader");
-            String string = jSONObject.optString("url");
-            JSONObject lN = Misc.jsonParse(string, OkHttpUtil.string(string, K(string)));
-            if (lN != null) {
-                lN.put("parse", 0);
-                lN.put("playUrl", "");
-                if (optJSONObject != null) {
-                    JSONObject jSONObject2 = lN.optJSONObject("header");
-                    Iterator<String> keys = optJSONObject.keys();
-                    while (keys.hasNext()) {
-                        String next = keys.next();
-                        jSONObject2.put(next, " " + optJSONObject.optString(next));
+            String url = siteUrl + "/api.php/provide/searchFilter?type_id=" + tid + "&pagenum=" + pg + "&pagesize=24";
+            Set<String> keys = extend.keySet();
+            for (String key : keys) {
+                String val = extend.get(key).trim();
+                if (val.length() == 0)
+                    continue;
+                url += "&" + key + "=" + URLEncoder.encode(val);
+            }
+            String content = OkHttpUtil.string(url, getHeaders(url));
+            JSONObject dataObject = new JSONObject(decryptResponse(content)).getJSONObject("data");
+            JSONArray jsonArray = dataObject.getJSONArray("result");
+            JSONArray videos = new JSONArray();
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject vObj = jsonArray.getJSONObject(i);
+                JSONObject v = new JSONObject();
+                v.put("vod_id", vObj.getString("id"));
+                v.put("vod_name", vObj.getString("title"));
+                v.put("vod_pic", vObj.getString("videoCover"));
+                v.put("vod_remarks", vObj.getString("msg"));
+                videos.put(v);
+            }
+            JSONObject result = new JSONObject();
+            int limit = 24;
+            int page = Integer.parseInt(dataObject.getString("page"));
+            int total = dataObject.getInt("total");
+            int pageCount = dataObject.getInt("pagesize");
+            result.put("page", page);
+            result.put("pagecount", pageCount);
+            result.put("limit", limit);
+            result.put("total", total);
+            result.put("list", videos);
+            return result.toString();
+        } catch (Throwable th) {
+
+        }
+        return "";
+    }
+
+    @Override
+    public String detailContent(List<String> ids) {
+        try {
+            String url = siteUrl + "/api.php/provide/videoDetail?ids=" + ids.get(0);
+            String content = OkHttpUtil.string(url, getHeaders(url));
+            JSONObject dataObject = new JSONObject(decryptResponse(content));
+            JSONObject vObj = dataObject.getJSONObject("data");
+            JSONObject result = new JSONObject();
+            JSONArray list = new JSONArray();
+            JSONObject vodAtom = new JSONObject();
+            String title = vObj.getString("videoName");
+            vodAtom.put("vod_id", vObj.getString("id"));
+            vodAtom.put("vod_name", title);
+            vodAtom.put("vod_pic", vObj.getString("videoCover"));
+            vodAtom.put("type_name", vObj.getString("subCategory"));
+            vodAtom.put("vod_year", vObj.getString("year"));
+            vodAtom.put("vod_area", vObj.getString("area"));
+            vodAtom.put("vod_remarks", vObj.getString("msg"));
+            vodAtom.put("vod_actor", vObj.getString("actor"));
+            vodAtom.put("vod_director", vObj.getString("director"));
+            vodAtom.put("vod_content", vObj.getString("brief").trim());
+
+            url = siteUrl + "/api.php/provide/videoPlaylist?ids=" + ids.get(0);
+            content = OkHttpUtil.string(url, getHeaders(url));
+            JSONArray episodes = new JSONObject(content).getJSONObject("data").getJSONArray("episodes");
+            LinkedHashMap<String, ArrayList<String>> playlist = new LinkedHashMap<>();
+            for (int i = 0; i < episodes.length(); i++) {
+                JSONArray playurls = episodes.getJSONObject(i).getJSONArray("playurls");
+                for (int j = 0; j < playurls.length(); j++) {
+                    JSONObject purl = playurls.getJSONObject(j);
+                    String from = purl.getString("playfrom");
+                    ArrayList<String> urls = playlist.get(from);
+                    if (urls == null) {
+                        urls = new ArrayList<>();
+                        playlist.put(from, urls);
                     }
-                    lN.put("header", jSONObject2.toString());
+                    String name = purl.getString("title").replace(title, "").trim();
+                    if (name.isEmpty()) {
+                        name = (i + 1) + "";
+                    }
+                    String pid = purl.getString("playurl");
+                    urls.add(name + "$" + pid);
                 }
-                return lN.toString();
             }
-        } catch (Throwable unused) {
-        }
-        try {
-            if (Misc.isVip(str2)) {
-                JSONObject jSONObject3 = new JSONObject();
-                jSONObject3.put("parse", 1);
-                jSONObject3.put("jx", "1");
-                jSONObject3.put("url", str2);
-                return jSONObject3.toString();
+            String vod_play_from = TextUtils.join("$$$", playlist.keySet());
+            StringBuilder sb = new StringBuilder();
+            Iterator<ArrayList<String>> iter = playlist.values().iterator();
+            short fromSize = (short) playlist.size();
+            while (iter.hasNext()) {
+                fromSize--;
+                ArrayList<String> urls = iter.next();
+                sb.append(TextUtils.join("#", urls));
+                if (fromSize > 0)
+                    sb.append("$$$");
             }
-            JSONObject jSONObject4 = new JSONObject();
-            jSONObject4.put("parse", 0);
-            jSONObject4.put("playUrl", "");
-            jSONObject4.put("url", str2);
-            return jSONObject4.toString();
-        } catch (Throwable unused2) {
-            return "";
+            vodAtom.put("vod_play_from", vod_play_from);
+            vodAtom.put("vod_play_url", sb.toString());
+            list.put(vodAtom);
+            result.put("list", list);
+            return result.toString();
+        } catch (Throwable th) {
+
         }
+        return "";
     }
 
-    public String searchContent(String str, boolean z) {
-        if (z) {
-            return "";
-        }
+    @Override
+    public String playerContent(String flag, String id, List<String> vipFlags) {
         try {
-            String str2 = "http://api.kunyu77.com/api.php/provide/searchVideo?searchName=" + URLEncoder.encode(str);
-            JSONArray jSONArray = new JSONObject(OkHttpUtil.string(str2, K(str2))).optJSONArray("data");
-            JSONArray jSONArray2 = new JSONArray();
-            for (int i = 0; i < jSONArray.length(); i++) {
-                JSONObject jSONObject = jSONArray.optJSONObject(i);
-                JSONObject jSONObject2 = new JSONObject();
-                String string = jSONObject.optString("videoName");
-                if (string.contains(str)) {
-                    jSONObject2.put("vod_id", jSONObject.optString("id"));
-                    jSONObject2.put("vod_name", string);
-                    jSONObject2.put("vod_pic", jSONObject.optString("videoCover"));
-                    jSONObject2.put("vod_remarks", jSONObject.optString("msg"));
-                    jSONArray2.put(jSONObject2);
+            String videoUrl = id;
+            try {
+                String url = siteUrl + "/api.php/provide/parserUrl?url=" + id;
+                String content = OkHttpUtil.string(url, getHeaders(url));
+                JSONObject dataObj = new JSONObject(decryptResponse(content)).getJSONObject("data");
+                JSONObject playHeader = dataObj.optJSONObject("playHeader");
+                String jxUrl = dataObj.getString("url");
+                content = OkHttpUtil.string(jxUrl, getHeaders(jxUrl));
+                JSONObject result = Misc.jsonParse(jxUrl, content);
+                if (result != null) {
+                    result.put("parse", 0);
+                    result.put("playUrl", "");
+                    if (playHeader != null) {
+                        JSONObject header = result.getJSONObject("header");
+                        Iterator<String> iter = playHeader.keys();
+                        while (iter.hasNext()) {
+                            String key = iter.next();
+                            header.put(key, " " + playHeader.getString(key));
+                        }
+                        result.put("header", header.toString());
+                    }
+                    return result.toString();
                 }
+            } catch (Throwable th) {
+
             }
-            JSONObject jSONObject3 = new JSONObject();
-            jSONObject3.put("list", jSONArray2);
-            return jSONObject3.toString();
-        } catch (Throwable unused) {
-            return "";
+            if (Misc.isVip(videoUrl)) {
+                JSONObject result = new JSONObject();
+                result.put("parse", 1);
+                result.put("jx", "1");
+                result.put("url", videoUrl);
+                return result.toString();
+            }
+            JSONObject result = new JSONObject();
+            result.put("parse", 0);
+            result.put("playUrl", "");
+            result.put("url", id);
+            return result.toString();
+        } catch (Throwable th) {
+
         }
+        return "";
     }
+
+    @Override
+    public String searchContent(String key, boolean quick) {
+        try {
+            String url = siteUrl + "/api.php/provide/searchVideo?searchName=" + URLEncoder.encode(key);
+            String content = OkHttpUtil.string(url, getHeaders(url));
+            JSONObject dataObject = new JSONObject(decryptResponse(content));
+            JSONArray jsonArray = dataObject.getJSONArray("data");
+            JSONArray videos = new JSONArray();
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject vObj = jsonArray.getJSONObject(i);
+                JSONObject v = new JSONObject();
+                String title = vObj.getString("videoName");
+                if (!title.contains(key))
+                    continue;
+                v.put("vod_id", vObj.getString("id"));
+                v.put("vod_name", title);
+                v.put("vod_pic", vObj.getString("videoCover"));
+                v.put("vod_remarks", vObj.getString("msg"));
+                videos.put(v);
+            }
+            JSONObject result = new JSONObject();
+            result.put("list", videos);
+            return result.toString();
+        } catch (Throwable th) {
+
+        }
+        return "";
+    }
+
+    protected String decryptResponse(String src) {
+        return src;
+    }
+
 }

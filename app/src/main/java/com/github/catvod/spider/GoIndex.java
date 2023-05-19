@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 
 import okhttp3.Response;
-import rxhttp.wrapper.annotations.NonNull;
 
 public class GoIndex extends Spider {
 
@@ -401,7 +400,7 @@ public class GoIndex extends Spider {
         return "";
     }
 
-    public String join(@NonNull CharSequence delimiter, @NonNull Iterable tokens) {
+    public String join(CharSequence delimiter, Iterable tokens) {
         final Iterator<?> it = tokens.iterator();
         if (!it.hasNext()) {
             return "";

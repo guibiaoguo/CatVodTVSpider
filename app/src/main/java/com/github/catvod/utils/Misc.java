@@ -131,10 +131,10 @@ public class Misc {
     }
 
     public static WebView dV() {
-        WebView webView = new WebView(Init.getContext());
+        WebView webView = new WebView(Init.context());
         webView.getSettings().setAllowFileAccess(true);
         webView.getSettings().setAllowContentAccess(true);
-        webView.getSettings().setAppCacheEnabled(false);
+//        webView.getSettings().setAppCacheEnabled(false);
         webView.getSettings().setDomStorageEnabled(true);
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);

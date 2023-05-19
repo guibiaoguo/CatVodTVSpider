@@ -28,14 +28,10 @@ import com.github.catvod.spider.Juhi;
 import com.github.catvod.spider.Jumi;
 import com.github.catvod.spider.Legado;
 import com.github.catvod.spider.MGTV;
-import com.github.catvod.spider.N0ys;
-import com.github.catvod.spider.Nekk;
-import com.github.catvod.spider.Nfx;
 import com.github.catvod.spider.Proxy;
 import com.github.catvod.spider.QQ;
 import com.github.catvod.spider.XPathAli;
 import com.github.catvod.spider.Ysgc;
-import com.github.catvod.spider.YydsAli2;
 import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.CipherUtil;
 import com.github.catvod.utils.Misc;
@@ -291,21 +287,6 @@ public class CatTest {
 
     }
 
-    @Test
-    public void n0ys() throws Exception {
-        spider(new N0ys());
-    }
-
-    @Test
-    public void nekk() throws Exception {
-        spider(new Nekk());
-    }
-
-    //    @Test
-    public void nfx() throws Exception {
-        spider(new Nfx());
-    }
-
     //    @Test
     public void ysgc() throws Exception {
         spider(new Ysgc());
@@ -410,7 +391,7 @@ public class CatTest {
             String srr = OkHttpUtil.string(url, null);
             Document doc = Jsoup.parse(srr);
             JSONArray classes = new JSONArray();
-            for (Element cls : doc.select(".nav_cell")) {
+            for (Element cls : doc.selectFirst(".nav-wrap > div").select("a")) {
                 JSONObject c = new JSONObject();
                 String id = cls.selectFirst("a").attr("href");
                 if (id.contains("/art") || id.contains("feeds_hotspot") || id.contains("wwe") || id.contains("choice") || id.contains("sports_new") || id.contains("games") || id.contains("lols11") || id.contains("ent") || id.contains("news") || id.contains("fashion") || id.contains("tech") || id.contains("auto") || id.contains("house") || id.contains("finance") || id.contains("astro") || id.contains("nba") || id.contains("fun") || id.contains("baby") || id.contains("music") || id.contains("life") || id.contains("travel")) {
@@ -584,7 +565,7 @@ public class CatTest {
         xpathAli("https://mao.guibiaoguo.tk/ahhfs.json", keys);
     }
 
-    public String showCategory(Spider spider, String category, int index) throws JSONException {
+    public String showCategory(Spider spider, String category, int index) throws Exception {
         JSONObject jsonObject = new JSONObject(category);
         JSONArray categorys = jsonObject.optJSONArray("list");
         if (categorys == null) {
@@ -648,50 +629,6 @@ public class CatTest {
     }
 
     @Test
-    public void yydsAli() throws Exception {
-        Spider spider = new YydsAli2();
-        String ext = "https://mao.guibiaoguo.tk/qq.json";
-        spider.init(null, ext);
-        String category = spider.searchContent("雪中悍刀行", false);
-        System.out.println(category);
-        JSONObject jsonObject = null;
-//        System.out.println(spider.searchContent("小姨", false));
-//        System.out.println(spider.searchContent("百家", false));
-//        System.out.println(spider.searchContent("快乐大本营", false));
-//        String homeContent = spider.homeContent(true);
-//        System.out.println(homeContent);
-//        JSONObject jsonObject = new JSONObject(homeContent);
-//        JSONArray classes = jsonObject.optJSONArray("class");
-//        for (int i = 0; i < classes.length(); i++) {
-//            String tid = classes.getJSONObject(i).optString("type_id");
-//            System.out.println(tid);
-//            category = spider.categoryContent(tid, "1", false, null);
-//            System.out.println(category);
-        List<String> ids = new ArrayList<>();
-        jsonObject = new JSONObject(category);
-        JSONArray categorys = jsonObject.optJSONArray("list");
-        ids.add(categorys.getJSONObject(0).optString("vod_id"));
-        System.out.println(ids);
-
-        String detail = spider.detailContent(ids);
-        System.out.println(detail);
-        if (!detail.equals("")) {
-            jsonObject = new JSONObject(detail);
-            JSONArray details = jsonObject.optJSONArray("list");
-            String playurls = details.getJSONObject(0).optString("vod_play_url");
-            if (!playurls.equals("")) {
-                String playurl = playurls.split("#")[0].split("\\$")[1];
-                System.out.println(playurl);
-
-                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurl, new ArrayList<>()));
-            }
-        }
-
-
-//        }
-    }
-
-    @Test
     public void analyze() {
         String content = "下一站";
         String rulestr = "##一站##一战";
@@ -710,11 +647,11 @@ public class CatTest {
         analyzeRule = new AnalyzeRule(new RuleData());
         analyzeRule.setContent(json);
         System.out.println(analyzeRule.getElement("@css:.chapterTitle"));
-        ext = "https://mao.guibiaoguo.tk/jsonpath.json";
+        ext = "https://ghproxy.com/raw.githubusercontent.com/gaotianliuyun/gao/master/js.json";
         json = OkHttpUtil.string(ext, null);
         analyzeRule = new AnalyzeRule(new RuleData());
         analyzeRule.setContent(json, ext);
-        System.out.println(analyzeRule.getElement("$.ua"));
+        System.out.println(analyzeRule.getElement("$.wallpaper"));
         String webUrl = analyzeRule.getString("@fun:{base64Encode:'$.homeUrl'}");
         System.out.println(webUrl);
         OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(webUrl);

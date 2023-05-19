@@ -1,47 +1,8 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
-buildscript {
-    ext {
-        appVersionCode = 1
-        appVersionName = "1.0.0"
-//        ext.kotlin_version = '1.6.10'
-        miniSdkVersion = 16
-        compileSdkVersion = 30
-        targetSdkVersion = 30
-
-        jsoup_version = "1.14.1"
-        jsoupxpath_version = "2.5.0"
-        okhttp_version = "3.12.13"
-        rxhttp_version = "2.6.5"
-    }
-
-    repositories {
-        mavenCentral()
-        google()
-//        jcenter()
-        maven { url 'https://maven.aliyun.com/repository/google' }
-        maven { url 'https://maven.aliyun.com/repository/central' }
-        maven { url 'https://maven.aliyun.com/repository/public' }
-        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
-        maven { url 'https://jitpack.io' }
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:7.4.2'
-        classpath "gradle.plugin.ru.cleverpumpkin.proguard-dictionaries-generator:plugin:1.0.8"
-//        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
-
-allprojects {
-    repositories {
-        mavenCentral()
-        google()
-//        jcenter()
-        maven { url 'https://maven.aliyun.com/repository/google' }
-        maven { url 'https://maven.aliyun.com/repository/central' }
-        maven { url 'https://maven.aliyun.com/repository/public' }
-        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
-        maven { url 'https://jitpack.io' }
-    }
+plugins {
+    id 'ru.cleverpumpkin.proguard-dictionaries-generator' version '1.0.8' apply false
+    id 'com.android.application' version '7.4.2' apply false
+    id 'com.android.library' version '7.4.2' apply false
 }
 
 task clean(type: Delete) {

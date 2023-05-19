@@ -29,8 +29,6 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import rxhttp.wrapper.annotations.NonNull;
-
 /**
  * 黄色仓库
  */
@@ -57,6 +55,11 @@ public class Hsck extends Spider {
     @Override
     public void init(Context context, String extend) {
         super.init(context, extend);
+        try {
+            domain = getDomain();
+        } catch (Exception e) {
+            SpiderDebug.log(e);
+        }
         this.ext = extend;
     }
 
@@ -319,7 +322,7 @@ public class Hsck extends Spider {
         return "";
     }
 
-    public String join(@NonNull CharSequence delimiter, @NonNull Iterable tokens) {
+    public String join(CharSequence delimiter, Iterable tokens) {
         final Iterator<?> it = tokens.iterator();
         if (!it.hasNext()) {
             return "";

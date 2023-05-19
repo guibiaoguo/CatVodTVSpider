@@ -1,285 +1,466 @@
 package com.github.catvod.spider;
 
-import com.github.catvod.utils.StringUtil;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Build;
+import android.text.TextUtils;
+import android.util.Base64;
+
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Misc;
+import com.github.catvod.utils.okhttp.OKCallBack;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.net.URLEncoder;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import java.util.Random;
+import java.util.Set;
 
+import okhttp3.Call;
 
 public class LiteApple extends Spider {
-    private HashMap<String, String> zM(String str) {
-        HashMap<String, String> hashMap = new HashMap<>();
-        hashMap.put("User-Agent", "okhttp/4.9.1");
-        return hashMap;
+    private static final String siteUrl = "http://ht.grelighting.cn/api.php";
+
+    private HashMap<String, String> getHeaders(String url, String data) {
+        HashMap<String, String> headers = new HashMap<>();
+        if (data != null) {
+            String token = "";
+            try {
+                token = Base64.encodeToString(b(fakeDevice.getBytes("UTF-8"), tokenKey == null ? "XPINGGUO" : tokenKey), 2);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+            int currentTimeMillis = (int) (System.currentTimeMillis() / ((long) 1000));
+            String hash = md5(fakeDevice + data + currentTimeMillis).substring(8, 12);
+            headers.put("token", token);
+            headers.put("hash", hash);
+            headers.put("timestamp", currentTimeMillis + "");
+            if (tokenKey == null) {
+                headers.put("version", "ANDROID cn.grelighting.xpg1.1.5");
+            }
+        }
+        headers.put("User-Agent", "okhttp/4.9.1");
+        return headers;
     }
 
-    public String categoryContent(String str, String str2, boolean z, HashMap<String, String> hashMap) {
+    private String fakeDevice = null;
+    private String tokenKey = null;
+
+    @Override
+    public void init(Context context, String extend) {
+        super.init(context, extend);
+        SharedPreferences sharedPreferences = context.getSharedPreferences("spider_LiteApple", Context.MODE_PRIVATE);
         try {
-            String str3 = "http://app.grelighting.cn/api.php/v1.vod/androidfilter?page=" + str2 + "&type=" + str;
-            for (String str4 : hashMap.keySet()) {
-                String trim = hashMap.get(str4).trim();
-                if (trim.length() != 0) {
-                    str3 = str3 + "&" + str4 + "=" + URLEncoder.encode(trim);
-                }
+            fakeDevice = sharedPreferences.getString("didd", null);
+        } catch (Throwable th) {
+        } finally {
+            if (fakeDevice == null) {
+                fakeDevice = fakeDid();
+                sharedPreferences.edit().putString("didd", fakeDevice).commit();
             }
-            JSONArray jSONArray = new JSONObject(l9(OkHttpUtil.string(str3, zM(str3)))).optJSONArray("data");
-            JSONArray jSONArray2 = new JSONArray();
-            for (int i = 0; i < jSONArray.length(); i++) {
-                JSONObject jSONObject = jSONArray.optJSONObject(i);
-                JSONObject jSONObject2 = new JSONObject();
-                jSONObject2.put("vod_id", jSONObject.optString("id"));
-                jSONObject2.put("vod_name", jSONObject.optString("name"));
-                jSONObject2.put("vod_pic", jSONObject.optString("pic"));
-                jSONObject2.put("vod_remarks", jSONObject.optString("updateInfo"));
-                jSONArray2.put(jSONObject2);
-            }
-            JSONObject jSONObject3 = new JSONObject();
-            int parseInt = Integer.parseInt(str2);
-            jSONObject3.put("page", parseInt);
-            if (jSONArray2.length() == 20) {
-                parseInt++;
-            }
-            jSONObject3.put("pagecount", parseInt);
-            jSONObject3.put("limit", 20);
-            jSONObject3.put("total", Integer.MAX_VALUE);
-            jSONObject3.put("list", jSONArray2);
-            return jSONObject3.toString();
-        } catch (Exception e) {
-            SpiderDebug.log(e);
-            return "";
         }
     }
 
-    public String detailContent(List<String> list) {
-        try {
-            StringBuilder sb = new StringBuilder();
-            sb.append("http://app.grelighting.cn/api.php/v1.vod/androiddetail?vod_id=");
-            sb.append(list.get(0));
-            String sb2 = sb.toString();
-            JSONObject jSONObject = new JSONObject(l9(OkHttpUtil.string(sb2, zM(sb2)))).optJSONObject("data");
-            JSONObject jSONObject2 = new JSONObject();
-            JSONArray jSONArray = new JSONArray();
-            JSONObject jSONObject3 = new JSONObject();
-            jSONObject3.put("vod_id", jSONObject.optString("id"));
-            jSONObject3.put("vod_name", jSONObject.optString("name"));
-            jSONObject3.put("vod_pic", jSONObject.optString("pic"));
-            jSONObject3.put("type_name", jSONObject.optString("className"));
-            jSONObject3.put("vod_year", jSONObject.optString("year"));
-            jSONObject3.put("vod_area", jSONObject.optString("area"));
-            jSONObject3.put("vod_remarks", jSONObject.optString("updateInfo"));
-            jSONObject3.put("vod_actor", jSONObject.optString("actor"));
-            jSONObject3.put("vod_content", jSONObject.optString("content").trim());
-            ArrayList arrayList = new ArrayList();
-            JSONArray jSONArray2 = jSONObject.optJSONArray("urls");
-            for (int i = 0; i < jSONArray2.length(); i++) {
-                JSONObject jSONObject4 = jSONArray2.optJSONObject(i);
-                arrayList.add(jSONObject4.optString("key") + "$" + jSONObject4.optString("url"));
+    void getTokenKey() {
+        if (tokenKey != null)
+            return;
+        String url = siteUrl + "/v2.user/tokenlogin";
+        OkHttpUtil.post(OkHttpUtil.defaultClient(), url, null, getHeaders(url, "ANDROID cn.grelighting.xpg1.1.5"), new OKCallBack.OKCallBackString() {
+            @Override
+            protected void onFailure(Call call, Exception e) {
+
             }
-            jSONObject3.put("vod_play_from", "LiteApple");
-            jSONObject3.put("vod_play_url", StringUtil.join("#", arrayList));
-            jSONArray.put(jSONObject3);
-            jSONObject2.put("list", jSONArray);
-            return jSONObject2.toString();
-        } catch (Exception e) {
-            SpiderDebug.log(e);
-            return "";
-        }
+
+            @Override
+            protected void onResponse(String response) {
+                try {
+                    tokenKey = new JSONObject(response).getJSONObject("data").getString("user_title");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
-    public String homeContent(boolean z) {
-        String str = "type_id";
-        String str2 = "type_name";
+    @Override
+    public String homeContent(boolean filter) {
         try {
-            JSONArray jSONArray = new JSONObject(l9(OkHttpUtil.string("http://app.grelighting.cn/api.php/v1.vod/androidtypes", zM("http://app.grelighting.cn/api.php/v1.vod/androidtypes")))).optJSONArray("data");
-            JSONObject jSONObject = new JSONObject();
-            JSONArray jSONArray2 = new JSONArray();
-            int i = 0;
-            JSONObject jSONObject2 = jSONObject;
-            while (i < jSONArray.length()) {
-                JSONObject jSONObject3 = jSONArray.optJSONObject(i);
-                String string = jSONObject3.optString(str2);
-                String string2 = jSONObject3.optString(str);
-                JSONObject jSONObject4 = new JSONObject();
-                jSONObject4.put(str, string2);
-                jSONObject4.put(str2, string);
-                jSONArray2.put(jSONObject4);
-                JSONArray jSONArray3 = jSONObject3.optJSONArray("areas");
-                JSONArray jSONArray4 = jSONObject3.optJSONArray("years");
-                JSONArray jSONArray5 = new JSONArray();
-                JSONObject jSONObject5 = new JSONObject();
-                jSONObject5.put("key", "class");
-                jSONObject5.put("name", "类型");
-                JSONArray jSONArray6 = new JSONArray();
-                int i2 = 0;
-                JSONObject jSONObject6 = jSONObject2;
-                for (JSONArray jSONArray7 = jSONObject3.optJSONArray("classes"); i2 < jSONArray7.length(); jSONArray7 = jSONArray7) {
-                    String string3 = jSONArray7.optString(i2);
-                    JSONObject jSONObject7 = new JSONObject();
-                    jSONObject7.put("n", string3);
-                    jSONObject7.put("v", string3);
-                    jSONArray6.put(jSONObject7);
-                    i2++;
-                    i = i;
-                    jSONObject6 = jSONObject6;
+            getTokenKey();
+            String url = siteUrl + "/v2.vod/androidtypes";
+            String content = OkHttpUtil.string(url, getHeaders(url, null));
+            JSONObject jsonObject = new JSONObject(decryptResponse(content));
+            JSONArray jsonArray = jsonObject.getJSONArray("data");
+
+            JSONObject filterConfig = new JSONObject();
+            JSONArray classes = new JSONArray();
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject jObj = jsonArray.getJSONObject(i);
+                String typeName = jObj.getString("type_name");
+                String typeId = jObj.getString("type_id");
+                JSONObject newCls = new JSONObject();
+                newCls.put("type_id", typeId);
+                newCls.put("type_name", typeName);
+                classes.put(newCls);
+
+                JSONArray clses = jObj.getJSONArray("classes");
+                JSONArray areas = jObj.getJSONArray("areas");
+                JSONArray years = jObj.getJSONArray("years");
+
+                JSONArray extendsAll = new JSONArray();
+                // 类型
+                JSONObject newTypeExtend;
+                JSONArray newTypeExtendKV;
+                JSONObject kv;
+                newTypeExtend = new JSONObject();
+                newTypeExtend.put("key", "class");
+                newTypeExtend.put("name", "类型");
+                newTypeExtendKV = new JSONArray();
+                for (int j = 0; j < clses.length(); j++) {
+                    String v = clses.getString(j);
+                    kv = new JSONObject();
+                    kv.put("n", v);
+                    kv.put("v", v);
+                    newTypeExtendKV.put(kv);
                 }
-                jSONObject5.put("value", jSONArray6);
-                jSONArray5.put(jSONObject5);
-                JSONObject jSONObject8 = new JSONObject();
-                jSONObject8.put("key", "area");
-                jSONObject8.put("name", "地区");
-                JSONArray jSONArray8 = new JSONArray();
-                JSONObject jSONObject9 = new JSONObject();
-                jSONObject9.put("n", "全部");
-                jSONObject9.put("v", "");
-                jSONArray8.put(jSONObject9);
-                for (int i3 = 0; i3 < jSONArray3.length(); i3++) {
-                    String string4 = jSONArray3.optString(i3);
-                    JSONObject jSONObject10 = new JSONObject();
-                    jSONObject10.put("n", string4);
-                    jSONObject10.put("v", string4);
-                    jSONArray8.put(jSONObject10);
+                newTypeExtend.put("value", newTypeExtendKV);
+                extendsAll.put(newTypeExtend);
+                // 地区
+                newTypeExtend = new JSONObject();
+                newTypeExtend.put("key", "area");
+                newTypeExtend.put("name", "地区");
+                newTypeExtendKV = new JSONArray();
+                kv = new JSONObject();
+                kv.put("n", "全部");
+                kv.put("v", "");
+                newTypeExtendKV.put(kv);
+                for (int j = 0; j < areas.length(); j++) {
+                    String area = areas.getString(j);
+                    kv = new JSONObject();
+                    kv.put("n", area);
+                    kv.put("v", area);
+                    newTypeExtendKV.put(kv);
                 }
-                jSONObject8.put("value", jSONArray8);
-                jSONArray5.put(jSONObject8);
-                JSONObject jSONObject11 = new JSONObject();
-                jSONObject11.put("key", "year");
-                jSONObject11.put("name", "年份");
-                JSONArray jSONArray9 = new JSONArray();
-                JSONObject jSONObject12 = new JSONObject();
-                jSONObject12.put("n", "全部");
-                jSONObject12.put("v", "");
-                jSONArray9.put(jSONObject12);
-                for (int i4 = 0; i4 < jSONArray4.length(); i4++) {
-                    String string5 = jSONArray4.optString(i4);
-                    JSONObject jSONObject13 = new JSONObject();
-                    jSONObject13.put("n", string5);
-                    jSONObject13.put("v", string5);
-                    jSONArray9.put(jSONObject13);
+                newTypeExtend.put("value", newTypeExtendKV);
+                extendsAll.put(newTypeExtend);
+                // 年份
+                newTypeExtend = new JSONObject();
+                newTypeExtend.put("key", "year");
+                newTypeExtend.put("name", "年份");
+                newTypeExtendKV = new JSONArray();
+                kv = new JSONObject();
+                kv.put("n", "全部");
+                kv.put("v", "");
+                newTypeExtendKV.put(kv);
+                for (int j = 0; j < years.length(); j++) {
+                    String year = years.getString(j);
+                    kv = new JSONObject();
+                    kv.put("n", year);
+                    kv.put("v", year);
+                    newTypeExtendKV.put(kv);
                 }
-                jSONObject11.put("value", jSONArray9);
-                jSONArray5.put(jSONObject11);
-                jSONObject6.put(string2, jSONArray5);
-                JSONObject jSONObject14 = new JSONObject();
-                jSONObject14.put("key", "sortby");
-                jSONObject14.put("name", "排序");
-                JSONArray jSONArray10 = new JSONArray();
-                JSONObject jSONObject15 = new JSONObject();
-                jSONObject15.put("n", "时间");
-                jSONObject15.put("v", "updatetime");
-                jSONArray10.put(jSONObject15);
-                JSONObject jSONObject16 = new JSONObject();
-                jSONObject16.put("n", "人气");
-                jSONObject16.put("v", "hits");
-                jSONArray10.put(jSONObject16);
-                JSONObject jSONObject17 = new JSONObject();
-                jSONObject17.put("n", "评分");
-                jSONObject17.put("v", "score");
-                jSONArray10.put(jSONObject17);
-                jSONObject14.put("value", jSONArray10);
-                jSONArray5.put(jSONObject14);
-                i++;
-                jSONObject2 = jSONObject6;
-                str = str;
-                str2 = str2;
-                jSONArray = jSONArray;
-                jSONArray2 = jSONArray2;
+                newTypeExtend.put("value", newTypeExtendKV);
+                extendsAll.put(newTypeExtend);
+                filterConfig.put(typeId, extendsAll);
+                // 排序
+                newTypeExtend = new JSONObject();
+                newTypeExtend.put("key", "sortby");
+                newTypeExtend.put("name", "排序");
+                newTypeExtendKV = new JSONArray();
+                kv = new JSONObject();
+                kv.put("n", "时间");
+                kv.put("v", "updatetime");
+                newTypeExtendKV.put(kv);
+                kv = new JSONObject();
+                kv.put("n", "人气");
+                kv.put("v", "hits");
+                newTypeExtendKV.put(kv);
+                kv = new JSONObject();
+                kv.put("n", "评分");
+                kv.put("v", "score");
+                newTypeExtendKV.put(kv);
+                newTypeExtend.put("value", newTypeExtendKV);
+                extendsAll.put(newTypeExtend);
             }
-            JSONObject jSONObject18 = new JSONObject();
-            jSONObject18.put("class", jSONArray2);
-            if (z) {
-                jSONObject18.put("filters", jSONObject2);
+
+            JSONObject result = new JSONObject();
+            result.put("class", classes);
+            if (filter) {
+                result.put("filters", filterConfig);
             }
-            return jSONObject18.toString();
+            return result.toString();
         } catch (Exception e) {
             SpiderDebug.log(e);
-            return "";
         }
+        return "";
     }
 
+    @Override
     public String homeVideoContent() {
         try {
-            JSONArray jSONArray = new JSONArray();
-            for (int i = 1; i < 5; i++) {
+            JSONArray videos = new JSONArray();
+            for (int id = 1; id < 5; id++) {
+                if (videos.length() > 30)
+                    break;
                 try {
-                    JSONArray jSONArray2 = new JSONObject(l9(OkHttpUtil.string("http://app.grelighting.cn/api.php/v1.main/androidhome", zM("http://app.grelighting.cn/api.php/v1.main/androidhome")))).optJSONObject("data").optJSONArray("list");
-                    for (int i2 = 0; i2 < jSONArray2.length(); i2++) {
-                        JSONArray jSONArray3 = jSONArray2.optJSONObject(i2).optJSONArray("list");
-                        int i3 = 0;
-                        while (i3 < jSONArray3.length() && i3 < 4) {
-                            JSONObject jSONObject = jSONArray3.optJSONObject(i3);
-                            JSONObject jSONObject2 = new JSONObject();
-                            jSONObject2.put("vod_id", jSONObject.optString("id"));
-                            jSONObject2.put("vod_name", jSONObject.optString("name"));
-                            jSONObject2.put("vod_pic", jSONObject.optString("pic"));
-                            jSONObject2.put("vod_remarks", jSONObject.optString("updateInfo"));
-                            jSONArray.put(jSONObject2);
-                            i3++;
+                    String url = siteUrl + "/v2.main/androidhome";
+                    String content = OkHttpUtil.string(url, getHeaders(url, null));
+                    JSONObject jsonObject = new JSONObject(decryptResponse(content));
+                    JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("list");
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONArray jsonArraySub = jsonArray.getJSONObject(i).getJSONArray("list");
+                        for (int j = 0; j < jsonArraySub.length() && j < 4; j++) {
+                            JSONObject vObj = jsonArraySub.getJSONObject(j);
+                            JSONObject v = new JSONObject();
+                            v.put("vod_id", vObj.getString("id"));
+                            v.put("vod_name", vObj.getString("name"));
+                            v.put("vod_pic", vObj.getString("pic"));
+                            v.put("vod_remarks", vObj.getString("updateInfo"));
+                            videos.put(v);
                         }
                     }
-                } catch (Exception unused) {
+                } catch (Exception e) {
+
                 }
             }
-            JSONObject jSONObject3 = new JSONObject();
-            jSONObject3.put("list", jSONArray);
-            return jSONObject3.toString();
+            JSONObject result = new JSONObject();
+            result.put("list", videos);
+            return result.toString();
         } catch (Exception e) {
             SpiderDebug.log(e);
-            return "";
         }
+        return "";
     }
 
-    protected String l9(String str) {
-        return str;
-    }
-
-    public String playerContent(String str, String str2, List<String> list) {
+    @Override
+    public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) {
         try {
-            if (!Misc.isVideoFormat(str2)) {
-                return "";
+            getTokenKey();
+            String area = extend.containsKey("area") ? extend.get("area") : "";
+            String year = extend.containsKey("year") ? extend.get("year") : "";
+            String url = siteUrl + "/v2.vod/androidfilter?page=" + pg + "&type=" + tid;
+            Set<String> keys = extend.keySet();
+            for (String key : keys) {
+                String val = extend.get(key).trim();
+                if (val.length() == 0)
+                    continue;
+                url += "&" + key + "=" + URLEncoder.encode(val);
             }
-            JSONObject jSONObject = new JSONObject();
-            jSONObject.put("parse", 0);
-            jSONObject.put("header", "");
-            jSONObject.put("playUrl", "");
-            jSONObject.put("url", str2);
-            return jSONObject.toString();
+            String content = OkHttpUtil.string(url, getHeaders(url, area + year));
+            JSONObject dataObject = new JSONObject(decryptResponse(content));
+            JSONArray jsonArray = dataObject.getJSONArray("data");
+            JSONArray videos = new JSONArray();
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject vObj = jsonArray.getJSONObject(i);
+                JSONObject v = new JSONObject();
+                v.put("vod_id", vObj.getString("id"));
+                v.put("vod_name", vObj.getString("name"));
+                v.put("vod_pic", vObj.getString("pic"));
+                v.put("vod_remarks", vObj.getString("updateInfo"));
+                videos.put(v);
+            }
+            JSONObject result = new JSONObject();
+            int limit = 20;
+            int page = Integer.parseInt(pg);
+            result.put("page", page);
+            int pageCount = videos.length() == limit ? page + 1 : page;
+            result.put("pagecount", pageCount);
+            result.put("limit", limit);
+            result.put("total", Integer.MAX_VALUE);
+            result.put("list", videos);
+            return result.toString();
         } catch (Exception e) {
             SpiderDebug.log(e);
+        }
+        return "";
+    }
+
+    @Override
+    public String detailContent(List<String> ids) {
+        try {
+            String url = siteUrl + "/v2.vod/androiddetail?vod_id=" + ids.get(0);
+            String content = OkHttpUtil.string(url, getHeaders(url, ids.get(0)));
+            JSONObject dataObject = new JSONObject(decryptResponse(content));
+            JSONObject vObj = dataObject.getJSONObject("data");
+            JSONObject result = new JSONObject();
+            JSONArray list = new JSONArray();
+            JSONObject vodAtom = new JSONObject();
+            vodAtom.put("vod_id", vObj.getString("id"));
+            vodAtom.put("vod_name", vObj.getString("name"));
+            vodAtom.put("vod_pic", vObj.getString("pic"));
+            vodAtom.put("type_name", vObj.getString("className"));
+            vodAtom.put("vod_year", vObj.getString("year"));
+            vodAtom.put("vod_area", vObj.getString("area"));
+            vodAtom.put("vod_remarks", vObj.getString("updateInfo"));
+            vodAtom.put("vod_actor", vObj.getString("actor"));
+            vodAtom.put("vod_content", vObj.getString("content").trim());
+
+            ArrayList<String> playUrls = new ArrayList<>();
+
+            JSONArray urls = vObj.getJSONArray("urls");
+            for (int i = 0; i < urls.length(); i++) {
+                JSONObject u = urls.getJSONObject(i);
+                playUrls.add(u.getString("key") + "$" + u.getString("url"));
+            }
+
+            vodAtom.put("vod_play_from", "LiteApple");
+            vodAtom.put("vod_play_url", TextUtils.join("#", playUrls));
+            list.put(vodAtom);
+            result.put("list", list);
+            return result.toString();
+        } catch (Exception e) {
+            SpiderDebug.log(e);
+        }
+        return "";
+    }
+
+    @Override
+    public String playerContent(String flag, String id, List<String> vipFlags) {
+        try {
+            if (Misc.isVideoFormat(id)) {
+                JSONObject result = new JSONObject();
+                result.put("parse", 0);
+                result.put("header", "");
+                result.put("playUrl", "");
+                result.put("url", id);
+                return result.toString();
+            }
             return "";
+        } catch (Exception e) {
+            SpiderDebug.log(e);
+        }
+        return "";
+    }
+
+    @Override
+    public String searchContent(String key, boolean quick) {
+        try {
+            getTokenKey();
+            String url = siteUrl + "/v2.vod/androidsearch?page=1&wd=" + URLEncoder.encode(key);
+            String content = OkHttpUtil.string(url, getHeaders(url, key));
+            JSONObject dataObject = new JSONObject(decryptResponse(content));
+            JSONArray jsonArray = dataObject.getJSONArray("data");
+            JSONArray videos = new JSONArray();
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject vObj = jsonArray.getJSONObject(i);
+                String title = vObj.getString("name");
+                if (!title.contains(key))
+                    continue;
+                JSONObject v = new JSONObject();
+                v.put("vod_id", vObj.getString("id"));
+                v.put("vod_name", title);
+                v.put("vod_pic", vObj.getString("pic"));
+                v.put("vod_remarks", vObj.getString("updateInfo"));
+                videos.put(v);
+            }
+            JSONObject result = new JSONObject();
+            result.put("list", videos);
+            return result.toString();
+        } catch (Exception e) {
+            SpiderDebug.log(e);
+        }
+        return "";
+    }
+
+    protected String decryptResponse(String src) {
+        return src;
+    }
+
+    byte[] a(String str) {
+        byte[] bytes = str.getBytes();
+        byte[] bArr = new byte[333];
+        for (int i9 = 0; i9 < 333; i9++) {
+            bArr[i9] = (byte) i9;
+        }
+        if (bytes.length == 0) {
+            return null;
+        }
+        int i10 = 0;
+        int i11 = 0;
+        for (int i12 = 0; i12 < 333; i12++) {
+            i11 = (((bytes[i10] & 255) + (bArr[i12] & 255)) + i11) % 333;
+            byte b = bArr[i12];
+            bArr[i12] = bArr[i11];
+            bArr[i11] = b;
+            i10 = (i10 + 1) % bytes.length;
+        }
+        return bArr;
+    }
+
+    byte[] b(byte[] bArr, String str) {
+        byte[] a = a(str);
+        byte[] bArr2 = new byte[bArr.length];
+        int i9 = 0;
+        int i10 = 0;
+        for (int i11 = 0; i11 < bArr.length; i11++) {
+            i9 = (i9 + 1) % 333;
+            i10 = ((a[i9] & 255) + i10) % 333;
+            byte b = a[i9];
+            a[i9] = a[i10];
+            a[i10] = b;
+            bArr2[i11] = (byte) (a[((a[i9] & 255) + (a[i10] & 255)) % 333] ^ bArr[i11]);
+        }
+        return bArr2;
+    }
+
+    String randomString(int length) {
+        String str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456";
+        Random random = new Random();
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < length; i++) {
+            int number = random.nextInt(str.length());
+            sb.append(str.charAt(number));
+        }
+        return sb.toString();
+    }
+
+    String randomMACAddress() {
+        Random rand = new Random();
+        byte[] macAddr = new byte[6];
+        rand.nextBytes(macAddr);
+        macAddr[0] = (byte) (macAddr[0] & (byte) 254);  //zeroing last 2 bytes to make it unicast and locally adminstrated
+        StringBuilder sb = new StringBuilder(18);
+        for (byte b : macAddr) {
+            sb.append(String.format("%02X", b));
+        }
+        return sb.toString();
+    }
+
+    String fakeDid() {
+        String i = "";
+        String f = "";
+        String d = "N/A";
+        try {
+            d = Build.class.getField("SERIAL").get((Object) null).toString();
+        } catch (Exception unused) {
+        }
+        String e = "";
+        try {
+            e = (String) Class.forName("android.os.SystemProperties").getDeclaredMethod("get", new Class[]{String.class}).invoke((Object) null, new Object[]{"ro.build.fingerprint"});
+        } catch (Exception unused) {
+            return "";
+        }
+        return (((((((((("" + i) + "||") + f) + "||") + randomMACAddress()) + "||") + randomString(16)) + "||") + d) + "||") + e;
+    }
+
+    String md5(String str) {
+        try {
+            MessageDigest instance = MessageDigest.getInstance("MD5");
+            instance.update(str.getBytes());
+            return new BigInteger(1, instance.digest()).toString(16);
+        } catch (Exception e9) {
+            e9.printStackTrace();
+            return str;
         }
     }
 
-    public String searchContent(String str, boolean z) {
-        try {
-            String str2 = "http://app.grelighting.cn/api.php/v1.vod/androidsearch?page=1&wd=" + URLEncoder.encode(str);
-            JSONArray jSONArray = new JSONObject(l9(OkHttpUtil.string(str2, zM(str2)))).optJSONArray("data");
-            JSONArray jSONArray2 = new JSONArray();
-            for (int i = 0; i < jSONArray.length(); i++) {
-                JSONObject jSONObject = jSONArray.optJSONObject(i);
-                String string = jSONObject.optString("name");
-                if (string.contains(str)) {
-                    JSONObject jSONObject2 = new JSONObject();
-                    jSONObject2.put("vod_id", jSONObject.optString("id"));
-                    jSONObject2.put("vod_name", string);
-                    jSONObject2.put("vod_pic", jSONObject.optString("pic"));
-                    jSONObject2.put("vod_remarks", jSONObject.optString("updateInfo"));
-                    jSONArray2.put(jSONObject2);
-                }
-            }
-            JSONObject jSONObject3 = new JSONObject();
-            jSONObject3.put("list", jSONArray2);
-            return jSONObject3.toString();
-        } catch (Exception e) {
-            SpiderDebug.log(e);
-            return "";
-        }
-    }
 }

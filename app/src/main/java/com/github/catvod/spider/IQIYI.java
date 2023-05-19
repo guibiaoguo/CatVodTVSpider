@@ -2,10 +2,11 @@ package com.github.catvod.spider;
 
 import android.content.Context;
 import android.net.Uri;
+import android.text.TextUtils;
 
+import com.github.catvod.bean.Result;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.crawler.SpiderReqResult;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 
@@ -15,12 +16,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-
-import rxhttp.wrapper.annotations.NonNull;
 
 /**
  * bill
@@ -167,7 +164,7 @@ public class IQIYI extends Spider {
                         url += "&" + key + "=" + val;
                     }
                 }
-                url += "&three_category_id=" + join(",", three_category_id);
+                url += "&three_category_id=" + TextUtils.join(",", three_category_id);
             }
             String srr = OkHttpUtil.string(url, getHeaders(url));
             JSONObject result = new JSONObject();
@@ -255,8 +252,8 @@ public class IQIYI extends Spider {
             vodList.put("vod_year", "");
             vodList.put("vod_area", "");
             vodList.put("vod_remarks", vod.optString("duration"));
-            vodList.put("vod_actor", join(",", charactors));
-            vodList.put("vod_director", join(",", directors));
+            vodList.put("vod_actor", TextUtils.join(",", charactors));
+            vodList.put("vod_director", TextUtils.join(",", directors));
             vodList.put("vod_content", vod.optString("description"));
             JSONArray playerList = dataObject.optJSONArray("epsodelist");
             if (playerList == null) {
@@ -269,7 +266,7 @@ public class IQIYI extends Spider {
                 plays.add(epsode.optString("order") + " " + epsode.optString("subtitle") + "$" + epsode.optString("playUrl"));
             }
             vodList.put("vod_play_from", "iqiyi");
-            vodList.put("vod_play_url", join("#", plays));
+            vodList.put("vod_play_url", TextUtils.join("#", plays));
             JSONObject result = new JSONObject();
             JSONArray list = new JSONArray();
             list.put(vodList);
@@ -279,20 +276,6 @@ public class IQIYI extends Spider {
             SpiderDebug.log(e);
         }
         return "";
-    }
-
-    public String join(@NonNull CharSequence delimiter, @NonNull Iterable tokens) {
-        final Iterator<?> it = tokens.iterator();
-        if (!it.hasNext()) {
-            return "";
-        }
-        final StringBuilder sb = new StringBuilder();
-        sb.append(it.next());
-        while (it.hasNext()) {
-            sb.append(delimiter);
-            sb.append(it.next());
-        }
-        return sb.toString();
     }
 
     private HashMap<String, String> getHeaderJxs(String url) {
@@ -308,21 +291,7 @@ public class IQIYI extends Spider {
 
     @Override
     public String playerContent(String flag, String id, List<String> vipFlags) {
-        try {
-            JSONObject result = new JSONObject();
-            try {
-                result.put("parse", 1);
-                result.put("playUrl", "");
-                result.put("url", id);
-                return result.toString();
-            } catch (Exception ee) {
-                SpiderDebug.log(ee);
-            }
-            return result.toString();
-        } catch (Exception e) {
-            SpiderDebug.log(e);
-        }
-        return "";
+        return Result.get().url(id).parse().jx().string();
     }
 
     @Override

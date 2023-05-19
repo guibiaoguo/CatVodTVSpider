@@ -12,7 +12,7 @@ public class XPathNfMov extends XPath {
 
     private String cookies = "";
 
-    @Override
+
     protected HashMap<String, String> getHeaders(String url) {
         HashMap<String, String> hashMap = super.getHeaders(url);
         if (cookies.length() > 0)
