@@ -1,5 +1,6 @@
 package com.github.catvod.utils.okhttp;
 
+import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 
 import java.io.IOException;
@@ -70,6 +71,7 @@ public class OkHttpUtil {
                     }
                     return response.body().string();
                 } catch (IOException e) {
+                    SpiderDebug.log(e);
                     return "";
                 }
             }

@@ -2,10 +2,8 @@ package com.github.catvod.utils;
 
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.legado.LegadoData;
-import com.github.catvod.utils.StringUtil;
 
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
@@ -19,6 +17,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 /**
  * 作者：By hdy
@@ -700,4 +699,56 @@ public class StringUtil {
         return map;
     }
 
+    public static boolean isXml(String str) {
+        if (str.startsWith("<") && str.endsWith(">")) {
+            return true;
+        }
+        return false;
+    }
+
+    public static final String escape(String src) {
+        StringBuilder tmp = new StringBuilder();
+        String var5 = src;
+        int var6 = src.length();
+
+        for(int var4 = 0; var4 < var6; ++var4) {
+            char var3;
+            label43: {
+                label51: {
+                    var3 = var5.charAt(var4);
+                    if ('0' <= var3) {
+                        if ('9' >= var3) {
+                            break label51;
+                        }
+                    }
+
+                    if ('A' <= var3) {
+                        if ('Z' >= var3) {
+                            break label51;
+                        }
+                    }
+
+                    if ('a' > var3) {
+                        break label43;
+                    }
+
+                    if ('z' < var3) {
+                        break label43;
+                    }
+                }
+
+                tmp.append(var3);
+                continue;
+            }
+
+            String prefix = var3 < 16 ? "%0" : (var3 < 256 ? "%" : "%u");
+            StringBuilder var10000 = tmp.append(prefix);
+            byte var10 = 16;
+            String var10001 = Integer.toString(var3);
+            var10000.append(var10001);
+        }
+
+        String var11 = tmp.toString();
+        return var11;
+    }
 }

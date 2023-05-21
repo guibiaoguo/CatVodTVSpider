@@ -8,6 +8,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class NewfiiTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(newfii.detailContent(List.of("102660")));
+        System.out.println(newfii.detailContent(Arrays.asList("102660")));
     }
 
     @Test

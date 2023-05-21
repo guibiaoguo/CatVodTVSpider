@@ -8,6 +8,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -42,7 +43,7 @@ public class JumiTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(jumi.detailContent(List.of("202372")));
+        System.out.println(jumi.detailContent(Arrays.asList("202372")));
     }
 
     @Test

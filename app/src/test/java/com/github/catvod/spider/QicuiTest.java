@@ -8,6 +8,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class QicuiTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(qicui.detailContent(List.of("125896")));
+        System.out.println(qicui.detailContent(Arrays.asList("125896")));
     }
 
     @Test

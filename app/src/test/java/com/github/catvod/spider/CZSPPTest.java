@@ -8,6 +8,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -36,7 +37,7 @@ public class CZSPPTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(czspp.detailContent(List.of("4181")));
+        System.out.println(czspp.detailContent(Arrays.asList("4181")));
     }
 
     @Test

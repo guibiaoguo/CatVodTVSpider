@@ -2,6 +2,7 @@ package com.github.catvod.net;
 
 import android.text.TextUtils;
 
+import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Utils;
 
 import java.io.IOException;
@@ -77,7 +78,8 @@ class OkRequest {
             if (respHeader != null) respHeader.clear();
             if (respHeader != null) respHeader.putAll(response.headers().toMultimap());
             return response.body().string();
-        } catch (IOException e) {
+        } catch (Exception e) {
+            SpiderDebug.log(e);
             return "";
         }
     }

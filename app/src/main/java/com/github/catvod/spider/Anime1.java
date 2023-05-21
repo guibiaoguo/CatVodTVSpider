@@ -39,11 +39,11 @@ public class Anime1 extends Spider {
     private String authority = "";
     private JSONArray srcArray = new JSONArray();
 
-    @Override
+	@Override
     public void init(Context context) {
         super.init(context);
     }
-
+	
     @Override
     public String homeContent(boolean filter) {
         try {
@@ -178,7 +178,7 @@ public class Anime1 extends Spider {
     public String detailContent(List<String> ids) {
         try {
             String id = ids.get(0);
-            JSONObject dtinfo = new JSONObject();
+  		    JSONObject dtinfo = new JSONObject();
             for (int i = 0 ; i < srcArray.length() ; i++) {
                 JSONObject dtobj = srcArray.getJSONObject(i);
                 String objid = dtobj.getString("link");
@@ -186,12 +186,12 @@ public class Anime1 extends Spider {
                     dtinfo = dtobj ;
                 }
             }
-            String title = dtinfo.getString("name");
+		    String title = dtinfo.getString("name");
             String mark = dtinfo.getString("hit");
             String year  = dtinfo.getString("year");
             String season = dtinfo.getString("season");
             String team = dtinfo.getString("team");
-            JSONObject result = new JSONObject();
+			JSONObject result = new JSONObject();
             JSONObject vodList = new JSONObject();
             vodList.put("vod_id", ids.get(0));
             vodList.put("vod_name", title);
@@ -206,7 +206,7 @@ public class Anime1 extends Spider {
              * 播放源配置
              */
             String url = "https://anime1.me/?cat=" + id;
-            Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders2(url)));
+			Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders2(url)));
             String nextPage = "";
             Map<String, String> vod_play_Order = new TreeMap<>();
             do {
@@ -307,16 +307,16 @@ public class Anime1 extends Spider {
     @Override
     public String playerContent(String flag, String id, List<String> vipFlags) {
         try {
-            cookies = "";
+			cookies = "";
             authority = "";
             String vlink =  id ;
-            String url = "https://v.anime1.me/api";
-            JSONObject result = new JSONObject();
-            String apireq = vlink;
-            String jsonreq = URLDecoder.decode(apireq,"UTF-8");
-            HashMap<String, String> reqpayload = new HashMap<>();
+			String url = "https://v.anime1.me/api";
+			JSONObject result = new JSONObject();
+			String apireq = vlink;
+			String jsonreq = URLDecoder.decode(apireq,"UTF-8");
+			HashMap<String, String> reqpayload = new HashMap<>();
             reqpayload.put("d", jsonreq);
-            OkHttpUtil.post(OkHttpUtil.defaultClient(), url, reqpayload, getHeaders2(url), new OKCallBack.OKCallBackString() {
+			OkHttpUtil.post(OkHttpUtil.defaultClient(), url, reqpayload, getHeaders2(url), new OKCallBack.OKCallBackString() {
                 @Override
                 public String onParseResponse(Call call, Response response) {
                     try {
@@ -345,17 +345,17 @@ public class Anime1 extends Spider {
                         JSONObject obj2 = objarray.getJSONObject(0);
                         String videolink = obj2.getString("src");
                         authority = videolink.split("/")[2];
-                        videolink = "https:" + videolink;
-                        result.put("url", videolink);
+						videolink = "https:" + videolink;
+		                result.put("url", videolink);
                     } catch (JSONException unused) {
                     }
                 }
             });
-            result.put("header", new JSONObject(getHeaders1(url)).toString());
-            result.put("parse", 0);
+		    result.put("header", new JSONObject(getHeaders1(url)).toString());
+			result.put("parse", 0);
             result.put("playUrl", "");
             return result.toString();
-        } catch (Exception e) {
+		} catch (Exception e) {
             SpiderDebug.log(e);
         }
         return "";
@@ -366,7 +366,7 @@ public class Anime1 extends Spider {
         headers.put("Authority", "d1zquzjgwo9yb.cloudfront.net");
         headers.put("Accept","application/json, text/javascript, */*; q=0.01");
         headers.put("Accept-Encoding","gzip, deflate, br");
-        headers.put("Accept-Language","zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6");
+		headers.put("Accept-Language","zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6");
         headers.put("Origin","https://anime1.me");
         headers.put("Referer","https://anime1.me/");
         headers.put("User-Agent","Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.134 YaBrowser/22.7.1.755 (beta) Yowser/2.5 Safari/537.36");
@@ -400,7 +400,7 @@ public class Anime1 extends Spider {
         HashMap<String, String> headers = new HashMap<>();
         headers.put("Accept","*/*");
         headers.put("Accept-encoding", "identity;q=1, *;q=0");
-        headers.put("Accept-language", "en,zh-TW;q=0.9,zh;q=0.8");
+		headers.put("Accept-language", "en,zh-TW;q=0.9,zh;q=0.8");
         headers.put("Referer", "https://anime1.me");
         headers.put("User-Agent","Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.134 YaBrowser/22.7.1.755 (beta) Yowser/2.5 Safari/537.36");
         headers.put("Sec-Fetch-Dest","video");
@@ -455,6 +455,6 @@ public class Anime1 extends Spider {
         }
         return "";
     }
-
-
+	
+	
 }

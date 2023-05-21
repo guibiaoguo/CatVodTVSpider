@@ -8,6 +8,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -47,7 +48,7 @@ public class MGTVTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(mgtv.detailContent(List.of("https://pcweb.api.mgtv.com/episode/list?size=5000&video_id=18588590#http://3img.hitv.com/preview/sp_images/2023/04/03/202304031713207326601.jpg")));
+        System.out.println(mgtv.detailContent(Arrays.asList("https://pcweb.api.mgtv.com/episode/list?size=5000&video_id=18588590#http://3img.hitv.com/preview/sp_images/2023/04/03/202304031713207326601.jpg")));
     }
 
     @Test

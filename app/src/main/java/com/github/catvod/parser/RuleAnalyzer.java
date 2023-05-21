@@ -1,5 +1,7 @@
 package com.github.catvod.parser;
 
+import com.github.catvod.script.IFunction;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -260,13 +262,15 @@ public final class RuleAnalyzer {
     }
 
 
-    public final String innerRule(String inner, int startStep, int endStep, AnalyzeByJSonPath analyzeByJSonPath) {
+    public final String innerRule(String inner, int startStep, int endStep, IFunction iFunction) {
 
         StringBuilder st = new StringBuilder();
         while (consumeTo(inner)) {
             int posPre = pos;
             if (chompCodeBalanced('{', '}')) {
-                String frv = analyzeByJSonPath.getString(queue.substring(posPre + startStep, pos - endStep));
+                String frv = queue.substring(posPre + startStep, pos - endStep);
+                if (iFunction != null)
+                    frv = iFunction.getInnerRule(frv);
                 if (StringUtils.isNotEmpty(frv)) {
                     st.append(queue.substring(startX, posPre)).append(frv);
                     startX = pos;
@@ -282,13 +286,15 @@ public final class RuleAnalyzer {
         }
     }
 
-    public final String innerRule(String startStr, String endStr, AnalyzeByJSonPath analyzeByJSonPath) {
+    public final String innerRule(String startStr, String endStr, IFunction iFunction) {
         StringBuilder st = new StringBuilder();
         while (consumeTo(startStr)) {
             pos += startStr.length();
             int posPre = pos;
             if (consumeTo(endStr)) {
-                String frv = analyzeByJSonPath.getString(queue.substring(posPre, pos));
+                String frv = queue.substring(posPre, pos);
+                if (iFunction != null)
+                    frv = iFunction.getInnerRule(frv);
                 st.append(queue.substring(startX, posPre - startStr.length())).append(frv);
                 pos += endStr.length();
                 startX = pos;

@@ -6,6 +6,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -30,7 +31,7 @@ public class Kunyu78Test {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(kunyu77.detailContent(List.of("147377")));
+        System.out.println(kunyu77.detailContent(Arrays.asList("147377")));
     }
 
     @Test

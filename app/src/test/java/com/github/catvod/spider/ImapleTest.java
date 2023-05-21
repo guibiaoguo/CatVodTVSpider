@@ -8,6 +8,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -46,7 +47,7 @@ public class ImapleTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(imaple.detailContent(List.of("269124")));
+        System.out.println(imaple.detailContent(Arrays.asList("269124")));
     }
 
     @Test

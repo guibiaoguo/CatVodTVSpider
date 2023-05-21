@@ -14,6 +14,7 @@ import com.github.catvod.net.OkHttp;
 import com.github.catvod.parser.AnalyzeByJSonPath;
 import com.github.catvod.parser.AnalyzeRule;
 import com.github.catvod.utils.StringUtil;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -23,8 +24,12 @@ import com.google.gson.reflect.TypeToken;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.mozilla.javascript.NativeObject;
+import org.mozilla.javascript.Scriptable;
 
+import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -90,6 +95,21 @@ public class QQ extends Spider {
     public String homeVideoContent() {
         List<Vod> list = new ArrayList<>();
         String vurl = siteUrl + "/x/bu/pagesheet/list?_all=1&append=1&channel=choice";
+        org.mozilla.javascript.Context cx = org.mozilla.javascript.Context.enter();
+        try {
+            cx.setOptimizationLevel(-1);
+            Scriptable scope = cx.initStandardObjects();
+            System.out.println(scope instanceof NativeObject);
+            System.out.println(new Gson().toJson(((NativeObject)scope).entrySet()));
+            String str = "3/(1+2)";
+            Object result = cx.evaluateString(scope, str, "javax.script.filename", 1, null);
+            Object result_reader = cx.evaluateReader(scope,new StringReader(str),"javax.script.filename",1, null);
+            System.out.println(str + "=" + org.mozilla.javascript.Context.toNumber(result));
+        } catch (Exception e) {
+            SpiderDebug.log(e);
+        }finally {
+            org.mozilla.javascript.Context.exit();
+        }
         Document doc = Jsoup.parse(OkHttp.string(vurl, getHeaders(siteUrl)));
         for (Element element : doc.select(".list_item")) {
             String img = element.select("img").attr("src");
@@ -139,11 +159,104 @@ public class QQ extends Spider {
     public String detailContent(List<String> ids) {
         String ssr = OkHttp.string("https://node.video.qq.com/x/api/float_vinfo2?cid=".concat(ids.get(0)), getHeaders(siteUrl));
         JsonObject jsonObject = new Gson().fromJson(ssr, JsonObject.class);
-        AnalyzeByJSonPath analyzeRule = new AnalyzeByJSonPath(ssr);
-        SpiderDebug.log(analyzeRule.getString("$.c.title"));
-        AnalyzeRule analyzeRule1 = new AnalyzeRule();
-        analyzeRule1.setContent(ssr);
-        SpiderDebug.log(analyzeRule1.getString("@Json:$.c.title"));
+        AnalyzeByJSonPath analyzeByJSonPath = new AnalyzeByJSonPath(ssr);
+        SpiderDebug.log(analyzeByJSonPath.getString("$.c.title"));
+        AnalyzeRule analyzeRule = new AnalyzeRule();
+        analyzeRule.setContent(ssr);
+        SpiderDebug.log(analyzeRule.getString("@Json:$.c.title@js:java.md5Encode(result)"));
+        SpiderDebug.log(analyzeRule.getString("@Json:$.c.title@js:java.md5Encode(result)"));
+        SpiderDebug.log(analyzeRule.getString("@Json:$.c.title@js:java.md5Encode(result);"));
+        SpiderDebug.log(analyzeRule.getString("@Json:$.c.title@js:code=java.md5Encode16(\"123456789\");java.log(code);result"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.digestHex(\"123456789\",\"sha256\")"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.digestBase64Str(\"123456789\",\"SHA256\")"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.HMacHex(\"123456789\",\"HmacSHA256\",\"123456789\")"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.HmacBase64(\"123456789\",\"HmacSHA256\",\"12345789\")"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.ajax(\"https://www.huangdizhijia.com\")"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.get(\"https://m.huangdizhijia.com\",{}).body().string();"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.head(\"https://www.huangdizhijia.com\",{})"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.post(\"https://m.huangdizhijia.com/index.php?action=search\", \"keyword=我的\", {}).body().string();"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.strToBytes(\"123456789\")"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.strToBytes(\"123456789\",\"utf-8\");"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.bytesToStr(java.strToBytes(\"123456789\"))"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.base64Decode(\"aHR0cHM6Ly9wYXN0ZWJpbi5jb20vcmF3L0ZBWGN0czBy\")"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.base64Decode(\"aHR0cHM6Ly9wYXN0ZWJpbi5jb20vcmF3L0ZBWGN0czBy\",2)"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.base64Decode(\"aHR0cHM6Ly9wYXN0ZWJpbi5jb20vcmF3L0ZBWGN0czBy\",\"utf-8\")"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.base64DecodeToByteArray(\"aHR0cHM6Ly9wYXN0ZWJpbi5jb20vcmF3L0ZBWGN0czBy\")"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.base64DecodeToByteArray(\"aHR0cHM6Ly9wYXN0ZWJpbi5jb20vcmF3L0ZBWGN0czBy\",2)"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.base64Encode(\"123456789\")"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.base64Encode(\"123456789\",2)"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.hexDecodeToByteArray(\"123456789\")"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.hexDecodeToString(\"313233343536373839\")"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.hexEncodeToByteArray(\"123456789\")"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.hexEncodeToString(\"123456789\")"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.timeFormatUTC(1684692908439,\"yyyy\",8)"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.timeFormat(1684692908439)"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.encodeURI(\"中文\")"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.encodeURI(\"中文\",\"GBK\")"));
+        SpiderDebug.log(analyzeRule.getString("@js:java.randomUUID()"));
+        SpiderDebug.log(analyzeRule.getString("@js:symmetricCrypto=java.createSymmetricCrypto(\"AES\",\"1234567812345678\",\"1234567812345678\");"));
+        SpiderDebug.log(analyzeRule.getString("@js:symmetricCrypto=java.createSymmetricCrypto(\"AES\",\"1234567812345678\",\"1234567812345678\");code = symmetricCrypto.encryptHex(\"123456789\");java.log(code);"));
+        SpiderDebug.log(analyzeRule.getString("@js:symmetricCrypto=java.createSymmetricCrypto(\"AES\",\"1234567812345678\",\"1234567812345678\");code = symmetricCrypto.encryptHex(\"123456789\");java.log(code);dcode = symmetricCrypto.decryptStr(code);java.log(dcode);"));
+        SpiderDebug.log(analyzeRule.getString("@js:publicKey = \"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCma/KlvKlXe58kxjDDtk7ju8oHGpl0dfSAQRVg\\n\" +\n" +
+                "                \"yWJHIVCfU8F5ZE784fcfOaSF5MB10WuCbAN+WK5S1aPRtKC37jGhMRNBWLwau5bSjuNaALO1Dq0o\\n\" +\n" +
+                "                \"rhUc/3NMpvw1MHZgVu/wbLvus1B8Up2+qYsbkelKtbUrjsL2JB+smGq/5QIDAQAB\";\n" +
+                "        privateKey = \"MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAKZr8qW8qVd7nyTGMMO2TuO7ygca\\n\" +\n" +
+                "                \"mXR19IBBFWDJYkchUJ9TwXlkTvzh9x85pIXkwHXRa4JsA35YrlLVo9G0oLfuMaExE0FYvBq7ltKO\\n\" +\n" +
+                "                \"41oAs7UOrSiuFRz/c0ym/DUwdmBW7/Bsu+6zUHxSnb6pixuR6Uq1tSuOwvYkH6yYar/lAgMBAAEC\\n\" +\n" +
+                "                \"gYADgyllXGnPNLGN/fgp1poBThrRneWZjXhsu92UI9vvoraIDk/53GdFs2KFpa/2ZXa3EIWY2ee+\\n\" +\n" +
+                "                \"+GcsIgx+5grdniEQbFyi9CVfQbxwcqDf74y6JNUHdSyWxUK2L0nMEyxbmAUOz/7NMgNGCGj0dWYL\\n\" +\n" +
+                "                \"FbPymWLajWQQjs8slu8DBwJBAOnNiAzZtUN+N/BtIPR16+dz5QZc7vWygwbfPAFScvaMOlIa9Xdi\\n\" +\n" +
+                "                \"p1Hfv3ukq/NfN+xf/gDCpisT88jydmhAG1cCQQC2OL+TQ2QFom9AUI7TdzpCNwQnMK1MKjkjlR+7\\n\" +\n" +
+                "                \"OoTA4hQuWttccxADfGOwQxl+hd+PYdI2g4trxlbO11I9MjUjAkEAqy3XUYlIRJ0x+a78tN9tk+1v\\n\" +\n" +
+                "                \"noQGVQ+ZDTv+Y/1ovIiY3qpsVDd/x9spCC7d0ndBq6fwgcACB4I5OEQFW3isSwJBAIQrDxFSTQcl\\n\" +\n" +
+                "                \"NUpR4/aPwQrr+rAuR1Q6P+2GKVjU7hs1H+wrbHZW4uOUYn4jfSdfFLNcAWwW55ZJawdl+Dl45D8C\\n\" +\n" +
+                "                \"QC6AcAEdPgSV9S0ythvvdphwzspt8aqBlQwqARh4Y+tnQYBXkkJcqVk08DuoVYqPbUe3jjVoA53l\\n\" +\n" +
+                "                \"/Od7c/4LNMs=\";asymmetricCrypto = java.createAsymmetricCrypto(\"RSA\", privateKey, publicKey);"));
+        SpiderDebug.log(analyzeRule.getString("@js:publicKey = \"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCma/KlvKlXe58kxjDDtk7ju8oHGpl0dfSAQRVg\\n\" +\n" +
+                "                \"yWJHIVCfU8F5ZE784fcfOaSF5MB10WuCbAN+WK5S1aPRtKC37jGhMRNBWLwau5bSjuNaALO1Dq0o\\n\" +\n" +
+                "                \"rhUc/3NMpvw1MHZgVu/wbLvus1B8Up2+qYsbkelKtbUrjsL2JB+smGq/5QIDAQAB\";\n" +
+                "        privateKey = \"MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAKZr8qW8qVd7nyTGMMO2TuO7ygca\\n\" +\n" +
+                "                \"mXR19IBBFWDJYkchUJ9TwXlkTvzh9x85pIXkwHXRa4JsA35YrlLVo9G0oLfuMaExE0FYvBq7ltKO\\n\" +\n" +
+                "                \"41oAs7UOrSiuFRz/c0ym/DUwdmBW7/Bsu+6zUHxSnb6pixuR6Uq1tSuOwvYkH6yYar/lAgMBAAEC\\n\" +\n" +
+                "                \"gYADgyllXGnPNLGN/fgp1poBThrRneWZjXhsu92UI9vvoraIDk/53GdFs2KFpa/2ZXa3EIWY2ee+\\n\" +\n" +
+                "                \"+GcsIgx+5grdniEQbFyi9CVfQbxwcqDf74y6JNUHdSyWxUK2L0nMEyxbmAUOz/7NMgNGCGj0dWYL\\n\" +\n" +
+                "                \"FbPymWLajWQQjs8slu8DBwJBAOnNiAzZtUN+N/BtIPR16+dz5QZc7vWygwbfPAFScvaMOlIa9Xdi\\n\" +\n" +
+                "                \"p1Hfv3ukq/NfN+xf/gDCpisT88jydmhAG1cCQQC2OL+TQ2QFom9AUI7TdzpCNwQnMK1MKjkjlR+7\\n\" +\n" +
+                "                \"OoTA4hQuWttccxADfGOwQxl+hd+PYdI2g4trxlbO11I9MjUjAkEAqy3XUYlIRJ0x+a78tN9tk+1v\\n\" +\n" +
+                "                \"noQGVQ+ZDTv+Y/1ovIiY3qpsVDd/x9spCC7d0ndBq6fwgcACB4I5OEQFW3isSwJBAIQrDxFSTQcl\\n\" +\n" +
+                "                \"NUpR4/aPwQrr+rAuR1Q6P+2GKVjU7hs1H+wrbHZW4uOUYn4jfSdfFLNcAWwW55ZJawdl+Dl45D8C\\n\" +\n" +
+                "                \"QC6AcAEdPgSV9S0ythvvdphwzspt8aqBlQwqARh4Y+tnQYBXkkJcqVk08DuoVYqPbUe3jjVoA53l\\n\" +\n" +
+                "                \"/Od7c/4LNMs=\";asymmetricCrypto = java.createAsymmetricCrypto(\"RSA\", privateKey, publicKey);code = asymmetricCrypto.encryptBase64(\"123456789\", PublicKey);java.log(code);"));
+        SpiderDebug.log(analyzeRule.getString("@js:publicKey = \"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCma/KlvKlXe58kxjDDtk7ju8oHGpl0dfSAQRVg\\n\" +\n" +
+                "                \"yWJHIVCfU8F5ZE784fcfOaSF5MB10WuCbAN+WK5S1aPRtKC37jGhMRNBWLwau5bSjuNaALO1Dq0o\\n\" +\n" +
+                "                \"rhUc/3NMpvw1MHZgVu/wbLvus1B8Up2+qYsbkelKtbUrjsL2JB+smGq/5QIDAQAB\";\n" +
+                "        privateKey = \"MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAKZr8qW8qVd7nyTGMMO2TuO7ygca\\n\" +\n" +
+                "                \"mXR19IBBFWDJYkchUJ9TwXlkTvzh9x85pIXkwHXRa4JsA35YrlLVo9G0oLfuMaExE0FYvBq7ltKO\\n\" +\n" +
+                "                \"41oAs7UOrSiuFRz/c0ym/DUwdmBW7/Bsu+6zUHxSnb6pixuR6Uq1tSuOwvYkH6yYar/lAgMBAAEC\\n\" +\n" +
+                "                \"gYADgyllXGnPNLGN/fgp1poBThrRneWZjXhsu92UI9vvoraIDk/53GdFs2KFpa/2ZXa3EIWY2ee+\\n\" +\n" +
+                "                \"+GcsIgx+5grdniEQbFyi9CVfQbxwcqDf74y6JNUHdSyWxUK2L0nMEyxbmAUOz/7NMgNGCGj0dWYL\\n\" +\n" +
+                "                \"FbPymWLajWQQjs8slu8DBwJBAOnNiAzZtUN+N/BtIPR16+dz5QZc7vWygwbfPAFScvaMOlIa9Xdi\\n\" +\n" +
+                "                \"p1Hfv3ukq/NfN+xf/gDCpisT88jydmhAG1cCQQC2OL+TQ2QFom9AUI7TdzpCNwQnMK1MKjkjlR+7\\n\" +\n" +
+                "                \"OoTA4hQuWttccxADfGOwQxl+hd+PYdI2g4trxlbO11I9MjUjAkEAqy3XUYlIRJ0x+a78tN9tk+1v\\n\" +\n" +
+                "                \"noQGVQ+ZDTv+Y/1ovIiY3qpsVDd/x9spCC7d0ndBq6fwgcACB4I5OEQFW3isSwJBAIQrDxFSTQcl\\n\" +\n" +
+                "                \"NUpR4/aPwQrr+rAuR1Q6P+2GKVjU7hs1H+wrbHZW4uOUYn4jfSdfFLNcAWwW55ZJawdl+Dl45D8C\\n\" +\n" +
+                "                \"QC6AcAEdPgSV9S0ythvvdphwzspt8aqBlQwqARh4Y+tnQYBXkkJcqVk08DuoVYqPbUe3jjVoA53l\\n\" +\n" +
+                "                \"/Od7c/4LNMs=\";asymmetricCrypto = java.createAsymmetricCrypto(\"RSA\", privateKey, publicKey);code = asymmetricCrypto.encryptBase64(\"123456789\", PublicKey);java.log(code);dcode = asymmetricCrypto.decryptStr(code, PrivateKey);java.log(dcode);"));
+        SpiderDebug.log(analyzeRule.getString("@js:publicKey = \"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCma/KlvKlXe58kxjDDtk7ju8oHGpl0dfSAQRVg\\n\" +\n" +
+                "                \"yWJHIVCfU8F5ZE784fcfOaSF5MB10WuCbAN+WK5S1aPRtKC37jGhMRNBWLwau5bSjuNaALO1Dq0o\\n\" +\n" +
+                "                \"rhUc/3NMpvw1MHZgVu/wbLvus1B8Up2+qYsbkelKtbUrjsL2JB+smGq/5QIDAQAB\";\n" +
+                "        privateKey = \"MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAKZr8qW8qVd7nyTGMMO2TuO7ygca\\n\" +\n" +
+                "                \"mXR19IBBFWDJYkchUJ9TwXlkTvzh9x85pIXkwHXRa4JsA35YrlLVo9G0oLfuMaExE0FYvBq7ltKO\\n\" +\n" +
+                "                \"41oAs7UOrSiuFRz/c0ym/DUwdmBW7/Bsu+6zUHxSnb6pixuR6Uq1tSuOwvYkH6yYar/lAgMBAAEC\\n\" +\n" +
+                "                \"gYADgyllXGnPNLGN/fgp1poBThrRneWZjXhsu92UI9vvoraIDk/53GdFs2KFpa/2ZXa3EIWY2ee+\\n\" +\n" +
+                "                \"+GcsIgx+5grdniEQbFyi9CVfQbxwcqDf74y6JNUHdSyWxUK2L0nMEyxbmAUOz/7NMgNGCGj0dWYL\\n\" +\n" +
+                "                \"FbPymWLajWQQjs8slu8DBwJBAOnNiAzZtUN+N/BtIPR16+dz5QZc7vWygwbfPAFScvaMOlIa9Xdi\\n\" +\n" +
+                "                \"p1Hfv3ukq/NfN+xf/gDCpisT88jydmhAG1cCQQC2OL+TQ2QFom9AUI7TdzpCNwQnMK1MKjkjlR+7\\n\" +\n" +
+                "                \"OoTA4hQuWttccxADfGOwQxl+hd+PYdI2g4trxlbO11I9MjUjAkEAqy3XUYlIRJ0x+a78tN9tk+1v\\n\" +\n" +
+                "                \"noQGVQ+ZDTv+Y/1ovIiY3qpsVDd/x9spCC7d0ndBq6fwgcACB4I5OEQFW3isSwJBAIQrDxFSTQcl\\n\" +\n" +
+                "                \"NUpR4/aPwQrr+rAuR1Q6P+2GKVjU7hs1H+wrbHZW4uOUYn4jfSdfFLNcAWwW55ZJawdl+Dl45D8C\\n\" +\n" +
+                "                \"QC6AcAEdPgSV9S0ythvvdphwzspt8aqBlQwqARh4Y+tnQYBXkkJcqVk08DuoVYqPbUe3jjVoA53l\\n\" +\n" +
+                "                \"/Od7c/4LNMs=\";asymmetricCrypto = java.createAsymmetricCrypto(\"RSA\", privateKey, publicKey);code = asymmetricCrypto.encryptBase64(\"123456789\", PublicKey);java.log(code);dcode = asymmetricCrypto.decryptStr(code, PrivateKey);java.log(dcode);"));
         String name = jsonObject.getAsJsonObject("c").get("title").getAsString();
         String remarks = jsonObject.get("rec").getAsString();
         String img = jsonObject.getAsJsonObject("c").get("pic").getAsString();
@@ -152,7 +265,7 @@ public class QQ extends Spider {
         String actor = jsonObject.get("nam").toString().replaceAll("[\\[\\]\"]", "");
         String content = jsonObject.getAsJsonObject("c").get("description").getAsString();
         String year = jsonObject.getAsJsonObject("c").get("year").getAsString();
-        String director = "";
+        String director = analyzeRule.getString("@Json:$.c.title@js:java.md5Encode(result)");
 
         Vod vod = new Vod();
         vod.setVodId(ids.get(0));
@@ -167,7 +280,7 @@ public class QQ extends Spider {
         vod.setTypeName(type);
 
         Map<String, String> sites = new LinkedHashMap<>();
-        List<String> sources = List.of("qq");
+        List<String> sources = Arrays.asList("qq");
         JsonArray sourceList = jsonObject.getAsJsonObject("c").getAsJsonArray("video_ids");
         for (int i = 0; i < sources.size(); i++) {
             String sourceName = sources.get(0);

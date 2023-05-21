@@ -57,7 +57,7 @@ public class Anfuns extends Spider {
             headers.put("Referer", ref);
         }
         if(cookie.length()>0){
-            headers.put("Cookie", cookie);
+        headers.put("Cookie", cookie);
         }
         headers.put("Accept-Language", "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2");
         return headers;
@@ -222,10 +222,10 @@ public class Anfuns extends Spider {
                 Elements playListA = playListB.select("li.hl-col-xs-4");
                 List<String> vodItems = new ArrayList<>();
                 for (int j = 0; j < playListA.size(); j++) {
-                    Element vod = playListA.get(j);
-                    String playURL = vod.selectFirst("a").attr("href");
-                    String playUrlName = vod.selectFirst("a").text();
-                    vodItems.add(playUrlName + "$" + playURL);
+                     Element vod = playListA.get(j);
+                     String playURL = vod.selectFirst("a").attr("href");
+                     String playUrlName = vod.selectFirst("a").text();
+                     vodItems.add(playUrlName + "$" + playURL);
                 }
                 if (vodItems.size() > 0) {
                     playList = TextUtils.join("#", vodItems);
@@ -326,7 +326,7 @@ public class Anfuns extends Spider {
                         break;
                     }
                 }
-            }else {
+           }else {
                 Map<String, List<String>> respHeaders = new HashMap<>();
                 OkHttpUtil.stringNoRedirect(urlreq, getHeaders2(urlreq,""), respHeaders);
                 String redirect = OkHttpUtil.getRedirectLocation(respHeaders);

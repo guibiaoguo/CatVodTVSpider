@@ -6,8 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 import org.seimicrawler.xpath.JXDocument;
 import org.seimicrawler.xpath.JXNode;
@@ -15,7 +17,7 @@ import org.seimicrawler.xpath.JXNode;
 public class AnalyzeByXPath {
     private Object jxNode;
 
-    private final Object parse(Object doc) {
+    private Object parse(Object doc) {
         Object jxNode;
         if (doc instanceof JXNode) {
             jxNode = ((JXNode) doc).isElement() ? doc : this.strToJXDocument(doc.toString());
@@ -23,7 +25,7 @@ public class AnalyzeByXPath {
             jxNode = JXDocument.create((Document) doc);
 
         } else if (doc instanceof Element) {
-            jxNode = JXDocument.create(new Elements(new Element[]{(Element) doc}));
+            jxNode = JXDocument.create(new Elements((Element) doc));
 
         } else if (doc instanceof Elements) {
             jxNode = JXDocument.create((Elements) doc);
@@ -35,7 +37,7 @@ public class AnalyzeByXPath {
         return jxNode;
     }
 
-    private final JXDocument strToJXDocument(String html) {
+    private JXDocument strToJXDocument(String html) {
         String html1 = html;
         if (StringUtils.endsWith(html, "</td>")) {
             html1 = "<tr>" + html + "</tr>";
@@ -44,12 +46,13 @@ public class AnalyzeByXPath {
         if (StringUtils.endsWith(html1, "</tr>") || StringUtils.endsWith(html1, "</tbody>")) {
             html1 = "<table>" + html1 + "</table>";
         }
-
-        JXDocument jxDocument = JXDocument.create(html1);
-        return jxDocument;
+        if (StringUtils.startsWith(html1, "<?xml")) {
+            return JXDocument.create(Jsoup.parse(html1, Parser.xmlParser()));
+        }
+        return JXDocument.create(html1);
     }
 
-    private final List getResult(String xPath) {
+    private List getResult(String xPath) {
         Object node = this.jxNode;
         List results;
         if (node instanceof JXNode) {
@@ -77,7 +80,7 @@ public class AnalyzeByXPath {
             return getResult(rules.get(0).toString());
         } else {
             ArrayList<List<JXNode>> results = new ArrayList<>();
-            for (Object r1 : results) {
+            for (Object r1 : rules) {
                 List<JXNode> temp = getElements(r1.toString());
                 if (temp != null && !temp.isEmpty()) {
                     results.add(temp);
@@ -150,52 +153,52 @@ public class AnalyzeByXPath {
         return result;
     }
 
-//    @TargetApi(Build.VERSION_CODES.N)
-//    public final String getString(String xPath) {
-//        if (xPath.isEmpty()) {
-//            return null;
-//        }
-//        List result = new ArrayList();
-//        RuleAnalyzer ruleAnalyzes = new RuleAnalyzer(xPath);
-//        ArrayList rules = ruleAnalyzes.splitRule("&&", "||");
-//        if (rules.size() == 1) {
-//            getResult(xPath).forEach(it -> {
-//                result.add(it.toString());
-//            });
-//            return StringUtil.join("\n",result);
-//        } else {
-//            for (Object r1 : rules) {
-//                String temp = getString(r1.toString());
-//                if (temp != null && !temp.isEmpty()) {
-//                    result.add(temp);
-//                    if (!temp.isEmpty() && ruleAnalyzes.getElementsType().equals("||")) {
-//                        break;
-//                    }
-//                }
-//            }
-//            return StringUtil.join("\n",result);
-//        }
-//    }
-
-//    @TargetApi(Build.VERSION_CODES.N)
-    public final String getString(String rule) {
-        if (rule.isEmpty()) {
+    public final String getString(String xPath) {
+        if (xPath.isEmpty()) {
             return null;
         }
-        List textS = getStringList(rule);
         List result = new ArrayList();
-        if (textS != null & !textS.isEmpty()) {
-//            textS.forEach(text -> {
-//                result.add(text);
-//            });
-            for(Object text:textS) {
-                result.add(text);
+        RuleAnalyzer ruleAnalyzes = new RuleAnalyzer(xPath);
+        ArrayList rules = ruleAnalyzes.splitRule("&&", "||");
+        if (rules.size() == 1) {
+            result = getResult(xPath);
+            if (result != null) {
+                return StringUtil.join("\n",result);
             }
-            return StringUtil.join("\n",result);
+            return "";
         } else {
-            return null;
+            for (Object r1 : rules) {
+                String temp = getString(r1.toString());
+                if (temp != null && !temp.isEmpty()) {
+                    result.add(temp);
+                    if (ruleAnalyzes.getElementsType().equals("||")) {
+                        break;
+                    }
+                }
+            }
+            return StringUtil.join("\n", result);
         }
     }
+
+//    @TargetApi(Build.VERSION_CODES.N)
+//    public final String getString(String rule) {
+//        if (rule.isEmpty()) {
+//            return null;
+//        }
+//        List textS = getStringList(rule);
+//        List result = new ArrayList();
+//        if (textS != null & !textS.isEmpty()) {
+////            textS.forEach(text -> {
+////                result.add(text);
+////            });
+//            for(Object text:textS) {
+//                result.add(text);
+//            }
+//            return StringUtil.join("\n",result);
+//        } else {
+//            return null;
+//        }
+//    }
 
     public AnalyzeByXPath(Object doc) {
         this.jxNode = this.parse(doc);

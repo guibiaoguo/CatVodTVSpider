@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
+import org.jsoup.parser.Parser;
 import org.jsoup.select.Collector;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
@@ -28,6 +29,8 @@ public class AnalyzeByJSoup {
             element = (Element) doc;
         } else if (doc instanceof JXNode) {
             element = ((JXNode) doc).isElement() ? ((JXNode) doc).asElement() : Jsoup.parse(((JXNode) doc).value().toString());
+        } else if (StringUtils.startsWith(doc.toString(),"<?xml")){
+            element = Jsoup.parse(doc.toString(), Parser.xmlParser());
         } else {
             element = Jsoup.parse(doc.toString());
         }

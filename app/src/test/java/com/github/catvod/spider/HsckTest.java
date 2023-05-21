@@ -8,6 +8,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -63,7 +64,7 @@ public class HsckTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(hsck.detailContent(List.of("/vodplay/34727-1-1.html#https://666546.xyz/images/2023/05/17/162a38014e06e9660dfdde744654b465.jpg")));
+        System.out.println(hsck.detailContent(Arrays.asList("/vodplay/34727-1-1.html#https://666546.xyz/images/2023/05/17/162a38014e06e9660dfdde744654b465.jpg")));
     }
 
     @Test

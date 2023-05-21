@@ -6,6 +6,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -44,7 +45,7 @@ public class TkysTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(tkys.detailContent(List.of("415491")));
+        System.out.println(tkys.detailContent(Arrays.asList("415491")));
     }
 
     @Test

@@ -16,6 +16,10 @@ if "%1" == "ec" (
 
 move "%~dp0\Smali_classes\com\github\catvod\spider" "%~dp0\spider.jar\smali\com\github\catvod\"
 move "%~dp0\Smali_classes\com\github\catvod\parser" "%~dp0\spider.jar\smali\com\github\catvod\"
+move "%~dp0\Smali_classes\com\github\catvod\script" "%~dp0\spider.jar\smali\com\github\catvod\"
+move "%~dp0\Smali_classes\com\github\catvod\script\rhino" "%~dp0\spider.jar\smali\com\github\catvod\script\"
+move "%~dp0\Smali_classes\org\mozilla\javascript" "%~dp0\spider.jar\smali\org\mozilla\"
+move "%~dp0\Smali_classes\cn\hutool\crypto" "%~dp0\spider.jar\smali\cn\hutool\"
 
 rd /s/q "%~dp0\Smali_classes"
 
@@ -27,6 +31,9 @@ certUtil -hashfile "%~dp0\custom_spider.jar" MD5 | find /i /v "md5" | find /i /v
 
 rd /s/q "%~dp0\spider.jar\smali\com\github\catvod\spider"
 rd /s/q "%~dp0\spider.jar\smali\com\github\catvod\parser"
+rd /s/q "%~dp0\spider.jar\smali\com\github\catvod\script"
+rd /s/q "%~dp0\spider.jar\smali\org\mozilla\javascript"
+rd /s/q "%~dp0\spider.jar\smali\cn\hutool\crypto"
 
 rd /s/q "%~dp0\spider.jar\build"
 rd /s/q "%~dp0\spider.jar\dist"

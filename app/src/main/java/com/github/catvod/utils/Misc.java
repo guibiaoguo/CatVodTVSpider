@@ -1,6 +1,7 @@
 package com.github.catvod.utils;
 
 import android.net.Uri;
+import android.text.TextUtils;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
@@ -11,6 +12,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.nio.charset.Charset;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.regex.Pattern;
 
 public class Misc {
@@ -141,4 +144,26 @@ public class Misc {
         return webView;
     }
 
+    public static Charset CharsetUTF8 = Charset.forName("UTF-8");
+    public static Charset CharsetIOS8859 = Charset.forName("iso-8859-1");
+
+    public static String MD5(String src, Charset charset) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] bytes = md.digest(src.getBytes(charset));
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < bytes.length; i++) {
+                int v = bytes[i] & 0xFF;
+                String hv = Integer.toHexString(v);
+                if (hv.length() < 2) {
+                    sb.append(0);
+                }
+                sb.append(hv);
+            }
+            return sb.toString().toLowerCase();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
 }

@@ -16,6 +16,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -40,7 +41,7 @@ public class XBiubiuTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(xbiubiu.detailContent(List.of("坏妈妈$$$https://img.tvbfuns.com/upload/vod/20230503-1/ca7ffed02fb5298ce2cedd0baa88845d.jpg$$$/hanju/11039.html")));
+        System.out.println(xbiubiu.detailContent(Arrays.asList("坏妈妈$$$https://img.tvbfuns.com/upload/vod/20230503-1/ca7ffed02fb5298ce2cedd0baa88845d.jpg$$$/hanju/11039.html")));
     }
 
     @Test
@@ -93,7 +94,7 @@ public class XBiubiuTest {
                     if (vods == null || vods.size() == 0) {
                         throw new Exception("列表是空的");
                     }
-                    String detail = xbiubiu.detailContent(List.of(vods.get(0).getVodId()));
+                    String detail = xbiubiu.detailContent(Arrays.asList(vods.get(0).getVodId()));
                     List<Vod> vodDetails = new Gson().fromJson(detail, Result.class).getList();
                     if (vodDetails == null || vodDetails.size() == 0) {
                         throw new Exception("内容时空的");

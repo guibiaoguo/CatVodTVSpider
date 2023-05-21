@@ -8,6 +8,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -32,7 +33,7 @@ public class BttooTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(bttoo.detailContent(List.of("67797")));
+        System.out.println(bttoo.detailContent(Arrays.asList("67797")));
     }
 
     @Test

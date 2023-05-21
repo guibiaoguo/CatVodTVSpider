@@ -8,6 +8,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -47,7 +48,7 @@ public class BiliTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(bili.detailContent(List.of("BV15z4y1871k")));
+        System.out.println(bili.detailContent(Arrays.asList("BV15z4y1871k")));
     }
 
     @Test

@@ -18,6 +18,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -59,7 +60,7 @@ public class AppYsV2Test {
 
     @Test
     public void detailContent() throws Exception {
-        String detail = appysv2.detailContent(List.of("106"));
+        String detail = appysv2.detailContent(Arrays.asList("106"));
         Result result = new Gson().fromJson(detail, Result.class);
         System.out.println(detail);
     }
@@ -137,7 +138,7 @@ public class AppYsV2Test {
                     if (vods == null || vods.size() == 0) {
                         throw new Exception("列表是空的");
                     }
-                    String detail = appysv2.detailContent(List.of(vods.get(0).getVodId()));
+                    String detail = appysv2.detailContent(Arrays.asList(vods.get(0).getVodId()));
                     List<Vod> vodDetails = new Gson().fromJson(detail, Result.class).getList();
                     if (vodDetails == null || vodDetails.size() == 0) {
                         throw new Exception("内容时空的");

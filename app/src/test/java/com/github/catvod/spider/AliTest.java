@@ -21,6 +21,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,12 +123,12 @@ public class AliTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(ali.detailContent(List.of("https://www.aliyundrive.com/s/QmzHZ6nL47M/folder/root")));
+        System.out.println(ali.detailContent(Arrays.asList("https://www.aliyundrive.com/s/QmzHZ6nL47M/folder/root")));
     }
 
     @Test
     public void playerContent() throws Exception {
-        System.out.println(ali.detailContent(List.of("https://www.aliyundrive.com/s/QmzHZ6nL47M/folder/root")));
+        System.out.println(ali.detailContent(Arrays.asList("https://www.aliyundrive.com/s/QmzHZ6nL47M/folder/root")));
         System.out.println(ali.playerContent("高清", "6401fb8432b23871d20d4f95ab6a176784612378", null));
     }
 

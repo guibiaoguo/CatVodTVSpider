@@ -29,11 +29,11 @@ public class Util {
 		}
 	}
 
-	public static String getFile(String fileName) {
-		try {
-			return Files.readString(Path.of(fileName));
-		} catch (Exception e) {
-			return "";
-		}
-	}
+//	public static String getFile(String fileName) {
+//		try {
+//			return Files.readString(Path.of(fileName));
+//		} catch (Exception e) {
+//			return "";
+//		}
+//	}
 }

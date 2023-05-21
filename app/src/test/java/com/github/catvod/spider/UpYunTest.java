@@ -16,6 +16,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -116,12 +117,12 @@ public class UpYunTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(upyun.detailContent(List.of("https://www.aliyundrive.com/s/KQQNDwPNF8M/folder/6418449a6cb74c72223d4f549040cb87a45129a8")));
+        System.out.println(upyun.detailContent(Arrays.asList("https://www.aliyundrive.com/s/KQQNDwPNF8M/folder/6418449a6cb74c72223d4f549040cb87a45129a8")));
     }
 
     @Test
     public void playerContent() throws Exception {
-        System.out.println(upyun.detailContent(List.of("https://www.aliyundrive.com/s/KQQNDwPNF8M/folder/6418449a6cb74c72223d4f549040cb87a45129a8")));
+        System.out.println(upyun.detailContent(Arrays.asList("https://www.aliyundrive.com/s/KQQNDwPNF8M/folder/6418449a6cb74c72223d4f549040cb87a45129a8")));
         System.out.println(upyun.playerContent("原畫","641844e696f191d7402b493f80e949047d060669+203@@@srt@@@641844e7d2156b551b59469fa665a4ef6ac45f8e",null));
     }
 }

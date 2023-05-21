@@ -7,7 +7,7 @@ import com.github.catvod.bean.Vod;
 import com.github.catvod.bean.upyun.Data;
 import com.github.catvod.bean.upyun.Item;
 import com.github.catvod.net.OkHttp;
-import com.google.common.io.BaseEncoding;
+import com.github.catvod.utils.Base64;
 
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -41,7 +41,7 @@ public class UpYun extends Ali {
         IvParameterSpec ivSpec = new IvParameterSpec("qq1920520460qqzz".getBytes());
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
-        byte[] encryptDataBytes = BaseEncoding.base16().decode(data.toUpperCase());
+        byte[] encryptDataBytes = Base64.decode(data.toUpperCase(),Base64.NO_WRAP);
         byte[] decryptData = cipher.doFinal(encryptDataBytes);
         return new String(decryptData, "UTF-8");
     }

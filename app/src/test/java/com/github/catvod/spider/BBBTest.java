@@ -8,6 +8,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -32,7 +33,7 @@ public class BBBTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(bbb.detailContent(List.of("BV1nW411K7CU")));
+        System.out.println(bbb.detailContent(Arrays.asList("BV1nW411K7CU")));
     }
 
     @Test

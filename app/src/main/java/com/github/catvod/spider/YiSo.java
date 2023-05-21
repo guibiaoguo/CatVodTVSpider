@@ -8,6 +8,7 @@ import android.webkit.WebViewClient;
 
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.yiso.Item;
+import com.github.catvod.utils.StringUtil;
 import com.github.catvod.utils.Utils;
 import com.google.gson.JsonParser;
 
@@ -26,7 +27,7 @@ public class YiSo extends Ali {
     @Override
     public String searchContent(String key, boolean quick) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) return "";
-        String url = "https://yiso.fun/api/search?name=" + URLEncoder.encode(key) + "&from=ali";
+        String url = "https://yiso.fun/api/search?name=" + StringUtil.encode(key) + "&from=ali";
         Map<String, String> result = new HashMap<>();
         Utils.loadWebView(url, getWebViewClient(result));
         while (!result.containsKey("json")) SystemClock.sleep(50);

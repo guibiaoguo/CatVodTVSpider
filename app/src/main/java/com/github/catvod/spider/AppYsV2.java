@@ -480,11 +480,15 @@ public class AppYsV2 extends Spider {
     }
 
     private String jsonArr2Str(JSONArray array) {
-        ArrayList<String> strings = new ArrayList<>();
-        for (int i = 0; i < array.length(); i++) {
-            strings.add(array.optString(i));
+        try {
+            ArrayList<String> strings = new ArrayList<>();
+            for (int i = 0; i < array.length(); i++) {
+                strings.add(array.getString(i));
+            }
+            return TextUtils.join(",", strings);
+        } catch (JSONException e) {
         }
-        return StringUtil.join(",", strings);
+        return "";
     }
 
     private HashMap<String, String> getHeaders(String URL) {
@@ -562,7 +566,9 @@ public class AppYsV2 extends Spider {
     };
 
     private String UA(String URL) {
-        if (URL.contains("api.php/app") || URL.contains("xgapp") || URL.contains("freekan")) {
+        if (URL.contains("vod.9e03.com")) {
+            return "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Mobile Safari/537.36";
+        } else if (URL.contains("api.php/app") || URL.contains("xgapp") || URL.contains("freekan")) {
             return "Dart/2.14 (dart:io)";
         } else if (URL.contains("zsb") || URL.contains("fkxs") || URL.contains("xays") || URL.contains("xcys") || URL.contains("szys") || URL.contains("dxys") || URL.contains("ytys") || URL.contains("qnys")) {
             return "Dart/2.15 (dart:io)";
@@ -630,7 +636,10 @@ public class AppYsV2 extends Spider {
             while (typeExtendKeys.hasNext()) {
                 String key = typeExtendKeys.next();
                 if (key.equals("class") || key.equals("area") || key.equals("lang") || key.equals("year")) {
-                    str = str + "筛选" + key + "+全部=+" + typeExtend.optString(key).replace(",", "+") + "\n";
+                    try {
+                        str = str + "筛选" + key + "+全部=+" + typeExtend.getString(key).replace(",", "+") + "\n";
+                    } catch (JSONException e) {
+                    }
                 }
             }
         }
@@ -678,7 +687,7 @@ public class AppYsV2 extends Spider {
     }
 
     // ######选集
-    private final HashMap<String, ArrayList<String>> parseUrlMap = new HashMap<>();
+    protected final HashMap<String, ArrayList<String>> parseUrlMap = new HashMap<>();
 
     private void genPlayList(String URL, JSONObject object, String json, JSONObject vod, String vid) throws JSONException {
         ArrayList<String> playUrls = new ArrayList<>();
@@ -837,11 +846,11 @@ public class AppYsV2 extends Spider {
                     }
                 }
                 playFlags.add(flag);
-                playUrls.add(StringUtil.join("#", urls));
+                playUrls.add(TextUtils.join("#", urls));
             }
         }
-        vod.put("vod_play_from", StringUtil.join("$$$", playFlags));
-        vod.put("vod_play_url", StringUtil.join("$$$", playUrls));
+        vod.put("vod_play_from", TextUtils.join("$$$", playFlags));
+        vod.put("vod_play_url", TextUtils.join("$$$", playUrls));
     }
 
     // ######视频地址
@@ -852,6 +861,17 @@ public class AppYsV2 extends Spider {
                 continue;
             String playUrl = parseUrl + url;
             String content = desc(OkHttpUtil.string(playUrl, null), (byte) 4);
+            if (parseUrl.contains("49.233.47.42:9898")) {
+
+                HashMap hashMap = new HashMap();
+                OkHttpUtil.stringNoRedirect(playUrl,null, hashMap);
+                String d = OkHttpUtil.getRedirectLocation(hashMap);
+                JSONObject result = new JSONObject();
+                result.put("parse", 0);
+                result.put("playUrl", "");
+                result.put("url", d);
+                return result;
+            }
             JSONObject tryJson = null;
             try {
                 tryJson = Misc.jsonParse(url, content);

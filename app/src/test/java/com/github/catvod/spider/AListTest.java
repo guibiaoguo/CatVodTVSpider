@@ -8,6 +8,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -42,7 +43,7 @@ public class AListTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(alist.detailContent(List.of("小雅/动漫/A-Z/A/爱吃拉面的小泉同学/Season 01/[UHA-WINGS][Ramen Daisuki Koizumi-san] S01E01[x264_1080p][BIG5].mp4")));
+        System.out.println(alist.detailContent(Arrays.asList("小雅/动漫/A-Z/A/爱吃拉面的小泉同学/Season 01/[UHA-WINGS][Ramen Daisuki Koizumi-san] S01E01[x264_1080p][BIG5].mp4")));
     }
 
     @Test

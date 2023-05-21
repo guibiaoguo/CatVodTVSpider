@@ -1,7 +1,5 @@
 package com.github.catvod.bean;
 
-import androidx.annotation.NonNull;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
@@ -164,7 +162,6 @@ public class Result {
         return toString();
     }
 
-    @NonNull
     @Override
     public String toString() {
         return new GsonBuilder().disableHtmlEscaping().create().toJson(this);

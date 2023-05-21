@@ -2,7 +2,6 @@ package com.guibiaoguo.myapplication;
 
 import android.content.Context;
 
-import com.github.catvod.parser.AnalyzeByFunction;
 import com.github.catvod.parser.AnalyzeRule;
 import com.github.catvod.parser.RuleData;
 import com.github.catvod.parser.AnalyzeByJSonPath;
@@ -1806,8 +1805,6 @@ public class CatTest {
         Math.subtractExact(5, 2);
         Math.multiplyExact(5, 2);
         System.out.println(method.invoke(Math.class, 2, 5));
-        AnalyzeByFunction analyzeByFunction = new AnalyzeByFunction(2);
-        System.out.println(analyzeByFunction.getString("math#subtractExact#1&&math#multiplyExact#30"));
         AnalyzeRule analyzeRule = new AnalyzeRule(new RuleData());
         analyzeRule.setContent(2);
         analyzeRule.getString("@put:{cateId:'@constant:23423','catePg':'@constant:2',count:'@constant:50'}");

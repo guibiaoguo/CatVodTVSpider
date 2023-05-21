@@ -6,6 +6,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -30,7 +31,7 @@ public class LiteApple1Test {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(liteapple.detailContent(List.of("119039")));
+        System.out.println(liteapple.detailContent(Arrays.asList("119039")));
     }
 
     @Test

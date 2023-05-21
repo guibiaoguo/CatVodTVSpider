@@ -125,20 +125,20 @@ public class Alist3 extends Spider {
                     try {
                         JSONObject retval = new JSONObject(response);
                         JSONObject files = retval.getJSONObject("data");
-                        JSONObject o = files;
-                        String url = o.getString("raw_url");
-                        if(url.indexOf("//") == 0){
-                            url = "http:"+url;
-                        }
+                            JSONObject o = files;
+                            String url = o.getString("raw_url");
+                            if(url.indexOf("//") == 0){
+                                url = "http:"+url;
+                            }
 
-                        JSONObject jSONObject2 = new JSONObject();
-                        jSONObject2.put("vod_id", tid + "/" + o.getString("name"));
-                        jSONObject2.put("vod_name", o.getString("name"));
-                        jSONObject2.put("vod_pic", "");
-                        jSONObject2.put("vod_tag",o.getInt("type") == 1 ? "folder" : "file" );
-                        jSONObject2.put("vod_play_from", "播放");
-                        jSONObject2.put("vod_play_url", o.getString("name")+"$"+url);
-                        list.put(jSONObject2);
+                            JSONObject jSONObject2 = new JSONObject();
+                            jSONObject2.put("vod_id", tid + "/" + o.getString("name"));
+                            jSONObject2.put("vod_name", o.getString("name"));
+                            jSONObject2.put("vod_pic", "");
+                            jSONObject2.put("vod_tag",o.getInt("type") == 1 ? "folder" : "file" );
+                            jSONObject2.put("vod_play_from", "播放");
+                            jSONObject2.put("vod_play_url", o.getString("name")+"$"+url);
+                            list.put(jSONObject2);
 
                     }catch (Exception e){
                         e.printStackTrace();

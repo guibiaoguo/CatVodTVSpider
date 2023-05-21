@@ -1,12 +1,37 @@
 package com.guibiaoguo.myapplication;
 
 import android.text.TextUtils;
+import android.util.Log;
+
+import com.github.catvod.bean.Result;
+import com.github.catvod.bean.Vod;
+import com.github.catvod.legado.LegadoData;
+import com.github.catvod.parser.AnalyzeRule;
+import com.github.catvod.parser.AnalyzeUrl;
+import com.github.catvod.utils.okhttp.OKCallBack;
+import com.google.gson.GsonBuilder;
+import com.github.catvod.script.Bindings;
+import com.github.catvod.script.ScriptEngine;
+import com.github.catvod.script.SimpleBindings;
+import com.github.catvod.script.rhino.RhinoScriptEngine;
 
 import org.junit.Test;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.StringReader;
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import okhttp3.Call;
+
 
 public class JadiText {
 
@@ -96,4 +121,120 @@ public class JadiText {
         }
     }
 
+    /**
+     *
+     * @return
+     */
+    @Test
+    public void  jsObjFunc() throws IOException {
+
+        Context cx = Context.enter();
+        try {
+            Scriptable scope = cx.initStandardObjects();
+            String str = "3/(1+2)";
+            Object result = cx.evaluateString(scope, str, "javax.script.filename", 1, null);
+            Object result_reader = cx.evaluateReader(scope,new StringReader(str),"javax.script.filename",1, null);
+            System.out.println(str + "=" + Context.toNumber(result));
+        } finally {
+            Context.exit();
+        }
+    }
+
+    @Test
+    public void test_script() throws Exception {
+        Bindings bindings = new SimpleBindings();
+        ScriptEngine scriptEngine = new RhinoScriptEngine(bindings);
+        String jsstr = "baseUrl + '111' + source + legado.name";
+        LegadoData legadoData = new LegadoData();
+        legadoData.name = "test";
+        bindings.put("legado", legadoData);
+        bindings.put("baseUrl","https://www.baidu.com");
+        bindings.put("source","www.google.com");
+        Object result = scriptEngine.eval(jsstr, bindings);
+        System.out.println(result);
+    }
+
+
+    private Class clazz;
+    private org.mozilla.javascript.Context rhino;
+    private Scriptable scope;
+
+    private String jsCode = "";
+    private String testCode =
+            "var method_Api_rhino_test = ScriptAPI.getMethod(\"test\",[java.lang.String])\n" +
+                    "function rhino_test() {\n" +
+                    "    var str = \"jzy666\";\n" +
+                    "    method_Api_rhino_test.invoke(javaContext,str);\n" +
+                    "}" +
+                    "rhino_test()";
+
+    private void initJsEngine(){
+        jsCode = "var ScriptAPI = java.lang.Class.forName(\"" + LegadoData.class.getName() + "\", true, javaLoader);\n"
+                + testCode;
+    }
+
+    public void request(){
+        rhino = org.mozilla.javascript.Context.enter();
+        rhino.setOptimizationLevel(-1);
+        try{
+            scope = rhino.initStandardObjects();
+            // 这两句是设置当前的类做为上下文以及获取当前的类加载器，以便于 rhino 通过反射获取档期类
+            ScriptableObject.putProperty(scope,"javaContext", org.mozilla.javascript.Context.javaToJS(LegadoData.class,scope));
+            ScriptableObject.putProperty(scope,"javaLoader", org.mozilla.javascript.Context.javaToJS(clazz.getClassLoader(),scope));
+            //执行 js 代码
+            Object x = rhino.evaluateString(scope, jsCode, clazz.getSimpleName(), 1, null);
+        }finally {
+            //退出
+            org.mozilla.javascript.Context.exit();
+        }
+    }
+    // 对应类中需要需要被调用的方法，可以做为 JS 代码执行时的回调
+    public void rhino_test(String str){
+        Log.i("jzy111","rhino_test: " + str);
+    }
+
+    @Test
+    public void test_Object() {
+        clazz = LegadoData.class;
+        initJsEngine();
+        request();
+    }
+
+    @Test
+    public void getResponse() {
+        Map<String, Object> data = new HashMap<>();
+        data.put("charset","utf-8");
+        data.put("method","POST");
+        data.put("body","keyword={{key}}&kwtype=0");
+        String body = new GsonBuilder().disableHtmlEscaping().create().toJson(data);
+        AnalyzeUrl analyzeUrl = new AnalyzeUrl("https://m.huangdizhijia.com/index.php?action=search," + body,"我的",1,"https://m.huangdingzhijia.com");
+        analyzeUrl.getRespone(new OKCallBack.OKCallBackString() {
+            @Override
+            protected void onFailure(Call call, Exception e) {
+                System.out.println(e);
+            }
+
+            @Override
+            protected void onResponse(String response) {
+                System.out.println(response);
+                AnalyzeRule analyzeRule = new AnalyzeRule();
+                analyzeRule.setContent(response, analyzeUrl.getBaseUrl());
+                List<Vod> list = new ArrayList<>();
+                for (Object element : analyzeRule.getElements("class.search-bookele")) {
+                    String name = analyzeRule.getString("tag.h3@text", element,false);
+                    String img = analyzeRule.getString("tag.img@src", element, false);
+                    String author = analyzeRule.getString("tag.p.0@text", element,false);
+                    String type = analyzeRule.getString("tag.p.1@text",element,false);
+                    String url = analyzeRule.getString("tag.a@href##.*id=(\\d+)##https://www.huangdizhijia.com/novel/$1",element,false);
+                    list.add(new Vod(url,name,img,type));
+                }
+                System.out.println(Result.string(list));
+            }
+        });
+    }
+
+    @Test
+    public void test_java() {
+
+    }
 }

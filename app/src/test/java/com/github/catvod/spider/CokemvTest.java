@@ -8,6 +8,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -46,7 +47,7 @@ public class CokemvTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(cokemv.detailContent(List.of("5042")));
+        System.out.println(cokemv.detailContent(Arrays.asList("5042")));
     }
 
     @Test

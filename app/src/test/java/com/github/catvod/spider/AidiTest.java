@@ -8,6 +8,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class AidiTest {
@@ -44,7 +45,7 @@ public class AidiTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(aidi.detailContent(List.of("3156")));
+        System.out.println(aidi.detailContent(Arrays.asList("3156")));
     }
 
     @Test

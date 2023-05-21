@@ -11,4 +11,9 @@ public final class Log {
         System.out.println(msg);
         return 0;
     }
+
+    public static int i(String tag, String msg) {
+        System.out.println(msg);
+        return 0;
+    }
 }

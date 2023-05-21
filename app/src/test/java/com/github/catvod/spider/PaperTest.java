@@ -16,6 +16,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -130,6 +131,6 @@ public class PaperTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(paper.detailContent(List.of("https://www.aliyundrive.com/s/GF9muMqpc16")));
+        System.out.println(paper.detailContent(Arrays.asList("https://www.aliyundrive.com/s/GF9muMqpc16")));
     }
 }

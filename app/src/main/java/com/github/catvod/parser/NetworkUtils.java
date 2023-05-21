@@ -11,13 +11,43 @@ import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class NetworkUtils {
     private static final Pattern IPV4_PATTERN;
     
     public static final NetworkUtils INSTANCE;
+
+    static List notNeedEncoding = Arrays.asList("0123456789abcdefghijlmnopqrstuvwxzABCDEFGHIJLMNOPQRSTUVWXZ+-_.$:()!*@&#,[]".toCharArray());
+
+    public static boolean hasUrlEncode(String str) {
+        Boolean needEncode = false;
+        int i = 0;
+        while (i < str.length()) {
+            char c = str.charAt(i);
+             if (notNeedEncoding.contains(c)) {
+                i++;
+                continue;
+            }
+            if (c == '%' && i + 2 < str.length()) {
+                // 判断是否符合urlEncode规范
+                char c1 = str.charAt(++i);
+                char c2 = str.charAt(++i);
+                if (isDigit16Char(c1) && isDigit16Char(c2)) {
+                    i++;
+                    continue;
+                }
+            }
+            // 其他字符，肯定需要urlEncode
+            needEncode = true;
+            break;
+        }
+
+        return !needEncode;
+    }
 
     public final boolean isAvailable() {
         if (VERSION.SDK_INT < 23) {
@@ -27,7 +57,7 @@ public class NetworkUtils {
         return false;
     }
     
-    private final boolean isDigit16Char(char c) {
+    private static boolean isDigit16Char(char c) {
         boolean var10000;
         label36: {
             if ('0' <= c) {

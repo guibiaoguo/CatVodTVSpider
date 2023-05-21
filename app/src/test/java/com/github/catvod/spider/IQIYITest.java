@@ -8,6 +8,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -51,7 +52,7 @@ public class IQIYITest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(iqiyi.detailContent(List.of("/albums/album/avlistinfo?aid=5328486914190101&size=5000&page=1&url=http://www.iqiyi.com/a_1fkgtbddd2x.html")));
+        System.out.println(iqiyi.detailContent(Arrays.asList("/albums/album/avlistinfo?aid=5328486914190101&size=5000&page=1&url=http://www.iqiyi.com/a_1fkgtbddd2x.html")));
     }
 
     @Test

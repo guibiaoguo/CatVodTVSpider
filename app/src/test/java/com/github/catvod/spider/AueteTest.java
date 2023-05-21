@@ -8,6 +8,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -46,7 +47,7 @@ public class AueteTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(auete.detailContent(List.of("Tv/tvbgj/shuihuwujiandao")));
+        System.out.println(auete.detailContent(Arrays.asList("Tv/tvbgj/shuihuwujiandao")));
     }
 
     @Test

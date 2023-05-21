@@ -2,6 +2,7 @@ package com.github.catvod.parser;
 
 import android.text.TextUtils;
 
+import com.github.catvod.script.IFunction;
 import com.github.catvod.utils.StringUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -16,7 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AnalyzeByJSonPath {
+public class AnalyzeByJSonPath implements IFunction {
 
     private ReadContext ctx;
 
@@ -200,6 +201,11 @@ public class AnalyzeByJSonPath {
             }
         }
         return result;
+    }
+
+    @Override
+    public String getInnerRule(String rule) {
+        return getString(rule);
     }
 }
 
