@@ -1,5 +1,7 @@
 package com.github.catvod.utils.okhttp;
 
+import com.github.catvod.parser.NetworkUtils;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
@@ -74,7 +76,10 @@ class OKRequest {
         FormBody.Builder formBody = new FormBody.Builder();
         if (mParamsMap != null) {
             for (String key : mParamsMap.keySet()) {
-                formBody.add(key, mParamsMap.get(key));
+                if (NetworkUtils.hasUrlEncode(mParamsMap.get(key)))
+                    formBody.addEncoded(key, mParamsMap.get(key));
+                else
+                    formBody.add(key, mParamsMap.get(key));
             }
         }
         return formBody.build();

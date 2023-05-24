@@ -2,14 +2,19 @@ package com.github.catvod.script;
 
 import static org.junit.Assert.*;
 
+import com.github.catvod.crawler.SpiderDebug;
+import com.github.catvod.parser.AnalyzeRule;
+import com.github.catvod.parser.AnalyzeUrl;
+import com.github.catvod.parser.StrResponse;
 import com.github.catvod.utils.Base64;
 import com.google.gson.GsonBuilder;
 
 import org.junit.Test;
+import org.mozilla.javascript.Scriptable;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.StringReader;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -33,9 +38,7 @@ import cn.hutool.crypto.asymmetric.KeyType;
 import cn.hutool.crypto.asymmetric.RSA;
 import cn.hutool.crypto.asymmetric.Sign;
 import cn.hutool.crypto.asymmetric.SignAlgorithm;
-import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
 import cn.hutool.crypto.symmetric.SymmetricCrypto;
-import okhttp3.Response;
 
 public class JsExtensionsTest {
 
@@ -293,15 +296,26 @@ public class JsExtensionsTest {
 
     @Test
     public void ajax() {
-        System.out.println(jsExtensions.ajax("https://www.huangdizhijia.com"));
+        System.out.println(jsExtensions.ajax("https://gitcafe.net/tool/alipaper/,{\"method\":\"POST\",\"body\":\"action=viewcat&num=1&cat=hyds\"}"));
     }
 
     @Test
-    public void get() throws IOException {
+    public void ajaxPost() {
+        Map<String, Object> data = new HashMap<>();
+        data.put("charset","utf-8");
+        data.put("method","POST");
+        data.put("body","keyword=我的&kwtype=0");
+        String body = new GsonBuilder().disableHtmlEscaping().create().toJson(data);
+        String url = "https://m.huangdizhijia.com/index.php?action=search," + body;
+        System.out.println(jsExtensions.ajax(url));
+    }
+
+    @Test
+    public void get(){
         Map<String, String> header = new HashMap<>();
         header.put("Content-Type","charset=utf-8");
-        Response response = jsExtensions.get("https://m.huangdizhijia.com", header);
-        System.out.println(new String(response.body().bytes(),"utf-8"));
+        StrResponse response = jsExtensions.get("https://m.huangdizhijia.com", header);
+        System.out.println(response.body());
     }
 
     @Test
@@ -313,8 +327,8 @@ public class JsExtensionsTest {
     public void post() throws IOException {
         Map<String, String> header = new HashMap<>();
         header.put("Content-Type","charset=utf-8");
-        Response response = jsExtensions.post("https://m.huangdizhijia.com/index.php?action=search", "keyword=我的", header);
-        System.out.println(new String(response.body().bytes(),"utf-8"));
+        StrResponse response = jsExtensions.post("https://m.huangdizhijia.com/index.php?action=search", "keyword=我的", header);
+        System.out.println(response.body());
     }
 
     @Test
@@ -430,5 +444,103 @@ public class JsExtensionsTest {
     @Test
     public void randomUUID() {
         System.out.println(jsExtensions.randomUUID());
+    }
+
+    @Test
+    public void test_js() {
+        AnalyzeRule analyzeRule = new AnalyzeRule();
+        analyzeRule.setContent("");
+        analyzeRule.put("detailId", "https://www.aliyundrive.com/s/aHCAJFSRyua");
+        System.out.println(analyzeRule.getString("@js:code=java.get('detailId');m=code.match(\"https://www.aliyundrive.com/s/([^/]+)(/folder/([^/]+))?\");if(m){result=m[1];java.put('fileId',m[3]!=undefined?m[3]:'');};result"));
+        System.out.println(analyzeRule.get("fileId"));
+        analyzeRule.getElements("@js:'原画,超清,高清'.split(',')");
+        String accessToken = analyzeRule.getString("@js:token=String(java.ajax('https://www.qiaoji8.com/jar1/token.txt'));java.log(token);token='9ed3f99efcbe40e89b13d307f915cb63';post={'body':{'refresh_token':token,'grant_type':'refresh_token'},'method':'POST','headers':{'referer':'https://www.aliyundrive.com/'}};content=java.ajax('https://auth.aliyundrive.com/v2/account/token,'+JSON.stringify(post));accessToken=JSON.parse(content).access_token");
+        System.out.println(analyzeRule.getString("@js:java.ajax('https://api.aliyundrive.com/token/refresh,'+JSON.stringify({'method':'post','body':{'client_id':'0','refresh_token':'9ed3f99efcbe40e89b13d307f915cb63'}}))"));
+        System.out.println("******");
+        System.out.println(analyzeRule.getString("@js:java.ajax('https://www.aliyundrive.com/oauth/access_token,'+JSON.stringify({'method':'post','body':{'client_id':'0','refresh_token':'9ed3f99efcbe40e89b13d307f915cb63','grant_type':'refresh_token'}}))"));
+        System.out.println("*****");
+        System.out.println(accessToken);
+    }
+
+    @Test
+    public void test_json() {
+        org.mozilla.javascript.Context cx = org.mozilla.javascript.Context.enter();
+        try {
+            cx.setOptimizationLevel(-1);
+            Scriptable scope = cx.initStandardObjects();
+            String str = "result='https://gitcafe.net/tool/alipaper/,'+JSON.stringify({'a':'2'})";
+            Object result = cx.evaluateString(scope, str, "javax.script.filename", 1, null);
+            Object result_reader = cx.evaluateReader(scope,new StringReader(str),"javax.script.filename",1, null);
+            System.out.println(str + "=" + result);
+        } catch (Exception e) {
+            SpiderDebug.log(e);
+        }finally {
+            org.mozilla.javascript.Context.exit();
+        }
+    }
+
+    @Test
+    public void test_analyzeurl() {
+        AnalyzeUrl analyzeUrl = new AnalyzeUrl("https://www.mbtxt.la/modules/article/search1.php,{\"body\":\"searchtype=articlename&searchkey=我的\",\"method\":\"POST\",\"charset\":\"gbk\"}");
+        System.out.println(analyzeUrl.getResponse());
+        analyzeUrl = analyzeUrl = new AnalyzeUrl("https://m.huangdizhijia.com/index.php?action=search,{\"body\":\"searchtype=articlename&searchkey=我的\",\"method\":\"POST\"}");
+        System.out.println(analyzeUrl.getResponse());
+    }
+
+    @Test
+    public void test_analyzeur2() throws IOException {
+        System.out.println(jsExtensions.get("https://www.mbtxt.la/go/117589/",null,"gbk").body());
+    }
+
+    @Test
+    public void test_analyzeRule1() {
+        AnalyzeRule analyzeRule = new AnalyzeRule();
+        analyzeRule.setContent("");
+        System.out.println(analyzeRule.getString("@js:java.ajax('https://www.mbtxt.la/modules/article/search1.php,{\"body\":\"searchtype=articlename&searchkey=我的\",\"method\":\"POST\",\"charset\":\"gbk\"}');"));
+    }
+
+    @Test
+    public void test_analyzeRule2() {
+        AnalyzeRule analyzeRule = new AnalyzeRule();
+        analyzeRule.setContent("");
+        System.out.println(analyzeRule.getString("@js:result=java.post('https://www.mbtxt.la/modules/article/search1.php',\"searchtype=articlename&searchkey=我的\",{},'gbk').body();"));
+    }
+
+    @Test
+    public void test_post1() {
+        System.out.println(jsExtensions.post("https://www.mbtxt.la/modules/article/search1.php","searchtype=articlename&searchkey=我的",new HashMap<>(),"gbk").body());
+    }
+
+    @Test
+    public void test_analyzeRule3() {
+        AnalyzeRule analyzeRule = new AnalyzeRule();
+        analyzeRule.setContent("");
+        analyzeRule.put("detailId", "https://www.aliyundrive.com/s/Lvt6XJobogm/folder/637a2afe82dedfde45d5400fb46f47f33ff5b438");
+        String url = analyzeRule.getString("@js:code=java.get('detailId');m=code.match('https://www.aliyundrive.com/s/([^/]+)(/folder/([^/]+))?');if(m){shareId=m[1];java.put('shareId',shareId);java.put('fileId',m[3]!=undefined?m[3]:'');};'https://api.aliyundrive.com/adrive/v3/share_link/get_share_by_anonymous,'+JSON.stringify({'method':'POST','header':{'Referer':'https://www.aliyundrive.com/'},'body':{'share_id':shareId}})");
+        AnalyzeUrl analyzeUrl = new AnalyzeUrl(url);
+        System.out.println(analyzeUrl.getResponse());
+    }
+
+    @Test
+    public void writeFile() {
+        AnalyzeRule analyzeRule = new AnalyzeRule();
+        analyzeRule.setContent("");
+        String accessToken = analyzeRule.getString("@js:token=String(java.ajax('https://www.qiaoji8.com/jar1/token.txt'));java.log(token);token='9ed3f99efcbe40e89b13d307f915cb63';post={'body':{'refresh_token':token,'grant_type':'refresh_token'},'method':'POST','headers':{'referer':'https://www.aliyundrive.com/'}};content=java.ajax('https://auth.aliyundrive.com/v2/account/token,'+JSON.stringify(post));path=java.writeFile('ali-token.json',content);java.log(path);accessToken=JSON.parse(content).access_token");
+        System.out.println(accessToken);
+    }
+
+    @Test
+    public void readFile() {
+//        System.out.println(jsExtensions.readFile("ali-token.json"));
+        AnalyzeRule analyzeRule = new AnalyzeRule();
+        analyzeRule.setContent("");
+//        System.out.println(analyzeRule.getString("@js:content=java.readFile('ali-token.json');java.log(content);token=JSON.parse(content).refresh_token;"));
+        String accessToken = analyzeRule.getString("@js:content=java.readFile('ali-token.json');java.log(content);token=JSON.parse(content).refresh_token;post={'body':{'refresh_token':token,'grant_type':'refresh_token'},'method':'POST','headers':{'referer':'https://www.aliyundrive.com/'}};content=java.ajax('https://auth.aliyundrive.com/v2/account/token,'+JSON.stringify(post));path=java.writeFile('ali-token.json',content);java.log(path);accessToken=JSON.parse(content).access_token");
+        System.out.println(accessToken);
+    }
+
+    @Test
+    public void ls() {
+        jsExtensions.ls(".");
     }
 }

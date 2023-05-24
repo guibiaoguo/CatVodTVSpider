@@ -52,6 +52,8 @@ public class MainActivity extends Activity {
                 Object result = scriptEngine.eval(jsstr, bindings);
                 System.out.println(result);
                 Init.init(MainActivity.this.getApplicationContext());
+                System.out.println(Init.context().getCacheDir().getAbsolutePath());
+                System.out.println(Init.context().getFilesDir().getAbsolutePath());
                 Spider qq = new QQ();
                 qq.init(null);
 //                qq.init(MainActivity.this.getApplicationContext(), "43073a876e9f4d6c906f1d7df92af59a");

@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 public interface RuleDataInterface {
 
-    HashMap<String, String> getVariableMap();
-    void putVariable(String key, String value);
-    String getVariable(String key);
+    HashMap<String, Object> getVariableMap();
+    void putVariable(String key, Object Object);
+    Object getVariable(String key);
 }

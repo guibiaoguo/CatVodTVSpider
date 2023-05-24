@@ -3,16 +3,18 @@ package com.github.catvod.script;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.parser.AnalyzeUrl;
 import com.github.catvod.parser.RequestMethod;
+import com.github.catvod.parser.StrResponse;
+import com.github.catvod.spider.Init;
 import com.github.catvod.utils.Base64;
-import com.github.catvod.utils.Misc;
+import com.github.catvod.utils.Utils;
 import com.google.gson.GsonBuilder;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.File;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -21,15 +23,16 @@ import java.util.Map;
 import java.util.SimpleTimeZone;
 import java.util.UUID;
 
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.HexUtil;
-import cn.hutool.crypto.asymmetric.AsymmetricAlgorithm;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.asymmetric.AsymmetricCrypto;
 import cn.hutool.crypto.asymmetric.Sign;
 import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.crypto.symmetric.SymmetricCrypto;
 import cn.hutool.crypto.digest.HMac;
 import okhttp3.Headers;
-import okhttp3.Response;
 
 public abstract class JsExtensions implements JsEncodeUtils {
 
@@ -221,22 +224,25 @@ public abstract class JsExtensions implements JsEncodeUtils {
         if (url instanceof List) {
             urlStr = ((List<?>) url).get(0).toString();
         }
-        AnalyzeUrl analyzeUrl = new AnalyzeUrl(urlStr,"",1,"");
+        AnalyzeUrl analyzeUrl = new AnalyzeUrl(urlStr);
         return analyzeUrl.getResponse();
     }
 
     /**
      * js实现重定向拦截,网络访问get
      */
-    public Response get(Object url, Map<String, String> headers) {
+    public StrResponse get(Object url, Map<String, String> headers, String charset) {
         String urlStr = url.toString();
         if (url instanceof List) {
             urlStr = ((List<?>) url).get(0).toString();
         }
-        AnalyzeUrl analyzeUrl = new AnalyzeUrl(RequestMethod.GET, urlStr, headers);
+        AnalyzeUrl analyzeUrl = new AnalyzeUrl(RequestMethod.GET, urlStr, headers, charset);
         return analyzeUrl.response();
     }
 
+    public StrResponse get(Object url, Map<String, String> headers) {
+        return get(url,headers, "utf-8");
+    }
     /**
      * js实现重定向拦截,网络访问get
      */
@@ -245,20 +251,24 @@ public abstract class JsExtensions implements JsEncodeUtils {
         if (url instanceof List) {
             urlStr = ((List<?>) url).get(0).toString();
         }
-        AnalyzeUrl analyzeUrl = new AnalyzeUrl(RequestMethod.GET, urlStr, headers);
+        AnalyzeUrl analyzeUrl = new AnalyzeUrl(RequestMethod.GET, urlStr, headers, "utf-8");
         return analyzeUrl.head();
     }
 
     /**
      * js实现重定向拦截,网络访问get
      */
-    public Response post(Object url, String body, Map<String, String> headers) {
+    public StrResponse post(Object url, String body, Map<String, String> headers, String charset) {
         String urlStr = url.toString();
         if (url instanceof List) {
             urlStr = ((List<?>) url).get(0).toString();
         }
-        AnalyzeUrl analyzeUrl = new AnalyzeUrl(RequestMethod.POST, urlStr, body, headers);
+        AnalyzeUrl analyzeUrl = new AnalyzeUrl(RequestMethod.POST, urlStr, body, headers, charset);
         return analyzeUrl.response();
+    }
+
+    public StrResponse post(Object url, String body, Map<String, String> headers) {
+        return post(url,body,headers,"utf-8");
     }
 
     public byte[] strToBytes(String str)  {
@@ -413,7 +423,7 @@ public abstract class JsExtensions implements JsEncodeUtils {
     }
 
     public Object log(Object msg) {
-        SpiderDebug.log(new GsonBuilder().disableHtmlEscaping().create().toJson(msg));
+        SpiderDebug.log(new GsonBuilder().setPrettyPrinting().setLenient().disableHtmlEscaping().create().toJson(msg));
         return msg;
     }
 
@@ -424,4 +434,53 @@ public abstract class JsExtensions implements JsEncodeUtils {
         return UUID.randomUUID().toString();
     }
 
+    //****************文件操作******************//
+
+    /***
+     * 写入文件
+     * @param path 文件路径
+     * @param content 文件内容
+     * @return 返回文件路径
+     */
+    public String writeFile(String path, String content) {
+        String parent = "";
+        try {
+            System.out.println(Init.context().getExternalFilesDir("/").getAbsolutePath());
+            parent = Init.context().getExternalFilesDir("/").getAbsolutePath();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        if (!StrUtil.endWith(path,"/")) {
+            path = "/" + path;
+        }
+        File file = FileUtil.writeString(content, parent + path,"utf-8");
+        return file.getPath();
+    }
+
+    public String readFile(String path) {
+        String parent = "";
+        try {
+            System.out.println(Init.context().getExternalFilesDir("/").getAbsolutePath());
+            parent = Init.context().getExternalFilesDir("/").getAbsolutePath();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        return FileUtil.readString(parent + path, CharsetUtil.charset("utf-8"));
+    }
+
+    public void ls(String path) {
+        System.out.println(Init.context().getCacheDir());
+        System.out.println(Init.context().getFilesDir());
+        System.out.println(Init.context().getExternalFilesDir(""));
+        System.out.println(Init.context().getFilesDir());
+//        System.out.println(Init.context().getDataDir().getAbsolutePath());
+    }
+
+    public String getSize(String size) {
+        if (StrUtil.isEmpty(size)) {
+            return "";
+        } else {
+            return Utils.getSize(Double.parseDouble(size));
+        }
+    }
 }

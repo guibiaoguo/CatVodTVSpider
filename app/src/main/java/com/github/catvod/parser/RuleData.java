@@ -6,15 +6,15 @@ import java.util.HashMap;
 
 public class RuleData implements RuleDataInterface {
 
-    private HashMap<String,String> variableMap = new HashMap<>();
+    private HashMap<String,Object> variableMap = new HashMap<>();
 
     @Override
-    public HashMap<String, String> getVariableMap() {
+    public HashMap<String, Object> getVariableMap() {
         return variableMap;
     }
 
     @Override
-    public void putVariable( String key, String value) {
+    public void putVariable( String key, Object value) {
         if (value != null) {
             variableMap.put(key,value);
         } else {
@@ -23,12 +23,12 @@ public class RuleData implements RuleDataInterface {
     }
 
     @Override
-    public String getVariable(String key) {
-        String value = "";
+    public Object getVariable(String key) {
+        Object value = "";
         if(key != null) {
             value = variableMap.get(key);
         }
-        if (StringUtils.isEmpty(value)) {
+        if (value == null || StringUtils.isEmpty(value.toString())) {
             return "";
         }
         return value;

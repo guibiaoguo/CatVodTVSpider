@@ -5,7 +5,9 @@ import android.text.TextUtils;
 import com.github.catvod.script.IFunction;
 import com.github.catvod.utils.StringUtil;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonPrimitive;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
@@ -30,11 +32,17 @@ public class AnalyzeByJSonPath implements IFunction {
         if (json instanceof ReadContext) {
             ctx = (ReadContext) json;
         } else if (json instanceof String) {
-            ctx = JsonPath.using(Configuration.builder().jsonProvider(new GsonJsonProvider()).build()).parse(json.toString());
+            try {
+                ctx = JsonPath.using(Configuration.builder().jsonProvider(new GsonJsonProvider()).build()).parse(json.toString());
+            } catch (Exception e) {
+                String jsonStr = new GsonBuilder().setLenient().disableHtmlEscaping().create().toJson(json);
+                ctx = JsonPath.using(Configuration.builder().jsonProvider(new GsonJsonProvider()).build()).parse(jsonStr);
+            }
         } else if (json instanceof List) {
             ctx = JsonPath.using(Configuration.builder().jsonProvider(new GsonJsonProvider()).build()).parse(StringUtil.join("\n",((ArrayList)json)));
         } else {
-            ctx = JsonPath.using(Configuration.builder().jsonProvider(new GsonJsonProvider()).build()).parse(json);
+            String jsonStr = new GsonBuilder().disableHtmlEscaping().create().toJson(json);
+            ctx = JsonPath.using(Configuration.builder().jsonProvider(new GsonJsonProvider()).build()).parse(jsonStr);
         }
         return ctx;
     }
@@ -61,6 +69,8 @@ public class AnalyzeByJSonPath implements IFunction {
                         Object obj = this.ctx.read(rule);
                         if(obj instanceof JsonArray) {
                             result = TextUtils.join("\n", (JsonArray)obj);
+                        } else if (obj instanceof JsonPrimitive){
+                            result = ((JsonPrimitive) obj).getAsString();
                         } else {
                             result = obj.toString();
                         }
@@ -104,6 +114,8 @@ public class AnalyzeByJSonPath implements IFunction {
                     Object obj = this.ctx.read(rule);
                     if (obj instanceof JsonArray) {
                         result.addAll(new Gson().fromJson(obj.toString(), List.class));
+                    } else if (obj instanceof JsonPrimitive){
+                        result.add(((JsonPrimitive) obj).getAsString());
                     } else {
                         result.add(obj.toString());
                     }
@@ -164,6 +176,8 @@ public class AnalyzeByJSonPath implements IFunction {
                 Object obj = this.ctx.read(rules.get(0).toString());
                 if (obj instanceof JsonArray) {
                     result.addAll(new Gson().fromJson(obj.toString(), List.class));
+                } else if (obj instanceof JsonPrimitive){
+                    result.add(((JsonPrimitive) obj).getAsString());
                 } else {
                     result.add(obj.toString());
                 }

@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 
 
-public class LegadoRule {
+public class LegadoRule1 {
     /**
      * user-agent
      */
@@ -527,10 +527,10 @@ public class LegadoRule {
         return subtitle;
     }
 
-    public static LegadoRule fromJson(String json) {
+    public static LegadoRule1 fromJson(String json) {
         try {
             JSONObject jsonObj = new JSONObject(json.replaceAll(",\\s+//.*",",").replaceAll("^//.*","").replaceAll("[ ]+//.*",""));
-            LegadoRule rule = new LegadoRule();
+            LegadoRule1 rule = new LegadoRule1();
             rule.ua = jsonObj.optString("ua");
             rule.homeUrl = jsonObj.optString("homeUrl").trim();
             rule.cateNode = jsonObj.optString("cateNode").trim();

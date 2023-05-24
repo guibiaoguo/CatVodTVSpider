@@ -4,7 +4,7 @@ import android.util.Log;
 
 
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.spider.Legado;
+import com.github.catvod.spider.Legado1;
 import com.github.catvod.utils.StringUtil;
 import com.github.catvod.utils.okhttp.OKCallBack;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
@@ -52,7 +52,7 @@ public class HttpParser {
                 protected void onResponse(Response response) {
                     try {
                         Map<String, String> params = StringUtil.getParameter(sourceUrl, "proxy://");
-                        Object[] result = Legado.loadPic(params);
+                        Object[] result = Legado1.loadPic(params);
                         Response.Builder builder = new Response.Builder();
                         if (result != null) {
                             InputStream inputStream = (InputStream) result[2];

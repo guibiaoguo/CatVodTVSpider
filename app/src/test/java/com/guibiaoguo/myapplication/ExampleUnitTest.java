@@ -2,7 +2,7 @@ package com.guibiaoguo.myapplication;
 
 import com.github.catvod.bean.Filter;
 import com.github.catvod.crawler.Spider;
-import com.github.catvod.spider.Legado;
+import com.github.catvod.spider.Legado1;
 import com.github.catvod.spider.XPath;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -12,7 +12,6 @@ import org.json.JSONObject;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +25,7 @@ import java.util.Map;
 public class ExampleUnitTest {
 
     public void echo(String json) throws Exception {
-        Spider aidi = new Legado();
+        Spider aidi = new Legado1();
         aidi.init(null, json);
         String homeContent = aidi.homeContent(true);
         System.out.println(homeContent);

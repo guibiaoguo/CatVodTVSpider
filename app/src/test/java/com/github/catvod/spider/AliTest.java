@@ -118,18 +118,19 @@ public class AliTest {
         });
         Init.init(mMockContext);
         Proxy.port = 9997;
-        ali.init(mMockContext, "c59b4bfb90df4a06bb74625b9b603146");
+        ali.init(mMockContext, "9ed3f99efcbe40e89b13d307f915cb63");
     }
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(ali.detailContent(Arrays.asList("https://www.aliyundrive.com/s/QmzHZ6nL47M/folder/root")));
+//        System.out.println(ali.detailContent(Arrays.asList("https://www.aliyundrive.com/s/UAhNowcSsBR")));
+        System.out.println(ali.detailContent(Arrays.asList("https://www.aliyundrive.com/s/Lvt6XJobogm/folder/637a2afe82dedfde45d5400fb46f47f33ff5b438")));
     }
 
     @Test
     public void playerContent() throws Exception {
-        System.out.println(ali.detailContent(Arrays.asList("https://www.aliyundrive.com/s/QmzHZ6nL47M/folder/root")));
-        System.out.println(ali.playerContent("高清", "6401fb8432b23871d20d4f95ab6a176784612378", null));
+        System.out.println(ali.detailContent(Arrays.asList("https://www.aliyundrive.com/s/UAhNowcSsBR")));
+        System.out.println(ali.playerContent("原畫", "646734b8a921719397cb4486b0a97ab50a15af57", null));
     }
 
 }

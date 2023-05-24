@@ -1,25 +1,20 @@
 package com.github.catvod.spider;
 
-import static org.junit.Assert.*;
-
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.parser.AnalyzeByJSonPath;
+import com.github.catvod.parser.AnalyzeRule;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class QQTest {
 
@@ -124,5 +119,6 @@ public class QQTest {
 
     @Test
     public void testSearchContent() {
+        AnalyzeRule analyzeRule = new AnalyzeRule();
     }
 }

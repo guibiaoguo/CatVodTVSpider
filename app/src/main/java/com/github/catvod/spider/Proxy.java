@@ -4,7 +4,6 @@ import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.live.TxtSubscribe;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.Base64;
-import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import java.io.ByteArrayInputStream;
 import java.util.Map;
@@ -42,7 +41,7 @@ public class Proxy extends Spider {
             String what = params.get("do");
             switch (what) {
                 case "legado":
-                    return Legado.loadPic(params);
+                    return Legado1.loadPic(params);
                 case "live":
                     String type = params.get("type");
                     if (type.equals("txt")) {

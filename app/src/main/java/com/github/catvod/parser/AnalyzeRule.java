@@ -362,6 +362,9 @@ public class AnalyzeRule extends JsExtensions {
     }
 
     public List<Object> getElements(String ruleStr) {
+        if (StringUtils.isEmpty(ruleStr)) {
+            return new ArrayList<>();
+        }
         Object result = null;
         Object content = this.content;
         List<SourceRule> ruleList = splitSourceRule(ruleStr, true);
@@ -563,17 +566,21 @@ public class AnalyzeRule extends JsExtensions {
 
     }
 
-    private String put(String key, String value) {
+    public Object put(String key, Object value) {
         ruleData.putVariable(key, value);
         return value;
     }
 
-    private String get(String key) {
-        String value = ruleData.getVariable(key);
-        if(StringUtils.isEmpty(value) || value.equalsIgnoreCase("null")) {
+    public Object get(String key) {
+        Object value = ruleData.getVariable(key);
+        if(value == null || StringUtils.isEmpty(value.toString())) {
             return "";
         }
-        return ruleData.getVariable(key);
+        Object data = ruleData.getVariable(key);
+        if (data instanceof String) {
+            return data.toString();
+        }
+        return data;
     }
 
     class SourceRule {

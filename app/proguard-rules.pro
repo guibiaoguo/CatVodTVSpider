@@ -73,7 +73,7 @@
 ##JSOUP
 #-keep class org.jsoup.**{*;}
 #-keep class **.xpath.**{*;}
--dontwarn org.bouncycastle.jce.provider.BouncyCastleProvider
+#-dontwarn org.bouncycastle.jce.provider.BouncyCastleProvider
 
 # hutool-core hutool-crypto
 #-keep class cn.hutool.core.**{*;}

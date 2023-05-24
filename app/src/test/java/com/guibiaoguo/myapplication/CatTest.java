@@ -25,7 +25,7 @@ import com.github.catvod.spider.IQIYI;
 import com.github.catvod.spider.Imaple;
 import com.github.catvod.spider.Juhi;
 import com.github.catvod.spider.Jumi;
-import com.github.catvod.spider.Legado;
+import com.github.catvod.spider.Legado1;
 import com.github.catvod.spider.MGTV;
 import com.github.catvod.spider.Proxy;
 import com.github.catvod.spider.QQ;
@@ -41,7 +41,6 @@ import com.github.catvod.utils.okhttp.OkHttpUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -135,7 +134,7 @@ public class CatTest {
     @Test
     public void jsonpath() throws Exception {
         String ext = "https://mao.guibiaoguo.ml/jsonpath.json";
-        Spider spider = new Legado();
+        Spider spider = new Legado1();
         spider.init(null, ext);
         showFilter(spider, true);
     }
@@ -586,7 +585,7 @@ public class CatTest {
             if (!playurls.equals("")) {
                 String playurl = playurls.split("#")[0].split("\\$")[1];
                 System.out.println(playurl);
-                if (spider instanceof Legado || (!StringUtils.contains(playurl, ".m3u8") && !StringUtils.contains(playurl, "jiexi")))
+                if (spider instanceof Legado1 || (!StringUtils.contains(playurl, ".m3u8") && !StringUtils.contains(playurl, "jiexi")))
                     System.out.println(spider.playerContent(details.optJSONObject(0).optString("vod_play_from"), playurls.split("#")[0].split("\\$")[1], new ArrayList<>()));
 //                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[1].split("\\$")[1], new ArrayList<>()));
 //                System.out.println(spider.playerContent(details.getJSONObject(0).optString("vod_play_from"), playurls.split("#")[2].split("\\$")[1], new ArrayList<>()));
@@ -786,28 +785,28 @@ public class CatTest {
     }
     @Test
     public void bagedvd() throws Exception {
-        Spider spider = new Legado();
+        Spider spider = new Legado1();
         spider.init(null, "https://mao.guibiaoguo.ml/bagedvd.json");
         showFilter(spider, true);
     }
 
     @Test
     public void zqystv() throws Exception {
-        Spider spider = new Legado();
+        Spider spider = new Legado1();
         spider.init(null, "https://mao.guibiaoguo.ml/zqystv.json");
         showFilter(spider, true);
     }
 
     @Test
     public void m896050() throws Exception {
-        Spider spider = new Legado();
+        Spider spider = new Legado1();
         spider.init(null, "https://mao.guibiaoguo.ml/896050.json");
         showFilter(spider, true);
     }
 
     @Test
     public void goindx1() throws Exception {
-        Spider spider = new Legado();
+        Spider spider = new Legado1();
         spider.init(null, "https://mao.guibiaoguo.ml/jsonpath.json");
         String category = spider.homeContent(true);
         System.out.println(category);
@@ -1032,7 +1031,7 @@ public class CatTest {
 
     @Test
     public void hsck1() throws Exception {
-        Spider spider = new Legado();
+        Spider spider = new Legado1();
         spider.init(null, "https://mao.guibiaoguo.ml/hsck1.json");
         String category = spider.homeContent(false);
         System.out.println(category);
@@ -1062,7 +1061,7 @@ public class CatTest {
 
     @Test
     public void hsck2() throws Exception {
-        Spider spider = new Legado();
+        Spider spider = new Legado1();
         spider.init(null, "https://mao.guibiaoguo.ml/hsck2.json");
         String category = spider.homeContent(false);
         System.out.println(category);
@@ -1088,7 +1087,7 @@ public class CatTest {
 
     @Test
     public void alipanso() throws Exception {
-        Spider spider = new Legado();
+        Spider spider = new Legado1();
         spider.init(null, "https://mao.guibiaoguo.ml/alipanso.json");
         String category = "";
         category = spider.homeContent(true);
@@ -1111,7 +1110,7 @@ public class CatTest {
 
     @Test
     public void affhs_legado() throws Exception {
-        Spider spider = new Legado();
+        Spider spider = new Legado1();
         spider.init(null, "http://mao.guibiaoguo.ml/ahhfs.json");
         String category = "";
         category = spider.homeContent(false);
@@ -1283,7 +1282,7 @@ public class CatTest {
                         Class cls = null;
                         try {
                             if (api.contains("XPath")) {
-                                cls = Class.forName("com.github.catvod.spider.Legado");
+                                cls = Class.forName("com.github.catvod.spider.Legado1");
                             } else {
                                 cls = Class.forName("com.github.catvod.spider." + api.substring(4));
                             }
@@ -1717,14 +1716,14 @@ public class CatTest {
 
     @Test
     public void myalipanFilter() throws Exception {
-        Spider spider = new Legado();
+        Spider spider = new Legado1();
         spider.init(null, "http://mao.guibiaoguo.ml/myalipan.json");
         showFilter(spider,true);
     }
 
     @Test
     public void myalipan() throws Exception {
-        Spider spider = new Legado();
+        Spider spider = new Legado1();
         spider.init(null, "http://mao.guibiaoguo.ml/myalipan.json");
         String category = "";
         category = spider.homeContent(false);
@@ -1770,7 +1769,7 @@ public class CatTest {
 
     @Test
     public void qindou() throws Exception {
-        Spider spider = new Legado();
+        Spider spider = new Legado1();
         spider.init(null, "https://mao.guibiaoguo.ml/qindou.json");
         showFilter(spider, true);
     }

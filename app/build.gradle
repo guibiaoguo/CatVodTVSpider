@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId "com.github.catvod.demo"
-        minSdk 17
+        minSdk 19
         targetSdk 33
         ndk { abiFilters "armeabi-v7a" }
         buildConfigField("String", "APP_ID", "\"${appId}\"")
@@ -61,13 +61,13 @@ dependencies {
 
     //junit 打包删除
 //    implementation group: 'org.json', name: 'json', version: '20190722'
-//    testImplementation 'junit:junit:4.13.2'
-//    //mockito
-//    testImplementation "org.mockito:mockito-core:3.3.3"
-//    //powermock
-//    testImplementation "org.powermock:powermock-module-junit4:2.0.9"
-//    testImplementation "org.powermock:powermock-module-junit4-rule:2.0.9"
-//    testImplementation "org.powermock:powermock-api-mockito2:2.0.9"
-//    testImplementation "org.powermock:powermock-classloading-xstream:2.0.9"
-//    testImplementation 'org.robolectric:robolectric:4.9'
+    testImplementation 'junit:junit:4.13.2'
+    //mockito
+    testImplementation "org.mockito:mockito-core:3.3.3"
+    //powermock
+    testImplementation "org.powermock:powermock-module-junit4:2.0.9"
+    testImplementation "org.powermock:powermock-module-junit4-rule:2.0.9"
+    testImplementation "org.powermock:powermock-api-mockito2:2.0.9"
+    testImplementation "org.powermock:powermock-classloading-xstream:2.0.9"
+    testImplementation 'org.robolectric:robolectric:4.9'
 }
