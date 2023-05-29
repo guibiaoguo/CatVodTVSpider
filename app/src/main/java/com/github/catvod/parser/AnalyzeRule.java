@@ -1,33 +1,41 @@
 package com.github.catvod.parser;
 
+import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.script.JsExtensions;
-import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.StringUtil;
 import com.google.gson.Gson;
 import com.github.catvod.script.Bindings;
 import com.github.catvod.script.ScriptEngine;
 import com.github.catvod.script.SimpleBindings;
 import com.github.catvod.script.rhino.RhinoScriptEngine;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Entities;
 import org.mozilla.javascript.NativeObject;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.lang.Console;
+import cn.hutool.core.util.ReUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.asymmetric.KeyType;
 
 public class AnalyzeRule extends JsExtensions {
 
-    private String nextChapterUrl = null;
+    public static Gson gson = new GsonBuilder()
+            .registerTypeAdapter(new TypeToken<Map<String,Object>>(){}.getType(),new DataTypeAdapter())
+            .registerTypeAdapter(new TypeToken<List>(){}.getType(),new DataTypeAdapter())
+            .create();
+
     private Object content = null;
     private String baseUrl = null;
     private URL redirectUrl = null;
@@ -42,14 +50,13 @@ public class AnalyzeRule extends JsExtensions {
     private boolean objectChangedJS = false;
     private boolean objectChangedJP = false;
 
-    private Pattern JS_PATTERN =
+    private final Pattern JS_PATTERN =
             Pattern.compile("<js>([\\w\\W]*?)</js>|@js:([\\w\\W]*)", Pattern.CASE_INSENSITIVE);
-    private Pattern putPattern = Pattern.compile("@put:(\\{[^}]+?\\})", Pattern.CASE_INSENSITIVE);
-    private Pattern evalPattern =
+    private final Pattern putPattern = Pattern.compile("@put:(\\{[^}]+?\\})", Pattern.CASE_INSENSITIVE);
+    private final Pattern evalPattern =
             Pattern.compile("@get:\\{[^}]+?\\}|\\{\\{[\\w\\W]*?\\}\\}", Pattern.CASE_INSENSITIVE);
-    private Pattern regexPattern = Pattern.compile("\\$\\d{1,2}");
-    private Pattern titleNumPattern = Pattern.compile("(第)(.+?)(章)");
-    private RuleDataInterface ruleData;
+    private final Pattern regexPattern = Pattern.compile("\\$\\d{1,2}");
+    private final RuleDataInterface ruleData;
 
     public AnalyzeRule() {
         ruleData = new RuleData();
@@ -77,19 +84,20 @@ public class AnalyzeRule extends JsExtensions {
     }
 
     public AnalyzeRule setBaseUrl(String baseUrl) {
-        if (StringUtils.isNotEmpty(baseUrl)) {
+        if (StrUtil.isNotEmpty(baseUrl)) {
             this.baseUrl = baseUrl;
         }
         return this;
     }
 
-    public URL setRedirectUrl(String url) {
+    public void setRedirectUrl(String url) {
         try {
             redirectUrl = new URL(url);
         } catch (Exception e) {
             e.printStackTrace();
+            SpiderDebug.log(StrUtil.format("URL {} error\n{}",url,e.getLocalizedMessage()));
         }
-        return redirectUrl;
+//        return redirectUrl;
     }
 
     /**
@@ -142,7 +150,7 @@ public class AnalyzeRule extends JsExtensions {
     }
 
     public List<String> getStringList(String rule, Object mContent, boolean isUrl) {
-        if (StringUtils.isEmpty(rule)) return null;
+        if (StrUtil.isEmpty(rule)) return null;
         List<SourceRule> ruleList = splitSourceRule(rule, false);
         return getStringList(ruleList, mContent, isUrl);
     }
@@ -167,7 +175,7 @@ public class AnalyzeRule extends JsExtensions {
             for (SourceRule sourceRule : ruleList) {
                 putRule(sourceRule.putMap);
                 sourceRule.makeUpRule(result);
-                if (result != null && StringUtils.isNotEmpty(sourceRule.rule)) {
+                if (result != null && StrUtil.isNotEmpty(sourceRule.rule)) {
                     switch (sourceRule.mode) {
                         case Js:
                             result = evalJS(sourceRule.rule, result);
@@ -186,51 +194,36 @@ public class AnalyzeRule extends JsExtensions {
                     }
                 }
                 if (result instanceof String) {
-                    result = Arrays.asList(StringUtils.split(result.toString(), "\n"));
+                    result = StrUtil.split(result.toString(), "\n");
                 }
-                if (StringUtils.isNotEmpty(sourceRule.replaceRegex) && result instanceof List) {
+                if (StrUtil.isNotEmpty(sourceRule.replaceRegex) && result instanceof List) {
                     List<String> newList = new ArrayList<>();
-                    for (Object item : (List) result) {
+                    for (Object item : Convert.convert(List.class, result)) {
                         newList.add(replaceRegex(item.toString(), sourceRule));
                     }
                     result = newList;
-                } else if (StringUtils.isNotEmpty(sourceRule.replaceRegex)) {
-                    result = replaceRegex(result.toString(), sourceRule);
+                } else if (StrUtil.isNotEmpty(sourceRule.replaceRegex)) {
+                    result = replaceRegex(Convert.convert(String.class, result), sourceRule);
                 }
             }
         }
         if (result == null) return null;
         if (result instanceof String) {
-            result = Arrays.asList(StringUtils.split(result.toString(), "\n"));
+            result = StrUtil.split(result.toString(), "\n");
         }
         if (isUrl) {
             List<String> urlList = new ArrayList<>();
             if (result instanceof List) {
-                for (Object url : (List) result) {
-                    try {
-                        if (url == null || StringUtils.isBlank(url.toString())) {
-                            baseUrl = baseUrl == null ? "" : baseUrl;
-                            urlList.add(baseUrl);
-                        } else if(url != null && url.toString().startsWith("/")) {
-                            urlList.add(StringUtil.getBaseUrl(baseUrl) + url.toString());
-                        }else if(url != null && !url.toString().startsWith("http") && !StringUtil.isBase64(url.toString())) {
-//                            try {
-//                                String absoluteURL = NetworkUtils.INSTANCE.getAbsoluteURL(redirectUrl, url.toString());
-//                                if (StringUtils.isNotEmpty(absoluteURL) && !urlList.contains(absoluteURL)) {
-//                                    urlList.add(absoluteURL);
-//                                }
-//                            } catch (MalformedURLException e) {
-//                                e.printStackTrace();
-//                            }
-                        }
-                    } catch (Exception e) {
-
+                for (Object url : Convert.convert(List.class, result)) {
+                    String absoluteURL = NetworkUtils.INSTANCE.getAbsoluteURL(redirectUrl, url.toString());
+                    if (StrUtil.isNotEmpty(absoluteURL) && !urlList.contains(absoluteURL)) {
+                        urlList.add(absoluteURL);
                     }
                 }
             }
             return urlList;
         }
-        return (List<String>) result;
+        return Convert.toList(String.class, result);
     }
 
     private Object evalJS(String rule, Object result) {
@@ -246,17 +239,25 @@ public class AnalyzeRule extends JsExtensions {
         return result;
     }
 
+    public String getString(String ruleStr, boolean unescape) {
+        return getString(ruleStr, null, false, unescape);
+    }
+    
     public String getString(String ruleStr) {
-        return getString(ruleStr, null, false);
+        return getString(ruleStr, null, false, true);
     }
 
     public String getString(String ruleStr, Object mContent, boolean isUrl) {
-        if (StringUtils.isEmpty(ruleStr)) return "";
-        List<SourceRule> ruleList = splitSourceRule(ruleStr, false);
-        return getString(ruleList, mContent, isUrl);
+        return getString(ruleStr, mContent, isUrl, true);
     }
 
-    public String getString(List<SourceRule> ruleList, Object mContent, boolean isUrl) {
+    public String getString(String ruleStr, Object mContent, boolean isUrl, boolean unescape) {
+        if (StrUtil.isEmpty(ruleStr)) return "";
+        List<SourceRule> ruleList = splitSourceRule(ruleStr, false);
+        return getString(ruleList, mContent, isUrl, unescape);
+    }
+
+    public String getString(List<SourceRule> ruleList, Object mContent, boolean isUrl, boolean unescape) {
         Object result = null;
         Object content = mContent != null ? mContent : this.content;
         if (content != null && ruleList != null && !ruleList.isEmpty()) {
@@ -275,9 +276,8 @@ public class AnalyzeRule extends JsExtensions {
             }
             for (SourceRule sourceRule : ruleList) {
                 putRule(sourceRule.putMap);
-//                result = funRule(sourceRule.funMap,result);
                 sourceRule.makeUpRule(result);
-                if (StringUtils.isNotEmpty(sourceRule.rule) || StringUtils.isEmpty(sourceRule.replaceRegex)) {
+                if (StrUtil.isNotEmpty(sourceRule.rule) || StrUtil.isEmpty(sourceRule.replaceRegex)) {
                     switch (sourceRule.mode) {
                         case Js:
                             result = evalJS(sourceRule.rule, result);
@@ -295,53 +295,50 @@ public class AnalyzeRule extends JsExtensions {
                             result = sourceRule.rule;
                     }
                 }
-                if (result != null && StringUtils.isNotEmpty(sourceRule.replaceRegex)) {
+                if (result != null && StrUtil.isNotEmpty(sourceRule.replaceRegex)) {
                     result = replaceRegex(result.toString(), sourceRule);
                 }
             }
         }
         if (result == null) return "";
-        String str = null;
-        try {
-            str = Entities.unescape(result.toString());
-        } catch (Exception e) {
+        String str;
+        if (unescape) {
+            try {
+                str = Entities.unescape(result.toString());
+            } catch (Exception e) {
+                SpiderDebug.log("Entities.unescape() error\n " + e.getLocalizedMessage());
+                str = result.toString();
+            }
+        } else {
             str = result.toString();
         }
         if (isUrl) {
-            if (StringUtils.isBlank(str)) {
+            if (StrUtil.isEmpty(str)) {
                 baseUrl = baseUrl == null ? "" : baseUrl;
                 return baseUrl;
-            } else if(str.startsWith("/")) {
-                return StringUtil.getBaseUrl(baseUrl) + str;
+            } else {
+                return NetworkUtils.INSTANCE.getAbsoluteURL(redirectUrl, str);
             }
-//            else if(!str.startsWith("http") && !StringUtil.isBase64(str)) {
-//                try {
-//                    return NetworkUtils.INSTANCE.getAbsoluteURL(redirectUrl, str);
-//                } catch (MalformedURLException e) {
-//                    e.printStackTrace();
-//                }
-//            }
         }
         return str;
     }
 
     public Object getElement(String ruleStr) {
         Object result = null;
-        if (StringUtils.isEmpty(ruleStr)) return null;
+        if (StrUtil.isEmpty(ruleStr)) return null;
         Object content = this.content;
         List<SourceRule> ruleList = splitSourceRule(ruleStr, true);
-        if (content != null && ruleList != null && !ruleList.isEmpty()) {
+        if (content != null && !ruleList.isEmpty()) {
             result = content;
             for (SourceRule sourceRule : ruleList) {
                 putRule(sourceRule.putMap);
-//                result = funRule(sourceRule.funMap,result);
                 sourceRule.makeUpRule(result);
                 switch (sourceRule.mode) {
                     case Js:
                         result = evalJS(sourceRule.rule, result);
                         break;
                     case Regex:
-                        result = AnalyzeByRegex.getElement(result.toString(), StringUtils.split(sourceRule.rule, "&&"));
+                        result = AnalyzeByRegex.getElement(Convert.convert(String.class, result), StrUtil.splitTrim(sourceRule.rule, "&&"));
                         break;
                     case Json:
                         result = getAnalyzeByJSonPath(result).getObject(sourceRule.rule);
@@ -353,7 +350,7 @@ public class AnalyzeRule extends JsExtensions {
                         result = getAnalyzeByJSoup(result).getElements(sourceRule.rule);
                 }
 
-                if (result != null && StringUtils.isNotEmpty(sourceRule.replaceRegex)) {
+                if (result != null && StrUtil.isNotEmpty(sourceRule.replaceRegex)) {
                     result = replaceRegex(result.toString(), sourceRule);
                 }
             }
@@ -362,24 +359,22 @@ public class AnalyzeRule extends JsExtensions {
     }
 
     public List<Object> getElements(String ruleStr) {
-        if (StringUtils.isEmpty(ruleStr)) {
+        if (StrUtil.isEmpty(ruleStr)) {
             return new ArrayList<>();
         }
         Object result = null;
         Object content = this.content;
         List<SourceRule> ruleList = splitSourceRule(ruleStr, true);
-        if (content != null && ruleList != null && !ruleList.isEmpty()) {
+        if (content != null && !ruleList.isEmpty()) {
             result = content;
             for (SourceRule sourceRule : ruleList) {
                 putRule(sourceRule.putMap);
-//                result = funRule(sourceRule.funMap,result);
-//                sourceRule.makeUpRule(sourceRule.rule);
                 switch (sourceRule.mode) {
                     case Js:
                         result = evalJS(sourceRule.rule, result);
                         break;
                     case Regex:
-                        result = AnalyzeByRegex.getElements(result.toString(), StringUtils.split(sourceRule.rule, "&&"));
+                        result = AnalyzeByRegex.getElements(Convert.convert(String.class, result), StrUtil.splitTrim(sourceRule.rule, "&&"));
                         break;
                     case Json:
                         result = getAnalyzeByJSonPath(result).getList(sourceRule.rule);
@@ -391,141 +386,57 @@ public class AnalyzeRule extends JsExtensions {
                         result = getAnalyzeByJSoup(result).getElements(sourceRule.rule);
                 }
 
-                if (StringUtils.isNotEmpty(sourceRule.replaceRegex) && result instanceof List) {
+                if (StrUtil.isNotEmpty(sourceRule.replaceRegex) && result instanceof List) {
                     List<String> newList = new ArrayList<>();
-                    for (Object item : (List) result) {
+                    for (Object item : Convert.convert(List.class ,result)) {
                         newList.add(replaceRegex(item.toString(), sourceRule));
                     }
                     result = newList;
-                } else if (StringUtils.isNotEmpty(sourceRule.replaceRegex)) {
-                    result = replaceRegex(result.toString(), sourceRule);
+                } else if (StrUtil.isNotEmpty(sourceRule.replaceRegex)) {
+                    result = replaceRegex(Convert.convert(String.class, result), sourceRule);
                 }
             }
         }
         List<Object> results = new ArrayList<>();
         if (result instanceof List) {
-            results = (List) result;
-            return results;
+            return Convert.toList(Object.class, result);
         }
         return results;
     }
 
     private void putRule(Map<String, String> putMap) {
-        for (Map.Entry data:putMap.entrySet()) {
-            put(data.getKey().toString(),getString(data.getValue().toString()));
+        for (Map.Entry<String, String> entry : putMap.entrySet()) {
+            put(entry.getKey(), getString(entry.getValue()));
         }
     }
 
-    private Object funRule(LinkedHashMap<String,String> ruleMap,Object data) {
-        Object result = data;
-        for(Map.Entry<String,String> entry:ruleMap.entrySet()) {
-            String key = entry.getKey();
-            if(StringUtils.isNotEmpty(entry.getValue()) && !StringUtil.isJson(entry.getValue()))
-                result = getString(entry.getValue());
-            else if(StringUtil.isJson(entry.getValue()))
-                result = getString(entry.getValue());
-//                for (Iterator<String> it = ruleData.getVariableMap().keySet().iterator(); it.hasNext(); ) {
-//                    String key1 = it.next();
-//                    String value = get(key1);
-//                    value = StringUtils.startsWith(key,"urlEncode")?value:StringUtil.encode(value);
-//                    if (value.length() > 0) {
-//                        result = result.toString().replace("{" + key1 + "}", value);
-//                    }
-//                }
-//            }
-            String charset = "utf-8";
-            if(key.split("#").length>1){
-                charset = key.split("#")[1];
-            }
-            try{
-                if(StringUtils.startsWith(key,"base64Encode")) {
-                    result = Base64.encodeToString(result.toString().getBytes(charset),Base64.NO_WRAP);
-                } else if(StringUtils.startsWith(key,"base64Decode")) {
-                    result = new String(Base64.decode(result.toString(),Base64.NO_WRAP));
-                }  else if(StringUtils.startsWith(key,"urlEncode")) {
-                    result = StringUtil.encode(result.toString(),charset);
-                }  else if(StringUtils.startsWith(key,"urlDecode")) {
-                    result = StringUtil.decode(result.toString(),charset);
-                }
-            } catch (Exception e) {
-
-            }
-        }
-        return result;
-    }
     private String splitPutRule(String ruleStr, Map<String, String> putMap) {
         String vRuleStr = ruleStr;
         Matcher putMatcher = putPattern.matcher(vRuleStr);
         while (putMatcher.find()) {
             vRuleStr = vRuleStr.replace(putMatcher.group(), "");
-            Map<String, String> data = new Gson().fromJson(putMatcher.group(1).replaceAll("%7B","{").replaceAll("%7D","}"), Map.class);
-            putMap.putAll(data);
+            String dataStr = StrUtil.replace(putMatcher.group(1),"%7B","{");
+            dataStr = StrUtil.replace(dataStr,"%7D","}");
+            Map<String, String> data = gson.fromJson(dataStr, new TypeToken<Map<String,String>>(){}.getType());
+            if (data != null)
+                putMap.putAll(data);
         }
         return vRuleStr;
     }
 
-//    @TargetApi(Build.VERSION_CODES.N)
-//    private String splitFunRule(String ruleStr, LinkedHashMap<String, String> putMap) {
-//        String vRuleStr = ruleStr;
-//        Matcher putMatcher = funPattern.matcher(vRuleStr);
-//        while (putMatcher.find()) {
-//            vRuleStr = vRuleStr.replace(putMatcher.group(), "");
-//            try {
-//                String js = putMatcher.group(1);
-////                js = js.replaceAll("【","{").replaceAll("】","}");
-//                JSONObject navs = new JSONObject(js);
-//                List<String> sorts = new ArrayList();
-//                if (navs != null) {
-//                    Iterator<String> keys = navs.keys();
-//                    while (keys.hasNext()) {
-//                        String name = keys.next();
-//                        sorts.add(js.indexOf(name)+"$"+name);
-//                    }
-//                }
-//                sorts.sort(Comparator.naturalOrder());
-//                for (String sort:sorts) {
-//                    String name = sort.split("\\$")[1];
-//                    putMap.put(name.trim(), navs.optString(name).replaceAll("%7B","{").replaceAll("%7D","}"));
-//                }
-//            } catch (Exception e) {
-//
-//            }
-//        }
-//        return vRuleStr;
-//    }
-
     private String replaceRegex(String result, SourceRule sourceRule) {
-        if (StringUtils.isEmpty(sourceRule.replaceRegex)) return result;
+        if (StrUtil.isEmpty(sourceRule.replaceRegex)) return result;
         String vResult = result;
         if (sourceRule.replaceFirst) {
-            try {
-                Pattern pattern = Pattern.compile(sourceRule.replaceRegex);
-                Matcher matcher = pattern.matcher(vResult);
-                if (matcher.find()) {
-                    vResult = matcher.group(0);
-                    if (StringUtils.isNotEmpty(vResult)) {
-                        vResult = vResult.replaceFirst(sourceRule.replaceRegex, sourceRule.replacement);
-                    } else {
-                        vResult = "";
-                    }
-                }
-            } catch (Exception e) {
-                vResult = vResult.replaceFirst(sourceRule.replaceRegex, sourceRule.replacement);
-            }
+            vResult = ReUtil.replaceFirst(Pattern.compile(sourceRule.replaceRegex), vResult,sourceRule.replacement);
         } else {
-            try {
-                vResult = vResult.replaceAll(sourceRule.replaceRegex, sourceRule.replacement);
-            } catch (Exception e) {
-                vResult = vResult.replaceAll(sourceRule.replaceRegex, sourceRule.replacement);
-            }
+            vResult = ReUtil.replaceAll(vResult, sourceRule.replaceRegex,sourceRule.replacement);
         }
         return vResult;
     }
 
     private List<SourceRule> splitSourceRule(String rule, boolean allInOne) {
-        if (StringUtil.isBase64(rule))
-            rule = new String(Base64.decode(rule, Base64.NO_WRAP));
-        if (StringUtils.isEmpty(rule))
+        if (StrUtil.isEmpty(rule))
             return new ArrayList<>();
         List<SourceRule> ruleList = new ArrayList<>();
         Mode mMode = Mode.Default;
@@ -538,23 +449,23 @@ public class AnalyzeRule extends JsExtensions {
             mMode = Mode.Regex;
         }
         Matcher jsMatcher = JS_PATTERN.matcher(rule);
-        String tmp = "";
+        String tmp;
         if(jsMatcher.find()) {
             do {
                 if(jsMatcher.start()> start) {
                     tmp = rule.substring(start,jsMatcher.start());
-                    if(StringUtils.isNotEmpty(tmp)) {
+                    if(StrUtil.isNotEmpty(tmp)) {
                         ruleList.add(new SourceRule(tmp,mMode));
                     }
                 }
-                if(StringUtils.isNotEmpty(jsMatcher.group(1)) || StringUtils.isNotEmpty(jsMatcher.group(2)))
+                if(StrUtil.isNotEmpty(jsMatcher.group(1)) || StrUtil.isNotEmpty(jsMatcher.group(2)))
                     ruleList.add(new SourceRule(jsMatcher.group(1) == null?jsMatcher.group(2):jsMatcher.group(1),Mode.Js));
                 start = jsMatcher.end();
             } while (jsMatcher.find());
         }
         if (rule.length() > start) {
-            tmp = StringUtils.trim(rule.substring(start));
-            if (StringUtils.isNotEmpty(tmp)) {
+            tmp = StrUtil.trim(rule.substring(start));
+            if (StrUtil.isNotEmpty(tmp)) {
                 ruleList.add(new SourceRule(tmp, mMode));
             }
         }
@@ -567,16 +478,14 @@ public class AnalyzeRule extends JsExtensions {
     }
 
     public Object put(String key, Object value) {
+        logType(value);
         ruleData.putVariable(key, value);
         return value;
     }
 
     public Object get(String key) {
-        Object value = ruleData.getVariable(key);
-        if(value == null || StringUtils.isEmpty(value.toString())) {
-            return "";
-        }
         Object data = ruleData.getVariable(key);
+        logType(data);
         if (data instanceof String) {
             return data.toString();
         }
@@ -590,45 +499,34 @@ public class AnalyzeRule extends JsExtensions {
         private boolean replaceFirst;
         private String replacement = "";
 
-        private Map<String, String> putMap = new HashMap<String, String>();
-        private LinkedHashMap<String,String> funMap = new LinkedHashMap();
-        private List<String> ruleParam = new ArrayList<>();
-        private List<Integer> ruleType = new ArrayList<>();
-        private int fun = -3;
-        private int getRuleType = -2;
-        private int jsRuleType = -1;
-        private int defaultRuleType = 0;
-
-        public SourceRule(String ruleStr) {
-            new SourceRule(ruleStr, Mode.Default);
-        }
+        private final Map<String, String> putMap = new HashMap<>();
+        private final List<String> ruleParam = new ArrayList<>();
+        private final List<Integer> ruleType = new ArrayList<>();
+        private final int getRuleType = -2;
+        private final int jsRuleType = -1;
+        private final int defaultRuleType = 0;
 
         public SourceRule(String ruleStr, Mode mMode) {
             this.mode = mMode;
             this.rule = ruleStr;
-//            ruleStr = splitFunRule(rule,funMap);
-            if(mMode == Mode.Js) {
-                this.mode = Mode.Js;
+            if(mMode == Mode.Js || mMode == Mode.Regex) {
                 rule = ruleStr;
-            } else if (StringUtils.startsWithIgnoreCase(ruleStr,"@CSS:")) {
+            } else if (StrUtil.startWithIgnoreCase(ruleStr,"@CSS:")) {
                 this.mode = Mode.Default;
                 rule = ruleStr;
-            } else if (StringUtils.startsWithIgnoreCase(ruleStr,"@@")) {
+            } else if (StrUtil.startWithIgnoreCase(ruleStr,"@@")) {
                 this.mode = Mode.Default;
                 this.rule = ruleStr.substring(2);
-            } else if (StringUtils.startsWithIgnoreCase(ruleStr,"@XPath:")) {
+            } else if (StrUtil.startWithIgnoreCase(ruleStr,"@XPath:")) {
                 this.mode = Mode.XPath;
                 this.rule = ruleStr.substring(7);
-//            }  else if (StringUtils.startsWithIgnoreCase(ruleStr,"@Js:")) {
-//                this.mode = Mode.Js;
-//                this.rule = ruleStr.substring(4);
-            } else if (StringUtils.startsWithIgnoreCase(ruleStr,"@Json:")) {
+            } else if (StrUtil.startWithIgnoreCase(ruleStr,"@Json:")) {
                 this.mode = Mode.Json;
                 this.rule = ruleStr.substring(6);
-            } else if (isJSON||StringUtils.startsWithIgnoreCase(ruleStr,"$.") || StringUtils.startsWithIgnoreCase(ruleStr,"$[")) {
+            } else if (isJSON||StrUtil.startWithIgnoreCase(ruleStr,"$.") || StrUtil.startWithIgnoreCase(ruleStr,"$[")) {
                 this.mode = Mode.Json;
                 rule = ruleStr;
-            } else if (StringUtils.startsWithIgnoreCase(ruleStr,"/")) {
+            } else if (StrUtil.startWithIgnoreCase(ruleStr,"/")) {
                 this.mode = Mode.XPath;
                 rule = ruleStr;
             } else {
@@ -638,11 +536,11 @@ public class AnalyzeRule extends JsExtensions {
             //分离put
             rule = splitPutRule(rule, putMap);
             int start = 0;
-            String tmp = "";
+            String tmp;
             Matcher evalMatcher = evalPattern.matcher(rule);
             if (evalMatcher.find()) {
                 tmp = rule.substring(start, evalMatcher.start());
-                if (mode != Mode.Js && mode != Mode.Regex && (evalMatcher.start() == 0 || !StringUtils.contains(tmp, "##"))) {
+                if (mode != Mode.Js && mode != Mode.Regex && (evalMatcher.start() == 0 || !StrUtil.contains(tmp, "##"))) {
                     mode = Mode.Regex;
                 }
                 do {
@@ -651,7 +549,7 @@ public class AnalyzeRule extends JsExtensions {
                         splitRegex(tmp);
                     }
                     tmp = evalMatcher.group();
-                    if (StringUtils.startsWithIgnoreCase(tmp,"@get")) {
+                    if (StrUtil.startWithIgnoreCase(tmp,"@get")) {
                         ruleType.add(getRuleType);
                         ruleParam.add(tmp.substring(6, tmp.length() - 1));
                     } else if (tmp.startsWith("{{")) {
@@ -675,7 +573,7 @@ public class AnalyzeRule extends JsExtensions {
         private void splitRegex(String ruleStr) {
             int start = 0;
             String tmp;
-            String[] ruleStrArray = StringUtils.split(ruleStr, "##");
+            String[] ruleStrArray = StrUtil.splitToArray(ruleStr, "##");
             Matcher regexMatcher = regexPattern.matcher(ruleStrArray[0]);
 
             if (regexMatcher.find()) {
@@ -703,7 +601,7 @@ public class AnalyzeRule extends JsExtensions {
 
         public void makeUpRule(Object result) {
             StringBuilder infoVal = new StringBuilder();
-            if (ruleParam != null && !ruleParam.isEmpty()) {
+            if (!ruleParam.isEmpty()) {
                 for (int index = ruleParam.size() - 1; index >= 0; --index) {
                     int regType = ruleType.get(index);
                     if (regType > defaultRuleType) {
@@ -722,7 +620,7 @@ public class AnalyzeRule extends JsExtensions {
                             if (jsEval == null) {
                                 System.out.println("执行了");
                             } else if (jsEval instanceof Double && (Double)jsEval % 1.0 == 0) {
-                                infoVal.insert(0, String.format("%0.f", jsEval));
+                                infoVal.insert(0, String.format(Locale.CHINA, "%.0f", jsEval));
                             } else {
                                 infoVal.insert(0, jsEval);
                             }
@@ -735,15 +633,15 @@ public class AnalyzeRule extends JsExtensions {
                 }
                 rule = infoVal.toString();
             }
-            String[] ruleStrs = rule.split("##");
-            rule = StringUtils.trim(ruleStrs[0]);
-            if (ruleStrs.length > 1) {
-                replaceRegex = ruleStrs[1];
+            String[] ruleStrS = rule.split("##");
+            rule = StrUtil.trim(ruleStrS[0]);
+            if (ruleStrS.length > 1) {
+                replaceRegex = ruleStrS[1];
             }
-            if (ruleStrs.length > 2) {
-                replacement = ruleStrs[2];
+            if (ruleStrS.length > 2) {
+                replacement = ruleStrS[2];
             }
-            if (ruleStrs.length > 3) {
+            if (ruleStrS.length > 3) {
                 replaceFirst = true;
             }
         }

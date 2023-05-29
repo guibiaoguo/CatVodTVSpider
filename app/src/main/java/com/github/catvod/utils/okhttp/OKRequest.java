@@ -2,11 +2,11 @@ package com.github.catvod.utils.okhttp;
 
 import com.github.catvod.parser.NetworkUtils;
 
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.util.Map;
 
+import cn.hutool.core.util.StrUtil;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
@@ -69,14 +69,14 @@ class OKRequest {
     }
 
     private RequestBody getRequestBody() {
-        if (StringUtils.isNotEmpty(mJsonStr)) {
+        if (StrUtil.isNotEmpty(mJsonStr)) {
             MediaType JSON = MediaType.parse("application/json; charset=utf-8");
             return RequestBody.create(JSON, mJsonStr);
         }
         FormBody.Builder formBody = new FormBody.Builder();
         if (mParamsMap != null) {
             for (String key : mParamsMap.keySet()) {
-                if (NetworkUtils.hasUrlEncode(mParamsMap.get(key)))
+                if (NetworkUtils.INSTANCE.hasUrlEncode(mParamsMap.get(key)))
                     formBody.addEncoded(key, mParamsMap.get(key));
                 else
                     formBody.add(key, mParamsMap.get(key));

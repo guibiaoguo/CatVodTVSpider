@@ -34,7 +34,13 @@ public class LegadoRule {
      */
     @SerializedName("type_id")
     private String typeId;
-
+    /**
+     * 分类类型
+     */
+    @SerializedName("type_flag")
+    private String typeFlag;
+    @SerializedName("filter_rule")
+    private String filterRule;
     @SerializedName("home_vod_node")
     private String homeVodNode;
     @SerializedName("home_vod_id")
@@ -71,7 +77,8 @@ public class LegadoRule {
     private String cateVodPic;
     @SerializedName("cate_vod_remarks")
     private String cateVodRemarks;
-
+    @SerializedName("cate_vod_tag")
+    private String cateVodTag;
     @SerializedName("search_url")
     private String searchUrl;
     @SerializedName("search_vod_node")
@@ -117,6 +124,9 @@ public class LegadoRule {
     @SerializedName("detail_node")
     private String detailNode;
 
+    @SerializedName("vod_play_list")
+    private String vodPlayList;
+
     @SerializedName("vod_play_form")
     private String vodPlayForm;
     @SerializedName("vod_play_name")
@@ -152,6 +162,9 @@ public class LegadoRule {
     private String detailFileNodeParent;
     @SerializedName("detail_file_node_id")
     private String detailFileNodeId;
+
+    @SerializedName("ali_token")
+    private String aliToken;
 
     public List<Class> getClasses() {
         return classes;
@@ -615,5 +628,37 @@ public class LegadoRule {
 
     public void setDetailFileNodeNfo(String detailFileNodeNfo) {
         this.detailFileNodeNfo = detailFileNodeNfo;
+    }
+
+    public String getCateVodTag() {
+        return cateVodTag;
+    }
+
+    public void setCateVodTag(String cateVodTag) {
+        this.cateVodTag = cateVodTag;
+    }
+
+    public String getTypeFlag() {
+        return typeFlag;
+    }
+
+    public void setTypeFlag(String typeFlag) {
+        this.typeFlag = typeFlag;
+    }
+
+    public String getVodPlayList() {
+        return vodPlayList;
+    }
+
+    public void setVodPlayList(String vodPlayList) {
+        this.vodPlayList = vodPlayList;
+    }
+
+    public String getAliToken() {
+        return aliToken;
+    }
+
+    public void setAliToken(String aliToken) {
+        this.aliToken = aliToken;
     }
 }

@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.github.catvod.ali.API;
 import com.github.catvod.bean.Result;
+import com.github.catvod.bean.ali.Auth;
 import com.github.catvod.crawler.Spider;
 
 import java.util.List;
@@ -20,7 +21,8 @@ public class Ali extends Spider {
 
     @Override
     public void init(Context context, String extend) {
-        API.get().setRefreshToken(extend);
+//        API.get().setRefreshToken(extend);
+        API.get().setRefreshToken("344d4e2759d14e349c6591ef4e5e772a");
     }
 
     @Override

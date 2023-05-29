@@ -7,42 +7,52 @@ import com.github.catvod.utils.StringUtil;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
+import com.google.gson.reflect.TypeToken;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
 import com.jayway.jsonpath.ReadContext;
 import com.jayway.jsonpath.spi.json.GsonJsonProvider;
 
-import org.apache.commons.lang3.StringUtils;
+import org.jsoup.nodes.Element;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import cn.hutool.core.util.StrUtil;
 
 public class AnalyzeByJSonPath implements IFunction {
 
-    private ReadContext ctx;
+    public static Gson gson = new GsonBuilder().setLenient()
+            .registerTypeAdapter(new TypeToken<Map<String,Object>>(){}.getType(),new DataTypeAdapter())
+            .registerTypeAdapter(new TypeToken<List>(){}.getType(),new DataTypeAdapter())
+            .create();
+    private final ReadContext ctx;
 
     public AnalyzeByJSonPath(Object json) {
         this.ctx = parse(json);
     }
 
-    public static final ReadContext parse(Object json) {
+    public static ReadContext parse(Object json) {
         ReadContext ctx;
         if (json instanceof ReadContext) {
             ctx = (ReadContext) json;
         } else if (json instanceof String) {
             try {
-                ctx = JsonPath.using(Configuration.builder().jsonProvider(new GsonJsonProvider()).build()).parse(json.toString());
+                ctx = JsonPath.using(Configuration.builder().jsonProvider(new GsonJsonProvider(gson)).build()).parse(json.toString());
             } catch (Exception e) {
                 String jsonStr = new GsonBuilder().setLenient().disableHtmlEscaping().create().toJson(json);
-                ctx = JsonPath.using(Configuration.builder().jsonProvider(new GsonJsonProvider()).build()).parse(jsonStr);
+                ctx = JsonPath.using(Configuration.builder().jsonProvider(new GsonJsonProvider(gson)).build()).parse(jsonStr);
             }
         } else if (json instanceof List) {
-            ctx = JsonPath.using(Configuration.builder().jsonProvider(new GsonJsonProvider()).build()).parse(StringUtil.join("\n",((ArrayList)json)));
+            ctx = JsonPath.using(Configuration.builder().jsonProvider(new GsonJsonProvider(gson)).build()).parse(gson.toJson(json));
+        } else if(json instanceof Element) {
+            ctx = JsonPath.using(Configuration.builder().jsonProvider(new GsonJsonProvider(gson)).build()).parse("{}");
         } else {
-            String jsonStr = new GsonBuilder().disableHtmlEscaping().create().toJson(json);
-            ctx = JsonPath.using(Configuration.builder().jsonProvider(new GsonJsonProvider()).build()).parse(jsonStr);
+            ctx = JsonPath.using(Configuration.builder().jsonProvider(new GsonJsonProvider(gson)).build()).parse(gson.toJson(json));
         }
         return ctx;
     }
@@ -56,10 +66,10 @@ public class AnalyzeByJSonPath implements IFunction {
         if (rule.isEmpty()) {
             return null;
         } else {
-            String result = null;
+            String result;
             RuleAnalyzer ruleAnalyzes = new RuleAnalyzer(rule, true);
             //设置平衡组为代码平衡
-            ArrayList rules = ruleAnalyzes.splitRule("&&", "||");
+            List<String> rules = ruleAnalyzes.splitRule("&&", "||");
             if (rules.size() == 1) {
                 ruleAnalyzes.reSetPos(); //将pos重置为0，复用解析器
                 result = ruleAnalyzes.innerRule("{$.",1,1,this);
@@ -68,7 +78,7 @@ public class AnalyzeByJSonPath implements IFunction {
                     try {
                         Object obj = this.ctx.read(rule);
                         if(obj instanceof JsonArray) {
-                            result = TextUtils.join("\n", (JsonArray)obj);
+                            result = TextUtils.join("\n", gson.fromJson(obj.toString(),List.class));
                         } else if (obj instanceof JsonPrimitive){
                             result = ((JsonPrimitive) obj).getAsString();
                         } else {
@@ -82,10 +92,10 @@ public class AnalyzeByJSonPath implements IFunction {
                 }
                 return result;
             } else {
-                List textList = new ArrayList();
+                List<String> textList = new ArrayList<>();
                 for (Object r1 : rules) {
                     String temp = getString(r1.toString());
-                    if (StringUtils.isNotEmpty(temp)) {
+                    if (StrUtil.isNotEmpty(temp)) {
                         textList.add(temp);
                         if (ruleAnalyzes.getElementsType().equals("||")) {
                             break;
@@ -98,13 +108,13 @@ public class AnalyzeByJSonPath implements IFunction {
     }
 
 
-    public final List getStringList(String rule) {
-        ArrayList result = new ArrayList();
+    public List<String> getStringList(String rule) {
+        List<String> result = new ArrayList<>();
         if (rule.isEmpty()) {
             return result;
         }
         RuleAnalyzer ruleAnalyzes = new RuleAnalyzer(rule, true); //设置平衡组为代码平衡
-        ArrayList rules = ruleAnalyzes.splitRule("&&", "||", "%%");
+        List<String> rules = ruleAnalyzes.splitRule("&&", "||", "%%");
         if (rules.size() == 1) {
             ruleAnalyzes.reSetPos(); //将pos重置为0，复用解析器
             String st = ruleAnalyzes.innerRule("{$.",1,1,this);
@@ -113,7 +123,9 @@ public class AnalyzeByJSonPath implements IFunction {
                 try {
                     Object obj = this.ctx.read(rule);
                     if (obj instanceof JsonArray) {
-                        result.addAll(new Gson().fromJson(obj.toString(), List.class));
+                        for (JsonElement element : ((JsonArray) obj)) {
+                            result.add(element.toString());
+                        }
                     } else if (obj instanceof JsonPrimitive){
                         result.add(((JsonPrimitive) obj).getAsString());
                     } else {
@@ -131,7 +143,7 @@ public class AnalyzeByJSonPath implements IFunction {
         } else {
             ArrayList<List<String>> results = new ArrayList<>();
             for (Object r1 : rules) {
-                List temp = getStringList(r1.toString());
+                List<String> temp = getStringList(r1.toString());
                 if (temp != null && !temp.isEmpty()) {
                     results.add(temp);
                     if (!temp.isEmpty() && ruleAnalyzes.getElementsType().equals("||")) {
@@ -142,14 +154,14 @@ public class AnalyzeByJSonPath implements IFunction {
             if (results.size() > 0) {
                 if ("%%".equals(ruleAnalyzes.getElementsType())) {
                     for (int i = 0; i < results.get(0).size(); i++) {
-                        for (List temp : results) {
+                        for (List<String> temp : results) {
                             if (i < temp.size()) {
                                 result.add(temp.get(i));
                             }
                         }
                     }
                 } else {
-                    for (List temp : results) {
+                    for (List<String> temp : results) {
                         result.addAll(temp);
                     }
                 }
@@ -159,41 +171,41 @@ public class AnalyzeByJSonPath implements IFunction {
     }
 
 
-    public final Object getObject(String rule) {
+    public Object getObject(String rule) {
         return ctx.read(rule);
     }
 
 
-    public final ArrayList getList(String rule) {
-        ArrayList result = new ArrayList();
+    public ArrayList<Object> getList(String rule) {
+        ArrayList<Object> result = new ArrayList<>();
         if (rule.isEmpty()) {
             return result;
         }
         RuleAnalyzer ruleAnalyzes = new RuleAnalyzer(rule, true); //设置平衡组为代码平衡
-        ArrayList rules = ruleAnalyzes.splitRule("&&", "||", "%%");
+        List<String> rules = ruleAnalyzes.splitRule("&&", "||", "%%");
         if (rules.size() == 1) {
             try {
-                Object obj = this.ctx.read(rules.get(0).toString());
+                Object obj = this.ctx.read(rules.get(0));
                 if (obj instanceof JsonArray) {
-                    result.addAll(new Gson().fromJson(obj.toString(), List.class));
+                    result.addAll(gson.fromJson(obj.toString(), List.class));
                 } else if (obj instanceof JsonPrimitive){
                     result.add(((JsonPrimitive) obj).getAsString());
                 } else {
                     result.add(obj.toString());
                 }
             } catch (PathNotFoundException e) {
-
+                System.out.println(e.getLocalizedMessage());
             }catch (Exception e) {
                 result.add(e.getMessage());
             }
             return result;
         } else {
-            ArrayList<ArrayList> results = new ArrayList<>();
+            ArrayList<ArrayList<Object>> results = new ArrayList<>();
             for (Object r1 : rules) {
-                ArrayList temp = getList(r1.toString());
+                ArrayList<Object> temp = getList(r1.toString());
                 if (!temp.isEmpty()) {
                     results.add(temp);
-                    if (temp != null && !temp.isEmpty() && ruleAnalyzes.getElementsType().equals("||")) {
+                    if (!temp.isEmpty() && ruleAnalyzes.getElementsType().equals("||")) {
                         break;
                     }
                 }
@@ -201,14 +213,14 @@ public class AnalyzeByJSonPath implements IFunction {
             if (results.size() > 0) {
                 if ("%%".equals(ruleAnalyzes.getElementsType())) {
                     for (int i = 0; i < results.get(0).size(); i++) {
-                        for (ArrayList temp : results) {
+                        for (ArrayList<Object> temp : results) {
                             if (i < temp.size()) {
                                 result.add(temp);
                             }
                         }
                     }
                 } else {
-                    for (ArrayList temp : results) {
+                    for (ArrayList<Object> temp : results) {
                         result.addAll(temp);
                     }
                 }

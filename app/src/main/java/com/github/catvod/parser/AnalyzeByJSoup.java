@@ -41,21 +41,13 @@ public class AnalyzeByJSoup {
         return getElements(element, rule);
     }
 
-
-//    @TargetApi(Build.VERSION_CODES.N)
-    public final String getString(String rule) {
+    public String getString(String rule) {
         if (rule.isEmpty()) {
             return null;
         }
-        List textS = getStringList(rule);
-        List result = new ArrayList();
-        if (textS != null & !textS.isEmpty()) {
-//            textS.forEach(text -> {
-//                result.add(text);
-//            });
-            for (Object text:textS) {
-                result.add(text);
-            }
+        List<String> textS = getStringList(rule);
+        if (!textS.isEmpty()) {
+            List<String> result = new ArrayList<>(textS);
             return StringUtil.join("\n",result);
         } else {
             return null;
@@ -63,16 +55,16 @@ public class AnalyzeByJSoup {
     }
 
     public String getString0(String rule) {
-        List urlList = getStringList(rule);
-        if (urlList != null && !urlList.isEmpty()) {
-            return urlList.get(0).toString();
+        List<String> urlList = getStringList(rule);
+        if (!urlList.isEmpty()) {
+            return urlList.get(0);
         } else {
             return "";
         }
     }
 
-    public final List getStringList(String rule) {
-        ArrayList result = new ArrayList();
+    public List<String> getStringList(String rule) {
+        List<String> result = new ArrayList<>();
         if (rule.isEmpty()) {
             return result;
         }
@@ -81,10 +73,10 @@ public class AnalyzeByJSoup {
             result.add(element.data());
         } else {
             RuleAnalyzer ruleAnalyzes = new RuleAnalyzer(sourceRule.elementsRule);
-            ArrayList<String> rules = ruleAnalyzes.splitRule("&&", "||", "%%");
+            List<String> rules = ruleAnalyzes.splitRule("&&", "||", "%%");
             ArrayList<List<String>> results = new ArrayList<>();
             for (String ruleStrX : rules) {
-                List temp = null;
+                List<String> temp;
                 if (sourceRule.isCss) {
                     int lastIndex = ruleStrX.lastIndexOf('@');
                     temp = getResultLast(element.select(ruleStrX.substring(0, lastIndex)), ruleStrX.substring(lastIndex + 1));
@@ -93,7 +85,7 @@ public class AnalyzeByJSoup {
                 }
                 if (temp != null && !temp.isEmpty()) {
                     results.add(temp);
-                    if (!results.isEmpty() && ruleAnalyzes.getElementsType().equals("||")) {
+                    if (ruleAnalyzes.getElementsType().equals("||")) {
                         break;
                     }
                 }
@@ -101,13 +93,13 @@ public class AnalyzeByJSoup {
             if (results.size() > 0) {
                 if ("%%".equals(ruleAnalyzes.getElementsType())) {
                     for (int i = 0; i < results.get(0).size(); i++) {
-                        for (List temp : results) {
+                        for (List<String> temp : results) {
                             if (i < temp.size())
                                 result.add(temp.get(i));
                         }
                     }
                 } else {
-                    for (List temp : results) {
+                    for (List<String> temp : results) {
                         result.addAll(temp);
                     }
                 }
@@ -124,7 +116,7 @@ public class AnalyzeByJSoup {
         Elements elements = new Elements();
         SourceRule sourceRule = new SourceRule(rule);
         RuleAnalyzer ruleAnalyzes = new RuleAnalyzer(sourceRule.elementsRule);
-        ArrayList<String> rules = ruleAnalyzes.splitRule("&&", "||", "%%");
+        List<String> rules = ruleAnalyzes.splitRule("&&", "||", "%%");
         List<Elements> elementsList = new ArrayList<>();
         if (sourceRule.isCss) {
             for (String ruleStr : rules) {
@@ -138,8 +130,8 @@ public class AnalyzeByJSoup {
             for (String ruleStr : rules) {
                 RuleAnalyzer rsRule = new RuleAnalyzer(ruleStr);
                 rsRule.trim();
-                ArrayList<String> rs = rsRule.splitRule("@");
-                Elements e1 = null;
+                List<String> rs = rsRule.splitRule("@");
+                Elements e1;
                 if (rs.size() > 1) {
                     e1 = new Elements();
                     e1.add(temp);
@@ -178,7 +170,7 @@ public class AnalyzeByJSoup {
         return elements;
     }
 
-    private List getResultList(String ruleStr) {
+    private List<String> getResultList(String ruleStr) {
         if (ruleStr.isEmpty()) {
             return null;
         }
@@ -186,7 +178,7 @@ public class AnalyzeByJSoup {
         elements.add(element);
         RuleAnalyzer rule = new RuleAnalyzer(ruleStr);
         rule.trim();
-        ArrayList<String> rules = rule.splitRule("@");
+        List<String> rules = rule.splitRule("@");
         int last = rules.size() - 1;
         for (int i = 0; i < last; i++) {
             Elements es = new Elements();
@@ -204,7 +196,7 @@ public class AnalyzeByJSoup {
     }
 
 //    @TargetApi(Build.VERSION_CODES.N)
-    private List getResultLast(Elements elements, String lastRule) {
+    private List<String> getResultLast(Elements elements, String lastRule) {
         List<String> textS = new ArrayList<>();
 
         if (StringUtils.equals(lastRule, "text")) {
@@ -216,7 +208,7 @@ public class AnalyzeByJSoup {
             }
         } else if (StringUtils.equals(lastRule, "textNodes")) {
             for (Element element : elements) {
-                List tn = new ArrayList();
+                List<String> tn = new ArrayList<>();
                 List<TextNode> contentEs = element.textNodes();
                 for (TextNode item : contentEs) {
                     String text = StringUtils.trim(item.text());
@@ -256,7 +248,7 @@ public class AnalyzeByJSoup {
         return textS;
     }
 
-    private class SourceRule {
+     static class SourceRule {
         public String elementsRule;
         public Boolean isCss = false;
 
@@ -270,15 +262,15 @@ public class AnalyzeByJSoup {
         }
     }
 
-    private class ElementsSingle {
+    static class ElementsSingle {
         private String beforeRule = "";
         private char split = '.';
-        List<Integer> indexDefault = new ArrayList();
-        List<Object> indexes = new ArrayList();
+        List<Integer> indexDefault = new ArrayList<>();
+        List<Object> indexes = new ArrayList<>();
 
         public Elements getElementsSingle(Element temp, String rule) {
             findIndexSet(rule);
-            Elements elements = null;
+            Elements elements;
             if (StringUtils.isEmpty(beforeRule)) {
                 elements = temp.children();
             } else {
@@ -319,9 +311,7 @@ public class AnalyzeByJSoup {
                     if (indexes.get(ix) instanceof Triple) {
                         Triple triple = (Triple) indexes.get(ix);
                         int start = 0;
-                        if (triple.first == null) {
-                            start = 0;
-                        } else if (triple.first >= 0) {
+                        if (triple.first >= 0) {
                             if (triple.first < len) {
                                 start = triple.first;
                             } else {
@@ -346,7 +336,7 @@ public class AnalyzeByJSoup {
                             indexSet.add(start);
                             continue;
                         }
-                        int step = 1;
+                        int step;
                         if (triple.third > 0) {
                             step = triple.third;
                         } else if (-triple.third < len) {
@@ -393,7 +383,7 @@ public class AnalyzeByJSoup {
             Integer curInt;
             boolean curMinus = false;
             List<Integer> curList = new ArrayList<>();
-            String l = "";
+            StringBuilder l = new StringBuilder();
             boolean head = rus.charAt(len - 1) == ']';
             if (head) {
                 len--;
@@ -402,11 +392,11 @@ public class AnalyzeByJSoup {
                     if (rl == ' ') continue;
 
                     if (Arrays.asList("0,1,2,3,4,5,6,7,8,9".split(",")).contains(rl+"")) {
-                        l = rl + l;
+                        l.insert(0, rl);
                     }
                     else if (rl == '-') curMinus = true;
                     else {
-                        curInt = l.isEmpty()?null:curMinus?-Integer.parseInt(l):Integer.parseInt(l);
+                        curInt = (l.length() == 0) ?null:curMinus?-Integer.parseInt(l.toString()):Integer.parseInt(l.toString());
 
                         if (rl == ':') curList.add(curInt);
                         else {
@@ -431,7 +421,7 @@ public class AnalyzeByJSoup {
                             }
                             if (rl != ',') break;
                         }
-                        l = "";
+                        l = new StringBuilder();
                         curMinus = false;
                     }
                 }
@@ -441,19 +431,19 @@ public class AnalyzeByJSoup {
                     char rl = rus.charAt(len);
                     if (rl == ' ') continue;
                     if (Arrays.asList("0,1,2,3,4,5,6,7,8,9".split(",")).contains(rl+"")) {
-                        l = rl + l;
+                        l.insert(0, rl);
                     }
                     else if (rl == '-') curMinus = true;
                     else {
                         if (rl == '!' || rl == '.' || rl == ':') {
-                            indexDefault.add(curMinus ? -Integer.parseInt(l) : Integer.parseInt(l));
+                            indexDefault.add(curMinus ? -Integer.parseInt(l.toString()) : Integer.parseInt(l.toString()));
                             if (rl != ':') {
                                 split = rl;
                                 beforeRule = rus.substring(0, len);
                                 return;
                             }
                         } else break;
-                        l = "";
+                        l = new StringBuilder();
                         curMinus = false;
                     }
                 }
@@ -463,7 +453,7 @@ public class AnalyzeByJSoup {
         }
     }
 
-    class Triple {
+    static class Triple {
         public Integer first;
         public Integer second;
         public Integer third;

@@ -70,4 +70,6 @@ dependencies {
     testImplementation "org.powermock:powermock-api-mockito2:2.0.9"
     testImplementation "org.powermock:powermock-classloading-xstream:2.0.9"
     testImplementation 'org.robolectric:robolectric:4.9'
+
+//    testImplementation 'org.mock-server:mockserver-junit-rule-no-dependencies:5.14.0'
 }

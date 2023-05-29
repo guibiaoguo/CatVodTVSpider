@@ -17,6 +17,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
@@ -90,7 +91,57 @@ public class PanSouTest {
 
             @Override
             public Editor edit() {
-                return null;
+                return new Editor() {
+                    @Override
+                    public Editor putString(String key, @Nullable String value) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putStringSet(String key, @Nullable Set<String> values) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putInt(String key, int value) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putLong(String key, long value) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putFloat(String key, float value) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putBoolean(String key, boolean value) {
+                        return null;
+                    }
+
+                    @Override
+                    public Editor remove(String key) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor clear() {
+                        return this;
+                    }
+
+                    @Override
+                    public boolean commit() {
+                        return false;
+                    }
+
+                    @Override
+                    public void apply() {
+
+                    }
+                };
             }
 
             @Override
@@ -104,16 +155,16 @@ public class PanSouTest {
             }
         });
         Init.init(mMockContext);
-        pansou.init(mMockContext, "43073a876e9f4d6c906f1d7df92af59a");
+        pansou.init(mMockContext, "");
     }
 
     @Test
-    public void detailContent() {
-
+    public void detailContent() throws Exception {
+        System.out.println(pansou.detailContent(Arrays.asList("/s/KeksNqYkc48pdqJwZTQ1TzW05V7sj")));
     }
 
     @Test
     public void searchContent() throws Exception {
-        System.out.println(pansou.searchContent("斗罗大陆", false));
+        System.out.println(pansou.searchContent("暮色黄昏", false));
     }
 }

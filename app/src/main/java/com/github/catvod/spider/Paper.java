@@ -2,14 +2,17 @@ package com.github.catvod.spider;
 
 import android.content.Context;
 
+import com.github.catvod.ali.API;
 import com.github.catvod.bean.Class;
 import com.github.catvod.bean.Filter;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
+import com.github.catvod.bean.ali.Item;
 import com.github.catvod.bean.paper.Data;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.Utils;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -25,6 +28,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import cn.hutool.core.util.ReUtil;
+import cn.hutool.core.util.StrUtil;
 
 /**
  * @author ColaMint & FongMi
@@ -59,7 +65,7 @@ public class Paper extends Ali {
                 if (td.hasClass("tableizer-title")) {
                     String typeId = td.select("a").attr("href").replace("#", "");
                     if (!types.contains(typeId)) continue;
-                    classes.add(new Class(typeId, td.text()));
+                    classes.add(new Class(typeId, td.text(),"1"));
                     filters.put(typeId, Arrays.asList(new Filter("type", "類型", values)));
                 } else {
                     String value = td.select("a").attr("onclick").split("'")[1];
@@ -87,8 +93,36 @@ public class Paper extends Ali {
         params.put("action", "viewcat");
         params.put("cat", type);
         params.put("num", pg);
-        String result = OkHttp.post(api, params, getHeaders());
-        for (Data item : Data.arrayFrom(result)) list.add(item.getVod());
+        if (StrUtil.contains(tid,"aliyundrive.com")) {
+            Map<String,Object> body = new HashMap<>();
+            String shareId = ReUtil.get(pattern, tid,1);
+            String fileId = ReUtil.get(pattern, tid, 3);
+            fileId = StrUtil.isNotEmpty(fileId)? fileId: "root";
+            API.get().setShareId(shareId);
+            String result = API.get().getList(fileId);
+            Item item = Item.objectFrom(result);
+            for (Item file:item.getItems()) {
+                Vod vod = new Vod(StrUtil.format("https://www.aliyundrive.com/s/{}/folder/{}",shareId,file.getFileId()),file.getName(),"https://www.lgstatic.com/i/image2/M01/15/7E/CgoB5lysLXCADg6ZAABapAHUnQM321.jpg","", file.getType());
+                if (file.getType().equals("file")) {
+                    vod.setVodId(StrUtil.format("https://www.aliyundrive.com/s/{}/folder/{}",shareId,file.getParentFileId()));
+                }
+                list.add(vod);
+            }
+        } else {
+            String result = OkHttp.post(api, params, getHeaders());
+            result = new Gson().fromJson(result, JsonObject.class).get("data").toString();
+            for (Data item : Data.arrayFrom(result)) {
+                Vod vod = item.getVod();
+                Map<String, Object> data = new HashMap<>();
+                data.put("share_id", item.getKey());
+                String json = OkHttp.postJson("https://api.aliyundrive.com/adrive/v3/share_link/get_share_by_anonymous", new Gson().toJson(data), API.get().getHeader());
+                JsonArray fileInfos = new Gson().fromJson(json, JsonObject.class).getAsJsonArray("file_infos");
+                if (fileInfos != null && fileInfos.get(0).getAsJsonObject().get("type").getAsString().equals("folder")) {
+                    vod.setVodTag("folder");
+                }
+                list.add(vod);
+            }
+        }
         return Result.string(list);
     }
 

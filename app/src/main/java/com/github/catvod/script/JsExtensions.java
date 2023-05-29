@@ -5,28 +5,36 @@ import com.github.catvod.parser.AnalyzeUrl;
 import com.github.catvod.parser.RequestMethod;
 import com.github.catvod.parser.StrResponse;
 import com.github.catvod.spider.Init;
-import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.Utils;
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import org.apache.commons.lang3.StringUtils;
+import org.mozilla.javascript.NativeObject;
 
 import java.io.File;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.SimpleTimeZone;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.Future;
 
+import cn.hutool.core.codec.Base64;
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.lang.Console;
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.HexUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.URLUtil;
 import cn.hutool.crypto.asymmetric.AsymmetricCrypto;
 import cn.hutool.crypto.asymmetric.Sign;
 import cn.hutool.crypto.digest.DigestUtil;
@@ -110,7 +118,7 @@ public abstract class JsExtensions implements JsEncodeUtils {
      */
     @Override
     public SymmetricCrypto createSymmetricCrypto(String transformation, String key, String iv) {
-        if (StringUtils.isNotEmpty(iv))
+        if (StrUtil.isNotEmpty(iv))
             return createSymmetricCrypto(transformation, key.getBytes(), iv.getBytes());
         else
             return createSymmetricCrypto(transformation, key.getBytes(), null);
@@ -184,7 +192,7 @@ public abstract class JsExtensions implements JsEncodeUtils {
      */
     @Override
     public String digestBase64Str(String data, String algorithm) {
-        return Base64.encodeToString(DigestUtil.digester(algorithm).digest(data), Base64.NO_WRAP);
+        return Base64.encode(DigestUtil.digester(algorithm).digest(data));
     }
 
     /**
@@ -210,9 +218,8 @@ public abstract class JsExtensions implements JsEncodeUtils {
      */
     @Override
     public String HmacBase64(String data, String algorithm, String key) {
-        return Base64.encodeToString(new
-                HMac(algorithm, key.getBytes()).digest(data),
-                Base64.NO_WRAP
+        return Base64.encode(new
+                HMac(algorithm, key.getBytes()).digest(data)
         );
     }
 
@@ -228,6 +235,23 @@ public abstract class JsExtensions implements JsEncodeUtils {
         return analyzeUrl.getResponse();
     }
 
+    public List<StrResponse> ajaxAll(List<String> urlList) throws Exception {
+        List<StrResponse> strResponses = new ArrayList<>();
+        CompletionService<StrResponse> completionService =  ThreadUtil.newCompletionService();
+        for (String url : urlList) {
+            Future<StrResponse> future = completionService.submit(new Callable<StrResponse>() {
+                @Override
+                public StrResponse call() throws Exception {
+                    AnalyzeUrl analyzeUrl = new AnalyzeUrl(url);
+                    return analyzeUrl.getStrResponse();
+                }
+            });
+        }
+        for (int i = 0; i < urlList.size(); i++) {
+            strResponses.add(completionService.take().get());
+        }
+        return strResponses;
+    }
     /**
      * js实现重定向拦截,网络访问get
      */
@@ -251,104 +275,75 @@ public abstract class JsExtensions implements JsEncodeUtils {
         if (url instanceof List) {
             urlStr = ((List<?>) url).get(0).toString();
         }
-        AnalyzeUrl analyzeUrl = new AnalyzeUrl(RequestMethod.GET, urlStr, headers, "utf-8");
+        AnalyzeUrl analyzeUrl = new AnalyzeUrl(RequestMethod.HEAD, urlStr, headers, "utf-8");
         return analyzeUrl.head();
     }
 
     /**
      * js实现重定向拦截,网络访问get
      */
-    public StrResponse post(Object url, String body, Map<String, String> headers, String charset) {
+    public StrResponse post(Object url, Object body, Map<String, String> headers, String charset) {
         String urlStr = url.toString();
         if (url instanceof List) {
             urlStr = ((List<?>) url).get(0).toString();
+        }
+        if (!(body instanceof String)) {
+            body = new Gson().toJson(body);
         }
         AnalyzeUrl analyzeUrl = new AnalyzeUrl(RequestMethod.POST, urlStr, body, headers, charset);
         return analyzeUrl.response();
     }
 
-    public StrResponse post(Object url, String body, Map<String, String> headers) {
-        return post(url,body,headers,"utf-8");
+    public StrResponse post(Object url, Object body, Map<String, String> headers) {
+        StrResponse strResponse = post(url,body,headers,"utf-8");
+        return strResponse;
     }
 
     public byte[] strToBytes(String str)  {
-        try {
-            return str.getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        }
+        return StrUtil.bytes(str);
     }
 
     public byte[] strToBytes(String str, String charset) {
-        try {
-            return str.getBytes(charset);
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        }
+        return StrUtil.bytes(str, charset);
     }
 
     public String bytesToStr(byte[] bytes)  {
-        try {
-            return new String(bytes, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        }
+        return StrUtil.str(bytes,"utf-8");
     }
 
     public String bytesToStr(byte[] bytes, String charset) {
-        try {
-            return new String(bytes, charset);
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        }
+        return StrUtil.str(bytes,charset);
     }
 
     public String base64Decode(String str)  {
-        try {
-            return new String(Base64.decode(str, Base64.DEFAULT),"UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        }
+        return Base64.decodeStr(str);
     }
 
     public String base64Decode(String str, String charset) {
-        try {
-            return new String(Base64.decode(str, Base64.DEFAULT), charset);
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        }
+        return Base64.decodeStr(str, charset);
     }
 
     public String base64Decode(String str, int flags) {
-        try {
-            return new String(Base64.decode(str, flags),"UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        }
+        return Base64.decodeStr(str);
     }
 
     public byte[] base64DecodeToByteArray(String str) {
-        if (StringUtils.isEmpty(str)) {
-            return null;
-        } else {
-            return Base64.decode(str, Base64.DEFAULT);
-        }
+        return Base64.decode(str);
     }
 
     public byte[] base64DecodeToByteArray(String str, int flags) {
-        if (StringUtils.isEmpty(str)) {
-            return null;
-        } else {
-            return Base64.decode(str, flags);
-        }
+        return Base64.decode(str);
     }
 
-    public String base64Encode(String str) {
-        return Base64.encodeToString(str.getBytes(), Base64.NO_WRAP);
+    public String base64Encode(Object str) {
+        if (!(str instanceof String)) {
+            return Base64.encode(new Gson().toJson(str));
+        }
+        return Base64.encode(str.toString());
     }
 
     public String base64Encode(String str, int flags) {
-        return Base64.encodeToString(str.getBytes(), flags);
+        return Base64.encode(str);
     }
     /* HexString 解码为字节数组 */
     public byte[] hexDecodeToByteArray(String hex) {
@@ -392,41 +387,41 @@ public abstract class JsExtensions implements JsEncodeUtils {
      * utf8编码转gbk编码
      */
     public String utf8ToGbk(String str)  {
-        String utf8 = null;
-        try {
-            utf8 = new String(str.getBytes("UTF-8"));
-            String unicode = new String(utf8.getBytes(), "UTF-8");
-            return new String(unicode.getBytes("GBK"));
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        }
+        return CharsetUtil.convert(str,"utf-8","gbk");
     }
 
     public String encodeURI(String str) {
-        try {
-            return URLEncoder.encode(str, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        }
+        return URLUtil.encode(str);
     }
 
     public String encodeURI(String str, String charset) {
-        try {
-            return URLEncoder.encode(str, charset);
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        }
+        return URLUtil.encode(str, Charset.forName(charset));
     }
 
+    public String decodeURI(String str) {
+        return URLUtil.decode(str);
+    }
+
+    public String decodeURI(String str, String charset) {
+        return URLUtil.decode(str, Charset.forName(charset));
+    }
     public String htmlFormat(String str) {
         return "";
     }
 
-    public Object log(Object msg) {
-        SpiderDebug.log(new GsonBuilder().setPrettyPrinting().setLenient().disableHtmlEscaping().create().toJson(msg));
+    public Object log(Object ... msg) {
+//        SpiderDebug.log(new GsonBuilder().setPrettyPrinting().setLenient().disableHtmlEscaping().create().toJson(msg));
+        Console.log(msg);
         return msg;
     }
 
+    public void logType(Object msg) {
+        Console.log(msg.getClass().getName());
+    }
+
+    public void logToast(Object msg) {
+        Init.show(new Gson().toJson(msg));
+    }
     /**
      * 生成UUID
      */
@@ -448,7 +443,7 @@ public abstract class JsExtensions implements JsEncodeUtils {
             System.out.println(Init.context().getExternalFilesDir("/").getAbsolutePath());
             parent = Init.context().getExternalFilesDir("/").getAbsolutePath();
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
         if (!StrUtil.endWith(path,"/")) {
             path = "/" + path;
@@ -463,7 +458,7 @@ public abstract class JsExtensions implements JsEncodeUtils {
             System.out.println(Init.context().getExternalFilesDir("/").getAbsolutePath());
             parent = Init.context().getExternalFilesDir("/").getAbsolutePath();
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
         return FileUtil.readString(parent + path, CharsetUtil.charset("utf-8"));
     }
@@ -482,5 +477,34 @@ public abstract class JsExtensions implements JsEncodeUtils {
         } else {
             return Utils.getSize(Double.parseDouble(size));
         }
+    }
+
+    /**
+     *  格式化文本, {} 表示占位符<br>
+     * @param template
+     * @param params
+     * @return
+     */
+    public String format(String template, Object... params) {
+        return StrUtil.format(template, params);
+    }
+
+    public String removePrefix(String str, String prefix) {
+        return StrUtil.removePrefix(str,prefix);
+    }
+
+    public String removeSuffix(String str, String prefix) {
+        return StrUtil.removeSuffix(str,prefix);
+    }
+
+    public String sub(String str, int fromIndexInclude, int toIndexExclude) {
+        return StrUtil.sub(str, fromIndexInclude, toIndexExclude);
+    }
+
+    public List<String> split(Object object, String separator) {
+        if (object instanceof List) {
+            return StrUtil.split(StrUtil.join("\n", Convert.toList(object)),separator);
+        }
+        return StrUtil.split(object.toString(), separator);
     }
 }

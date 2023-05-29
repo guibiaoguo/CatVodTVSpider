@@ -6,7 +6,9 @@ import android.content.SharedPreferences;
 
 import androidx.annotation.Nullable;
 
+import com.github.catvod.bean.Result;
 import com.github.catvod.crawler.Spider;
+import com.google.gson.Gson;
 import com.guibiaoguo.myapplication.RoboApp;
 
 import org.junit.After;
@@ -16,6 +18,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +45,7 @@ public class PaperTest {
 
     @Test
     public void init() {
+        Proxy.port = 9978;
 //        when(mMockContext.getString(R.string.app_name)).thenReturn(FAKE_STRING);
         when(mMockContext.getPackageName()).thenReturn("com.github.androidunittest");
 //        when(mMockContext.getApplicationContext()).thenReturn(new Application());
@@ -92,7 +96,57 @@ public class PaperTest {
 
             @Override
             public Editor edit() {
-                return null;
+                return new Editor() {
+                    @Override
+                    public Editor putString(String key, @Nullable String value) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putStringSet(String key, @Nullable Set<String> values) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putInt(String key, int value) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putLong(String key, long value) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putFloat(String key, float value) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putBoolean(String key, boolean value) {
+                        return null;
+                    }
+
+                    @Override
+                    public Editor remove(String key) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor clear() {
+                        return this;
+                    }
+
+                    @Override
+                    public boolean commit() {
+                        return false;
+                    }
+
+                    @Override
+                    public void apply() {
+
+                    }
+                };
             }
 
             @Override
@@ -106,7 +160,7 @@ public class PaperTest {
             }
         });
         Init.init(mMockContext);
-        paper.init(mMockContext, "43073a876e9f4d6c906f1d7df92af59a");
+        paper.init(mMockContext, "344d4e2759d14e349c6591ef4e5e772a");
     }
 
     @Test
@@ -122,6 +176,8 @@ public class PaperTest {
     @Test
     public void categoryContent() throws Exception {
         System.out.println(paper.categoryContent("hyds","1",true,new HashMap<>()));
+//        System.out.println(paper.categoryContent("https://www.aliyundrive.com/s/BfFQz6zbfYm","1",true,new HashMap<>()));
+//        System.out.println(paper.categoryContent("https://www.aliyundrive.com/s/BfFQz6zbfYm/folder/646f5d3147fd14c065c14811ac2cc1773e3474bd","1",true,new HashMap<>()));
     }
 
     @Test
@@ -131,6 +187,27 @@ public class PaperTest {
 
     @Test
     public void detailContent() throws Exception {
+//        System.out.println(paper.detailContent(Arrays.asList("https://www.aliyundrive.com/s/GF9muMqpc16")));
         System.out.println(paper.detailContent(Arrays.asList("https://www.aliyundrive.com/s/GF9muMqpc16")));
+    }
+
+    @Test
+    public void
+
+
+
+
+
+
+
+
+
+
+    playerContent() throws Exception {
+//        String content = paper.detailContent(List.of("https://www.aliyundrive.com/s/BfFQz6zbfYm/folder/646f5d3147fd14c065c14811ac2cc1773e3474bd"));
+        String content = paper.detailContent(List.of("https://www.aliyundrive.com/s/KwUCz4H31JK/folder/619ae206f21fe67ebabb402d9429931729e7c039"));
+        Result result = new Gson().fromJson(content, Result.class);
+        String id = result.getList().get(0).getVodPlayUrl().split("#")[0].split("\\$")[1];
+        System.out.println(paper.playerContent("原畫",id,new ArrayList<>()));
     }
 }

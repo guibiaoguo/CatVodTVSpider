@@ -20,21 +20,31 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cn.hutool.core.lang.Console;
+import cn.hutool.core.util.StrUtil;
 import okhttp3.Call;
 import okhttp3.Headers;
 import okhttp3.Response;
 
 public class AnalyzeUrl extends JsExtensions implements IFunction {
 
-    private String mUrl;
+    public static Gson gson = new GsonBuilder()
+            .registerTypeAdapter(new TypeToken<Map<String,Object>>(){}.getType(),new DataTypeAdapter())
+            .registerTypeAdapter(new TypeToken<List>(){}.getType(),new DataTypeAdapter())
+            .create();
+
+    private final String mUrl;
     private String key;
     private int page;
     private String baseUrl;
 
+    private String urlNoQuery;
     public AnalyzeUrl(RequestMethod method, String mUrl, Map<String, String> headerMapF,String charset) {
         this.method = method;
         this.mUrl = mUrl;
@@ -49,12 +59,12 @@ public class AnalyzeUrl extends JsExtensions implements IFunction {
         ruleData = new RuleData();
     }
 
-    public AnalyzeUrl(RequestMethod method, String mUrl, String body, Map<String, String> headerMapF,String charset) {
+    public AnalyzeUrl(RequestMethod method, String mUrl, Object body, Map<String, String> headerMapF,String charset) {
         this.method = method;
         this.mUrl = mUrl;
         this.url = mUrl;
         this.baseUrl = "";
-        this.body = body;
+        this.body = body.toString();
         if (headerMapF != null)
             this.headerMap.putAll(headerMapF);
         if (!this.headerMap.containsKey("User-Agent")) {
@@ -100,20 +110,14 @@ public class AnalyzeUrl extends JsExtensions implements IFunction {
     private String ruleUrl = "";
     private String url = "";
     private String body = "";
-    private String type = "";
 
-    private Map<String, String> headerMap = new HashMap<>();
-    private String urlNoQuery = "";
-    private String queryStr = null;
-    private Map<String, String> fieldMap = new LinkedHashMap<>();
+    private final Map<String, String> headerMap = new HashMap<>();
+    private final Map<String, String> fieldMap = new LinkedHashMap<>();
     private String charset = null;
     private RequestMethod method = RequestMethod.GET;
-    private String proxy = null;
-    private int retry = 0;
     private String domain;
 
-    private Long serverId = null;
-    private RuleDataInterface ruleData;
+    private final RuleDataInterface ruleData;
 
     public void init() {
         Matcher urlMatcher = paramPattern.matcher(baseUrl);
@@ -141,18 +145,14 @@ public class AnalyzeUrl extends JsExtensions implements IFunction {
         while (jsMatcher.find()) {
             if (jsMatcher.start() > start) {
                 result = ruleUrl.substring(start, jsMatcher.start());
-                if (result != null) {
-                    result = result.replace("@result", result);
-                }
+                result = result.replace("@result", result);
             }
             result = evalJS(jsMatcher.group(2)!=null?jsMatcher.group(2):jsMatcher.group(1), result).toString();
             start = jsMatcher.end();
         }
         if (ruleUrl.length() > start) {
             result = ruleUrl.substring(start);
-            if (result != null) {
-                result = result.replace("@result", result);
-            }
+            result = result.replace("@result", result);
         }
     }
 
@@ -178,11 +178,11 @@ public class AnalyzeUrl extends JsExtensions implements IFunction {
         }
         Matcher pageMatcher = pagePattern.matcher(ruleUrl);
         while (pageMatcher.find()) {
-            String[] pages = pageMatcher.group(1).split(",");
-            if (page < pages.length) {
-                ruleUrl = ruleUrl.replace(pageMatcher.group(), pages[page -1]);
+            List<String> pages = StrUtil.split(pageMatcher.group(1), ",");
+            if (page < pages.size()) {
+                ruleUrl = ruleUrl.replace(pageMatcher.group(), pages.get(page -1));
             } else {
-                ruleUrl = ruleUrl.replace(pageMatcher.group(), pages[pages.length-1]);
+                ruleUrl = ruleUrl.replace(pageMatcher.group(), pages.get(pages.size()-1));
             }
         }
     }
@@ -203,36 +203,28 @@ public class AnalyzeUrl extends JsExtensions implements IFunction {
             System.out.println(option.getHeaders());
             System.out.println(option.getMethod());
             System.out.println("**********option end*********************");
-            if (option != null) {
-                if (StringUtils.equalsIgnoreCase("POST",option.getMethod())) {
-                    method = RequestMethod.POST;
-                }
+            if (StringUtils.equalsIgnoreCase("POST",option.getMethod())) {
+                method = RequestMethod.POST;
             }
             if (option.getHeaders() != null) {
-                for (Map.Entry<String, String> entry : option.getHeaders().entrySet()) {
-                    headerMap.put(entry.getKey(), entry.getValue());
-                }
+                headerMap.putAll(option.getHeaders());
             }
             if (option.getBody() instanceof String) {
                 body = option.getBody().toString();
-            } else {
-                Map<String,Object> data = new GsonBuilder()
-                        .registerTypeAdapter(new TypeToken<Map<String,Object>>(){}.getType(),new DataTypeAdapter())
-                        .create().fromJson(ruleUrl.substring(urlMatcher.end()),new TypeToken<Map<String,Object>>(){}.getType());
+            } else if (option.getBody() != null){
+                Map<String,Object> data = gson.fromJson(ruleUrl.substring(urlMatcher.end()),new TypeToken<Map<String,Object>>(){}.getType());
                 body = new GsonBuilder().disableHtmlEscaping().create().toJson(data.get("body"));
             }
-            type = option.getType();
             charset = option.getCharset();
-            retry = option.getRetry();
             if (StringUtils.isNotEmpty(option.getJs())) {
                 url = evalJS(option.getJs(),"").toString();
             }
         }
-        urlNoOption = url;
+        urlNoQuery = url;
         switch (method) {
             case GET:
                 int pos = url.indexOf("?");
-                if (pos != -1) {
+                if (pos != -1 && !headerMap.containsKey("referer")) {
                     analyzeFields(url.substring(pos + 1));
                     urlNoQuery = url.substring(0, pos);
                 }
@@ -245,14 +237,13 @@ public class AnalyzeUrl extends JsExtensions implements IFunction {
     }
 
     private void analyzeFields(String fieldTxt) {
-        queryStr = fieldTxt;
         String[] queryS = StringUtils.split(fieldTxt,"&");
         for (String query : queryS) {
             String[] queryPair = StringUtils.splitByWholeSeparator(query,"=",2);
             String key = queryPair[0];
             String value = queryPair.length > 1 ? queryPair[1]: "";
             if (StringUtils.isEmpty(charset)) {
-                if (NetworkUtils.hasUrlEncode(value)) {
+                if (NetworkUtils.INSTANCE.hasUrlEncode(value)) {
                     fieldMap.put(key, value);
                 } else {
                     fieldMap.put(key, StringUtil.encode(value));
@@ -282,16 +273,16 @@ public class AnalyzeUrl extends JsExtensions implements IFunction {
         return data;
     }
 
-    public void getRespone(OKCallBack okCallBack) {
+    public void getRespone(OKCallBack<?> okCallBack) {
         switch (method) {
             case GET:
-                OkHttpUtil.get(OkHttpUtil.defaultClient(),url,fieldMap,headerMap, okCallBack);
+                OkHttpUtil.get(OkHttpUtil.defaultClient(),urlNoQuery,fieldMap,headerMap, okCallBack);
                 break;
             case POST:
                 if (StringUtil.isJson(body) || StringUtil.isXml(body))
-                    OkHttpUtil.postJson(OkHttpUtil.defaultClient(),url,body,headerMap,okCallBack);
+                    OkHttpUtil.postJson(OkHttpUtil.defaultClient(),urlNoQuery,body,headerMap,okCallBack);
                 else
-                    OkHttpUtil.post(OkHttpUtil.defaultClient(),url,fieldMap,headerMap, okCallBack);
+                    OkHttpUtil.post(OkHttpUtil.defaultClient(),urlNoQuery,fieldMap,headerMap, okCallBack);
                 break;
         }
     }
@@ -300,8 +291,8 @@ public class AnalyzeUrl extends JsExtensions implements IFunction {
 
         OKCallBack<Response> okCallBack = new OKCallBack.OKCallBackDefault() {
             /**
-             * @param call
-             * @param e
+             * @param call 回调
+             * @param e 错误信息
              */
             @Override
             protected void onFailure(Call call, Exception e) {
@@ -309,35 +300,42 @@ public class AnalyzeUrl extends JsExtensions implements IFunction {
             }
 
             /**
-             * @param response
+             * @param response 返回响应
              */
             @Override
             protected void onResponse(Response response) {
 
             }
         };
+        Console.log(headerMap);
         switch (method) {
+            case HEAD:
+                System.out.println("head请求");
+                OkHttpUtil.get(OkHttpUtil.noRedirectClient(),urlNoQuery,fieldMap,headerMap, okCallBack);
+                break;
             case GET:
                 System.out.println("get请求");
-                OkHttpUtil.get(OkHttpUtil.defaultClient(),url,fieldMap,headerMap, okCallBack);
+                OkHttpUtil.get(OkHttpUtil.defaultClient(),urlNoQuery,fieldMap,headerMap, okCallBack);
                 break;
             case POST:
                 if (StringUtil.isJson(body) || StringUtil.isXml(body)) {
                     System.out.println("postJson请求");
-                    OkHttpUtil.postJson(OkHttpUtil.defaultClient(), url, new Gson().fromJson(body, JsonObject.class).toString(), headerMap, okCallBack);
+                    OkHttpUtil.postJson(OkHttpUtil.defaultClient(), urlNoQuery, body, headerMap, okCallBack);
                 }
                 else {
                     System.out.println("post请求");
-                    OkHttpUtil.post(OkHttpUtil.defaultClient(), url, fieldMap, headerMap, okCallBack);
+                    OkHttpUtil.post(OkHttpUtil.defaultClient(), urlNoQuery, fieldMap, headerMap, okCallBack);
                 }
                 break;
         }
-        StrResponse strResponse = new StrResponse(okCallBack.getResult(),charset);
-        return strResponse;
+        return new StrResponse(okCallBack.getResult(),charset);
     }
 
     public String getResponse() {
-        return getStrResponse().body();
+        StrResponse strResponse = getStrResponse();
+        if (strResponse != null)
+            return getStrResponse().body();
+        return "";
     }
 
     public Headers head() {
@@ -345,33 +343,21 @@ public class AnalyzeUrl extends JsExtensions implements IFunction {
     }
 
     public StrResponse response() {
-        OKCallBack<Response> okCallBack = new OKCallBack.OKCallBackDefault() {
-            @Override
-            protected void onFailure(Call call, Exception e) {
-
-            }
-
-            @Override
-            protected void onResponse(Response response) {
-
-            }
-        };
-        if (StringUtils.isNotEmpty(body) && (!StringUtil.isJson(body)||!StringUtil.isXml(body))) {
-            analyzeFields(body);
-        }
+        urlNoQuery = url;
         switch (method) {
             case GET:
-                OkHttpUtil.get(OkHttpUtil.noRedirectClient(), url, fieldMap, headerMap, okCallBack);
+                int pos = url.indexOf("?");
+                if (pos != -1 && !headerMap.containsKey("referer")) {
+                    analyzeFields(url.substring(pos + 1));
+                    urlNoQuery = url.substring(0, pos);
+                }
                 break;
             case POST:
-                if (StringUtil.isJson(body) || StringUtil.isXml(body))
-                    OkHttpUtil.postJson(OkHttpUtil.noRedirectClient(),url,body,headerMap,okCallBack);
-                else
-                    OkHttpUtil.post(OkHttpUtil.noRedirectClient(), url, fieldMap, headerMap, okCallBack);
+                if (!StringUtil.isJson(body) && !StringUtil.isXml(body) && StringUtils.isEmpty(headerMap.get("Content-Type")))
+                    analyzeFields(body);
                 break;
         }
-        StrResponse strResponse = new StrResponse(okCallBack.getResult(),charset);
-        return strResponse;
+        return getStrResponse();
     }
 
     public String getBaseUrl() {
@@ -385,7 +371,7 @@ public class AnalyzeUrl extends JsExtensions implements IFunction {
         if (jsEval instanceof String) {
             url = jsEval.toString();
         } else if (jsEval instanceof Double && (Double)jsEval % 1.0 == 0) {
-            url = String.format("%0.f", jsEval);
+            url = String.format(Locale.CHINA, "%.0f", jsEval);
         } else if (jsEval == null){
             url = "";
         }

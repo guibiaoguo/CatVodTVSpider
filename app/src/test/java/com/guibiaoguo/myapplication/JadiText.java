@@ -30,6 +30,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.HexUtil;
 import okhttp3.Call;
 
 
@@ -73,8 +75,39 @@ public class JadiText {
         System.out.println(md5(a(new byte[]{-122, -94, 6, -62, -102, 21}, new byte[]{-33, -53, 119, -85, -15, 74, 112, 88})));
         System.out.println(md5(a(new byte[]{26, 104, 109, -123, 111, 15}, new byte[]{66, 1, 12, -22, 7, 80, -26, -27})));
         System.out.println(d("273E4F"));
-
-        }
+        System.out.println(a(new byte[]{34, -57, -6, 60, 90, -85, -113, 121, -111, 38, 33, -80, -93, -32, -31, 97, -18, -119}, new byte[]{118, -88, -111, 89, 52, 78, 8, -61}));
+//        System.out.println(d("B1ECA1D597FEB1DFA1D297CFB1E6A1D397F3B1D1A1E297FDB1E2A1D197F0B1E5"));
+//        System.out.println(d("B1DAA1DD97F8B1E2A1D097FFB1E2A1DE97C2B1DFA1ED97C2B1EDA1D797F3B1DFA1D297C0"));
+//        System.out.println(d("B1D2A1DE97CFB1DCA1EA97C0B1E2A1DE97FAB1DBA1D297FCB1E6A1ED97F9B1DEA1DD97C0B1DEA1D497FDB1D1A1EE97FEB1E2A1D397F8"));
+        System.out.println(a(new byte[]{-104, -94, -18, -95, 62, 97}, new byte[]{-22, -51, -116, -51, 81, 25, -1, 30}));
+        System.out.println(a(new byte[]{-102, 100, -15, -110, 33, 62, 68, 64, -121, 121, -88, -125, 100, 73, 100, 0, -39, 110, -5, -53, 109}, new byte[]{-29, 29, -120, -21, 12, 115, 9, 109}));
+        System.out.println(a(new byte[]{-13, -65, 112, 71, -82, 16, 72, -11}, new byte[]{-105, -51, 25, 49, -53, 79, 33, -111}));
+        System.out.println(a(new byte[]{58, 42, -8, -36, 12, -41, 54, 116, 40, 53, -50, -9, 2, -33, 48, Byte.MAX_VALUE}, new byte[]{91, 70, -111, -125, 109, -76, 85, 17}));
+        System.out.println(a(new byte[]{30, 39, -77, 32, -92, -70, 32, 46, 20, 36, -91, 17, -113, -76, 40, 40, 31}, new byte[]{113, 87, -42, 78, -5, -37, 67, 77}));
+        System.out.println(d(d("1E030A10")));
+        System.out.println(HexUtil.decodeHexStr("1E030A10"));
+        System.out.println(HexUtil.decodeHexStr("0511"));
+        System.out.println(d("0511"));
+        System.out.println(d("020E0E057677454B48426268444A544476"));
+        System.out.println(d("0E15"));
+        System.out.println(d("1D1F18112D2E"));
+        System.out.println(d("0911"));
+        System.out.println(d("0B1613"));
+        System.out.println(d("0E1E081E"));
+        System.out.println(d("0B0F1F0129"));
+        System.out.println(d("090009053C"));
+        System.out.println(d("12131B1A24"));
+        System.out.println(a(new byte[]{-63, -75, -12, -80}, new byte[]{-107, -31, -99, -58, -12, -40, -93, -106}));
+        System.out.println(a(new byte[]{9, 99, -116, 76, -81}, new byte[]{93, 55, -25, 41, -42, 111, -57, -100}));
+        System.out.println(a(new byte[]{33, 14, -52, 20, 107, -100}, new byte[]{83, 97, -82, 120, 4, -28, 3, 0}));
+        System.out.println(d("B1DCA1E997F0B1E2A1ED97FEB1E5A1EF97F0B1D1A1ED97C3B1E2A1ED97FCB1DEA1E2"));
+        System.out.println(a(new byte[]{-122, 119, 1, 58, -33, 106, 119, -47, -104, 106, 17, 47, -61, 126, 44, -54, -102, 117, 91, 34, -42, 126, 59, -124, -63, 113, 26, 40, -64, 63, 32}, new byte[]{-18, 3, 117, 74, -84, 80, 88, -2}));
+        System.out.println(DateUtil.date(System.currentTimeMillis()-7200*1000));
+        System.out.println(DateUtil.now());
+        System.out.println(System.currentTimeMillis());
+        System.out.println(DateUtil.parse("2023-05-28 02:00:00 AM","yyyy-MM-dd hh:mm:ss").getTime());
+        System.out.println(a(new byte[]{-102, 100, -15, -110, 33, 62, 68, 64, -121, 121, -88, -125, 100, 73, 100, 0, -39, 110, -5, -53, 109}, new byte[]{-29, 29, -120, -21, 12, 115, 9, 109}));
+    }
 
     private static final String KEY = "jzzuLX";
     private static final String hexString = "0123456789ABCDEF";

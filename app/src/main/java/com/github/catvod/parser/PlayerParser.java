@@ -7,7 +7,6 @@ import com.github.catvod.utils.StringUtil;
 import com.github.catvod.utils.okhttp.OKCallBack;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
-import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -21,6 +20,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cn.hutool.core.util.StrUtil;
 import okhttp3.Response;
 
 public class PlayerParser {
@@ -254,7 +254,7 @@ public class PlayerParser {
     public boolean isParse(String url) {
         String[] videoFormatList = {".CUE",".APE",".M3U8", ".3G2", ".3GP", ".3GP2", ".3GPP", ".AMV", ".ASF", ".AVI", ".DIVX", ".DPG", ".DVR-MS", ".EVO", ".F4V", ".FLV", ".IFO", ".K3G", ".M1V", ".M2T", ".M2TS", ".M2V", ".M4B", ".M4P", ".M4V", ".MKV", ".MOV", ".MP2V", ".MP4", ".MPE", ".MPEG", ".MPG", ".MPV2", ".MTS", ".MXF", ".NSR", ".NSV", ".OGM", ".OGV", ".QT", ".RAM", ".RM", ".RMVB", ".RPM", ".SKM", ".TP", ".TPR", ".TRP", ".TS", ".VOB", ".WEBM", ".WM", ".WMP", ".WMV", ".WTV"};
         url = url.toLowerCase();
-        boolean parse = StringUtils.endsWithAny(url.toUpperCase(), videoFormatList);
+        boolean parse = StrUtil.endWithAny(url.toUpperCase(), videoFormatList);
         if (parse || Misc.isVip(url)) {
             return true;
         }

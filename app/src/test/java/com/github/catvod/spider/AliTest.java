@@ -103,7 +103,57 @@ public class AliTest {
 
             @Override
             public Editor edit() {
-                return null;
+                return new Editor() {
+                    @Override
+                    public Editor putString(String key, @Nullable String value) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putStringSet(String key, @Nullable Set<String> values) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putInt(String key, int value) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putLong(String key, long value) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putFloat(String key, float value) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putBoolean(String key, boolean value) {
+                        return null;
+                    }
+
+                    @Override
+                    public Editor remove(String key) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor clear() {
+                        return this;
+                    }
+
+                    @Override
+                    public boolean commit() {
+                        return false;
+                    }
+
+                    @Override
+                    public void apply() {
+
+                    }
+                };
             }
 
             @Override
@@ -117,8 +167,7 @@ public class AliTest {
             }
         });
         Init.init(mMockContext);
-        Proxy.port = 9997;
-        ali.init(mMockContext, "9ed3f99efcbe40e89b13d307f915cb63");
+        ali.init(mMockContext, "");
     }
 
     @Test

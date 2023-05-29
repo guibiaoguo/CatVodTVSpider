@@ -4,7 +4,6 @@ import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.StringUtil;
 import com.github.catvod.utils.okhttp.OKCallBack;
 
-import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -13,6 +12,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cn.hutool.core.util.StrUtil;
 import okhttp3.Response;
 
 public class CategoryBuild {
@@ -155,7 +155,7 @@ public class CategoryBuild {
                 ruleData.putVariable("catePg","1");
                 putParamMap(categoryParamMaps);
                 String cateUrl = analyzeRule.getString(cateUrlSelector, null, true);
-                if (StringUtils.isEmpty(cateUrl) || !StringUtil.isWebUrl(cateUrl)) {
+                if (StrUtil.isEmpty(cateUrl) || !StringUtil.isWebUrl(cateUrl)) {
                     cateUrl = categoryUrl(typeId, "1");
                 }
                 cateUrl = StringUtil.encode(StringUtil.decode(cateUrl));
@@ -217,7 +217,7 @@ public class CategoryBuild {
     protected String categoryUrl(String tid, String pg) {
         String cateUrl = cateUrlSelector;
         if (StringUtil.isAbsUrl(tid)) {
-            tid = StringUtils.trim(tid).split("\n")[0];
+            tid = StrUtil.trim(tid).split("\n")[0];
         }
         cateUrl = cateUrl.replace("{cateId}", tid).replace("{catePg}", pg);
         Matcher m = Pattern.compile("\\{(.*?)\\}").matcher(cateUrl);
@@ -237,7 +237,7 @@ public class CategoryBuild {
                 String value = param.optString("paramValue");
                 String flag = param.optString("paramFlag");
                 String webUrl = analyzeRule.getString(url);
-                if (StringUtils.isNotEmpty(webUrl) && StringUtil.isWebUrl(webUrl)) {
+                if (StrUtil.isNotEmpty(webUrl) && StringUtil.isWebUrl(webUrl)) {
                     webUrl = StringUtil.encode(StringUtil.decode(webUrl));
                     OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(webUrl);
                     try {
@@ -251,9 +251,9 @@ public class CategoryBuild {
                     }
                 }
                 String value1 = analyzeRule.getString(value);
-                if (StringUtils.equalsIgnoreCase(flag, "list")) {
+                if (StrUtil.equalsIgnoreCase(flag, "list")) {
                     ruleData.putVariable(key, ruleData.getVariable(key) + "\n" + value1);
-                } else if (StringUtils.isNotEmpty(value1)) {
+                } else if (StrUtil.isNotEmpty(value1)) {
                     ruleData.putVariable(key, value1);
                 }
             }

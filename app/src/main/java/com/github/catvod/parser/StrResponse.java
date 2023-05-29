@@ -1,18 +1,17 @@
 package com.github.catvod.parser;
 
-import org.apache.commons.lang3.StringUtils;
-
-import java.io.IOException;
-
+import cn.hutool.core.lang.Console;
+import cn.hutool.core.util.StrUtil;
 import okhttp3.Headers;
 import okhttp3.Response;
 
 public class StrResponse {
 
-    private Response raw;
+    private final Response raw;
+    private final String charset;
+
     private String body;
-    private int code;
-    private String charset;
+
 
     public StrResponse(Response raw, String charset) {
         this.raw = raw;
@@ -20,13 +19,23 @@ public class StrResponse {
     }
 
     public String body() {
-        try {
-            if (StringUtils.isEmpty(charset))
-                return new String(raw.body().bytes(),"utf-8");
-            else
-                return new String(raw.body().bytes(),charset);
-        } catch (IOException e) {
+        if (raw == null) {
             return "";
+        }
+        try {
+            if (StrUtil.isEmpty(charset))
+                body = StrUtil.str(raw.body().bytes(),"utf-8");
+            else
+                body = StrUtil.str(raw.body().bytes(), charset);
+            return body;
+        } catch (Exception e) {
+            Console.log(e.getLocalizedMessage());
+            return body;
+        } finally {
+            if (raw != null) {
+                raw.close();
+                raw.body().close();
+            }
         }
     }
 
@@ -49,4 +58,5 @@ public class StrResponse {
     public String toString() {
         return raw.toString();
     }
+
 }

@@ -1,11 +1,12 @@
 package com.github.catvod.parser;
 
+import android.text.TextUtils;
+
 import com.github.catvod.utils.StringUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -14,8 +15,10 @@ import org.jsoup.select.Elements;
 import org.seimicrawler.xpath.JXDocument;
 import org.seimicrawler.xpath.JXNode;
 
+import cn.hutool.core.util.StrUtil;
+
 public class AnalyzeByXPath {
-    private Object jxNode;
+    private final Object jxNode;
 
     private Object parse(Object doc) {
         Object jxNode;
@@ -39,22 +42,22 @@ public class AnalyzeByXPath {
 
     private JXDocument strToJXDocument(String html) {
         String html1 = html;
-        if (StringUtils.endsWith(html, "</td>")) {
+        if (StrUtil.endWith(html, "</td>")) {
             html1 = "<tr>" + html + "</tr>";
         }
 
-        if (StringUtils.endsWith(html1, "</tr>") || StringUtils.endsWith(html1, "</tbody>")) {
+        if (StrUtil.endWith(html1, "</tr>") || StrUtil.endWith(html1, "</tbody>")) {
             html1 = "<table>" + html1 + "</table>";
         }
-        if (StringUtils.startsWith(html1, "<?xml")) {
+        if (StrUtil.startWith(html1, "<?xml")) {
             return JXDocument.create(Jsoup.parse(html1, Parser.xmlParser()));
         }
         return JXDocument.create(html1);
     }
 
-    private List getResult(String xPath) {
+    private List<JXNode> getResult(String xPath) {
         Object node = this.jxNode;
-        List results;
+        List<JXNode> results;
         if (node instanceof JXNode) {
             results = ((JXNode) node).sel(xPath);
         } else {
@@ -75,9 +78,9 @@ public class AnalyzeByXPath {
         }
         List<JXNode> jxNodes = new ArrayList<>();
         RuleAnalyzer ruleAnalyzes = new RuleAnalyzer(xPath);
-        ArrayList rules = ruleAnalyzes.splitRule("&&", "||", "%%");
+        List<String> rules = ruleAnalyzes.splitRule("&&", "||", "%%");
         if (rules.size() == 1) {
-            return getResult(rules.get(0).toString());
+            return getResult(rules.get(0));
         } else {
             ArrayList<List<JXNode>> results = new ArrayList<>();
             for (Object r1 : rules) {
@@ -116,9 +119,9 @@ public class AnalyzeByXPath {
         }
         List<String> result = new ArrayList<>();
         RuleAnalyzer ruleAnalyzes = new RuleAnalyzer(xPath);
-        ArrayList rules = ruleAnalyzes.splitRule("&&", "||", "%%");
+        List<String> rules = ruleAnalyzes.splitRule("&&", "||", "%%");
         if (rules.size() == 1) {
-            List its = getResult(xPath);
+            List<JXNode> its = getResult(xPath);
             for(Object it:its) {
                 result.add(it.toString());
             }
@@ -157,13 +160,13 @@ public class AnalyzeByXPath {
         if (xPath.isEmpty()) {
             return null;
         }
-        List result = new ArrayList();
+        List<String> result = new ArrayList<>();
         RuleAnalyzer ruleAnalyzes = new RuleAnalyzer(xPath);
-        ArrayList rules = ruleAnalyzes.splitRule("&&", "||");
+        List<String> rules = ruleAnalyzes.splitRule("&&", "||");
         if (rules.size() == 1) {
-            result = getResult(xPath);
-            if (result != null) {
-                return StringUtil.join("\n",result);
+            List<JXNode> result1 = getResult(xPath);
+            if (result1 != null) {
+                return TextUtils.join("\n", result1);
             }
             return "";
         } else {
@@ -179,26 +182,6 @@ public class AnalyzeByXPath {
             return StringUtil.join("\n", result);
         }
     }
-
-//    @TargetApi(Build.VERSION_CODES.N)
-//    public final String getString(String rule) {
-//        if (rule.isEmpty()) {
-//            return null;
-//        }
-//        List textS = getStringList(rule);
-//        List result = new ArrayList();
-//        if (textS != null & !textS.isEmpty()) {
-////            textS.forEach(text -> {
-////                result.add(text);
-////            });
-//            for(Object text:textS) {
-//                result.add(text);
-//            }
-//            return StringUtil.join("\n",result);
-//        } else {
-//            return null;
-//        }
-//    }
 
     public AnalyzeByXPath(Object doc) {
         this.jxNode = this.parse(doc);

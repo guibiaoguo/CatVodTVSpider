@@ -1,12 +1,13 @@
 package com.github.catvod.parser;
 
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
 
+import cn.hutool.core.util.StrUtil;
+
 public class RuleData implements RuleDataInterface {
 
-    private HashMap<String,Object> variableMap = new HashMap<>();
+    private final HashMap<String,Object> variableMap = new HashMap<>();
 
     @Override
     public HashMap<String, Object> getVariableMap() {
@@ -28,7 +29,7 @@ public class RuleData implements RuleDataInterface {
         if(key != null) {
             value = variableMap.get(key);
         }
-        if (value == null || StringUtils.isEmpty(value.toString())) {
+        if (value == null || StrUtil.isEmpty(value.toString())) {
             return "";
         }
         return value;

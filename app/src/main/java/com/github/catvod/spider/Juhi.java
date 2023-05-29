@@ -8,7 +8,6 @@ import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Misc;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
-import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,6 +26,8 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import cn.hutool.core.util.StrUtil;
 
 public class Juhi extends Spider {
 
@@ -455,7 +456,7 @@ public class Juhi extends Spider {
         if (url.contains("=http") || url.contains("=https") || url.contains("=https%3a%2f") || url.contains("=http%3a%2f")) {
             return false;
         }
-        if(StringUtils.endsWithAny(url.toUpperCase(),videoFormatList)) {
+        if(StrUtil.endWithAny(url.toUpperCase(),videoFormatList)) {
             return true;
         }
         return false;

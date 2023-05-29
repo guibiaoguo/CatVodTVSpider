@@ -26,7 +26,6 @@ import com.github.catvod.utils.Prefers;
 import com.github.catvod.utils.QRCode;
 import com.github.catvod.utils.Trans;
 import com.github.catvod.utils.Utils;
-import com.github.catvod.utils.okhttp.OKCallBack;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -35,6 +34,7 @@ import com.starkbank.ellipticcurve.PrivateKey;
 import com.starkbank.ellipticcurve.utils.BinaryAscii;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
@@ -50,8 +50,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
-import okhttp3.Call;
-import okhttp3.Response;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
 
 public class API {
 
@@ -62,6 +62,21 @@ public class API {
     private String shareToken = "";
     private final Auth auth;
     private String shareId;
+
+    public String getList(String fileId) {
+        JSONObject body = new JSONObject();
+        try {
+            body.put("limit", 200);
+            body.put("share_id", shareId);
+            body.put("parent_file_id", fileId);
+            body.put("order_by", "name");
+            body.put("order_direction", "ASC");
+            body.put("marker", "");
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+        return auth("adrive/v3/file/list", body, true);
+    }
 
     private static class Loader {
         static volatile API INSTANCE = new API();
@@ -77,7 +92,12 @@ public class API {
     }
 
     public void setRefreshToken(String token) {
-        if (auth.getRefreshToken().isEmpty()) auth.setRefreshToken(token);
+        if (StrUtil.isEmpty(token)) {
+            auth.clean();
+        }
+        else if (StrUtil.isNotEmpty(token)) {
+            auth.setRefreshToken(token);
+        }
     }
 
     public void setShareId(String shareId) {
@@ -171,6 +191,38 @@ public class API {
             SpiderDebug.log("refreshAccessToken...");
             JSONObject body = new JSONObject();
             String token = auth.getRefreshToken();
+            if (StrUtil.isEmpty(token)) {
+                SpiderDebug.log("refreshAccessToken...共享token");
+                String roblox = Prefers.getString("roblox");
+                SpiderDebug.log(roblox);
+                if (StrUtil.isEmpty(roblox) || roblox.equals("null")) {
+                    SpiderDebug.log("请求共享token");
+                    Map<String, String> header = getHeader();
+                    header.put("Referer", "arsenal");
+                    String result = OkHttp.string("https://video.t4tv.hz.cz/roblox", header);
+                    if (StrUtil.isEmpty(result)) {
+                        refreshOpenToken();
+                    }
+                    JSONObject object = new JSONObject(result);
+                    auth.setUserId(object.getString("user_id"));
+                    auth.setDriveId(object.getString("drive_id"));
+                    auth.setRefreshTokenOpen(object.getString("open_refresh_token"));
+                    auth.setAccessTokenOpen(object.getString("open_access_token"));
+                    auth.setAccessToken(object.getString("ali_access_token"));
+                    Prefers.put("roblox", result);
+                } else {
+                    JSONObject object = new JSONObject(roblox);
+                    auth.setUserId(object.getString("user_id"));
+                    auth.setDriveId(object.getString("drive_id"));
+                    auth.setRefreshTokenOpen(object.getString("open_refresh_token"));
+                    auth.setAccessTokenOpen(object.getString("open_access_token"));
+                    auth.setAccessToken(object.getString("ali_access_token"));
+                    if ((System.currentTimeMillis() - DateUtil.parse(new JSONObject(roblox).optString("current_time"),"yyyy-MM-dd hh:mm:ss").getTime() > 7200 * 1000)) {
+                        Prefers.put("roblox", "");
+                    }
+                }
+                return true;
+            }
             if (token.startsWith("http")) token = OkHttp.string(token).replaceAll("[^A-Za-z0-9]", "");
             body.put("refresh_token", token);
             body.put("grant_type", "refresh_token");
@@ -213,6 +265,7 @@ public class API {
             JSONObject object = new JSONObject(OkHttp.postJson("https://api.nn.ci/alist/ali_open/code", body.toString(), null));
             Log.e("DDD", object.toString());
             auth.setRefreshTokenOpen(object.getString("refresh_token"));
+            auth.setAccessTokenOpen(object.getString("token_type") + " " + object.getString("access_token"));
         } catch (Exception e) {
             SpiderDebug.log(e);
         }

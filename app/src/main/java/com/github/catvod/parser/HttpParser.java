@@ -9,7 +9,6 @@ import com.github.catvod.utils.StringUtil;
 import com.github.catvod.utils.okhttp.OKCallBack;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
-import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -22,6 +21,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cn.hutool.core.util.StrUtil;
 import okhttp3.Call;
 import okhttp3.Protocol;
 import okhttp3.Request;
@@ -41,7 +41,7 @@ public class HttpParser {
     private static final String MOBILE_UA = "";
 
     public static OKCallBack<Response> parseSearchUrlForHtml(String sourceUrl) {
-        if (StringUtils.startsWith(sourceUrl, "proxy://")) {
+        if (StrUtil.startWith(sourceUrl, "proxy://")) {
             OKCallBack<Response> callBack = new OKCallBack.OKCallBackDefault() {
                 @Override
                 protected void onFailure(Call call, Exception e) {
@@ -116,7 +116,7 @@ public class HttpParser {
                     }
                     HashMap<String,String> params = new HashMap<>();
                     for (String s : sss) {
-                        if (StringUtils.isEmpty(s)) {
+                        if (StrUtil.isEmpty(s)) {
                             continue;
                         }
                         String[] kk = s.split("=");
@@ -139,7 +139,7 @@ public class HttpParser {
                     }
                     HashMap<String,String> params = new HashMap<>();
                     for (String s : sss) {
-                        if (StringUtils.isEmpty(s)) {
+                        if (StrUtil.isEmpty(s)) {
                             continue;
                         }
                         String[] kk = s.split("=");
@@ -157,7 +157,7 @@ public class HttpParser {
     }
 
     public static String getCode(String searchUrl) {
-        if (StringUtils.isEmpty(searchUrl)) {
+        if (StrUtil.isEmpty(searchUrl)) {
             return null;
         }
         if (searchUrl.startsWith("proxy://")) {
@@ -182,7 +182,7 @@ public class HttpParser {
     }
 
     public static HashMap<String, String> getHeaders(String searchUrl) {
-        if (StringUtils.isEmpty(searchUrl)) {
+        if (StrUtil.isEmpty(searchUrl)) {
             return null;
         }
         Pattern pattern = Pattern.compile("(.*);(\\{.*\\}$)");
@@ -249,7 +249,7 @@ public class HttpParser {
     }
 
     public static String getRealUrlFilterHeaders(String searchUrl) {
-        if (StringUtils.isEmpty(searchUrl)) {
+        if (StrUtil.isEmpty(searchUrl)) {
             return "";
         }
         String[] d = searchUrl.split(";");
@@ -362,9 +362,9 @@ public class HttpParser {
             if (url.startsWith("x5Rule://")) {
                 return url.split("@")[0].replace("x5Rule://", "");
             } else if (url.startsWith("hiker://empty#http")) {
-                url = StringUtils.replaceOnce(url, "hiker://empty#", "");
+                url = StrUtil.replace(url, "hiker://empty#", "");
             } else if (url.startsWith("hiker://empty##http")) {
-                url = StringUtils.replaceOnce(url, "hiker://empty##", "");
+                url = StrUtil.replace(url, "hiker://empty##", "");
             }
             int page = 1;
             String[] allUrl = url.split(";");
@@ -411,7 +411,7 @@ public class HttpParser {
             sss = new String[]{};
         }
         for (String s : sss) {
-            if (StringUtils.isEmpty(s)) {
+            if (StrUtil.isEmpty(s)) {
                 continue;
             }
             String[] kk = s.split("=");

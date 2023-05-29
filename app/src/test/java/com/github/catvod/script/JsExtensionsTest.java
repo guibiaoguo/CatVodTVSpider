@@ -3,12 +3,16 @@ package com.github.catvod.script;
 import static org.junit.Assert.*;
 
 import com.github.catvod.crawler.SpiderDebug;
+import com.github.catvod.parser.AnalyzeByJSonPath;
 import com.github.catvod.parser.AnalyzeRule;
 import com.github.catvod.parser.AnalyzeUrl;
+import com.github.catvod.parser.NetworkUtils;
 import com.github.catvod.parser.StrResponse;
 import com.github.catvod.utils.Base64;
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.mozilla.javascript.Scriptable;
 
@@ -24,14 +28,25 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.crypto.Cipher;
 
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.date.TimeInterval;
+import cn.hutool.core.lang.Console;
+import cn.hutool.core.thread.ConcurrencyTester;
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.HexUtil;
+import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.PageUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.URLUtil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.asymmetric.AsymmetricCrypto;
 import cn.hutool.crypto.asymmetric.KeyType;
@@ -542,5 +557,124 @@ public class JsExtensionsTest {
     @Test
     public void ls() {
         jsExtensions.ls(".");
+    }
+
+    @Test
+    public void testMehod() {
+        System.out.println(StrUtil.str(null));
+        String url = URLUtil.completeUrl("https://m.huangdingzhijia.com/test/index.php?action=search", "novel/6098.html");
+        System.out.println(url);
+        System.out.println(StringUtils.substringBefore("https://m.huangdingzhijia.com/test/index.php,{'method':'post','body':''}", ","));
+        System.out.println(StrUtil.subBefore("https://m.huangdingzhijia.com/test/index.php,{'method':'post','body':''}", ",",false));
+        System.out.println(URLUtil.getHost(URLUtil.url("https://m.huangdingzhijia.com/test/index.php?action=search,{'method':'post'}")).toString());
+    }
+
+    @Test
+    public void testEncode() {
+        System.out.println(URLUtil.encode("我的"));
+        System.out.println(NetworkUtils.INSTANCE.isDigit16Char('E'));
+        System.out.println(NetworkUtils.INSTANCE.hasUrlEncode(URLUtil.encode("我的")));
+        System.out.println(String.format("%.0f",5.05555));
+        System.out.println(NumberUtil.roundStr(5.05555,0));
+        Object result = List.of(1,2,3,4);
+        System.out.println(result instanceof List);
+        for (Object o : Convert.convert(List.class, result)) {
+            System.out.println(o);
+        }
+        Object result1 = "12455";
+        System.out.println(Convert.convert(String.class,result1));
+        Map<String,Object> data = new HashMap<>();
+        data.put("a","b");
+        data.put("c","d");
+        AnalyzeByJSonPath analyzeByJSonPath = new AnalyzeByJSonPath("{'file_id':1}");
+        System.out.println(analyzeByJSonPath.getString("$.file_id"));
+        AnalyzeRule analyzeRule = new AnalyzeRule();
+        analyzeRule.setContent("<a href='/novel/500.html'></a>");
+        System.out.println(analyzeRule.getString("tag.a@href##/(\\d+).html##/book/$1.html"));
+        System.out.println(analyzeRule.getString("tag.a@href##\\d##6###"));
+    }
+
+    @Test
+    public void testSub() {
+        String url = "http://127.0.0.1:9978/proxy?do=legado&js=@js:java.head(\"https://pdsapi.aliyundrive.com/v2/redirect?id=700559d915124bd19ad97223d91825341685019125170095386\",{\"referer\":\"https://www.aliyundrive.com/\"}).get(\"Location\")";
+
+    }
+
+    @Test
+    public void test1() {
+        AnalyzeRule analyzeRule = new AnalyzeRule();
+        analyzeRule.setContent("");
+        analyzeRule.put("accessToken","eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI0MTdiYzk5NTllZDk0N2M3YmQzNDgzMzJlODg3YmI2MSIsImN1c3RvbUpzb24iOiJ7XCJjbGllbnRJZFwiOlwiMjVkelgzdmJZcWt0Vnh5WFwiLFwiZG9tYWluSWRcIjpcImJqMjlcIixcInNjb3BlXCI6W1wiRFJJVkUuQUxMXCIsXCJTSEFSRS5BTExcIixcIkZJTEUuQUxMXCIsXCJVU0VSLkFMTFwiLFwiVklFVy5BTExcIixcIlNUT1JBR0UuQUxMXCIsXCJTVE9SQUdFRklMRS5MSVNUXCIsXCJCQVRDSFwiLFwiT0FVVEguQUxMXCIsXCJJTUFHRS5BTExcIixcIklOVklURS5BTExcIixcIkFDQ09VTlQuQUxMXCIsXCJTWU5DTUFQUElORy5MSVNUXCIsXCJTWU5DTUFQUElORy5ERUxFVEVcIl0sXCJyb2xlXCI6XCJ1c2VyXCIsXCJyZWZcIjpcImh0dHBzOi8vd3d3LmFsaXl1bmRyaXZlLmNvbS9cIixcImRldmljZV9pZFwiOlwiMTczOGZlOWE2NjA4NDAxNWExNDcxNjgzZTAwZmFmOGJcIn0iLCJleHAiOjE2ODUwNTUzNzUsImlhdCI6MTY4NTA0ODExNX0.p_AYgx24KMLqHchnmptbqYkdsGq_mP0Rhrrh5oCE97vWgVYJ5-51o7jquK3PoPuRb4M4xP70fY6l6tB8pxyPJBUKP_vPRsGMRvIyjczsW850utFmQtR2_JoW4MFzo3_1S5ivTk8sOpJjWrAI_XOl07qJrAdKlWZCZJPPbgJw3vs");
+        analyzeRule.put("shareToken","eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21Kc29uIjoie1wiZG9tYWluX2lkXCI6XCJiajI5XCIsXCJzaGFyZV9pZFwiOlwiS3dVQ3o0SDMxSktcIixcImNyZWF0b3JcIjpcImEzOWY5YTMyNjEzMzQ1ZTk4ODRjOGExYTI5OGY2ZGVjXCIsXCJ1c2VyX2lkXCI6XCJhbm9ueW1vdXNcIn0iLCJjdXN0b21UeXBlIjoic2hhcmVfbGluayIsImV4cCI6MTY4NTA1NTM3NSwiaWF0IjoxNjg1MDQ4MTE1fQ.KWW_vD3EWOSWCw5EpQPKpUftmN0q_k-ZkS_awXgzAsQqbXKrhZOh62xRROmL6xNtyEbceuuhdNJprOgb9F4pnjhNl967Z30Hml53INy8awi4Y72NRVl3VVzJe08M5ap5Bc2ETykGcwMCbJovRVLg1adIofS_nJIDjtspE_VFHfo");
+        analyzeRule.put("poster","619ae207b6f14e786a234bb9bf1c0c8998b75834");
+        analyzeRule.put("proxy","http://127.0.0.:9978");
+        analyzeRule.put("shareId","KwUCz4H31JK");
+        String proxy = analyzeRule.getString("@js:proxy=java.get('proxy');list=[];list.push(proxy);list");
+        String str =analyzeRule.getString("@js:java.get('proxy')+'?do=legado&js='+java.base64Encode('@js:playId=\"'+java.get('poster')+'\";shareId=\"'+java.get('shareId')+'\";shareToken=\"'+java.get('shareToken')+'\";access_token=\"'+java.get('accessToken')+'\";content=java.post(\"https://api.aliyundrive.com/v2/file/get_share_link_download_url\",\"{share_id:\"+shareId+\",file_id:\"+playId+\"}\",{\"referer\":\"https://www.aliyundrive.com/\",\"x-canary\":\"client=web,app=share,version=v2.3.1\",\"authorization\":access_token,\"x-share-token\":shareToken}).body();url=JSON.parse(content).url;url=java.head(url,{\"referer\":\"https://www.aliyundrive.com/\"}).get(\"Location\");url+\\',{\\\"headers\\\":{\\\"referer\\\":\\\"https://www.aliyundrive.com/\\\"}}\\'');");
+        System.out.println(str);
+        System.out.println(cn.hutool.core.codec.Base64.decodeStr(str.split("js=")[1]));
+        String content = analyzeRule.getString(cn.hutool.core.codec.Base64.decodeStr(str.split("js=")[1]));
+        System.out.println(content);
+        AnalyzeUrl analyzeUrl = new AnalyzeUrl(content);
+        System.out.println(analyzeUrl.getResponse());
+    }
+
+    @Test
+    public void testFormat() {
+        System.out.println(StrUtil.format("{} test", "car"));
+        AnalyzeRule analyzeRule = new AnalyzeRule();
+        analyzeRule.setContent("");
+        System.out.println(analyzeRule.getString("@js:java.format('{} run {}','car','test');"));
+        System.out.println(analyzeRule.getString("@js:java.sub('teseefefe',2,4)"));
+        final TimeInterval timer = new TimeInterval();
+
+// 分组1
+        timer.start("1");
+        ThreadUtil.sleep(800);
+
+// 分组2
+        timer.start("2");
+        ThreadUtil.sleep(900);
+
+        Console.log("Timer 1 took {} ms", timer.intervalMs("1"));
+        Console.log("Timer 2 took {} ms", timer.intervalMs("2"));
+        int[] startEnd1 = PageUtil.transToStartEnd(0, 10);//[0, 10]
+        int[] startEnd2 = PageUtil.transToStartEnd(1, 10);//[10, 20]
+        jsExtensions.log(startEnd1);
+        jsExtensions.log(startEnd2);
+        ConcurrencyTester tester = ThreadUtil.concurrencyTest(100, () -> {
+            // 测试的逻辑内容
+            long delay = RandomUtil.randomLong(100, 1000);
+            ThreadUtil.sleep(delay);
+            Console.log("{} test finished, delay: {}", Thread.currentThread().getName(), delay);
+        });
+
+// 获取总的执行时间，单位毫秒
+        Console.log(tester.getInterval());
+    }
+
+    @Test
+    public void ajaxAll() throws Exception {
+        List<String> urlList = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            urlList.add(StrUtil.format("https://www.huangdizhijia.com/novel/{}.html", 490 + i));
+        }
+        List<StrResponse> strResponses = jsExtensions.ajaxAll(urlList);
+        for (StrResponse strRespon : strResponses) {
+            System.out.println(strRespon.body());
+        }
+    }
+
+    @Test
+    public void testCopy() {
+        AnalyzeRule analyzeRule = new AnalyzeRule();
+        analyzeRule.setContent("");
+        analyzeRule.put("accessToken","Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI0NGM4YjFlZTlhMWQ0ZTY3YTBjYTJhYjJiOWYwODhmOCIsImN1c3RvbUpzb24iOiJ7XCJjbGllbnRJZFwiOlwicEpaSW5OSE4yZFpXazhxZ1wiLFwiZG9tYWluSWRcIjpcImJqMjlcIixcInNjb3BlXCI6W1wiRFJJVkUuQUxMXCIsXCJGSUxFLkFMTFwiLFwiVklFVy5BTExcIixcIlNIQVJFLkFMTFwiLFwiU1RPUkFHRS5BTExcIixcIlNUT1JBR0VGSUxFLkxJU1RcIixcIlVTRVIuQUxMXCIsXCJCQVRDSFwiLFwiQUNDT1VOVC5BTExcIixcIklNQUdFLkFMTFwiLFwiSU5WSVRFLkFMTFwiLFwiU1lOQ01BUFBJTkcuTElTVFwiXSxcInJvbGVcIjpcInVzZXJcIixcInJlZlwiOlwiXCIsXCJkZXZpY2VfaWRcIjpcIjRhOGY2Zjk0ODgxYzRlYTdiYzBkNWVkYjZmNGU5NTM5XCJ9IiwiZXhwIjoxNjg1MTQ1NjA1LCJpYXQiOjE2ODUxMzgzNDV9.LrD5KNG7kxX9c0lhpaHDKzDcepG0cEc9Don3yoBqWnsqE4qoqe7Js0COqqnOYJCyVgTii6XFa6p-cqinLKzUbyaVzvr0HmPoOkQ1_aw2031eXJmuc1CRWnRfV3qCSVL1a4Sl6q-qHiHC7iM2TmKSWdK43gqNnsbv4Dx0i4nPg6s");
+        analyzeRule.put("shareId","BfFQz6zbfYm");
+        String shareToken = analyzeRule.getString("@js:shareId=java.get('shareId');post={'method':'POST','body':{'share_pwd':'','share_id':String(shareId)}};url='https://api.aliyundrive.com/v2/share_link/get_share_token,'+JSON.stringify(post);shareToken=JSON.parse(java.ajax(url)).share_token;java.put('shareToken',shareToken);shareToken");
+        System.out.println(shareToken);
+        String webUrl = "https://api.aliyundrive.com/v2/file/get_share_link_video_preview_play_info?jsonBody={\"share_id\":\"{{$.share_id}}\",\"file_id\":\"{{$.file_id}}\",\"template_id\":\"\",\"category\":\"live_transcoding\"};post;utf-8;{x-share-token@@get:{share_token}&&authorization@@get:{access_token}&&User-Agent@PC_UA}";
+        String purl = analyzeRule.getString("@js:shareId=java.get('shareId');accessToken=java.get('accessToken');shareToken=java.get('shareToken');java.post('https://api.aliyundrive.com/v2/file/get_share_link_video_preview_play_info',JSON.stringify({'share_id':String(shareId),'file_id':'646f5da5ab61d810d9c74ac7baf24020742d07ad','template_id':'','category':'live_transcoding'}),{'X-Device-Id':'7d4aa4f32c5845e1b470ec40a7da186c','x-share-token':String(shareToken),'authorization':accessToken}).body();");
+        System.out.println(purl);
     }
 }

@@ -5,13 +5,14 @@ import com.github.catvod.script.IFunction;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public final class RuleAnalyzer {
     private String queue;
     private int pos;
     private int start;
     private int startX;
-    private ArrayList rule;
+    private List<String> rule;
     private int step;
 
     private boolean code;
@@ -147,7 +148,7 @@ public final class RuleAnalyzer {
     }
 
 
-    public final ArrayList splitRule(String... split) {
+    public List<String> splitRule(String... split) {
         if (split.length == 1) {
             this.elementsType = split[0];
             if (!this.consumeTo(this.elementsType)) {
@@ -213,7 +214,7 @@ public final class RuleAnalyzer {
         }
     }
 
-    private final ArrayList splitRuleNext() {
+    private final List splitRuleNext() {
         int end = this.pos;
         this.pos = this.start;
 

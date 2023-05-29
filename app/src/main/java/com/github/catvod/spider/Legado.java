@@ -1,18 +1,18 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
-import android.net.Uri;
 import android.text.TextUtils;
 
+import com.github.catvod.ali.API;
 import com.github.catvod.bean.Class;
 import com.github.catvod.bean.Filter;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Sub;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
-import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.parser.AnalyzeRule;
 import com.github.catvod.parser.AnalyzeUrl;
+import com.github.catvod.parser.StrResponse;
 import com.github.catvod.parser.TVShow;
 import com.github.catvod.utils.Misc;
 import com.github.catvod.utils.StringUtil;
@@ -21,24 +21,30 @@ import com.github.catvod.utils.XMLUtil;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
-
-import org.apache.commons.lang3.StringUtils;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import cn.hutool.core.codec.Base64;
+import cn.hutool.core.lang.Console;
+import cn.hutool.core.util.StrUtil;
+import okhttp3.Headers;
 
 /**
  * bill
  * 仿照阅读规则,各种语法参考开源阅读
  */
 public class Legado extends Spider {
+
+
+    public static final Pattern pattern = Pattern.compile("www.aliyundrive.com/s/([^/]+)(/folder/([^/]+))?");
 
     private String ext;
     private LegadoRule rule;
@@ -47,78 +53,78 @@ public class Legado extends Spider {
     private AnalyzeUrl analyzeUrl;
 
     /**
-     * @param context
-     * @param extend
+     * @param context 上下文对象
+     * @param extend  额外参数
      */
     @Override
     public void init(Context context, String extend) {
         this.ext = extend;
         fetchRule();
-        System.out.println(rule.getClasses());
-        System.out.println(rule.getFilters());
-        System.out.println(rule.getHomeUrl());
-        System.out.println(rule.getTypeName());
-        System.out.println(rule.getTypeId());
-        System.out.println(rule.getTypeNode());
-        System.out.println(rule.getHomeVodNode());
-        System.out.println(rule.getHomeVodName());
-        System.out.println(rule.getHomeVodId());
-        System.out.println(rule.getHomeVodPic());
-        System.out.println(rule.getHomeVodRemarks());
-        System.out.println(rule.getHomeVideoUrl());
-        System.out.println(rule.getCateUrl());
-        System.out.println(rule.getPageNode());
-        System.out.println(rule.getPage());
-        System.out.println(rule.getPageCount());
-        System.out.println(rule.getCateVodNode());
-        System.out.println(rule.getCateVodId());
-        System.out.println(rule.getCateVodName());
-        System.out.println(rule.getCateVodPic());
-        System.out.println(rule.getCateVodRemarks());
-        System.out.println(rule.getSearchUrl());
-        System.out.println(rule.getSearchVodNode());
-        System.out.println(rule.getSearchVodId());
-        System.out.println(rule.getSearchVodName());
-        System.out.println(rule.getSearchVodPic());
-        System.out.println(rule.getSearchVodRemarks());
-        System.out.println(rule.getDetailUrl());
-        System.out.println(rule.getDetailTypeName());
-        System.out.println(rule.getDetailVodId());
-        System.out.println(rule.getDetailVodName());
-        System.out.println(rule.getDetailVodPic());
-        System.out.println(rule.getDetailVodRemarks());
-        System.out.println(rule.getDetailVodYear());
-        System.out.println(rule.getDetailVodArea());
-        System.out.println(rule.getDetailVodActor());
-        System.out.println(rule.getDetailVodDirector());
-        System.out.println(rule.getDetailVodContent());
-        System.out.println(rule.getDetailVodPlayFrom());
-        System.out.println(rule.getDetailVodPlayUrl());
-        System.out.println(rule.getDetailVodTag());
-        System.out.println(rule.getDetailNode());
-        System.out.println(rule.getVodPlayForm());
-        System.out.println(rule.getVodPlayName());
-        System.out.println(rule.getVodPlayUrl());
-        System.out.println(rule.getPlayUrl());
-        System.out.println(rule.getPlaySub());
-        System.out.println(rule.getPlayHeader());
-        System.out.println(rule.getPlayExtendHeader());
-        System.out.println(rule.getDetailFileNode());
-        System.out.println(rule.getDetailFileNodeFlag());
-        System.out.println(rule.getDetailFileNodeUrl());
-        System.out.println(rule.getDetailFileNodeRoot());
-        System.out.println(rule.getDetailFileNodeLeaf());
-        System.out.println(rule.getDetailFileNodeSub());
-        System.out.println(rule.getDetailFileNodeParent());
-        System.out.println(rule.getDetailFileNodeId());
+        Console.log(rule.getClasses());
+        Console.log(rule.getFilters());
+        Console.log(rule.getHomeUrl());
+        Console.log(rule.getTypeName());
+        Console.log(rule.getTypeId());
+        Console.log(rule.getTypeNode());
+        Console.log(rule.getHomeVodNode());
+        Console.log(rule.getHomeVodName());
+        Console.log(rule.getHomeVodId());
+        Console.log(rule.getHomeVodPic());
+        Console.log(rule.getHomeVodRemarks());
+        Console.log(rule.getHomeVideoUrl());
+        Console.log(rule.getCateUrl());
+        Console.log(rule.getPageNode());
+        Console.log(rule.getPage());
+        Console.log(rule.getPageCount());
+        Console.log(rule.getCateVodNode());
+        Console.log(rule.getCateVodId());
+        Console.log(rule.getCateVodName());
+        Console.log(rule.getCateVodPic());
+        Console.log(rule.getCateVodRemarks());
+        Console.log(rule.getSearchUrl());
+        Console.log(rule.getSearchVodNode());
+        Console.log(rule.getSearchVodId());
+        Console.log(rule.getSearchVodName());
+        Console.log(rule.getSearchVodPic());
+        Console.log(rule.getSearchVodRemarks());
+        Console.log(rule.getDetailUrl());
+        Console.log(rule.getDetailTypeName());
+        Console.log(rule.getDetailVodId());
+        Console.log(rule.getDetailVodName());
+        Console.log(rule.getDetailVodPic());
+        Console.log(rule.getDetailVodRemarks());
+        Console.log(rule.getDetailVodYear());
+        Console.log(rule.getDetailVodArea());
+        Console.log(rule.getDetailVodActor());
+        Console.log(rule.getDetailVodDirector());
+        Console.log(rule.getDetailVodContent());
+        Console.log(rule.getDetailVodPlayFrom());
+        Console.log(rule.getDetailVodPlayUrl());
+        Console.log(rule.getDetailVodTag());
+        Console.log(rule.getDetailNode());
+        Console.log(rule.getVodPlayForm());
+        Console.log(rule.getVodPlayName());
+        Console.log(rule.getVodPlayUrl());
+        Console.log(rule.getPlayUrl());
+        Console.log(rule.getPlaySub());
+        Console.log(rule.getPlayHeader());
+        Console.log(rule.getPlayExtendHeader());
+        Console.log(rule.getDetailFileNode());
+        Console.log(rule.getDetailFileNodeFlag());
+        Console.log(rule.getDetailFileNodeUrl());
+        Console.log(rule.getDetailFileNodeRoot());
+        Console.log(rule.getDetailFileNodeLeaf());
+        Console.log(rule.getDetailFileNodeSub());
+        Console.log(rule.getDetailFileNodeParent());
+        Console.log(rule.getDetailFileNodeId());
         analyzeRule = new AnalyzeRule();
         analyzeRule.setContent("");
-        analyzeRule.put("proxy",Proxy.getUrl());
+        analyzeRule.put("proxy", Proxy.getUrl());
         super.init(context, extend);
     }
 
     private void fetchRule() {
-        if (StringUtils.isNotEmpty(ext) && StringUtils.startsWith(ext, "http")) {
+        if (StrUtil.isNotEmpty(ext) && StrUtil.startWith(ext, "http")) {
             String ruleStr = OkHttpUtil.string(ext, null);
             rule = new GsonBuilder().disableHtmlEscaping().create().fromJson(ruleStr, LegadoRule.class);
         } else {
@@ -131,29 +137,63 @@ public class Legado extends Spider {
      * 首页数据内容
      *
      * @param filter 是否开启筛选
-     * @return
+     * @return 返回首页数据
      */
     @Override
-    public String homeContent(boolean filter) throws Exception {
-        List<Vod> list = new ArrayList<>();
-        List<Class> classes = rule.getClasses();
-        analyzeUrl = new AnalyzeUrl(analyzeRule.getString(rule.getHomeUrl()));
-        String content = analyzeUrl.getResponse();
-        analyzeRule.setContent(content, analyzeUrl.getBaseUrl());
-        if (classes == null) {
-            classes = new ArrayList<>();
-            List<?> elements = analyzeRule.getElements(rule.getTypeNode());
-            for (Object element : elements) {
-                String name = analyzeRule.getString(rule.getTypeName(), element, false);
-                String id = analyzeRule.getString(rule.getTypeId(), element, false);
-                classes.add(new Class(id, name));
+    public String homeContent(boolean filter) {
+        try {
+            List<Vod> list = new ArrayList<>();
+            List<Class> classes = rule.getClasses();
+            analyzeUrl = new AnalyzeUrl(analyzeRule.getString(rule.getHomeUrl()));
+            String content = analyzeUrl.getResponse();
+            Console.log(content);
+            analyzeRule.setContent(content, analyzeUrl.getBaseUrl());
+            if (classes == null) {
+                classes = new ArrayList<>();
+                List<?> elements = analyzeRule.getElements(rule.getTypeNode());
+                for (Object element : elements) {
+                    String name = analyzeRule.getString(rule.getTypeName(), element, false);
+                    String id = analyzeRule.getString(rule.getTypeId(), element, false);
+                    String flag = analyzeRule.getString(rule.getTypeFlag(), element, false);
+                    classes.add(new Class(id, name, flag));
+                }
             }
+            LinkedHashMap<String, List<Filter>> filters = rule.getFilters();
+            if (filters == null) {
+                filters = new LinkedHashMap<>();
+            }
+
+            if (StrUtil.isEmpty(rule.getHomeVideoUrl())) {
+                List<?> elements = analyzeRule.getElements(rule.getHomeVodNode());
+                for (Object element : elements) {
+                    String name = analyzeRule.getString(rule.getHomeVodName(), element, false);
+                    String img = analyzeRule.getString(rule.getHomeVodPic(), element, true);
+                    String remark = analyzeRule.getString(rule.getHomeVodRemarks(), element, false);
+                    String id = analyzeRule.getString(rule.getHomeVodId(), element, false);
+                    list.add(new Vod(id, name, img, remark));
+                }
+            }
+            return Result.string(classes, list, filters);
+        } catch (Exception e) {
+            Console.log("homeUrl {} {}", rule.getHomeUrl(), e.getLocalizedMessage());
         }
-        LinkedHashMap<String, List<Filter>> filters = rule.getFilters();
-        if (filters == null) {
-            filters = new LinkedHashMap<>();
-        }
-        if (StringUtils.isNotEmpty(rule.getHomeVodNode())) {
+        return "";
+    }
+
+    /**
+     * 首页最近更新数据 如果上面的homeContent中不包含首页最近更新视频的数据 可以使用这个接口返回
+     *
+     * @return 返回首页推荐
+     */
+    @Override
+    public String homeVideoContent() {
+        try {
+            String homeVideUrl = analyzeRule.getString(rule.getHomeVideoUrl());
+            analyzeUrl = new AnalyzeUrl(homeVideUrl);
+            String content = analyzeUrl.getResponse();
+            Console.log(content);
+            analyzeRule.setContent(content, analyzeUrl.getBaseUrl());
+            List<Vod> list = new ArrayList<>();
             List<?> elements = analyzeRule.getElements(rule.getHomeVodNode());
             for (Object element : elements) {
                 String name = analyzeRule.getString(rule.getHomeVodName(), element, false);
@@ -162,179 +202,221 @@ public class Legado extends Spider {
                 String id = analyzeRule.getString(rule.getHomeVodId(), element, false);
                 list.add(new Vod(id, name, img, remark));
             }
+            return Result.string(list);
+        } catch (Exception e) {
+            Console.log("homeVideoUrl {} {}", rule.getHomeVideoUrl(), e.getLocalizedMessage());
         }
-        return Result.string(classes, list, filters);
-    }
-
-    /**
-     * 首页最近更新数据 如果上面的homeContent中不包含首页最近更新视频的数据 可以使用这个接口返回
-     *
-     * @return
-     */
-    @Override
-    public String homeVideoContent() throws Exception {
-        analyzeUrl = new AnalyzeUrl(analyzeRule.getString(rule.getHomeVideoUrl()));
-        String content = analyzeUrl.getResponse();
-        analyzeRule.setContent(content, analyzeUrl.getBaseUrl());
-        List<Vod> list = new ArrayList<>();
-        List<?> elements = analyzeRule.getElements(rule.getHomeVodNode());
-        for (Object element : elements) {
-            String name = analyzeRule.getString(rule.getHomeVodName(), element, false);
-            String img = analyzeRule.getString(rule.getHomeVodPic(), element, true);
-            String remark = analyzeRule.getString(rule.getHomeVodRemarks(), element, false);
-            String id = analyzeRule.getString(rule.getHomeVodId(), element, false);
-            list.add(new Vod(id, name, img, remark));
-        }
-        return Result.string(list);
+        return "";
     }
 
     /**
      * 分类数据
      *
-     * @param tid
-     * @param pg
-     * @param filter
-     * @param extend
-     * @return
+     * @param tid    分类id
+     * @param pg     分类页码
+     * @param filter 是否过滤
+     * @param extend 过滤参数
+     * @return 返回分类数据
      */
     @Override
-    public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) throws Exception {
-        List<Vod> list = new ArrayList<>();
-        analyzeRule.put("pg", pg);
-        analyzeRule.put("cateId", tid);
-        if (filter && extend != null) {
-            for (Map.Entry<String, String> entry : extend.entrySet()) {
-                analyzeRule.put(entry.getKey(), entry.getValue());
+    public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) {
+        try {
+            List<Vod> list = new ArrayList<>();
+            analyzeRule.put("pg", pg);
+            analyzeRule.put("cateId", tid);
+            if (filter && extend != null) {
+                for (Map.Entry<String, String> entry : extend.entrySet()) {
+                    analyzeRule.put(entry.getKey(), entry.getValue());
+                }
             }
+            String cateUrl = analyzeRule.getString(rule.getCateUrl());
+            Console.log(cateUrl);
+            analyzeUrl = new AnalyzeUrl(cateUrl);
+            String content = analyzeUrl.getResponse();
+            Console.log(content);
+            analyzeRule.setContent(content, analyzeUrl.getBaseUrl());
+            int page = Integer.parseInt(pg);
+            int pageCount = 1;
+            int limit;
+            List<?> pageElements = analyzeRule.getElements(rule.getPageNode());
+            String currentPage = analyzeRule.getString(rule.getPage(), pageElements, false);
+            String lastPage = analyzeRule.getString(rule.getPageCount(), pageElements, false);
+            if (StrUtil.isNotEmpty(currentPage) && Pattern.matches("\\d+", currentPage)) {
+                page = Integer.parseInt(currentPage);
+            }
+            if (StrUtil.isNotEmpty(lastPage) && Pattern.matches("\\d+", lastPage)) {
+                pageCount = Integer.parseInt(lastPage);
+            }
+            List<?> elements = analyzeRule.getElements(rule.getCateVodNode());
+            for (Object element : elements) {
+                String name = analyzeRule.getString(rule.getCateVodName(), element, false);
+                String img = analyzeRule.getString(rule.getCateVodPic(), element, true);
+                String remark = analyzeRule.getString(rule.getCateVodRemarks(), element, false);
+                String id = analyzeRule.getString(rule.getCateVodId(), element, false);
+                String tag = analyzeRule.getString(rule.getCateVodTag(), element, false);
+                list.add(new Vod(id, name, img, remark, tag));
+            }
+            limit = list.size();
+            return Result.get().vod(list).page(page, pageCount, limit, pageCount <= 1 ? limit : pageCount * limit).string();
+        } catch (Exception e) {
+            Console.log("cateUrl {} {}", rule.getCateUrl(), e.getLocalizedMessage());
         }
-        String cateUrl = analyzeRule.getString(rule.getCateUrl());
-        System.out.println(cateUrl);
-        analyzeUrl = new AnalyzeUrl(cateUrl);
-        String content = analyzeUrl.getResponse();
-        System.out.println(content);
-        analyzeRule.setContent(content, analyzeUrl.getBaseUrl());
-        int page = Integer.parseInt(pg);
-        int pageCount = 0;
-        int limit = 90;
-        List<?> pageElements = analyzeRule.getElements(rule.getPageNode());
-        String currentPage = analyzeRule.getString(rule.getPage(), pageElements, false);
-        String lastPage = analyzeRule.getString(rule.getPageCount(), pageElements, false);
-        if (StringUtils.isNotEmpty(currentPage) && Pattern.matches("\\d+", currentPage)) {
-            page = Integer.parseInt(currentPage);
-        }
-        if (StringUtils.isNotEmpty(lastPage) && Pattern.matches("\\d+", lastPage)) {
-            pageCount = Integer.parseInt(lastPage);
-        }
-        List<?> elements = analyzeRule.getElements(rule.getCateVodNode());
-        for (Object element : elements) {
-            String name = analyzeRule.getString(rule.getCateVodName(), element, false);
-            String img = analyzeRule.getString(rule.getCateVodPic(), element, true);
-            String remark = analyzeRule.getString(rule.getCateVodRemarks(), element, false);
-            String id = analyzeRule.getString(rule.getCateVodId(), element, false);
-            list.add(new Vod(id, name, img, remark));
-        }
-        limit = list.size();
-        return Result.get().vod(list).page(page, pageCount, limit,  pageCount <= 1 ? limit : pageCount * limit).string();
+        return "";
     }
 
     /**
      * 详情数据
      *
-     * @param ids
-     * @return
+     * @param ids 详情数据ID
+     * @return 返回详情数据
      */
     @Override
-    public String detailContent(List<String> ids) throws Exception {
-        Vod vod = new Vod();
-        analyzeRule.put("detailId", ids.get(0));
-        analyzeUrl = new AnalyzeUrl(analyzeRule.getString(rule.getDetailUrl()));
-        String content = analyzeUrl.getResponse();
-        analyzeRule.setContent(content, analyzeUrl.getBaseUrl());
-        String img = analyzeRule.getString(rule.getDetailVodPic());
-        String name = analyzeRule.getString(rule.getDetailVodName());
-        List<?> elements = analyzeRule.getElements(rule.getDetailNode());
-        String type = analyzeRule.getString(rule.getDetailTypeName(), elements, false);
-        String area = analyzeRule.getString(rule.getDetailVodArea(), elements,false);
-        String year = analyzeRule.getString(rule.getDetailVodYear(), elements, false);
-        String remarks = analyzeRule.getString(rule.getDetailVodRemarks(), elements, false);
-        String director = analyzeRule.getString(rule.getDetailVodDirector(), elements, false);
-        String actor = analyzeRule.getString(rule.getDetailVodActor(), elements, false);
-        String desc = analyzeRule.getString(rule.getDetailVodContent(), elements, false);
+    public String detailContent(List<String> ids) {
+        try {
+            String url = ids.get(0).trim();
+            Matcher matcher = pattern.matcher(url);
+            if (matcher.find()) {
+                analyzeRule.put("spider", API.get());
+                API.get().setRefreshToken(rule.getAliToken());
+                String shareId = matcher.group(1);
+                String fileId = matcher.groupCount() == 3 ? matcher.group(3) : "";
+                API.get().setShareId(shareId);
+                return Result.string(API.get().getVod(url, fileId));
+            }
+            Vod vod = new Vod();
+            analyzeRule.put("detailId", ids.get(0));
+            analyzeUrl = new AnalyzeUrl(analyzeRule.getString(rule.getDetailUrl()));
+            String content = analyzeUrl.getResponse();
+            Console.log(content);
+            analyzeRule.setContent(content, analyzeUrl.getBaseUrl());
+            String img = analyzeRule.getString(rule.getDetailVodPic());
+            String name = analyzeRule.getString(rule.getDetailVodName());
+            List<?> elements = analyzeRule.getElements(rule.getDetailNode());
+            String type = analyzeRule.getString(rule.getDetailTypeName(), elements, false);
+            String area = analyzeRule.getString(rule.getDetailVodArea(), elements, false);
+            String year = analyzeRule.getString(rule.getDetailVodYear(), elements, false);
+            String remarks = analyzeRule.getString(rule.getDetailVodRemarks(), elements, false);
+            String director = analyzeRule.getString(rule.getDetailVodDirector(), elements, false);
+            String actor = analyzeRule.getString(rule.getDetailVodActor(), elements, false);
+            String desc = analyzeRule.getString(rule.getDetailVodContent(), elements, false);
 
-        if (StringUtils.isEmpty(type)) {type = analyzeRule.getString(rule.getDetailTypeName());}
-        if (StringUtils.isEmpty(area)) {area = analyzeRule.getString(rule.getDetailVodArea());}
-        if (StringUtils.isEmpty(year)) {year = analyzeRule.getString(rule.getDetailVodYear());}
-        if (StringUtils.isEmpty(remarks)) {remarks = analyzeRule.getString(rule.getDetailVodRemarks());}
-        if (StringUtils.isEmpty(director)) {director = analyzeRule.getString(rule.getDetailVodDirector());}
-        if (StringUtils.isEmpty(actor)) {actor = analyzeRule.getString(rule.getDetailVodActor());}
-        if (StringUtils.isEmpty(desc)) {desc = analyzeRule.getString(rule.getDetailVodContent());}
+            if (StrUtil.isEmpty(type)) {
+                type = analyzeRule.getString(rule.getDetailTypeName());
+            }
+            if (StrUtil.isEmpty(area)) {
+                area = analyzeRule.getString(rule.getDetailVodArea());
+            }
+            if (StrUtil.isEmpty(year)) {
+                year = analyzeRule.getString(rule.getDetailVodYear());
+            }
+            if (StrUtil.isEmpty(remarks)) {
+                remarks = analyzeRule.getString(rule.getDetailVodRemarks());
+            }
+            if (StrUtil.isEmpty(director)) {
+                director = analyzeRule.getString(rule.getDetailVodDirector());
+            }
+            if (StrUtil.isEmpty(actor)) {
+                actor = analyzeRule.getString(rule.getDetailVodActor());
+            }
+            if (StrUtil.isEmpty(desc)) {
+                desc = analyzeRule.getString(rule.getDetailVodContent());
+            }
 
-        List<?> sourceNames = analyzeRule.getElements(rule.getDetailVodPlayFrom());
-        List<Object> files = new ArrayList<>();
-        LinkedHashMap<String, List<String>> subMap = new LinkedHashMap<>();
-        LinkedHashMap<String, List<String>> nfoMap = new LinkedHashMap<>();
-        List<Object> sources = analyzeRule.getElements(rule.getDetailVodPlayUrl());
-        String item = analyzeRule.getString(rule.getDetailFileNodeParent());
-        if (StringUtils.isNotEmpty(item)) {
-            listFiles(item, files, subMap, nfoMap);
-        }
-        if (nfoMap.size() > 0) {
-            analyzeRule.put("nfo", nfoMap.get("tvshow").get(0).split("@@@")[2]);
-            analyzeRule.put("poster", nfoMap.get("poster").get(0).split("@@@")[2]);
-            String nfo = analyzeRule.getString(rule.getDetailFileNodeNfo());
-            nfo = nfo.replace("\uFEFF","");
+            List<?> sourceNames = analyzeRule.getElements(rule.getDetailVodPlayFrom());
+            List<Object> files = new ArrayList<>();
+            LinkedHashMap<String, List<String>> subMap = new LinkedHashMap<>();
+            LinkedHashMap<String, String> nfoMap = new LinkedHashMap<>();
+            List<Object> sources = analyzeRule.getElements(rule.getDetailVodPlayUrl());
+            String item = analyzeRule.getString(rule.getDetailFileNodeParent());
+            if (StrUtil.isNotEmpty(item)) {
+                listFiles(item, files, subMap, nfoMap);
+            }
+//        String code = analyzeRule.getString("@js:playId='619ae207b6f14e786a234bb9bf1c0c8998b75834';shareId=java.get('shareId');shareToken=java.get('shareToken');access_token=java.get('accessToken');content=java.post('https://api.aliyundrive.com/v2/file/get_share_link_download_url/',{'share_id':shareId,'file_id':playId},{'referer':'https://www.aliyundrive.com','x-canary':'client=web,app=share,version=v2.3.1','authorization':access_token,'x-share-token':shareToken}).body();java.log(content);url=JSON.parse(content).url;java.log(url);url1=java.getString('$.url',content,false);java.log(url1);java.get(url1,{'referer':'https://www.aliyundrive.com/'}).body();");
+//        System.out.println(code);
+            if (nfoMap.size() > 0 && nfoMap.get("tvshow") != null) {
+                analyzeRule.put("nfo", StrUtil.split(nfoMap.get("tvshow"), "@@@").get(2));
+                analyzeRule.put("poster", StrUtil.split(nfoMap.get("poster"), "@@@").get(2));
+                String nfo = analyzeRule.getString(rule.getDetailFileNodeNfo());
+                nfo = nfo.replace("\uFEFF", "");
 //            String json = XML.toJSONObject(nfo).toString();
-            Map<String, Object> data = XMLUtil.xmlToMap(nfo);
-            TVShow tvShow = new Gson().fromJson(new Gson().toJson(data),TVShow.class);
-            if (StringUtils.isEmpty(type)) {type = TextUtils.join(",",tvShow.getGenre());}
-            if (StringUtils.isEmpty(area)) {area = tvShow.getStudio();}
-            if (StringUtils.isEmpty(year)) {year = tvShow.getYear();}
-            if (StringUtils.isEmpty(remarks)) {remarks = tvShow.getStudio() + tvShow.getRating();}
-            if (StringUtils.isEmpty(director)) {director = TextUtils.join("",tvShow.getDirector());}
-            if (StringUtils.isEmpty(actor)) {actor = analyzeRule.getString(rule.getDetailVodActor());}
-            if (StringUtils.isEmpty(desc)) {desc = tvShow.getPlot();}
-            if (StringUtils.isEmpty(name)) {name = tvShow.getTitle();}
-            if (StringUtils.isEmpty(img)) {img = analyzeRule.getString(rule.getDetailVodPic());}
-        }
-        vod.setVodId(ids.get(0));
-        vod.setVodPic(img);
-        vod.setVodYear(year);
-        vod.setVodName(name);
-        vod.setVodArea(area);
-        vod.setVodActor(actor);
-        vod.setVodRemarks(remarks);
-        vod.setVodContent(desc);
-        vod.setVodDirector(director);
-        vod.setTypeName(type);
-        if (files.size() > 0) {
-            sources.addAll(files);
-        }
-        Map<String, String> sites = new LinkedHashMap<>();
-        for (Object sourceName : sourceNames) {
-            String formName = analyzeRule.getString(rule.getVodPlayForm(), sourceName, false);
-            List<String> vodItems = new ArrayList<>();
-            for (Object source : sources) {
-                String vodPlayName = analyzeRule.getString(rule.getVodPlayName(), source, false);
-                String vodPlayUrl = analyzeRule.getString(rule.getVodPlayUrl(), source, false);
-                vodItems.add(Trans.get(vodPlayName) + "$" + vodPlayUrl + findSubs(vodPlayName, subMap));
+                Map<String, Object> data = XMLUtil.xmlToMap(nfo);
+                TVShow tvShow = new Gson().fromJson(new Gson().toJson(data), TVShow.class);
+                if (StrUtil.isEmpty(type) && !tvShow.getGenre().isEmpty()) {
+                    type = TextUtils.join(",", tvShow.getGenre());
+                }
+                if (StrUtil.isEmpty(area)) {
+                    area = tvShow.getStudio();
+                }
+                if (StrUtil.isEmpty(year)) {
+                    year = tvShow.getYear();
+                }
+                if (StrUtil.isEmpty(remarks)) {
+                    remarks = tvShow.getStudio() + tvShow.getRating();
+                }
+                if (StrUtil.isEmpty(director) && !tvShow.getDirector().isEmpty()) {
+                    director = TextUtils.join("", tvShow.getDirector());
+                }
+                if (StrUtil.isEmpty(actor)) {
+                    actor = analyzeRule.getString(rule.getDetailVodActor());
+                }
+                if (StrUtil.isEmpty(desc)) {
+                    desc = tvShow.getPlot();
+                }
+                if (StrUtil.isEmpty(name)) {
+                    name = tvShow.getTitle();
+                }
+                if (StrUtil.isEmpty(img)) {
+                    img = analyzeRule.getString(rule.getDetailVodPic());
+                }
             }
-            if (vodItems.size() > 0) {
-                sites.put(formName, TextUtils.join("#", vodItems));
+            vod.setVodId(ids.get(0));
+            vod.setVodPic(img);
+            vod.setVodYear(year);
+            vod.setVodName(name);
+            vod.setVodArea(area);
+            vod.setVodActor(actor);
+            vod.setVodRemarks(remarks);
+            vod.setVodContent(desc);
+            vod.setVodDirector(director);
+            vod.setTypeName(type);
+            if (files.size() > 0) {
+                for (Object source : sourceNames) {
+                    sources.add(files);
+                }
             }
+            Map<String, String> sites = new LinkedHashMap<>();
+            for (int i = 0; i < sourceNames.size(); i++) {
+                Object sourceName = sourceNames.get(i);
+                String formName = analyzeRule.getString(rule.getVodPlayForm(), sourceName, false);
+                List<?> playList = analyzeRule.getStringList(rule.getVodPlayList(), sources.get(i), false);
+                List<String> vodItems = new ArrayList<>();
+                for (Object source : playList) {
+                    String vodPlayName = analyzeRule.getString(rule.getVodPlayName(), source, false);
+                    String vodPlayUrl = analyzeRule.getString(rule.getVodPlayUrl(), source, false);
+                    vodItems.add(Trans.get(vodPlayName) + "$" + vodPlayUrl + findSubs(analyzeRule.getString(rule.getDetailFileNodeSub(), source, false), subMap));
+                }
+                if (vodItems.size() > 0) {
+                    sites.put(formName, TextUtils.join("#", vodItems));
+                }
+            }
+            if (sites.size() > 0) {
+                vod.setVodPlayFrom(TextUtils.join("$$$", sites.keySet()));
+                vod.setVodPlayUrl(TextUtils.join("$$$", sites.values()));
+            }
+            return Result.string(vod);
+        } catch (Exception e) {
+            Console.log("detailUrl {} {}", rule.getDetailUrl(), e.getLocalizedMessage());
         }
-        if (sites.size() > 0) {
-            vod.setVodPlayFrom(TextUtils.join("$$$", sites.keySet()));
-            vod.setVodPlayUrl(TextUtils.join("$$$", sites.values()));
-        }
-        return Result.string(vod);
+        return "";
     }
 
     private String findSubs(String name, LinkedHashMap<String, List<String>> subMap) {
-        name = name.substring(0, name.lastIndexOf("."));
+        name = StrUtil.sub(name, 0, name.lastIndexOf("."));
         List<String> subs = subMap.get(name);
         if (subs != null && subs.size() > 0) return combineSubs(subs);
         StringBuilder sb = new StringBuilder();
-        for (Map.Entry<String, List<String>> entry : subMap.entrySet()) sb.append(combineSubs(entry.getValue()));
+        for (Map.Entry<String, List<String>> entry : subMap.entrySet())
+            sb.append(combineSubs(entry.getValue()));
         return sb.toString();
     }
 
@@ -344,19 +426,21 @@ public class Legado extends Spider {
         return sb.toString();
     }
 
-    private void listFiles(String folder, List<Object> files, LinkedHashMap<String, List<String>> subMap, LinkedHashMap<String, List<String>> nfoMap) {
+    private void listFiles(String folder, List<Object> files, LinkedHashMap<String, List<String>> subMap, LinkedHashMap<String, String> nfoMap) {
         listFiles(folder, files, subMap, nfoMap, "");
     }
 
-    private void listFiles(String parent, List<Object> files, LinkedHashMap<String, List<String>> subMap, LinkedHashMap<String, List<String>>  nfoMap, String marker) {
+    private void listFiles(String parent, List<Object> files, LinkedHashMap<String, List<String>> subMap, LinkedHashMap<String, String> nfoMap, String marker) {
         analyzeRule.put("marker", marker);
         analyzeRule.put("parent", parent);
         Object data = analyzeRule.get("parents");
-        if (data == null || StringUtils.isEmpty(data.toString())) {
-            data = new ArrayList<>();
+        if (data == null || StrUtil.isEmpty(data.toString())) {
+            data = new ArrayList<String>();
             analyzeRule.put("parents", data);
         }
-        ((List)data).add(parent);
+        if (data instanceof List) {
+            ((List<String>) data).add(parent);
+        }
         List<String> folders = new ArrayList<>();
         String fileNodeUrl = analyzeRule.getString(rule.getDetailFileNodeUrl());
         analyzeUrl = new AnalyzeUrl(fileNodeUrl);
@@ -364,31 +448,31 @@ public class Legado extends Spider {
         analyzeRule.setContent(content, analyzeUrl.getBaseUrl());
         List<?> items = analyzeRule.getElements(rule.getDetailFileNode());
         for (Object item : items) {
-            if (StringUtils.isNotEmpty(analyzeRule.getString(rule.getDetailFileNodeRoot(), item,false))) {
+            if (StrUtil.isNotEmpty(analyzeRule.getString(rule.getDetailFileNodeRoot(), item, false))) {
                 folders.add(new Gson().toJson(item));
             }
-            if (isVideoFormat(analyzeRule.getString(rule.getDetailFileNodeLeaf(), item,false))) {
+            if (isVideoFormat(analyzeRule.getString(rule.getDetailFileNodeLeaf(), item, false))) {
                 files.add(item);
             }
-            if (StringUtils.endsWithAny(analyzeRule.getString(rule.getDetailFileNodeSub(), item, false), ".srt,.ass,.ssa,.vtt".split(","))) {
+            if (StrUtil.endWithAny(analyzeRule.getString(rule.getDetailFileNodeSub(), item, false), ".srt,.ass,.ssa,.vtt".split(","))) {
                 String subName = analyzeRule.getString(rule.getDetailFileNodeSub(), item, false);
-                String key = subName.indexOf(".") > 0? subName.substring(0, subName.lastIndexOf(".")): subName;
-                String fileExtension = subName.indexOf(".") > 0 ? subName.substring(subName.lastIndexOf(".")) :"";
+                String key = subName.indexOf(".") > 0 ? subName.substring(0, subName.lastIndexOf(".")) : subName;
+                String fileExtension = subName.indexOf(".") > 0 ? subName.substring(subName.lastIndexOf(".")) : "";
                 if (!subMap.containsKey(key)) subMap.put(key, new ArrayList<>());
                 String id = analyzeRule.getString(rule.getDetailFileNodeId(), item, false);
                 subMap.get(key).add(key + "@@@" + fileExtension + "@@@" + id);
             }
-            if (StringUtils.endsWithAny(analyzeRule.getString(rule.getDetailFileNodeSub(), item, false), ".nfo,.jpg".split(","))) {
+            if (StrUtil.endWithAny(analyzeRule.getString(rule.getDetailFileNodeSub(), item, false), ".nfo,.jpg".split(","))) {
                 String subName = analyzeRule.getString(rule.getDetailFileNodeSub(), item, false);
-                String key = subName.indexOf(".") > 0? subName.substring(0, subName.lastIndexOf(".")): subName;
-                String fileExtension = subName.indexOf(".") > 0 ? subName.substring(subName.lastIndexOf(".")) :"";
-                if (!nfoMap.containsKey(key)) nfoMap.put(key, new ArrayList<>());
+                String key = subName.indexOf(".") > 0 ? subName.substring(0, subName.lastIndexOf(".")) : subName;
+                String fileExtension = subName.indexOf(".") > 0 ? subName.substring(subName.lastIndexOf(".")) : "";
+//                if (!nfoMap.containsKey(key)) nfoMap.put(key, new ArrayList<>());
                 String id = analyzeRule.getString(rule.getDetailFileNodeId(), item, false);
-                nfoMap.get(key).add(key + "@@@" + fileExtension + "@@@" + id);
+                nfoMap.put(key, key + "@@@" + fileExtension + "@@@" + id);
             }
         }
         String nextMarker = analyzeRule.getString(rule.getDetailFileNodeFlag());
-        if (StringUtils.isNotEmpty(nextMarker)) {
+        if (StrUtil.isNotEmpty(nextMarker)) {
             listFiles(parent, files, subMap, nfoMap, nextMarker);
         }
         for (String folder : folders) {
@@ -399,80 +483,97 @@ public class Legado extends Spider {
     /**
      * 搜索数据内容
      *
-     * @param key
-     * @param quick
-     * @return
+     * @param key   搜索参数
+     * @param quick 是否快捷搜索
+     * @return 返回搜索数据
      */
     @Override
-    public String searchContent(String key, boolean quick) throws Exception {
-        List<Vod> list = new ArrayList<>();
-        analyzeRule.put("searchKey",key);
-        analyzeUrl = new AnalyzeUrl(analyzeRule.getString(rule.getSearchUrl()));
-        String content = analyzeUrl.getResponse();
-        analyzeRule.setContent(content, analyzeUrl.getBaseUrl());
-        List<?> elements = analyzeRule.getElements(rule.getSearchVodNode());
-        for (Object element : elements) {
-            String name = analyzeRule.getString(rule.getSearchVodName(), element, false);
-            String img = analyzeRule.getString(rule.getSearchVodPic(), element, true);
-            String remark = analyzeRule.getString(rule.getSearchVodRemarks(), element, false);
-            String id = analyzeRule.getString(rule.getSearchVodId(), element, false);
-            list.add(new Vod(id, name, img, remark));
+    public String searchContent(String key, boolean quick) {
+        try {
+            List<Vod> list = new ArrayList<>();
+            analyzeRule.put("searchKey", key);
+            analyzeUrl = new AnalyzeUrl(analyzeRule.getString(rule.getSearchUrl()));
+            String content = analyzeUrl.getResponse();
+            Console.log(content);
+            analyzeRule.setContent(content, analyzeUrl.getBaseUrl());
+            List<?> elements = analyzeRule.getElements(rule.getSearchVodNode());
+            for (Object element : elements) {
+                String name = analyzeRule.getString(rule.getSearchVodName(), element, false);
+                String img = analyzeRule.getString(rule.getSearchVodPic(), element, true);
+                String remark = analyzeRule.getString(rule.getSearchVodRemarks(), element, false);
+                String id = analyzeRule.getString(rule.getSearchVodId(), element, false);
+                list.add(new Vod(id, name, img, remark));
+            }
+            return Result.string(list);
+        } catch (Exception e) {
+            Console.log("searchUrl {} {}", rule.getSearchUrl(), e.getLocalizedMessage());
         }
-        return Result.string(list);
+        return "";
     }
 
     /**
      * 播放信息
      *
-     * @param flag
-     * @param id
-     * @param vipFlags
-     * @return
+     * @param flag     播放标签
+     * @param id       播放id
+     * @param vipFlags VIP标签标识
+     * @return 返回播放数据
      */
     @Override
-    public String playerContent(String flag, String id, List<String> vipFlags) throws Exception {
-        analyzeRule.put("playFlag", flag);
-        analyzeRule.put("playId", id);
-        analyzeRule.put("playFlags", new Gson().toJson(vipFlags));
-        String url = analyzeRule.getString(rule.getPlayUrl());
-        String subStr = analyzeRule.getString(rule.getPlaySub());
-        List<Sub> subs = new Gson().fromJson(subStr,new TypeToken<List<Sub>>(){}.getType());
-        HashMap<String, String> header = rule.getPlayHeader();
-        String extendHeaderStr = analyzeRule.getString(rule.getPlayExtendHeader());
-        if (header != null && StringUtils.isNotEmpty(extendHeaderStr)) {
-            header.putAll(new Gson().fromJson(extendHeaderStr, HashMap.class));
-        } else if (header == null) {
-            header = new HashMap<>();
+    public String playerContent(String flag, String id, List<String> vipFlags) {
+        try {
+            if (analyzeRule.get("spider") instanceof API) {
+                API.get().checkAccessToken();
+                String[] ids = id.split("\\+");
+                String url = flag.equals("原畫") ? API.get().getDownloadUrl(ids[0]) : API.get().getPreviewUrl(ids[0], flag);
+                return Result.get().url(url).subs(API.get().getSub(ids)).header(API.get().getHeader()).parse(0).string();
+            }
+            analyzeRule.put("playFlag", flag);
+            analyzeRule.put("playId", StrUtil.split(id, "+").get(0));
+            analyzeRule.put("playFlags", new Gson().toJson(vipFlags));
+            analyzeRule.put("subs", StrUtil.split(id, "+"));
+            Console.log("flag: {}, id: {}, vipFlags: {}", flag, id, vipFlags);
+            String url = analyzeRule.getString(rule.getPlayUrl());
+            String subStr = analyzeRule.getString(rule.getPlaySub());
+            List<Sub> subs = new Gson().fromJson(subStr, new TypeToken<List<Sub>>() {
+            }.getType());
+            HashMap<String, String> header = rule.getPlayHeader();
+            String extendHeaderStr = analyzeRule.getString(rule.getPlayExtendHeader());
+            if (header != null && StrUtil.isNotEmpty(extendHeaderStr)) {
+                header.putAll(new Gson().fromJson(extendHeaderStr, new TypeToken<HashMap<String, String>>() {
+                }.getType()));
+            } else if (header == null) {
+                header = new HashMap<>();
+            }
+            if (!header.containsKey("User-Agent")) {
+                header.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.42");
+            }
+            if (isVideoFormat(url)) {
+                return Result.get().url(url).subs(subs).header(header).parse(0).string();
+            }
+            if ((Misc.isVip(url))) {
+                return Result.get().url(url).subs(subs).header(header).parse(1).jx().string();
+            }
+            if (vipFlags.contains(flag)) {
+                return Result.get().url(url).subs(subs).header(header).parse(1).jx().string();
+            }
+            return Result.get().url(url).subs(subs).header(header).parse().string();
+        } catch (Exception e) {
+            Console.log("playUrl {} {}", rule.getPlayUrl(), e.getLocalizedMessage());
         }
-        if (!header.containsKey("User-Agent")) {
-            header.put("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.42");
-        }
-        if (isVideoFormat(url)) {
-            return Result.get().url(url).subs(subs).header(header).parse(0).string();
-        }
-        if ((Misc.isVip(url))) {
-            return Result.get().url(url).subs(subs).header(header).parse(1).jx().string();
-        }
-        if (vipFlags.contains(flag)) {
-            return Result.get().url(url).subs(subs).header(header).parse(1).jx().string();
-        }
-        return Result.get().url(url).subs(subs).header(header).parse().string();
+        return "";
     }
 
     /**
      * webview解析时使用 可自定义判断当前加载的 url 是否是视频
      *
-     * @param url
-     * @return
+     * @param url 检测的URL
+     * @return 返回是否是视频
      */
     @Override
     public boolean isVideoFormat(String url) {
         if (StringUtil.isJson(url)) {
-            try {
-                url = new JSONObject(url).optJSONArray("urls").optString(0);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            url = new Gson().fromJson(url, JsonObject.class).getAsJsonArray("urls").get(0).getAsString();
         }
         String[] videoFormatList = {".M3U8", ".3G2", ".3GP", ".3GP2", ".3GPP", ".AMV", ".ASF", ".AVI", ".DIVX", ".DPG", ".DVR-MS", ".EVO", ".F4V", ".FLV", ".IFO", ".K3G", ".M1V", ".M2T", ".M2TS", ".M2V", ".M4B", ".M4P", ".M4V", ".MKV", ".MOV", ".MP2V", ".MP4", ".MPE", ".MPEG", ".MPG", ".MPV2", ".MTS", ".MXF", ".NSR", ".NSV", ".OGM", ".OGV", ".QT", ".RAM", ".RM", ".RMVB", ".RPM", ".SKM", ".TP", ".TPR", ".TRP", ".TS", ".VOB", ".WEBM", ".WM", ".WMP", ".WMV", ".WTV"};
         url = url.toLowerCase();
@@ -482,31 +583,38 @@ public class Legado extends Spider {
         if (url.contains("alicloudccp.com") || url.contains("data.aliyundrive.net")) {
             return true;
         }
-        return StringUtils.endsWithAny(url.toUpperCase(), videoFormatList);
+        return StrUtil.endWithAny(url.toUpperCase(), videoFormatList);
     }
 
     /**
      * 是否手动检测webview中加载的url
      *
-     * @return
+     * @return 是否手动检测webview中加载的url
      */
     @Override
     public boolean manualVideoCheck() {
         return super.manualVideoCheck();
     }
 
-    private String fixUrl(String base, String src) {
-        try {
-            if (src.startsWith("//")) {
-                Uri parse = Uri.parse(base);
-                src = parse.getScheme() + ":" + src;
-            } else if (!src.contains("://")) {
-                Uri parse = Uri.parse(base);
-                src = parse.getScheme() + "://" + parse.getHost() + src;
+    public static Object[] vod(Map<String, String> params) {
+        String js = params.get("js");
+        AnalyzeRule analyzeRule1 = new AnalyzeRule();
+        analyzeRule1.setContent("");
+        String url = analyzeRule1.getString(Base64.decodeStr(js));
+        AnalyzeUrl analyzeUrl1 = new AnalyzeUrl(url);
+        StrResponse strResponse = analyzeUrl1.getStrResponse();
+        if (strResponse.code() == 200) {
+            Headers headers = strResponse.header();
+            String type = headers.get("Content-Type");
+            if (type == null) {
+                type = "application/octet-stream";
             }
-        } catch (Exception e) {
-            SpiderDebug.log(e);
+            Object[] result = new Object[3];
+            result[0] = 200;
+            result[1] = type;
+            result[2] = strResponse.raw().body().byteStream();
+            return result;
         }
-        return src;
+        return null;
     }
 }

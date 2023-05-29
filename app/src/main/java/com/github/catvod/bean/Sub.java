@@ -14,6 +14,9 @@ public class Sub {
     @SerializedName("format")
     private String format;
 
+    @SerializedName("ext")
+    private String ext;
+
     public static Sub create() {
         return new Sub();
     }
@@ -39,6 +42,7 @@ public class Sub {
     }
 
     public Sub ext(String ext) {
+        this.ext = ext;
         switch (ext) {
             case "vtt":
                 return format("text/vtt");
@@ -48,5 +52,9 @@ public class Sub {
             default:
                 return format("application/x-subrip");
         }
+    }
+
+    public String getUrl() {
+        return url;
     }
 }

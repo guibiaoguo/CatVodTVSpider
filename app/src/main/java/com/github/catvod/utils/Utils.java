@@ -1,5 +1,6 @@
 package com.github.catvod.utils;
 
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.util.DisplayMetrics;
@@ -10,18 +11,25 @@ import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.spider.Init;
 
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 public class Utils {
 
     public static final String CHROME = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36";
+    public static final List<String> MEDIA = Arrays.asList("mp4", "mkv", "wmv", "flv", "avi", "mp3", "aac", "flac", "m4a");
+    public static final Pattern RULE = Pattern.compile(
+            "http((?!http).){12,}?\\.(m3u8|mp4|flv|avi|mkv|rm|wmv|mpg|m4a|mp3)\\?.*|" +
+                    "http((?!http).){12,}\\.(m3u8|mp4|flv|avi|mkv|rm|wmv|mpg|m4a|mp3)|" +
+                    "http((?!http).)*?video/tos*"
+    );
 
     public static boolean isVip(String url) {
         List<String> hosts = Arrays.asList("iqiyi.com", "v.qq.com", "youku.com", "le.com", "tudou.com", "mgtv.com", "sohu.com", "acfun.cn", "bilibili.com", "baofeng.com", "pptv.com");
@@ -31,15 +39,41 @@ public class Utils {
 
     public static boolean isVideoFormat(String url) {
         if (url.contains("url=http") || url.contains(".js") || url.contains(".css") || url.contains(".html")) return false;
-        return Sniffer.RULE.matcher(url).find();
+        return RULE.matcher(url).find();
+    }
+
+    public static boolean isMobile() {
+        boolean hasCamera = Init.context().getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
+        boolean hasPhone = Init.context().getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEPHONY);
+        boolean hasBT = Init.context().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH);
+        return hasCamera && hasPhone && hasBT;
+    }
+
+    public static boolean isGBK(byte[] bytes) {
+        Charset charset = Charset.forName("GBK");
+        String str = new String(bytes, charset);
+        byte[] newBytes = str.getBytes(charset);
+        return Arrays.equals(bytes, newBytes);
+    }
+
+    public static byte[] getUTF8(byte[] bytes) throws Exception {
+        if (isGBK(bytes)) {
+            return new String(bytes, Charset.forName("GBK")).getBytes("UTF-8");
+        } else {
+            return bytes;
+        }
     }
 
     public static boolean isSub(String ext) {
         return ext.equals("srt") || ext.equals("ass") || ext.equals("ssa");
     }
 
+    public static String getExt(String name) {
+        return name.substring(name.lastIndexOf(".") + 1);
+    }
+
     public static String getSize(double size) {
-        if (size == 0) return "";
+        if (size <= 0) return "";
         if (size > 1024 * 1024 * 1024 * 1024.0) {
             size /= (1024 * 1024 * 1024 * 1024.0);
             return String.format(Locale.getDefault(), "%.2f%s", size, "TB");
@@ -56,18 +90,19 @@ public class Utils {
     }
 
     public static String fixUrl(String base, String src) {
-        try {
-            if (src.startsWith("//")) {
-                Uri parse = Uri.parse(base);
-                src = parse.getScheme() + ":" + src;
-            } else if (!src.contains("://")) {
-                Uri parse = Uri.parse(base);
-                src = parse.getScheme() + "://" + parse.getHost() + src;
-            }
-        } catch (Exception e) {
-            SpiderDebug.log(e);
+        if (src.startsWith("//")) {
+            Uri parse = Uri.parse(base);
+            return parse.getScheme() + ":" + src;
+        } else if (!src.contains("://")) {
+            Uri parse = Uri.parse(base);
+            return parse.getScheme() + "://" + parse.getHost() + src;
+        } else {
+            return src;
         }
-        return src;
+    }
+
+    public static String removeExt(String text) {
+        return text.contains(".") ? text.substring(0, text.lastIndexOf(".")) : text;
     }
 
     public static String substring(String text) {
@@ -131,15 +166,6 @@ public class Utils {
         try {
             ViewGroup group = Init.getActivity().getWindow().getDecorView().findViewById(android.R.id.content);
             group.addView(view, params);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void removeView(View view) {
-        try {
-            ViewGroup group = Init.getActivity().getWindow().getDecorView().findViewById(android.R.id.content);
-            group.removeView(view);
         } catch (Exception e) {
             e.printStackTrace();
         }

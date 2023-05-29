@@ -3,7 +3,6 @@ package com.github.catvod.utils;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.legado.LegadoData;
 
-import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
@@ -17,6 +16,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import cn.hutool.core.util.StrUtil;
 
 
 /**
@@ -581,7 +582,7 @@ public class StringUtil {
     public static boolean isAbsUrl(String url) {
         boolean isAbsUrl;
         if (url != null) {
-            isAbsUrl = StringUtils.startsWith(url, "http://") || StringUtils.startsWith(url, "https://");
+            isAbsUrl = StrUtil.startWith(url, "http://") || StrUtil.startWith(url, "https://");
         } else {
             isAbsUrl = false;
         }

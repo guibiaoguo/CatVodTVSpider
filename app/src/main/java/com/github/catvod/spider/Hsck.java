@@ -112,7 +112,7 @@ public class Hsck extends Spider {
             result.put("class", classes);
             try {
                 // 取首页推荐视频列表
-                Elements list = doc.select(".stui-vodlist>li");
+                Elements list = doc.select(".stui-vodlist>li:has(span.pic-text)");
                 JSONArray videos = new JSONArray();
                 for (int i = 0; i < list.size(); i++) {
                     Element vod = list.get(i);
@@ -148,7 +148,7 @@ public class Hsck extends Spider {
             JSONObject result = new JSONObject();
             try {
                 // 取首页推荐视频列表
-                Elements list = doc.select(".stui-vodlist>li");
+                Elements list = doc.select(".stui-vodlist>li:has(span.pic-text)");
                 JSONArray videos = new JSONArray();
                 for (int i = 0; i < list.size(); i++) {
                     Element vod = list.get(i);
@@ -202,7 +202,7 @@ public class Hsck extends Spider {
             try {
                 Document doc = Jsoup.parse(srr);
                 // 取首页推荐视频列表
-                Elements list = doc.select(".stui-vodlist>li");
+                Elements list = doc.select(".stui-vodlist>li:has(span.pic-text)");
                 JSONArray videos = new JSONArray();
                 for (int i = 0; i < list.size(); i++) {
                     Element vod = list.get(i);

@@ -41,7 +41,7 @@ public class Proxy extends Spider {
             String what = params.get("do");
             switch (what) {
                 case "legado":
-                    return Legado1.loadPic(params);
+                    return Legado.vod(params);
                 case "live":
                     String type = params.get("type");
                     if (type.equals("txt")) {

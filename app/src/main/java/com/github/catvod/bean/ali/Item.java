@@ -33,6 +33,9 @@ public class Item {
     @SerializedName("parent")
     private String parent;
 
+    @SerializedName("parent_file_id")
+    private String parentFileId;
+
     public static Item objectFrom(String str) {
         return new Gson().fromJson(str, Item.class);
     }
@@ -88,5 +91,9 @@ public class Item {
 
     public String removeExt() {
         return getName().indexOf(".") > 0 ? getName().substring(0, getName().lastIndexOf(".")) : getName();
+    }
+
+    public String getParentFileId() {
+        return parentFileId;
     }
 }
