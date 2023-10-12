@@ -9,7 +9,8 @@ import org.mozilla.javascript.Wrapper;
 
 import java.util.Map;
 
-public class ExternalScriptable implements Scriptable {
+public class
+ExternalScriptable implements Scriptable {
 
     private ScriptContext context;
     private Map indexedProps;

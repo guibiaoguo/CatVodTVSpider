@@ -57,19 +57,25 @@ dependencies {
         //Rhino
     implementation 'org.mozilla:rhino:1.7.12'
     //加密解密库
-    implementation('cn.hutool:hutool-crypto:5.7.11')
+    implementation('cn.hutool:hutool-crypto:4.5.15')
+    implementation 'androidx.test:runner:1.5.2'
+    implementation project(path: ':quickjs')
+    implementation 'androidx.core:core:1.7.0'
 
     //junit 打包删除
-//    implementation group: 'org.json', name: 'json', version: '20190722'
+    implementation group: 'org.json', name: 'json', version: '20190722'
     testImplementation 'junit:junit:4.13.2'
-    //mockito
-    testImplementation "org.mockito:mockito-core:3.3.3"
+//    mockito
+    testImplementation "org.mockito:mockito-core:3.7.7"
+    testImplementation "org.mockito:mockito-inline:3.7.7"
     //powermock
     testImplementation "org.powermock:powermock-module-junit4:2.0.9"
     testImplementation "org.powermock:powermock-module-junit4-rule:2.0.9"
     testImplementation "org.powermock:powermock-api-mockito2:2.0.9"
     testImplementation "org.powermock:powermock-classloading-xstream:2.0.9"
     testImplementation 'org.robolectric:robolectric:4.9'
-
+    androidTestImplementation 'com.android.support:support-annotations:27.1.1'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test:rules:1.0.2'
 //    testImplementation 'org.mock-server:mockserver-junit-rule-no-dependencies:5.14.0'
 }

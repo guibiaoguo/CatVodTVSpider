@@ -35,7 +35,7 @@ public class QQTest {
         qq.init(null);
     }
 
-    @Test
+//    @Test
     public void testInit() throws Exception {
         URI uri = new URI("https://www.baidu.com");
         System.out.println(uri.getScheme());

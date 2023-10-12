@@ -141,9 +141,11 @@ public class Legado extends Spider {
      */
     @Override
     public String homeContent(boolean filter) {
+        List<Vod> list = new ArrayList<>();
+        List<Class> classes = rule.getClasses();
+        LinkedHashMap<String, List<Filter>> filters = rule.getFilters();
         try {
-            List<Vod> list = new ArrayList<>();
-            List<Class> classes = rule.getClasses();
+
             analyzeUrl = new AnalyzeUrl(analyzeRule.getString(rule.getHomeUrl()));
             String content = analyzeUrl.getResponse();
             Console.log(content);
@@ -158,12 +160,12 @@ public class Legado extends Spider {
                     classes.add(new Class(id, name, flag));
                 }
             }
-            LinkedHashMap<String, List<Filter>> filters = rule.getFilters();
+
             if (filters == null) {
                 filters = new LinkedHashMap<>();
             }
 
-            if (StrUtil.isEmpty(rule.getHomeVideoUrl())) {
+//            if (StrUtil.isEmpty(rule.getHomeVideoUrl())) {
                 List<?> elements = analyzeRule.getElements(rule.getHomeVodNode());
                 for (Object element : elements) {
                     String name = analyzeRule.getString(rule.getHomeVodName(), element, false);
@@ -172,12 +174,12 @@ public class Legado extends Spider {
                     String id = analyzeRule.getString(rule.getHomeVodId(), element, false);
                     list.add(new Vod(id, name, img, remark));
                 }
-            }
+//            }
             return Result.string(classes, list, filters);
         } catch (Exception e) {
             Console.log("homeUrl {} {}", rule.getHomeUrl(), e.getLocalizedMessage());
         }
-        return "";
+        return Result.string(classes, list, filters);
     }
 
     /**
@@ -206,7 +208,7 @@ public class Legado extends Spider {
         } catch (Exception e) {
             Console.log("homeVideoUrl {} {}", rule.getHomeVideoUrl(), e.getLocalizedMessage());
         }
-        return "";
+        return Result.get().string();
     }
 
     /**
@@ -261,7 +263,7 @@ public class Legado extends Spider {
         } catch (Exception e) {
             Console.log("cateUrl {} {}", rule.getCateUrl(), e.getLocalizedMessage());
         }
-        return "";
+        return Result.get().string();
     }
 
     /**
@@ -274,18 +276,20 @@ public class Legado extends Spider {
     public String detailContent(List<String> ids) {
         try {
             String url = ids.get(0).trim();
-            Matcher matcher = pattern.matcher(url);
-            if (matcher.find()) {
-                analyzeRule.put("spider", API.get());
-                API.get().setRefreshToken(rule.getAliToken());
-                String shareId = matcher.group(1);
-                String fileId = matcher.groupCount() == 3 ? matcher.group(3) : "";
-                API.get().setShareId(shareId);
-                return Result.string(API.get().getVod(url, fileId));
-            }
+//            Matcher matcher = pattern.matcher(url);
+//            if (matcher.find()) {
+//                analyzeRule.put("spider", API.get());
+//                API.get().setRefreshToken(rule.getAliToken());
+//                String shareId = matcher.group(1);
+//                String fileId = matcher.groupCount() == 3 ? matcher.group(3) : "";
+//                API.get().setShareId(shareId);
+//                return Result.string(API.get().getVod(url, fileId));
+//            }
             Vod vod = new Vod();
             analyzeRule.put("detailId", ids.get(0));
-            analyzeUrl = new AnalyzeUrl(analyzeRule.getString(rule.getDetailUrl()));
+            String detailUrl = analyzeRule.getString(rule.getDetailUrl());
+            Console.log(detailUrl);
+            analyzeUrl = new AnalyzeUrl(detailUrl);
             String content = analyzeUrl.getResponse();
             Console.log(content);
             analyzeRule.setContent(content, analyzeUrl.getBaseUrl());
@@ -334,8 +338,8 @@ public class Legado extends Spider {
 //        String code = analyzeRule.getString("@js:playId='619ae207b6f14e786a234bb9bf1c0c8998b75834';shareId=java.get('shareId');shareToken=java.get('shareToken');access_token=java.get('accessToken');content=java.post('https://api.aliyundrive.com/v2/file/get_share_link_download_url/',{'share_id':shareId,'file_id':playId},{'referer':'https://www.aliyundrive.com','x-canary':'client=web,app=share,version=v2.3.1','authorization':access_token,'x-share-token':shareToken}).body();java.log(content);url=JSON.parse(content).url;java.log(url);url1=java.getString('$.url',content,false);java.log(url1);java.get(url1,{'referer':'https://www.aliyundrive.com/'}).body();");
 //        System.out.println(code);
             if (nfoMap.size() > 0 && nfoMap.get("tvshow") != null) {
-                analyzeRule.put("nfo", StrUtil.split(nfoMap.get("tvshow"), "@@@").get(2));
-                analyzeRule.put("poster", StrUtil.split(nfoMap.get("poster"), "@@@").get(2));
+                analyzeRule.put("nfo", StrUtil.split(nfoMap.get("tvshow"), "@@@")[2]);
+                analyzeRule.put("poster", StrUtil.split(nfoMap.get("poster"), "@@@")[2]);
                 String nfo = analyzeRule.getString(rule.getDetailFileNodeNfo());
                 nfo = nfo.replace("\uFEFF", "");
 //            String json = XML.toJSONObject(nfo).toString();
@@ -407,7 +411,7 @@ public class Legado extends Spider {
         } catch (Exception e) {
             Console.log("detailUrl {} {}", rule.getDetailUrl(), e.getLocalizedMessage());
         }
-        return "";
+        return Result.get().string();
     }
 
     private String findSubs(String name, LinkedHashMap<String, List<String>> subMap) {
@@ -508,7 +512,7 @@ public class Legado extends Spider {
         } catch (Exception e) {
             Console.log("searchUrl {} {}", rule.getSearchUrl(), e.getLocalizedMessage());
         }
-        return "";
+        return Result.get().string();
     }
 
     /**
@@ -521,23 +525,24 @@ public class Legado extends Spider {
      */
     @Override
     public String playerContent(String flag, String id, List<String> vipFlags) {
+        String url = id;
+        HashMap<String, String> header = rule.getPlayHeader();
         try {
-            if (analyzeRule.get("spider") instanceof API) {
-                API.get().checkAccessToken();
-                String[] ids = id.split("\\+");
-                String url = flag.equals("原畫") ? API.get().getDownloadUrl(ids[0]) : API.get().getPreviewUrl(ids[0], flag);
-                return Result.get().url(url).subs(API.get().getSub(ids)).header(API.get().getHeader()).parse(0).string();
-            }
+//            if (analyzeRule.get("spider") instanceof API) {
+//                API.get().checkAccessToken();
+//                String[] ids = id.split("\\+");
+//                String url = flag.equals("原畫") ? API.get().getDownloadUrl(ids[0]) : API.get().getPreviewUrl(ids[0], flag);
+//                return Result.get().url(url).subs(API.get().getSub(ids)).header(API.get().getHeader()).parse(0).string();
+//            }
             analyzeRule.put("playFlag", flag);
-            analyzeRule.put("playId", StrUtil.split(id, "+").get(0));
+            analyzeRule.put("playId", StrUtil.split(id, "+")[0]);
             analyzeRule.put("playFlags", new Gson().toJson(vipFlags));
             analyzeRule.put("subs", StrUtil.split(id, "+"));
             Console.log("flag: {}, id: {}, vipFlags: {}", flag, id, vipFlags);
-            String url = analyzeRule.getString(rule.getPlayUrl());
+            url = analyzeRule.getString(rule.getPlayUrl());
             String subStr = analyzeRule.getString(rule.getPlaySub());
             List<Sub> subs = new Gson().fromJson(subStr, new TypeToken<List<Sub>>() {
             }.getType());
-            HashMap<String, String> header = rule.getPlayHeader();
             String extendHeaderStr = analyzeRule.getString(rule.getPlayExtendHeader());
             if (header != null && StrUtil.isNotEmpty(extendHeaderStr)) {
                 header.putAll(new Gson().fromJson(extendHeaderStr, new TypeToken<HashMap<String, String>>() {
@@ -549,7 +554,7 @@ public class Legado extends Spider {
                 header.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.42");
             }
             if (isVideoFormat(url)) {
-                return Result.get().url(url).subs(subs).header(header).parse(0).string();
+                    return Result.get().url(url).subs(subs).header(header).parse(0).string();
             }
             if ((Misc.isVip(url))) {
                 return Result.get().url(url).subs(subs).header(header).parse(1).jx().string();
@@ -561,7 +566,7 @@ public class Legado extends Spider {
         } catch (Exception e) {
             Console.log("playUrl {} {}", rule.getPlayUrl(), e.getLocalizedMessage());
         }
-        return "";
+        return Result.get().url(url).header(header).string();
     }
 
     /**

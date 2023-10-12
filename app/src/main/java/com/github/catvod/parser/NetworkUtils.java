@@ -2,6 +2,7 @@ package com.github.catvod.parser;
 
 import com.github.catvod.utils.StringUtil;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -47,39 +48,42 @@ public class NetworkUtils {
         if ((int)('A') <= (int)(c) && (int)(c) <=(int)('F')) {
             return true;
         }
-        if ((int)('a') <= (int)(c) && (int)(c) <=(int)('f')) {
-            return true;
-        }
-        return false;
+        return (int) ('a') <= (int) (c) && (int) (c) <= (int) ('f');
     }
 
     public String getAbsoluteURL(String baseURL,  String relativePath) {
-        String relativePathTrim = StrUtil.trim(relativePath);
+        String relativePathTrim = StringUtil.trimBlanks(relativePath);
         if (baseURL == null || StringUtil.isAbsUrl(relativePathTrim)) {
             return relativePathTrim;
         } else if(StrUtil.startWith(relativePathTrim, "javascript")) {
             return "";
         } else {
-            return URLUtil.completeUrl(StrUtil.subBefore(baseURL, ",", false), relativePathTrim);
+            return URLUtil.complateUrl(StrUtil.subBefore(baseURL, ",", false), relativePathTrim);
         }
     }
 
     
     public String getAbsoluteURL( URL baseURL,  String relativePath) {
-        String relativePathTrim = StrUtil.trim(relativePath);
+        String relativePathTrim = StringUtil.trimBlanks(relativePath);
         if (baseURL == null || StringUtil.isAbsUrl(relativePathTrim)) {
             return relativePathTrim;
         } else if(StrUtil.startWith(relativePathTrim, "javascript")) {
             return "";
         } else {
-            return URLUtil.completeUrl(baseURL.toString(), relativePath);
+            return URLUtil.complateUrl(baseURL.toString(), relativePath);
         }
     }
 
     
     public String getBaseUrl(String url) {
         if (StrUtil.isNotEmpty(url) && StrUtil.startWithAny(url, "http://", "https://")) {
-            return URLUtil.getHost(URLUtil.url(url)).toString();
+            URL url1 = null;
+            try {
+                url1 = new URL(url);
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+            return StrUtil.format("{}://{}",url1.getProtocol(),url1.getHost());
         }
         return url;
     }
@@ -94,7 +98,12 @@ public class NetworkUtils {
     public String getSubDomain(String url) {
         String baseUrl = getBaseUrl(url);
         if (StrUtil.isEmpty(baseUrl)) return url;
-        String host =  URLUtil.url(baseUrl).getHost();
+        String host = null;
+        try {
+            host = new URL(baseUrl).getHost();
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
         if (isIPAddress(host)) return host;
         return host;
     }

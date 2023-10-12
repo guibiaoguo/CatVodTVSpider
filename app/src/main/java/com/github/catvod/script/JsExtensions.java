@@ -1,5 +1,7 @@
 package com.github.catvod.script;
 
+import android.os.Build;
+
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.parser.AnalyzeUrl;
 import com.github.catvod.parser.RequestMethod;
@@ -9,13 +11,14 @@ import com.github.catvod.utils.Utils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import org.mozilla.javascript.NativeObject;
 
 import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.security.spec.AlgorithmParameterSpec;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -27,7 +30,6 @@ import java.util.concurrent.CompletionService;
 import java.util.concurrent.Future;
 
 import cn.hutool.core.codec.Base64;
-import cn.hutool.core.convert.Convert;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.lang.Console;
 import cn.hutool.core.thread.ThreadUtil;
@@ -84,9 +86,9 @@ public abstract class JsExtensions implements JsEncodeUtils {
     @Override
     public SymmetricCrypto createSymmetricCrypto(String transformation, byte[] key, byte[] iv) {
         SymmetricCrypto symmetricCrypto = new SymmetricCrypto(transformation, key);
-        if (iv != null && iv.length > 0) {
-            return symmetricCrypto.setIv(iv);
-        }
+//        if (iv != null && iv.length > 0) {
+//            return symmetricCrypto.setParams(new AlgorithmParameterSpec);
+//        }
         return symmetricCrypto;
     }
 
@@ -146,7 +148,13 @@ public abstract class JsExtensions implements JsEncodeUtils {
      */
     @Override
     public AsymmetricCrypto createAsymmetricCrypto(String algorithm, String privateKeyBase64, String publicKeyBase64) {
-        return new AsymmetricCrypto(algorithm,privateKeyBase64,publicKeyBase64);
+        if (StrUtil.isEmpty(privateKeyBase64)) {
+            return new AsymmetricCrypto(algorithm,null,publicKeyBase64);
+        } else if (StrUtil.isEmpty(publicKeyBase64)) {
+            return new AsymmetricCrypto(algorithm,privateKeyBase64,null);
+        } else {
+            return new AsymmetricCrypto(algorithm,privateKeyBase64,publicKeyBase64);
+        }
     }
 
     /**
@@ -335,11 +343,15 @@ public abstract class JsExtensions implements JsEncodeUtils {
         return Base64.decode(str);
     }
 
-    public String base64Encode(Object str) {
+    public String base64EncodeStr(Object str) {
         if (!(str instanceof String)) {
             return Base64.encode(new Gson().toJson(str));
         }
         return Base64.encode(str.toString());
+    }
+
+    public String base64Encode(byte[] bytes) {
+        return Base64.encode(bytes);
     }
 
     public String base64Encode(String str, int flags) {
@@ -405,71 +417,6 @@ public abstract class JsExtensions implements JsEncodeUtils {
     public String decodeURI(String str, String charset) {
         return URLUtil.decode(str, Charset.forName(charset));
     }
-    public String htmlFormat(String str) {
-        return "";
-    }
-
-    public Object log(Object ... msg) {
-//        SpiderDebug.log(new GsonBuilder().setPrettyPrinting().setLenient().disableHtmlEscaping().create().toJson(msg));
-        Console.log(msg);
-        return msg;
-    }
-
-    public void logType(Object msg) {
-        Console.log(msg.getClass().getName());
-    }
-
-    public void logToast(Object msg) {
-        Init.show(new Gson().toJson(msg));
-    }
-    /**
-     * 生成UUID
-     */
-    public String randomUUID() {
-        return UUID.randomUUID().toString();
-    }
-
-    //****************文件操作******************//
-
-    /***
-     * 写入文件
-     * @param path 文件路径
-     * @param content 文件内容
-     * @return 返回文件路径
-     */
-    public String writeFile(String path, String content) {
-        String parent = "";
-        try {
-            System.out.println(Init.context().getExternalFilesDir("/").getAbsolutePath());
-            parent = Init.context().getExternalFilesDir("/").getAbsolutePath();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        if (!StrUtil.endWith(path,"/")) {
-            path = "/" + path;
-        }
-        File file = FileUtil.writeString(content, parent + path,"utf-8");
-        return file.getPath();
-    }
-
-    public String readFile(String path) {
-        String parent = "";
-        try {
-            System.out.println(Init.context().getExternalFilesDir("/").getAbsolutePath());
-            parent = Init.context().getExternalFilesDir("/").getAbsolutePath();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return FileUtil.readString(parent + path, CharsetUtil.charset("utf-8"));
-    }
-
-    public void ls(String path) {
-        System.out.println(Init.context().getCacheDir());
-        System.out.println(Init.context().getFilesDir());
-        System.out.println(Init.context().getExternalFilesDir(""));
-        System.out.println(Init.context().getFilesDir());
-//        System.out.println(Init.context().getDataDir().getAbsolutePath());
-    }
 
     public String getSize(String size) {
         if (StrUtil.isEmpty(size)) {
@@ -503,8 +450,69 @@ public abstract class JsExtensions implements JsEncodeUtils {
 
     public List<String> split(Object object, String separator) {
         if (object instanceof List) {
-            return StrUtil.split(StrUtil.join("\n", Convert.toList(object)),separator);
+            return Arrays.asList(StrUtil.split(StrUtil.join("\n", (List)object),separator));
         }
-        return StrUtil.split(object.toString(), separator);
+        return Arrays.asList(StrUtil.split(object.toString(), separator));
     }
+
+    public String htmlFormat(String str) {
+        return "";
+    }
+
+    public Object log(Object ... msg) {
+        SpiderDebug.log(new GsonBuilder().setPrettyPrinting().setLenient().disableHtmlEscaping().create().toJson(msg));
+        Console.log(msg);
+        return msg;
+    }
+
+    public void logType(Object msg) {
+        Console.log(msg.getClass().getName());
+    }
+
+    public void toast(Object msg) {
+        Init.show(new Gson().toJson(msg));
+    }
+    /**
+     * 生成UUID
+     */
+    public String randomUUID() {
+        return UUID.randomUUID().toString();
+    }
+
+    //****************文件操作******************//
+
+    /***
+     * 写入文件
+     * @param path 文件路径
+     * @param content 文件内容
+     * @return 返回文件路径
+     */
+    public String writeFile(String path, String content) {
+        path = Init.context().getExternalFilesDir(path).getAbsolutePath();
+        File file = FileUtil.writeString(content, path,"utf-8");
+        return file.getPath();
+    }
+
+    public String readFile(String path) {
+        path = Init.context().getExternalFilesDir(path).getAbsolutePath();
+        return FileUtil.readString(path, CharsetUtil.charset("utf-8"));
+    }
+
+    public void ls(String path) {
+        System.out.println(Init.context().getCacheDir());
+        System.out.println(Init.context().getFilesDir());
+        System.out.println(Init.context().getExternalFilesDir(""));
+        System.out.println(Init.context().getFilesDir());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            System.out.println(Init.context().getCodeCacheDir());
+        }
+        System.out.println(Init.context().getExternalCacheDir());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            System.out.println(Init.context().getExternalMediaDirs());
+        }
+        System.out.println(Init.context().getExternalCacheDirs());
+        System.out.println(Init.context().getDatabasePath("/"));
+//        System.out.println(Init.context().getDataDir().getAbsolutePath());
+    }
+
 }

@@ -78,7 +78,11 @@ public class AnalyzeByJSonPath implements IFunction {
                     try {
                         Object obj = this.ctx.read(rule);
                         if(obj instanceof JsonArray) {
-                            result = TextUtils.join("\n", gson.fromJson(obj.toString(),List.class));
+                            List<String> txt = new ArrayList<>();
+                            for (JsonElement element : ((JsonArray) obj)) {
+                                txt.add(element.toString());
+                            }
+                            result = TextUtils.join("\n", txt);
                         } else if (obj instanceof JsonPrimitive){
                             result = ((JsonPrimitive) obj).getAsString();
                         } else {

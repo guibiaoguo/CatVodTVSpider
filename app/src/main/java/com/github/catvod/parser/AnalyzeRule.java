@@ -2,6 +2,7 @@ package com.github.catvod.parser;
 
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.script.JsExtensions;
+import com.github.catvod.script.quickjs.QuickJSScriptEngine;
 import com.github.catvod.utils.StringUtil;
 import com.google.gson.Gson;
 import com.github.catvod.script.Bindings;
@@ -11,11 +12,13 @@ import com.github.catvod.script.rhino.RhinoScriptEngine;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Entities;
 import org.mozilla.javascript.NativeObject;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -23,17 +26,17 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import cn.hutool.core.convert.Convert;
 import cn.hutool.core.lang.Console;
-import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.asymmetric.KeyType;
 
 public class AnalyzeRule extends JsExtensions {
 
     public static Gson gson = new GsonBuilder()
-            .registerTypeAdapter(new TypeToken<Map<String,Object>>(){}.getType(),new DataTypeAdapter())
-            .registerTypeAdapter(new TypeToken<List>(){}.getType(),new DataTypeAdapter())
+            .registerTypeAdapter(new TypeToken<Map<String, Object>>() {
+            }.getType(), new DataTypeAdapter())
+            .registerTypeAdapter(new TypeToken<List>() {
+            }.getType(), new DataTypeAdapter())
             .create();
 
     private Object content = null;
@@ -95,7 +98,7 @@ public class AnalyzeRule extends JsExtensions {
             redirectUrl = new URL(url);
         } catch (Exception e) {
             e.printStackTrace();
-            SpiderDebug.log(StrUtil.format("URL {} error\n{}",url,e.getLocalizedMessage()));
+            SpiderDebug.log(StrUtil.format("URL {} error\n{}", url, e.getLocalizedMessage()));
         }
 //        return redirectUrl;
     }
@@ -194,27 +197,27 @@ public class AnalyzeRule extends JsExtensions {
                     }
                 }
                 if (result instanceof String) {
-                    result = StrUtil.split(result.toString(), "\n");
+                    result = Arrays.asList(StringUtils.split(result.toString(), "\n"));
                 }
                 if (StrUtil.isNotEmpty(sourceRule.replaceRegex) && result instanceof List) {
                     List<String> newList = new ArrayList<>();
-                    for (Object item : Convert.convert(List.class, result)) {
+                    for (Object item : (List) result) {
                         newList.add(replaceRegex(item.toString(), sourceRule));
                     }
                     result = newList;
                 } else if (StrUtil.isNotEmpty(sourceRule.replaceRegex)) {
-                    result = replaceRegex(Convert.convert(String.class, result), sourceRule);
+                    result = replaceRegex(result.toString(), sourceRule);
                 }
             }
         }
         if (result == null) return null;
         if (result instanceof String) {
-            result = StrUtil.split(result.toString(), "\n");
+            result = Arrays.asList(StringUtils.split(result.toString(), "\n"));
         }
         if (isUrl) {
             List<String> urlList = new ArrayList<>();
             if (result instanceof List) {
-                for (Object url : Convert.convert(List.class, result)) {
+                for (Object url : (List) result) {
                     String absoluteURL = NetworkUtils.INSTANCE.getAbsoluteURL(redirectUrl, url.toString());
                     if (StrUtil.isNotEmpty(absoluteURL) && !urlList.contains(absoluteURL)) {
                         urlList.add(absoluteURL);
@@ -223,7 +226,7 @@ public class AnalyzeRule extends JsExtensions {
             }
             return urlList;
         }
-        return Convert.toList(String.class, result);
+        return (List<String>) result;
     }
 
     private Object evalJS(String rule, Object result) {
@@ -236,13 +239,27 @@ public class AnalyzeRule extends JsExtensions {
         bindings.put("PublicKey", KeyType.PublicKey);
         bindings.put("PrivateKey", KeyType.PrivateKey);
         result = scriptEngine.eval(rule, bindings);
+//        try {
+//            bindings = new SimpleBindings();
+//            bindings.put("java", this);
+//            bindings.put("result", result);
+//            bindings.put("src", content);
+//            bindings.put("baseUrl", baseUrl);
+//            bindings.put("PublicKey", KeyType.PublicKey);
+//            bindings.put("PrivateKey", KeyType.PrivateKey);
+//            QuickJSScriptEngine quickJSScriptEngine = QuickJSScriptEngine.getInstance();
+//            result = quickJSScriptEngine.eval(rule, bindings);
+//            Console.log(result);
+//        } catch (Exception e) {
+//            Console.log(e);
+//        }
         return result;
     }
 
     public String getString(String ruleStr, boolean unescape) {
         return getString(ruleStr, null, false, unescape);
     }
-    
+
     public String getString(String ruleStr) {
         return getString(ruleStr, null, false, true);
     }
@@ -338,7 +355,7 @@ public class AnalyzeRule extends JsExtensions {
                         result = evalJS(sourceRule.rule, result);
                         break;
                     case Regex:
-                        result = AnalyzeByRegex.getElement(Convert.convert(String.class, result), StrUtil.splitTrim(sourceRule.rule, "&&"));
+                        result = AnalyzeByRegex.getElement(result.toString(), StrUtil.splitTrim(sourceRule.rule, "&&"));
                         break;
                     case Json:
                         result = getAnalyzeByJSonPath(result).getObject(sourceRule.rule);
@@ -374,7 +391,7 @@ public class AnalyzeRule extends JsExtensions {
                         result = evalJS(sourceRule.rule, result);
                         break;
                     case Regex:
-                        result = AnalyzeByRegex.getElements(Convert.convert(String.class, result), StrUtil.splitTrim(sourceRule.rule, "&&"));
+                        result = AnalyzeByRegex.getElements(result.toString(), StrUtil.splitTrim(sourceRule.rule, "&&"));
                         break;
                     case Json:
                         result = getAnalyzeByJSonPath(result).getList(sourceRule.rule);
@@ -388,18 +405,18 @@ public class AnalyzeRule extends JsExtensions {
 
                 if (StrUtil.isNotEmpty(sourceRule.replaceRegex) && result instanceof List) {
                     List<String> newList = new ArrayList<>();
-                    for (Object item : Convert.convert(List.class ,result)) {
+                    for (Object item : (List) result) {
                         newList.add(replaceRegex(item.toString(), sourceRule));
                     }
                     result = newList;
                 } else if (StrUtil.isNotEmpty(sourceRule.replaceRegex)) {
-                    result = replaceRegex(Convert.convert(String.class, result), sourceRule);
+                    result = replaceRegex(result.toString(), sourceRule);
                 }
             }
         }
         List<Object> results = new ArrayList<>();
         if (result instanceof List) {
-            return Convert.toList(Object.class, result);
+            return (List) result;
         }
         return results;
     }
@@ -415,9 +432,10 @@ public class AnalyzeRule extends JsExtensions {
         Matcher putMatcher = putPattern.matcher(vRuleStr);
         while (putMatcher.find()) {
             vRuleStr = vRuleStr.replace(putMatcher.group(), "");
-            String dataStr = StrUtil.replace(putMatcher.group(1),"%7B","{");
-            dataStr = StrUtil.replace(dataStr,"%7D","}");
-            Map<String, String> data = gson.fromJson(dataStr, new TypeToken<Map<String,String>>(){}.getType());
+            String dataStr = StrUtil.replace(putMatcher.group(1), "%7B", "{");
+            dataStr = StrUtil.replace(dataStr, "%7D", "}");
+            Map<String, String> data = gson.fromJson(dataStr, new TypeToken<Map<String, String>>() {
+            }.getType());
             if (data != null)
                 putMap.putAll(data);
         }
@@ -425,12 +443,29 @@ public class AnalyzeRule extends JsExtensions {
     }
 
     private String replaceRegex(String result, SourceRule sourceRule) {
-        if (StrUtil.isEmpty(sourceRule.replaceRegex)) return result;
+        if (StringUtils.isEmpty(sourceRule.replaceRegex)) return result;
         String vResult = result;
         if (sourceRule.replaceFirst) {
-            vResult = ReUtil.replaceFirst(Pattern.compile(sourceRule.replaceRegex), vResult,sourceRule.replacement);
+            try {
+                Pattern pattern = Pattern.compile(sourceRule.replaceRegex);
+                Matcher matcher = pattern.matcher(vResult);
+                if (matcher.find()) {
+                    vResult = matcher.group(0);
+                    if (StringUtils.isNotEmpty(vResult)) {
+                        vResult = vResult.replaceFirst(sourceRule.replaceRegex, sourceRule.replacement);
+                    } else {
+                        vResult = "";
+                    }
+                }
+            } catch (Exception e) {
+                vResult = vResult.replaceFirst(sourceRule.replaceRegex, sourceRule.replacement);
+            }
         } else {
-            vResult = ReUtil.replaceAll(vResult, sourceRule.replaceRegex,sourceRule.replacement);
+            try {
+                vResult = vResult.replaceAll(sourceRule.replaceRegex, sourceRule.replacement);
+            } catch (Exception e) {
+                vResult = vResult.replaceAll(sourceRule.replaceRegex, sourceRule.replacement);
+            }
         }
         return vResult;
     }
@@ -450,21 +485,21 @@ public class AnalyzeRule extends JsExtensions {
         }
         Matcher jsMatcher = JS_PATTERN.matcher(rule);
         String tmp;
-        if(jsMatcher.find()) {
+        if (jsMatcher.find()) {
             do {
-                if(jsMatcher.start()> start) {
-                    tmp = rule.substring(start,jsMatcher.start());
-                    if(StrUtil.isNotEmpty(tmp)) {
-                        ruleList.add(new SourceRule(tmp,mMode));
+                if (jsMatcher.start() > start) {
+                    tmp = rule.substring(start, jsMatcher.start());
+                    if (StrUtil.isNotEmpty(tmp)) {
+                        ruleList.add(new SourceRule(tmp, mMode));
                     }
                 }
-                if(StrUtil.isNotEmpty(jsMatcher.group(1)) || StrUtil.isNotEmpty(jsMatcher.group(2)))
-                    ruleList.add(new SourceRule(jsMatcher.group(1) == null?jsMatcher.group(2):jsMatcher.group(1),Mode.Js));
+                if (StrUtil.isNotEmpty(jsMatcher.group(1)) || StrUtil.isNotEmpty(jsMatcher.group(2)))
+                    ruleList.add(new SourceRule(jsMatcher.group(1) == null ? jsMatcher.group(2) : jsMatcher.group(1), Mode.Js));
                 start = jsMatcher.end();
             } while (jsMatcher.find());
         }
         if (rule.length() > start) {
-            tmp = StrUtil.trim(rule.substring(start));
+            tmp = StringUtil.trimBlanks(rule.substring(start));
             if (StrUtil.isNotEmpty(tmp)) {
                 ruleList.add(new SourceRule(tmp, mMode));
             }
@@ -478,8 +513,10 @@ public class AnalyzeRule extends JsExtensions {
     }
 
     public Object put(String key, Object value) {
-        logType(value);
-        ruleData.putVariable(key, value);
+        if (value != null) {
+            logType(value);
+            ruleData.putVariable(key, value);
+        }
         return value;
     }
 
@@ -509,24 +546,24 @@ public class AnalyzeRule extends JsExtensions {
         public SourceRule(String ruleStr, Mode mMode) {
             this.mode = mMode;
             this.rule = ruleStr;
-            if(mMode == Mode.Js || mMode == Mode.Regex) {
+            if (mMode == Mode.Js || mMode == Mode.Regex) {
                 rule = ruleStr;
-            } else if (StrUtil.startWithIgnoreCase(ruleStr,"@CSS:")) {
+            } else if (StrUtil.startWithIgnoreCase(ruleStr, "@CSS:")) {
                 this.mode = Mode.Default;
                 rule = ruleStr;
-            } else if (StrUtil.startWithIgnoreCase(ruleStr,"@@")) {
+            } else if (StrUtil.startWithIgnoreCase(ruleStr, "@@")) {
                 this.mode = Mode.Default;
                 this.rule = ruleStr.substring(2);
-            } else if (StrUtil.startWithIgnoreCase(ruleStr,"@XPath:")) {
+            } else if (StrUtil.startWithIgnoreCase(ruleStr, "@XPath:")) {
                 this.mode = Mode.XPath;
                 this.rule = ruleStr.substring(7);
-            } else if (StrUtil.startWithIgnoreCase(ruleStr,"@Json:")) {
+            } else if (StrUtil.startWithIgnoreCase(ruleStr, "@Json:")) {
                 this.mode = Mode.Json;
                 this.rule = ruleStr.substring(6);
-            } else if (isJSON||StrUtil.startWithIgnoreCase(ruleStr,"$.") || StrUtil.startWithIgnoreCase(ruleStr,"$[")) {
+            } else if (isJSON || StrUtil.startWithIgnoreCase(ruleStr, "$.") || StrUtil.startWithIgnoreCase(ruleStr, "$[")) {
                 this.mode = Mode.Json;
                 rule = ruleStr;
-            } else if (StrUtil.startWithIgnoreCase(ruleStr,"/")) {
+            } else if (StrUtil.startWithIgnoreCase(ruleStr, "/")) {
                 this.mode = Mode.XPath;
                 rule = ruleStr;
             } else {
@@ -540,7 +577,7 @@ public class AnalyzeRule extends JsExtensions {
             Matcher evalMatcher = evalPattern.matcher(rule);
             if (evalMatcher.find()) {
                 tmp = rule.substring(start, evalMatcher.start());
-                if (mode != Mode.Js && mode != Mode.Regex && (evalMatcher.start() == 0 || !StrUtil.contains(tmp, "##"))) {
+                if (mode != Mode.Js && mode != Mode.Regex && (evalMatcher.start() == 0 || !StringUtils.contains(tmp, "##"))) {
                     mode = Mode.Regex;
                 }
                 do {
@@ -549,7 +586,7 @@ public class AnalyzeRule extends JsExtensions {
                         splitRegex(tmp);
                     }
                     tmp = evalMatcher.group();
-                    if (StrUtil.startWithIgnoreCase(tmp,"@get")) {
+                    if (StrUtil.startWithIgnoreCase(tmp, "@get")) {
                         ruleType.add(getRuleType);
                         ruleParam.add(tmp.substring(6, tmp.length() - 1));
                     } else if (tmp.startsWith("{{")) {
@@ -559,7 +596,7 @@ public class AnalyzeRule extends JsExtensions {
                         splitRegex(tmp);
                     }
                     start = evalMatcher.end();
-                }while (evalMatcher.find());
+                } while (evalMatcher.find());
             }
             if (rule.length() > start) {
                 tmp = rule.substring(start);
@@ -573,11 +610,11 @@ public class AnalyzeRule extends JsExtensions {
         private void splitRegex(String ruleStr) {
             int start = 0;
             String tmp;
-            String[] ruleStrArray = StrUtil.splitToArray(ruleStr, "##");
+            String[] ruleStrArray = StrUtil.split(ruleStr, "##");
             Matcher regexMatcher = regexPattern.matcher(ruleStrArray[0]);
 
             if (regexMatcher.find()) {
-                if (mode != Mode.Js  && mode != Mode.Regex) {
+                if (mode != Mode.Js && mode != Mode.Regex) {
                     mode = Mode.Regex;
                 }
                 do {
@@ -612,14 +649,14 @@ public class AnalyzeRule extends JsExtensions {
                         } else {
                             infoVal.insert(0, ruleParam.get(index));
                         }
-                    } else if(regType == jsRuleType){
-                        if(isRule(ruleParam.get(index))) {
-                            infoVal.insert(0,getString(ruleParam.get(index)));
+                    } else if (regType == jsRuleType) {
+                        if (isRule(ruleParam.get(index))) {
+                            infoVal.insert(0, getString(ruleParam.get(index)));
                         } else {
                             Object jsEval = evalJS(ruleParam.get(index), result);
                             if (jsEval == null) {
                                 System.out.println("执行了");
-                            } else if (jsEval instanceof Double && (Double)jsEval % 1.0 == 0) {
+                            } else if (jsEval instanceof Double && (Double) jsEval % 1.0 == 0) {
                                 infoVal.insert(0, String.format(Locale.CHINA, "%.0f", jsEval));
                             } else {
                                 infoVal.insert(0, jsEval);
@@ -634,7 +671,7 @@ public class AnalyzeRule extends JsExtensions {
                 rule = infoVal.toString();
             }
             String[] ruleStrS = rule.split("##");
-            rule = StrUtil.trim(ruleStrS[0]);
+            rule = StringUtil.trimBlanks(ruleStrS[0]);
             if (ruleStrS.length > 1) {
                 replaceRegex = ruleStrS[1];
             }

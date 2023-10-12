@@ -38,12 +38,6 @@ public class SP360 extends Spider {
         }
     }
 
-    protected HashMap<String, String> Headers() {
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
-        return headers;
-    }
-
     @Override
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) {
         String cover;
@@ -57,23 +51,23 @@ public class SP360 extends Spider {
                     continue;
                 url += "&" + key + "=" + URLEncoder.encode(val);
             }
-            String content = OkHttpUtil.string(url, Headers());
+            String content = OkHttpUtil.string(url, getHeader());
             JSONObject dataObject = new JSONObject(content).getJSONObject("data");
             JSONArray jsonArray = dataObject.getJSONArray("movies");
             JSONArray videos = new JSONArray();
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject vObj = jsonArray.getJSONObject(i);
                 JSONObject v = new JSONObject();
-                cover = vObj.getString("cover");
+                cover = vObj.optString("cover");
                 if (vObj.has("upinfo")) {
-                    remark = vObj.getString("upinfo");
-                    v.put("vod_id", tid + "_" + vObj.getString("id"));
-                    v.put("vod_name", vObj.getString("title"));
+                    remark = vObj.optString("upinfo");
+                    v.put("vod_id", tid + "_" + vObj.optString("id"));
+                    v.put("vod_name", vObj.optString("title"));
                     v.put("vod_pic", "https:" + cover);
                     v.put("vod_remarks", remark);
                 } else {
-                    v.put("vod_id", tid + "_" + vObj.getString("id"));
-                    v.put("vod_name", vObj.getString("title"));
+                    v.put("vod_id", tid + "_" + vObj.optString("id"));
+                    v.put("vod_name", vObj.optString("title"));
                     v.put("vod_pic", "https:" + cover);
                     v.put("vod_remarks", "");
                 }
@@ -81,7 +75,7 @@ public class SP360 extends Spider {
             }
             JSONObject result = new JSONObject();
             int limit = 24;
-            int page = Integer.parseInt(dataObject.getString("current_page"));
+            int page = Integer.parseInt(dataObject.optString("current_page"));
             int total = dataObject.getInt("total");
             int pageCount = total % limit == 0 ? (total / limit) : (total / limit + 1);
             result.put("page", page);
@@ -108,7 +102,7 @@ public class SP360 extends Spider {
         try {
             String[] split = ids.get(0).split("_");
             String format = String.format("%s?cat=%s&id=%s", SiteDetail, split[0], split[1]);
-            JSONObject jSONObject6 = new JSONObject(OkHttpUtil.string(format, Headers())).getJSONObject("data");
+            JSONObject jSONObject6 = new JSONObject(OkHttpUtil.string(format, getHeader())).getJSONObject("data");
             JSONArray jSONArray = new JSONArray();
             JSONObject list = new JSONObject();
             jSONArray.put(list);
@@ -119,34 +113,34 @@ public class SP360 extends Spider {
             JSONArray optJSONArray = jSONObject6.optJSONArray("moviecategory");
             ArrayList arrayList2 = new ArrayList();
             for (int i = 0; i < optJSONArray.length(); i++) {
-                arrayList2.add(optJSONArray.getString(i));
+                arrayList2.add(optJSONArray.optString(i));
             }
             list.put("type_name", TextUtils.join("/", arrayList2));
             list.put("vod_year", jSONObject6.optString("pubdate"));
             JSONArray optJSONArray2 = jSONObject6.optJSONArray("area");
             ArrayList arrayList3 = new ArrayList();
             for (int i2 = 0; i2 < optJSONArray2.length(); i2++) {
-                arrayList3.add(optJSONArray2.getString(i2));
+                arrayList3.add(optJSONArray2.optString(i2));
             }
             list.put("vod_area", TextUtils.join("/", arrayList3));
             list.put("vod_remarks", jSONObject6.optString("doubanscore"));
             JSONArray optJSONArray3 = jSONObject6.optJSONArray("actor");
             ArrayList arrayList4 = new ArrayList();
             for (int i3 = 0; i3 < optJSONArray3.length(); i3++) {
-                arrayList4.add(optJSONArray3.getString(i3));
+                arrayList4.add(optJSONArray3.optString(i3));
             }
             list.put("vod_actor", TextUtils.join("/", arrayList4));
             JSONArray optJSONArray4 = jSONObject6.optJSONArray("director");
             ArrayList arrayList5 = new ArrayList();
             for (int i4 = 0; i4 < optJSONArray4.length(); i4++) {
-                arrayList5.add(optJSONArray4.getString(i4));
+                arrayList5.add(optJSONArray4.optString(i4));
             }
             list.put("vod_director", TextUtils.join("/", arrayList5));
             list.put("vod_content", jSONObject6.optString("description"));
             JSONArray optJSONArray5 = jSONObject6.optJSONArray("playlink_sites");
             ArrayList<String> arrayList6 = new ArrayList();
             for (int i5 = 0; i5 < optJSONArray5.length(); i5++) {
-                arrayList6.add(optJSONArray5.getString(i5));
+                arrayList6.add(optJSONArray5.optString(i5));
             }
             list.put("vod_play_from", TextUtils.join("$$$", arrayList6));
             JSONObject optJSONObject = jSONObject6.optJSONObject("playlinksdetail");
@@ -197,7 +191,7 @@ public class SP360 extends Spider {
                         sb2.append(str9);
                         str = sb2.toString();
                     }
-                    JSONObject optJSONObject4 = new JSONObject(OkHttpUtil.string(str, Headers())).getJSONObject("data").optJSONObject("allepidetail");
+                    JSONObject optJSONObject4 = new JSONObject(OkHttpUtil.string(str, getHeader())).getJSONObject("data").optJSONObject("allepidetail");
                     ArrayList arrayList10 = new ArrayList();
                     JSONArray jSONArray2 = optJSONObject4.getJSONArray(str9);
                     int i7 = 0;
@@ -227,7 +221,7 @@ public class SP360 extends Spider {
                             if (i9 > parseInt) {
                                 i9 = parseInt;
                             }
-                            JSONObject optJSONObject5 = new JSONObject(OkHttpUtil.string(String.format("%s?cat=%s&id=%s&start=%s&end=%s&site=%s", SiteDetail, split[0], split[1], Integer.valueOf(i8), Integer.valueOf(i9), str9), Headers())).optJSONObject("data");
+                            JSONObject optJSONObject5 = new JSONObject(OkHttpUtil.string(String.format("%s?cat=%s&id=%s&start=%s&end=%s&site=%s", SiteDetail, split[0], split[1], Integer.valueOf(i8), Integer.valueOf(i9), str9), getHeader())).optJSONObject("data");
                             if (optJSONObject5 == null) {
                                 break;
                             }
@@ -278,12 +272,19 @@ public class SP360 extends Spider {
         return results.toString();
     }
 
+    protected HashMap<String, String> getHeader() {
+        HashMap<String, String> hashMap = new HashMap<>();
+        hashMap.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
+        hashMap.put("Referer", "https://www.360kan.com/");
+        return hashMap;
+    }
+
     @Override
     public String homeVideoContent() {
         JSONObject list = new JSONObject();
         try {
             String str = SiteHost;
-            String i = OkHttpUtil.string(str, new HashMap());
+            String i = OkHttpUtil.string(str, getHeader());
             SpiderDebug.log("响应请求：" + str);
             JSONArray optJSONArray = new JSONObject(i).optJSONArray("data");
             JSONArray jSONArray = new JSONArray();
@@ -322,7 +323,7 @@ public class SP360 extends Spider {
         JSONObject optJSONObject;
         JSONObject list = new JSONObject();
         try {
-            JSONObject optJSONObject2 = new JSONObject(OkHttpUtil.string(String.format(SiteSearch, str), Headers())).optJSONObject("data");
+            JSONObject optJSONObject2 = new JSONObject(OkHttpUtil.string(String.format(SiteSearch, str), getHeader())).optJSONObject("data");
             if (!(optJSONObject2 == null || (optJSONObject = optJSONObject2.optJSONObject("longData")) == null)) {
                 JSONArray jSONArray = optJSONObject.getJSONArray("rows");
                 JSONArray videos = new JSONArray();

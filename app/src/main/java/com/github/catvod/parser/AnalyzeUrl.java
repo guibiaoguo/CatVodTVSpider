@@ -4,6 +4,7 @@ import android.text.TextUtils;
 
 import com.github.catvod.script.IFunction;
 import com.github.catvod.script.JsExtensions;
+import com.github.catvod.script.quickjs.QuickJSScriptEngine;
 import com.github.catvod.utils.StringUtil;
 import com.github.catvod.utils.okhttp.OKCallBack;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
@@ -18,6 +19,7 @@ import com.google.gson.reflect.TypeToken;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,6 +30,7 @@ import java.util.regex.Pattern;
 
 import cn.hutool.core.lang.Console;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.asymmetric.KeyType;
 import okhttp3.Call;
 import okhttp3.Headers;
 import okhttp3.Response;
@@ -84,11 +87,6 @@ public class AnalyzeUrl extends JsExtensions implements IFunction {
         if (!this.headerMap.containsKey("User-Agent")) {
             headerMap.put("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.42");
         }
-        System.out.println(url);
-        System.out.println(method);
-        System.out.println(fieldMap);
-        System.out.println(body);
-        System.out.println(headerMap);
     }
 
     public AnalyzeUrl(String mUrl, String key, int page, String baseUrl) {
@@ -165,6 +163,19 @@ public class AnalyzeUrl extends JsExtensions implements IFunction {
         bindings.put("page",page);
         bindings.put("key",key);
         result = scriptEngine.eval(rule, bindings);
+//        try {
+//            bindings = new SimpleBindings();
+//            bindings.put("java", this);
+//            bindings.put("result", result);
+//            bindings.put("page", page);
+//            bindings.put("baseUrl", baseUrl);
+//            bindings.put("key", key);
+//            QuickJSScriptEngine quickJSScriptEngine = QuickJSScriptEngine.getInstance();
+//            result = quickJSScriptEngine.eval(rule, bindings);
+//            Console.log(result);
+//        } catch (Exception e) {
+//            Console.log(e);
+//        }
         return result;
     }
 
@@ -178,7 +189,7 @@ public class AnalyzeUrl extends JsExtensions implements IFunction {
         }
         Matcher pageMatcher = pagePattern.matcher(ruleUrl);
         while (pageMatcher.find()) {
-            List<String> pages = StrUtil.split(pageMatcher.group(1), ",");
+            List<String> pages = Arrays.asList(StrUtil.split(pageMatcher.group(1), ","));
             if (page < pages.size()) {
                 ruleUrl = ruleUrl.replace(pageMatcher.group(), pages.get(page -1));
             } else {
@@ -334,7 +345,7 @@ public class AnalyzeUrl extends JsExtensions implements IFunction {
     public String getResponse() {
         StrResponse strResponse = getStrResponse();
         if (strResponse != null)
-            return getStrResponse().body();
+            return strResponse.body();
         return "";
     }
 

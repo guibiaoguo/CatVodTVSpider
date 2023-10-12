@@ -245,8 +245,8 @@ public class SpiderText {
                     legadoRule.setDetailVodRemarks("$..vod_remarks");
                     legadoRule.setDetailVodDirector("$..vod_director");
                     legadoRule.setDetailVodActor("$..vod_actor");
-                    legadoRule.setDetailVodPlayFrom("$.list[*].vod_play_from@js:java.split(result,'$$$')");
-                    legadoRule.setDetailVodPlayUrl("$.list[*].vod_play_url@js:java.split(result,'$$$')");
+                    legadoRule.setDetailVodPlayFrom("$.list[*].vod_play_from@js:list=java.split(result,'$$$');list");
+                    legadoRule.setDetailVodPlayUrl("$.list[*].vod_play_url@js:list=java.split(result,'$$$');list");
                     legadoRule.setVodPlayForm("@js:String(result)");
                     legadoRule.setVodPlayList("@js:java.split(result,'#')");
                     legadoRule.setVodPlayName("@js:String(result).split('$')[0]");

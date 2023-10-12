@@ -1,12 +1,7 @@
 package com.github.catvod.spider;
 
-import android.app.Application;
-import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Looper;
-import android.text.TextUtils;
 
-import com.github.catvod.R;
 import com.github.catvod.crawler.Spider;
 import com.guibiaoguo.myapplication.RoboApp;
 
@@ -16,14 +11,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 

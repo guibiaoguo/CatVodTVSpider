@@ -23,6 +23,8 @@ import org.mozilla.javascript.ScriptableObject;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -32,6 +34,7 @@ import java.util.Map;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.HexUtil;
+import cn.hutool.core.util.ReflectUtil;
 import okhttp3.Call;
 
 
@@ -267,7 +270,24 @@ public class JadiText {
     }
 
     @Test
-    public void test_java() {
+    public void test_java() throws ClassNotFoundException, InvocationTargetException, IllegalAccessException, InstantiationException {
+        Class cls = Class.forName("com.github.catvod.parser.AnalyzeRule");
+        Object cls1 = cls.newInstance();
+        Object[] d = new Object[]{"RSA","",null};
+        ReflectUtil.invoke(cls1,"createAsymmetricCrypto",d);
+    }
 
+    @Test
+    public void test_java_class() throws ClassNotFoundException, IllegalAccessException, InstantiationException, InvocationTargetException {
+        Class cls = Class.forName("com.github.catvod.parser.AnalyzeRule");
+        Object javaObject = cls.newInstance();
+        Object[] args = new Object[]{"RSA","",null};
+        for (Method method : cls.getMethods()) {
+            method.setAccessible(true);
+            if (method.getName().equals("createAsymmetricCrypto") && method.getParameterTypes().length> 2 && method.getParameterTypes()[2].getName() == String.class.getName()) {
+//                method.invoke(javaObject,args);
+                ReflectUtil.invoke(javaObject,method,args);
+            }
+        }
     }
 }

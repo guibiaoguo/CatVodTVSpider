@@ -1,9 +1,12 @@
 package com.github.catvod.parser;
 
+import java.io.InputStream;
+
 import cn.hutool.core.lang.Console;
 import cn.hutool.core.util.StrUtil;
 import okhttp3.Headers;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 public class StrResponse {
 
@@ -23,10 +26,15 @@ public class StrResponse {
             return "";
         }
         try {
+            ResponseBody responseBody = raw.body();
+            byte[] bytes = raw.body().bytes();
             if (StrUtil.isEmpty(charset))
-                body = StrUtil.str(raw.body().bytes(),"utf-8");
+                body = StrUtil.str(bytes,"utf-8");
             else
-                body = StrUtil.str(raw.body().bytes(), charset);
+                body = StrUtil.str(bytes, charset);
+            if (StrUtil.contains(body,'�')) {
+                body = StrUtil.str(bytes,"gbk");
+            }
             return body;
         } catch (Exception e) {
             Console.log(e.getLocalizedMessage());
@@ -55,8 +63,19 @@ public class StrResponse {
         return raw;
     }
 
+    public InputStream stream() {
+        return raw.body().byteStream();
+    }
+
     public String toString() {
         return raw.toString();
     }
 
+    public String url() {
+        if (raw.networkResponse() != null) {
+            return raw.networkResponse().request().url().toString();
+        } else {
+            return raw.request().url().toString();
+        }
+    }
 }

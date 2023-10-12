@@ -4,3 +4,4 @@
 *.jks
 *i.java
 /local.properties
+.idea/gradle.xml

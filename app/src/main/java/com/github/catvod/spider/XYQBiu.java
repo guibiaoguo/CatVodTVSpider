@@ -9,6 +9,8 @@ import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Misc;
 import com.github.catvod.utils.okhttp.OKCallBack;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,7 +38,7 @@ import okhttp3.Response;
 
 public class XYQBiu extends Spider {
 
-//    private String btcookie = "";
+    private String btcookie = "";
 
     @Override
     public void init(Context context) {
@@ -841,9 +843,9 @@ public class XYQBiu extends Spider {
                 try {
                     if (ext.startsWith("http")) {
                         String json = OkHttpUtil.string(ext, null);
-                        rule = new JSONObject(json);
+                        rule = new JSONObject(new Gson().fromJson(json, JsonObject.class).toString());
                     } else {
-                        rule = new JSONObject(ext);
+                        rule = new JSONObject(new Gson().fromJson(ext, JsonObject.class).toString());
                     }
                 } catch (JSONException e) {
                 }

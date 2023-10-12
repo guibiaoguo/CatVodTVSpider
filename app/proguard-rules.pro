@@ -79,3 +79,5 @@
 #-keep class cn.hutool.core.**{*;}
 -keep class cn.hutool.crypto.**{*;}
 -dontwarn cn.hutool.**
+# quickjs引擎
+-keep class com.github.tvbox.quickjs.** {*;}

@@ -16,6 +16,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -93,7 +94,7 @@ public class Paper extends Ali {
         params.put("action", "viewcat");
         params.put("cat", type);
         params.put("num", pg);
-        if (StrUtil.contains(tid,"aliyundrive.com")) {
+        if (StringUtils.contains(tid,"aliyundrive.com")) {
             Map<String,Object> body = new HashMap<>();
             String shareId = ReUtil.get(pattern, tid,1);
             String fileId = ReUtil.get(pattern, tid, 3);

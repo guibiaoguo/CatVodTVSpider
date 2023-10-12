@@ -35,8 +35,8 @@ import java.util.regex.Pattern;
  * Author: CatVod
  */
 public class Aidi extends Spider {
-    private static final String siteUrl = "https://aidi.tv";
-    private static final String siteHost = "aidi.tv";
+    private static final String siteUrl = "https://adys.tv";
+    private static final String siteHost = "adys.tv";
 
     /**
      * 筛选配置
@@ -105,8 +105,8 @@ public class Aidi extends Spider {
         }
         for (Element element : doc.select("div.vod_row").get(1).select("div.cbox1 > ul.vodlist li a.vodlist_thumb")) {
             String name = element.attr("title");
-            String img = element.attr("data-original");
-            String remark = element.selectFirst("span.pic_text").text();
+            String img = element.attr("data-background-image");
+            String remark = element.select("span.pack_tagtext").text();
             Matcher matcher = regexVid.matcher(element.attr("href"));
             if (!matcher.find())
                 continue;

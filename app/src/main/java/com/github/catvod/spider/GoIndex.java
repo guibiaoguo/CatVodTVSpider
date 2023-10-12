@@ -10,6 +10,7 @@ import com.github.catvod.utils.okhttp.OKCallBack;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 import com.github.catvod.xpath.XPathRule;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
@@ -348,7 +349,7 @@ public class GoIndex extends Spider {
                             getFileList(id + "/?page_index={catePg};post", vod_play);
                         else if (urlNode.optString("mimeType").equals("video/x-matroska")) {
                             vod_play.get("workerdev").add(name + "$" + webUrl + id);
-                        } else if (urlNode.optString("mimeType").equals("text/xml") && StrUtil.contains(name, ".nfo")) {
+                        } else if (urlNode.optString("mimeType").equals("text/xml") && StringUtils.contains(name, ".nfo")) {
                             getNfo(vod, webUrl + id);
                         }
                     }

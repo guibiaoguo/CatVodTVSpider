@@ -1,9 +1,11 @@
 package com.github.catvod.spider;
 
+import android.content.Context;
 import android.text.TextUtils;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
+import com.github.catvod.parser.NetworkUtils;
 import com.github.catvod.utils.AES;
 import com.github.catvod.utils.CBC;
 import com.github.catvod.utils.gZip;
@@ -35,6 +37,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import cn.hutool.core.util.StrUtil;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
@@ -48,14 +51,14 @@ import okhttp3.ResponseBody;
 
 public class Ddys extends Spider {
 
-    private static final String siteUrl = "https://ddys.tv";
-    private static final String siteHost = "ddys.tv";
+    private static String siteUrl = "https://ddys.art";
+    private static String siteHost = "ddys.art";
     private String cookie="";
 
     protected JSONObject filterConfig;
 
     protected Pattern regexCategory = Pattern.compile("/category/(\\S+)/");
-    protected Pattern regexVid = Pattern.compile("https://ddys.tv/(\\S+)/");
+    protected Pattern regexVid = Pattern.compile("https://ddys.\\w+/(\\S+)/");
 
     protected Pattern regexPage = Pattern.compile("\\S+/page/(\\S+)\\S+");
     protected Pattern m = Pattern.compile("\\S+(http\\S+g)");
@@ -63,6 +66,15 @@ public class Ddys extends Spider {
 
     //   protected Pattern t = Pattern.compile("(\\S+)");
 
+
+    @Override
+    public void init(Context context, String extend) {
+        if (StrUtil.isNotEmpty(extend)) {
+            siteUrl = extend;
+            siteHost = NetworkUtils.INSTANCE.getSubDomain(extend);
+        }
+        super.init(context, extend);
+    }
 
     /**
      * 爬虫headers
@@ -73,7 +85,7 @@ public class Ddys extends Spider {
     protected HashMap<String, String> getHeaders(String url) {
         HashMap<String, String> headers = new HashMap<>();
         headers.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.62 Safari/537.36");
-        headers.put("Referer", "https://ddys.tv/");
+        headers.put("Referer", siteUrl);
         if(cookie.length()>0 && !url.contains(("google"))){
             headers.put("Cookie", cookie);
         }
@@ -83,7 +95,7 @@ public class Ddys extends Spider {
     protected static HashMap<String, String> Headers() {
         HashMap<String, String> headers = new HashMap<>();
         headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
-        headers.put("Referer", "https://ddys.tv/");
+        headers.put("Referer", siteUrl);
         return headers;
     }
 
@@ -102,7 +114,7 @@ public class Ddys extends Spider {
             Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url),cookies));
             for( Map.Entry<String, List<String>> entry : cookies.entrySet() ){
                 if(entry.getKey().equals("set-cookie")){
-                    cookie = TextUtils.join(";",entry.getValue());
+                    cookie += TextUtils.join(";",entry.getValue());
                     break;
                 }
             }
@@ -329,7 +341,14 @@ public class Ddys extends Spider {
         try {
             // 视频详情url
             String url = siteUrl + "/" + ids.get(0) + "/";
-            Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
+            Map<String, List<String>> cookies = new HashMap<>();
+            Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url),cookies));
+            for( Map.Entry<String, List<String>> entry : cookies.entrySet() ){
+                if(entry.getKey().equals("set-cookie")){
+                    cookie += TextUtils.join(";",entry.getValue());
+                    break;
+                }
+            }
             JSONObject result = new JSONObject();
             JSONObject vodList = new JSONObject();
 
@@ -392,8 +411,8 @@ public class Ddys extends Spider {
                     JSONObject src = Track.getJSONObject(k);
                     String adk = src.getString("src1");
                     String vodName = src.getString("caption");
-                    String playURL = "https://ddys.tv/getvddr/video?id=" + adk +"&dim=1080P+&type=mix";
-                    String zm = "https://ddys.tv/subddr/" + src.getString("subsrc");
+                    String playURL = siteUrl + "/getvddr/video?id=" + adk +"&dim=1080P+&type=mix";
+                    String zm = siteUrl + "/subddr/" + src.getString("subsrc");
                     String pzm = playURL + "|" + zm;
                     vodItems.add(vodName + "$" + pzm);
                 }
@@ -402,8 +421,8 @@ public class Ddys extends Spider {
                     String adksrc0 = src.getString("src0");
                     String adksrc2 = src.getString("src2");
                     String vodName = src.getString("caption");
-                    String playURL = "https://w.ddys.tv" + adksrc0 +"?ddrkey=" + adksrc2;
-                    String zm = "https://ddys.tv/subddr/" + src.getString("subsrc");
+                    String playURL = siteUrl + adksrc0 +"?ddrkey=" + adksrc2;
+                    String zm = siteUrl + "/subddr/" + src.getString("subsrc");
                     String pzm = playURL + "|" + zm;
                     vodItemsos.add(vodName + "$" + pzm);
                 }
@@ -431,8 +450,8 @@ public class Ddys extends Spider {
                             JSONObject src = Track.getJSONObject(k);
                             String adk = src.getString("src1");
                             String vodName = src.getString("caption");
-                            String playURL = "https://ddys.tv/getvddr/video?id=" + adk +"&dim=1080P+&type=mix";
-                            String zm = "https://ddys.tv/subddr/" + src.getString("subsrc");
+                            String playURL = siteUrl+ "/getvddr/video?id=" + adk +"&dim=1080P+&type=mix";
+                            String zm = siteUrl + "/subddr/" + src.getString("subsrc");
                             String pzm = playURL + "|" + zm;
                             vodItems2.add(vodName + "$" + pzm);
                         }
@@ -441,8 +460,8 @@ public class Ddys extends Spider {
                             String adksrc0 = src.getString("src0");
                             String adksrc2 = src.getString("src2");
                             String vodName = src.getString("caption");
-                            String playURL = "https://w.ddys.tv" + adksrc0 +"?ddrkey=" + adksrc2;
-                            String zm = "https://ddys.tv/subddr/" + src.getString("subsrc");
+                            String playURL = siteUrl+ adksrc0 +"?ddrkey=" + adksrc2;
+                            String zm = siteUrl + "/subddr/" + src.getString("subsrc");
                             String pzm = playURL + "|" + zm;
                             vodItems2os.add(vodName + "$" + pzm);
                         }
@@ -569,38 +588,48 @@ public class Ddys extends Spider {
 
     @Override
     public String searchContent(String key, boolean quick) {
+        JSONObject result = new JSONObject();
         try {
-            String url = "https://www.google.com/search?q=site%3Addys.tv+" + URLEncoder.encode(key);
+            String url = siteUrl + "/?s="+key+"&post_type=post";
             Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
-            JSONObject result = new JSONObject();
+            // 取首页推荐视频列表
+            Elements list = doc.select("div.post-content");
             JSONArray videos = new JSONArray();
-            String sourceName = doc.select("div.yuRUbf a h3").text();
-            if (sourceName.contains(key)) {
-                String list1 = doc.select("div.yuRUbf a").attr("href");
-                Document ddrklink = Jsoup.parse(OkHttpUtil.string(list1, getHeaders(list1)));
-                String DDlink = ddrklink.select("link[rel=canonical]").attr("href");
-                Matcher matcher = regexVid.matcher(DDlink);
-                if (matcher.find()) {
+            for (int i = 0; i < list.size(); i++) {
+                Element vod = list.get(i);
+                String a = vod.selectFirst(".post-title a").text();
+                if (a.contains("(")) {
+                    String[] item = a.split("\\(");
+                    String title = item[0];
+                    String remark = item[1].replace(")", "");
+                    String cover = "";//doReplaceRegex(m, vod.selectFirst(".post-image").attr("style"));
+                    Matcher matcher = regexVid.matcher(vod.selectFirst("time").attr("href"));
+                    if (!matcher.find())
+                        continue;
+                    String id = matcher.group(1);
                     JSONObject v = new JSONObject();
-                    String group = matcher.group(1);
-                    String ab = ddrklink.select("h1.post-title").text();
-                    String cover = ddrklink.select("div.post img").attr("src");
-                    if (ab.contains("(")) {
-                        String[] b = ab.split("\\(");
-                        String title = b[0];
-                        String remark = b[1].replace("(", "");
-                        v.put("vod_name", title);
-                        v.put("vod_remarks", remark);
-                    } else {
-                        v.put("vod_name", ab);
-                        String remark = "全";
-                        v.put("vod_remarks", remark);
-                    }
-                    v.put("vod_id", group);
+                    v.put("vod_id", id);
+                    v.put("vod_name", title);
                     v.put("vod_pic", cover);
+                    v.put("vod_remarks", remark);
+                    videos.put(v);
+                } else {
+                    String title = a;
+                    String cover = "";//doReplaceRegex(m, vod.selectFirst(".post-image").attr("style"));
+                    String remark = doReplaceRegex(mark, vod.selectFirst("time").text());
+                    Matcher matcher = regexVid.matcher(vod.selectFirst(".post-title a").attr("href"));
+                    if (!matcher.find())
+                        continue;
+                    String id = matcher.group(1);
+                    JSONObject v = new JSONObject();
+                    v.put("vod_id", id);
+                    v.put("vod_name", title);
+                    v.put("vod_pic", cover);
+                    v.put("vod_remarks", remark);
                     videos.put(v);
                 }
             }
+
             result.put("list", videos);
             return result.toString();
         } catch (Exception e) {

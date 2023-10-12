@@ -8,15 +8,14 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 
-public class Kunyu78Test {
+public class Kunyu77Test {
 
     private Spider kunyu77;
 
     @Before
     public void setUp() throws Exception {
-        kunyu77 = new Kunyu78();
+        kunyu77 = new Kunyu77();
         kunyu77.init(null);
     }
 

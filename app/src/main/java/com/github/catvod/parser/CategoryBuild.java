@@ -217,7 +217,7 @@ public class CategoryBuild {
     protected String categoryUrl(String tid, String pg) {
         String cateUrl = cateUrlSelector;
         if (StringUtil.isAbsUrl(tid)) {
-            tid = StrUtil.trim(tid).split("\n")[0];
+            tid = StringUtil.trimBlanks(tid).split("\n")[0];
         }
         cateUrl = cateUrl.replace("{cateId}", tid).replace("{catePg}", pg);
         Matcher m = Pattern.compile("\\{(.*?)\\}").matcher(cateUrl);

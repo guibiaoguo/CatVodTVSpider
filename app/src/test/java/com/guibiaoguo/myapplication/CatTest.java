@@ -688,8 +688,8 @@ public class CatTest {
         String ext = "http://www.paper027.com/home/chapter/lists/id/77485.html";
         String json = OkHttpUtil.string(ext, null);
         System.out.println(json);
-        System.out.println(AnalyzeByRegex.getElement(json, StrUtil.split(rulestr, "&&"), 0));
-        System.out.println(AnalyzeByRegex.getElements(json, StrUtil.split(rulestr, "&&"), 0));
+//        System.out.println(AnalyzeByRegex.getElement(json, StrUtil.split(rulestr, "&&"), 0));
+//        System.out.println(AnalyzeByRegex.getElements(json, StrUtil.split(rulestr, "&&"), 0));
         ext = "https://mao.guibiaoguo.tk/jsonpath.json";
         json = OkHttpUtil.string(ext, null);
         System.out.println(new AnalyzeByJSonPath(json).getString("{$.homeUrl}/test"));
