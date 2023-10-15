@@ -1,5 +1,6 @@
 package com.github.catvod.spider;
 
+import android.content.Context;
 import android.text.TextUtils;
 
 import com.github.catvod.bean.Class;
@@ -9,7 +10,6 @@ import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.Utils;
-import com.github.catvod.utils.Trans;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -22,14 +22,25 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import cn.hutool.core.util.StrUtil;
+
 public class Ysj extends Spider {
 
-    private static final String siteUrl = "https://ysjdm.net";
-    private static final String cateUrl = "https://ysjdm.net/index.php/vod/show";
-    private static final String homeUrl = "https://ysjdm.net/index.php/vod/show/id/20.html";
-    private static final String detailUrl = "https://ysjdm.net/index.php/vod/detail/id/";
-    private static final String searchUrl = "https://ysjdm.net/index.php/vod/search.html";
+    private static String siteUrl = "https://www.lldm.net";
+    private static final String cateUrl = siteUrl + "/index.php/vod/show";
+    private static final String homeUrl = siteUrl + "/index.php/vod/show/id/20.html";
+    private static final String detailUrl = siteUrl + "/index.php/vod/detail/id/";
+    private static final String searchUrl = siteUrl + "/index.php/vod/search.html";
     private static final String playUrl = "/index.php/vod/play/id/";
+
+    @Override
+    public void init(Context context, String extend) {
+        super.init(context, extend);
+        if (StrUtil.isEmpty(extend)) {
+            extend = "https://www.lldm.net/";
+        }
+        siteUrl = extend;
+    }
 
     private HashMap<String, String> getHeaders() {
         HashMap<String, String> headers = new HashMap<>();
@@ -131,7 +142,7 @@ public class Ysj extends Spider {
             for (int j = 0; j < playList.size(); j++) {
                 Element e = playList.get(j);
                 String href = e.attr("href").replace(playUrl, "");
-                vodItems.add(Trans.get(e.text()) + "$" + href);
+                vodItems.add(e.text() + "$" + href);
             }
             if (vodItems.size() > 0) {
                 sites.put(sourceName, TextUtils.join("#", vodItems));

@@ -1,6 +1,7 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
+import android.text.TextUtils;
 
 import com.github.catvod.ali.API;
 import com.github.catvod.bean.Class;
@@ -17,6 +18,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -25,6 +27,7 @@ import org.jsoup.select.Elements;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -38,10 +41,11 @@ import cn.hutool.core.util.StrUtil;
  */
 public class Paper extends Ali {
 
-    private final String url = "https://gitcafe.net/alipaper/";
+    private final String siteUrl = "https://gitcafe.net/alipaper/";
     private final String api = "https://gitcafe.net/tool/alipaper/";
     private List<String> types;
-
+    private String token;
+    private Date date;
     private HashMap<String, String> getHeaders() {
         HashMap<String, String> headers = new HashMap<>();
         headers.put("User-Agent", Utils.CHROME);
@@ -56,7 +60,7 @@ public class Paper extends Ali {
 
     @Override
     public String homeContent(boolean filter) {
-        Document doc = Jsoup.parse(OkHttp.string(url, getHeaders()));
+        Document doc = Jsoup.parse(OkHttp.string(siteUrl, getHeaders()));
         Elements trs = doc.select("table.tableizer-table > tbody > tr");
         LinkedHashMap<String, List<Filter>> filters = new LinkedHashMap<>();
         List<Class> classes = new ArrayList<>();
@@ -80,7 +84,7 @@ public class Paper extends Ali {
     @Override
     public String homeVideoContent() throws Exception {
         List<Vod> list = new ArrayList<>();
-        JSONObject homeData = new JSONObject(OkHttp.string(url + "home.json", getHeaders()));
+        JSONObject homeData = new JSONObject(OkHttp.string(siteUrl + "home.json", getHeaders()));
         List<Data> items = Data.arrayFrom(homeData.getJSONObject("info").getJSONArray("new").toString());
         for (Data item : items) if (types.contains(item.getCat())) list.add(item.getVod());
         return Result.string(list);
@@ -128,12 +132,13 @@ public class Paper extends Ali {
     }
 
     @Override
-    public String searchContent(String key, boolean quick) {
+    public String searchContent(String key, boolean quick) throws JSONException {
         List<Vod> list = new ArrayList<>();
         Map<String, String> params = new HashMap<>();
         params.put("action", "search");
         params.put("from","web");
         params.put("keyword", key);
+        params.put("token", getToken());
         String result = OkHttp.post(api, params, getHeaders());
 //        for (Data item : Data.arrayFrom(result)) if (types.contains(item.getCat()) && item.getTitle().contains(key)) list.add(item.getVod());
         JsonObject jsonObject = new Gson().fromJson(result, JsonObject.class);
@@ -148,5 +153,20 @@ public class Paper extends Ali {
             }
         }
         return Result.string(list);
+    }
+
+    private String getToken() throws JSONException {
+        if (TextUtils.isEmpty(token) || new Date().compareTo(date) > 0) {
+            Map<String, String> params = new HashMap<>();
+            params.put("action", "get_token");
+            params.put("from", "web");
+            String content = OkHttp.post(siteUrl, params, getHeaders());
+            JSONObject object = new JSONObject(content);
+            if (object.getBoolean("success")) {
+                token = object.getString("data");
+                date = new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000);
+            }
+        }
+        return token;
     }
 }

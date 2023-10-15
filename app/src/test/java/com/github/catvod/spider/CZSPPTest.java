@@ -19,7 +19,7 @@ public class CZSPPTest {
     @Before
     public void setUp() throws Exception {
         czspp = new CZSPP();
-        czspp.init(null);
+        czspp.init(null,"https://www.cz01.vip/");
     }
 
     @After

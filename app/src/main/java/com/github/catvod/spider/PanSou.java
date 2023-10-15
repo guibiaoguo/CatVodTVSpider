@@ -45,7 +45,8 @@ public class PanSou extends Ali {
         Map<String, List<String>> respHeaders = new HashMap<>();
         OkHttp.stringNoRedirect(url, getHeaders(ids.get(0)), respHeaders);
         url = OkHttp.getRedirectLocation(respHeaders);
-        return super.detailContent(Arrays.asList(url));
+        String content = super.detailContent(Arrays.asList(url));
+        return content;
     }
 
     @Override

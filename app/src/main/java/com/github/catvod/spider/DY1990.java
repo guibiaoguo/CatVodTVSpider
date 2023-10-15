@@ -1,5 +1,7 @@
 package com.github.catvod.spider;
 
+import android.text.TextUtils;
+
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Base64;
@@ -17,32 +19,32 @@ import org.jsoup.select.Elements;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
+import cn.hutool.core.util.StrUtil;
 
 public class DY1990 extends Spider {
-    private final Pattern g = Pattern.compile("vodtype/(\\d+)");
-    private final Pattern l = Pattern.compile("voddetail/(\\d+)");
-    private final Pattern J = Pattern.compile("vodplay/(\\d+)-(\\d+)-(\\d+)");
-    private final Pattern dV = Pattern.compile("vodshow/1--------(\\d+)---.html");
+
+    private static String siteUrl="https://dy1990.com/";
+    private static String siteHost="dy1990.com/";
+    private final Pattern regexCategory = Pattern.compile("vods/(\\w+)");
+    private final Pattern regexVoddetail = Pattern.compile("vod/(\\w+)");
+    private final Pattern regexPlay = Pattern.compile("play/(\\d+)-(\\d+)-(\\d+)");
+    private final Pattern regexPage = Pattern.compile("vodshow/1--------(\\d+)---.html");
     private final Pattern rl = Pattern.compile("\"url\": *\"([^\"]*)\",");
 
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) {
         int total = 0;
         int page = 0;
         try {
-            String weburl = "https://dy1990.com/vodshow/"+ tid +"--------" + pg + "---.html";
-            String V = OkHttpUtil.string(weburl, g());
+            String weburl = siteUrl + "/vodshow/"+ tid +"--------" + pg + "---.html";
+            String V = OkHttpUtil.string(weburl, getHeaders());
             Document g = Jsoup.parse(V);
             JSONObject jSONObject = new JSONObject();
-            Elements o = g.select(".pages a");
+            Elements o = g.select(".ewave-page a");
             if (o.size() == 0) {
                 total = Integer.parseInt(pg);
                 page = total;
@@ -58,11 +60,11 @@ public class DY1990 extends Spider {
                     if (Xq != null) {
                         String H = Xq.text();
                         if (page == -1 && ik.hasClass("active")) {
-                            Matcher matcher = this.dV.matcher(Xq.attr("href"));
+                            Matcher matcher = this.regexPage.matcher(Xq.attr("href"));
                             page = matcher.find() ? Integer.parseInt(matcher.group(1)) : 0;
                         }
                         if (H.equals("尾页")) {
-                            Matcher matcher2 = this.dV.matcher(Xq.attr("href"));
+                            Matcher matcher2 = this.regexPage.matcher(Xq.attr("href"));
                             if (matcher2.find()) {
                                 total = Integer.parseInt(matcher2.group(1));
                             }
@@ -75,24 +77,24 @@ public class DY1990 extends Spider {
             JSONArray jSONArray = new JSONArray();
             if (!V.contains("没有找到您想要的结果哦")) {
                 try {
-                    Elements o2 = g.select(".show_play");
+                    Elements o2 = g.select(".ewave-vodlist__box");
                     JSONArray jSONArray2 = new JSONArray();
                     HashMap hashMap = new HashMap();
-                    for (int j = 0; j < o2.size(); j++) {
-                        Element ik = o2.get(j);
-                        String href = ik.selectFirst(".tcl-img").attr("href");
-                        Matcher matcher2 = this.l.matcher(href);
+                    for (int i = 0; i < o2.size(); i++) {
+                        Element ik = o2.get(i);
+                        String href = ik.select("h4 a").attr("href");
+                        Matcher matcher2 = this.regexVoddetail.matcher(href);
                         if (matcher2.find()) {
                             String group = matcher2.group(1);
                             if (!hashMap.containsKey(group)) {
-                                String dV = ik.selectFirst("a").attr("title");
-                                String dV2 = ik.selectFirst(".lazyload").attr("data-original");
-                                String H2 = ik.selectFirst("p").text();
+                                String title = ik.select(".ewave-vodlist__thumb").attr("title");
+                                String cover = ik.select(".ewave-vodlist__thumb").attr("data-original");
+                                String remark = ik.selectFirst(".pic-text").text();
                                 JSONObject jSONObject3 = new JSONObject();
                                 jSONObject3.put("vod_id", group);
-                                jSONObject3.put("vod_name", dV);
-                                jSONObject3.put("vod_pic", dV2);
-                                jSONObject3.put("vod_remarks", H2);
+                                jSONObject3.put("vod_name", title);
+                                jSONObject3.put("vod_pic", cover);
+                                jSONObject3.put("vod_remarks", remark);
                                 jSONArray2.put(jSONObject3);
                                 hashMap.put(group, Boolean.TRUE);
                             }
@@ -122,55 +124,56 @@ public class DY1990 extends Spider {
         String str3 = "href";
         String str4 = "";
         try {
-            String str5 = "https://dy1990.com/voddetail/" + list.get(0) + ".html";
-            Document doc = Jsoup.parse(OkHttpUtil.string(str5, dy1990.g()));
+            String str5 = siteUrl + "/vod/" + list.get(0) + ".html";
+            Document doc = Jsoup.parse(OkHttpUtil.string(str5, dy1990.getHeaders()));
             JSONObject jSONObject = new JSONObject();
             JSONObject jSONObject2 = new JSONObject();
-            String vod_pic = doc.selectFirst(".lazyload").attr("data-original");
-            String vod_name = doc.selectFirst("h1 a").attr("title");
-            String vod_content = doc.selectFirst("#content").text();
-            Elements o = doc.select(".yplx_c1 i");
+            String vod_pic = doc.select(".lazyload").attr("data-original");
+            String vod_name = doc.selectFirst("h1 span").text();
+            String vod_content = doc.select(".desc").text();
+            Elements span_text_muted = doc.select(".data span");
             String type_name = "";
             String vod_year = "";
             String vod_area = "";
             String vod_remarks = "";
             String vod_actor = "";
             String vod_director = "";
-            int i = 0;
-            while (i < o.size()) {
-                Element ik = o.get(i);
-                String H2 = ik.ownText();
-                str = str4;
-                try {
-                    switch (H2) {
-                        case "类型：":
-                            type_name = dy1990.getDetail(ik);
-                            break;
-                        case "年份：":
-                            vod_year = dy1990.getDetail(ik);
-                            break;
-                        case "地区：":
-                            vod_area = dy1990.getDetail(ik);
-                            break;
-                        case "更新：":
-                            vod_remarks = dy1990.getDetail(ik);
-                            break;
-                        case "导演：":
-                            vod_director = dy1990.getDetail(ik);
-                            break;
-                        case "主演：":
-                            vod_actor = dy1990.getDetail(ik);
-                            break;
+            for (int i = 0; i < span_text_muted.size(); i++) {
+                Element text = span_text_muted.get(i);
+                String info = text.text();
+                switch (info) {
+                    case "类型：":
+                        type_name = text.nextElementSibling().text();
+                        break;
+                    case "年份：":
+                        vod_year = text.nextElementSibling().text();
+                        break;
+                    case "地区：":
+                        vod_area = text.nextElementSibling().text();
+                        break;
+                    case "状态：":
+                        vod_remarks = text.nextElementSibling().text();
+                        break;
+                    case "导演：": {
+                        List<String> directors = new ArrayList<>();
+                        Elements aa = text.parent().select("a");
+                        for (int j = 0; j < aa.size(); j++) {
+                            directors.add(aa.get(j).text());
+                        }
+                        vod_director = TextUtils.join(",", directors);
+                        break;
                     }
-                    i++;
-                    str4 = str;
-                } catch (Exception e2) {
-                    e = e2;
-                    SpiderDebug.log(e);
-                    return str;
+                    case "主演：": {
+                        List<String> actors = new ArrayList<>();
+                        Elements aa = text.parent().select("a");
+                        for (int j = 0; j < aa.size(); j++) {
+                            actors.add(aa.get(j).text());
+                        }
+                        vod_actor = TextUtils.join(",", actors);
+                        break;
+                    }
                 }
             }
-            str = str4;
             jSONObject2.put("vod_id", list.get(0));
             jSONObject2.put("vod_name", vod_name);
             jSONObject2.put("vod_pic", vod_pic);
@@ -182,17 +185,17 @@ public class DY1990 extends Spider {
             jSONObject2.put("vod_director", vod_director);
             jSONObject2.put("vod_content", vod_content);
             HashMap hashMap = new HashMap();
-            Elements o2 = doc.select("ul.con_c2_title > li");
+            Elements o2 = doc.select(".nav-tabs li");
             int i2 = 0;
             while (i2 < o2.size()) {
                 Element ik2 = o2.get(i2);
                 String trim = ik2.text().trim();
-                Elements o3 = doc.select("#" + ik2.attr("switch") + " ul.con_c2_list li > a");
+                Elements o3 = doc.select(".ewave-content__playlist li > a");
                 ArrayList arrayList = new ArrayList();
                 int i3 = 0;
                 while (i3 < o3.size()) {
                     Element ik3 = o3.get(i3);
-                    Matcher matcher = dy1990.J.matcher(ik3.attr(str3));
+                    Matcher matcher = dy1990.regexPlay.matcher(ik3.attr(str3));
                     if (!matcher.find()) {
                         str2 = str3;
                     } else {
@@ -209,7 +212,7 @@ public class DY1990 extends Spider {
                     dy1990 = this;
                     str3 = str2;
                 }
-                String join = arrayList.size() > 0 ? StringUtil.join("#", arrayList) : str;
+                String join = arrayList.size() > 0 ? StringUtil.join("#", arrayList) : "";
                 if (join.length() != 0) {
                     hashMap.put(trim, join);
                 }
@@ -232,7 +235,7 @@ public class DY1990 extends Spider {
         return "";
     }
 
-    protected HashMap<String, String> g() {
+    protected HashMap<String, String> getHeaders() {
         HashMap<String, String> hashMap = new HashMap<>();
         hashMap.put("Upgrade-Insecure-Requests", "1");
         hashMap.put("DNT", "1");
@@ -249,13 +252,13 @@ public class DY1990 extends Spider {
 
     public String homeContent(boolean z) {
         try {
-            Document g = Jsoup.parse(OkHttpUtil.string("https://dy1990.com", g()));
-            Elements o = g.select(".all-type-content>li:gt(0) a");
+            Document g = Jsoup.parse(OkHttpUtil.string(siteUrl, getHeaders()));
+            Elements o = g.select(".ewave-header__menu li:gt(0) a");
             JSONArray jSONArray = new JSONArray();
             for (Element next : o) {
                 String H = next.text();
                 String href = next.attr("href");
-                Matcher matcher = this.g.matcher(href);
+                Matcher matcher = this.regexCategory.matcher(href);
                 if (matcher.find()) {
                     String type_id = matcher.group(1).trim();
                     JSONObject jSONObject = new JSONObject();
@@ -267,24 +270,24 @@ public class DY1990 extends Spider {
             JSONObject jSONObject2 = new JSONObject();
             jSONObject2.put("class", jSONArray);
             try {
-                Elements o2 = g.select(".show_play");
+                Elements o2 = g.select(".ewave-vodlist__box");
                 JSONArray jSONArray2 = new JSONArray();
                 HashMap hashMap = new HashMap();
                 for (int i = 0; i < o2.size(); i++) {
                     Element ik = o2.get(i);
-                    String href = ik.selectFirst(".tcl-img").attr("href");
-                    Matcher matcher2 = this.l.matcher(href);
+                    String href = ik.select("h4 a").attr("href");
+                    Matcher matcher2 = this.regexVoddetail.matcher(href);
                     if (matcher2.find()) {
                         String group = matcher2.group(1);
                         if (!hashMap.containsKey(group)) {
-                            String dV = ik.selectFirst("a").attr("title");
-                            String dV2 = ik.selectFirst(".lazyload").attr("data-original");
-                            String H2 = ik.selectFirst("p").text();
+                            String title = ik.select(".ewave-vodlist__thumb").attr("title");
+                            String cover = ik.select(".ewave-vodlist__thumb").attr("data-original");
+                            String remark = ik.selectFirst(".pic-text").text();
                             JSONObject jSONObject3 = new JSONObject();
                             jSONObject3.put("vod_id", group);
-                            jSONObject3.put("vod_name", dV);
-                            jSONObject3.put("vod_pic", dV2);
-                            jSONObject3.put("vod_remarks", H2);
+                            jSONObject3.put("vod_name", title);
+                            jSONObject3.put("vod_pic", cover);
+                            jSONObject3.put("vod_remarks", remark);
                             jSONArray2.put(jSONObject3);
                             hashMap.put(group, Boolean.TRUE);
                         }
@@ -304,26 +307,27 @@ public class DY1990 extends Spider {
     @Override
     public String homeVideoContent() {
         try {
-            Document g = Jsoup.parse(OkHttpUtil.string("https://dy1990.com", g()));
+            Document g = Jsoup.parse(OkHttpUtil.string(siteUrl, getHeaders()));
             JSONObject jSONObject2 = new JSONObject();
             try {
-                Elements o2 = g.select(".show_play");
+                Elements o2 = g.select(".ewave-vodlist__box");
                 JSONArray jSONArray2 = new JSONArray();
                 HashMap hashMap = new HashMap();
                 for (int i = 0; i < o2.size(); i++) {
                     Element ik = o2.get(i);
-                    Matcher matcher2 = this.l.matcher(ik.selectFirst(".tcl-img").attr("href"));
+                    String href = ik.select("h4 a").attr("href");
+                    Matcher matcher2 = this.regexVoddetail.matcher(href);
                     if (matcher2.find()) {
                         String group = matcher2.group(1);
                         if (!hashMap.containsKey(group)) {
-                            String dV = ik.selectFirst("a").attr("title");
-                            String dV2 = ik.selectFirst(".lazyload").attr("data-original");
-                            String H2 = ik.selectFirst("p").text();
+                            String title = ik.select(".ewave-vodlist__thumb").attr("title");
+                            String cover = ik.select(".ewave-vodlist__thumb").attr("data-original");
+                            String remark = ik.selectFirst(".pic-text").text();
                             JSONObject jSONObject3 = new JSONObject();
                             jSONObject3.put("vod_id", group);
-                            jSONObject3.put("vod_name", dV);
-                            jSONObject3.put("vod_pic", dV2);
-                            jSONObject3.put("vod_remarks", H2);
+                            jSONObject3.put("vod_name", title);
+                            jSONObject3.put("vod_pic", cover);
+                            jSONObject3.put("vod_remarks", remark);
                             jSONArray2.put(jSONObject3);
                             hashMap.put(group, Boolean.TRUE);
                         }
@@ -342,11 +346,11 @@ public class DY1990 extends Spider {
 
     @Override
     public String playerContent(String flag, String id, List<String> vipFlags) throws Exception {
-        String webUrl = "https://dy1990.com/vodplay/" + id + ".html";
+        String webUrl = siteUrl + "/play/" + id + ".html";
         String videoUrl = null;
         // 尝试分析直连
             try {
-                Document doc = Jsoup.parse(OkHttpUtil.string(webUrl,g()));
+                Document doc = Jsoup.parse(OkHttpUtil.string(webUrl, getHeaders()));
                 Elements allScript = doc.select("script");
                 for (int i = 0; i < allScript.size(); i++) {
                     String scContent = allScript.get(i).html().trim();
@@ -414,18 +418,33 @@ public class DY1990 extends Spider {
         return super.playerContent(flag, id, vipFlags);
     }
 
+    @Override
+    public boolean isVideoFormat(String url) {
+        String[] videoFormatList = {".M3U8", ".3G2", ".3GP", ".3GP2", ".3GPP", ".AMV", ".ASF", ".AVI", ".DIVX", ".DPG", ".DVR-MS", ".EVO", ".F4V", ".FLV", ".IFO", ".K3G", ".M1V", ".M2T", ".M2TS", ".M2V", ".M4B", ".M4P", ".M4V", ".MKV", ".MOV", ".MP2V", ".MP4", ".MPE", ".MPEG", ".MPG", ".MPV2", ".MTS", ".MXF", ".NSR", ".NSV", ".OGM", ".OGV", ".QT", ".RAM", ".RM", ".RMVB", ".RPM", ".SKM", ".TP", ".TPR", ".TRP", ".TS", ".VOB", ".WEBM", ".WM", ".WMP", ".WMV", ".WTV"};
+        url = url.toLowerCase();
+        if (url.contains("=http") || url.contains("=https") || url.contains("=https%3a%2f") || url.contains("=http%3a%2f")) {
+            return false;
+        }
+        if(StrUtil.endWithAny(url.toUpperCase(),videoFormatList)) {
+            return true;
+        }
+        return false;
+    }
+
+
     public String searchContent(String str, boolean z) {
         try {
-            String str2 = "https://dy1990.com/vodsearch/-------------.html?wd=" + URLEncoder.encode(str,"utf-8");
-            Elements o = Jsoup.parse(OkHttpUtil.string(str2, g())).select(".result_list");
+            String str2 = siteUrl + "/vodsearch/-------------.html?wd=" + URLEncoder.encode(str,"utf-8");
+            Document document = Jsoup.parse(OkHttpUtil.string(str2, getHeaders()));
+            Elements o = document.select(".ewave-vodlist__media li");
             JSONArray jSONArray = new JSONArray();
             for (int i = 0; i < o.size(); i++) {
                 Element ik = o.get(i);
-                Matcher matcher = this.l.matcher(ik.selectFirst(".pic").attr("href"));
+                Matcher matcher = this.regexVoddetail.matcher(ik.selectFirst(".ewave-vodlist__thumb").attr("href"));
                 if (matcher.find()) {
-                    String vod_name = ik.selectFirst(".result_title a").text();
-                    String vod_pic = ik.selectFirst(".lazyload").attr("data-original");
-                    String vod_remarks = ik.selectFirst(".result_detail").text();
+                    String vod_name = ik.selectFirst("h3.title a").text();
+                    String vod_pic = ik.selectFirst(".ewave-vodlist__thumb").attr("data-original");
+                    String vod_remarks = ik.selectFirst(".pic-text").text();
                     String group = matcher.group(1);
                     JSONObject jSONObject = new JSONObject();
                     jSONObject.put("vod_id", group);

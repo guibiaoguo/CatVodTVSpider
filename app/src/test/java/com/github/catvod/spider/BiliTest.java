@@ -28,7 +28,11 @@ public class BiliTest {
 
     @Test
     public void init() {
-        bili.init(null, "https://ghproxy.com/https://raw.githubusercontent.com/FongMi/CatVodSpider/main/json/bili.json");
+        bili.init(null, "{\n" +
+                "        \"json\": \"https://fongmi.cachefly.net/FongMi/CatVodSpider/main/json/bili.json\",\n" +
+                "        \"type\": \"帕梅拉#太极拳#广场舞#演唱会\",\n" +
+                "        \"cookie\": \"\"\n" +
+                "      }");
     }
 
     @Test
@@ -43,12 +47,12 @@ public class BiliTest {
 
     @Test
     public void categoryContent() throws Exception {
-        System.out.println(bili.categoryContent("电影", "1", true, new HashMap()));
+        System.out.println(bili.categoryContent("電影", "1", true, new HashMap()));
     }
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(bili.detailContent(Arrays.asList("BV15z4y1871k")));
+        System.out.println(bili.detailContent(Arrays.asList("BV1A84y127t9@619571245")));
     }
 
     @Test
@@ -58,6 +62,6 @@ public class BiliTest {
 
     @Test
     public void playerContent() throws Exception {
-        System.out.println(bili.playerContent("", "571007162+1125499203", null));
+        System.out.println(bili.playerContent("", "577093762+1296645526+32:16+清晰 480P:流畅 360P", null));
     }
 }

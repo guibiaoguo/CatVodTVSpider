@@ -51,8 +51,8 @@ import okhttp3.ResponseBody;
 
 public class Ddys extends Spider {
 
-    private static String siteUrl = "https://ddys.art";
-    private static String siteHost = "ddys.art";
+    private static String siteUrl = "https://ddys.mov";
+    private static String siteHost = "ddys.mov";
     private String cookie="";
 
     protected JSONObject filterConfig;

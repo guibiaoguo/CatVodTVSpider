@@ -1,5 +1,6 @@
 package com.github.catvod.spider;
 
+import android.content.Context;
 import android.text.TextUtils;
 
 import com.github.catvod.bean.Class;
@@ -8,6 +9,7 @@ import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.net.OkHttp;
+import com.github.catvod.parser.NetworkUtils;
 import com.github.catvod.utils.Utils;
 import com.github.catvod.utils.Trans;
 
@@ -23,17 +25,50 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import cn.hutool.core.util.StrUtil;
+
 /**
  * @author FongMi
  */
 public class Dm84 extends Spider {
 
-    private static final String siteUrl = "https://dm84.tv";
+    private static String siteUrl = "https://dm84.tv";
+    private static String siteHost = "dm84.tv";
 
     private HashMap<String, String> getHeaders() {
         HashMap<String, String> headers = new HashMap<>();
         headers.put("User-Agent", Utils.CHROME);
         return headers;
+    }
+
+    public void setSiteUrl(String extend) {
+        if (StrUtil.isEmpty(extend)) {
+            extend = "http://dm84.site/";
+        }
+        String content = OkHttp.string(extend);
+        Document document = Jsoup.parse(content);
+        for(Element element:document.select("li a")) {
+            String site = element.select("a").attr("href");
+            System.out.println("动漫巴士：" + site);
+            String subContent = OkHttp.string(site);
+            if (StrUtil.isNotEmpty(subContent) && !subContent.contains("Loading......")) {
+                siteUrl = site;
+                siteHost = NetworkUtils.INSTANCE.getSubDomain(siteUrl);
+                break;
+            }
+        }
+    }
+
+    @Override
+    public void init(Context context) {
+        super.init(context);
+        setSiteUrl("http://dm84.site/");
+    }
+
+    @Override
+    public void init(Context context, String extend) {
+        super.init(context, extend);
+        setSiteUrl(extend);
     }
 
     private Filter getFilter(String name, String key, List<String> texts) {

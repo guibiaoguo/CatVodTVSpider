@@ -28,12 +28,12 @@ public class BBBTest {
 
     @Test
     public void categoryContent() throws Exception {
-        System.out.println(bbb.categoryContent("电视剧","1",true, new HashMap()));
+        System.out.println(bbb.categoryContent("電影","1",true, new HashMap()));
     }
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(bbb.detailContent(Arrays.asList("BV1nW411K7CU")));
+        System.out.println(bbb.detailContent(Arrays.asList("BV1Ah4y1z7RP@662031481")));
     }
 
     @Test
@@ -48,12 +48,13 @@ public class BBBTest {
 
     @Test
     public void init() {
-        bbb.init(null);
+        bbb.init(null,"https://www.qiaoji8.com/tvbox/bili.json");
     }
 
     @Test
     public void playerContent() throws Exception {
         System.out.println(bbb.playerContent("", "21880376+ 36180672",null));
+//        System.out.println(bbb.playerContent("", "662031481+1297277695+120:116:80:64:32:16+\\\"超清 4K\\\":\\\"高清 1080P60\\\":\\\"高清 1080P\\\":\\\"高清 720P\\\":\\\"清晰 480P\\\":\\\"流畅 360P\\\"",null));
     }
 
     @Test

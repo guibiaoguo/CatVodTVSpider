@@ -2,7 +2,9 @@ package com.github.catvod.spider;
 
 import android.content.SharedPreferences;
 
+import com.github.catvod.bean.Result;
 import com.github.catvod.crawler.Spider;
+import com.google.gson.Gson;
 import com.guibiaoguo.myapplication.RoboApp;
 
 import org.junit.After;
@@ -42,6 +44,7 @@ public class AliTest {
 
     @Test
     public void init() {
+        Proxy.port = 9978;
 //        when(mMockContext.getString(R.string.app_name)).thenReturn(FAKE_STRING);
         when(mMockContext.getPackageName()).thenReturn("com.github.androidunittest");
 //        when(mMockContext.getApplicationContext()).thenReturn(new Application());
@@ -156,7 +159,7 @@ public class AliTest {
             }
         });
         Init.init(mMockContext);
-        ali.init(mMockContext, "");
+        ali.init(mMockContext, "0ac3580008b64f20bc72877bba446e6d");
     }
 
     @Test
@@ -167,8 +170,10 @@ public class AliTest {
 
     @Test
     public void playerContent() throws Exception {
-        System.out.println(ali.detailContent(Arrays.asList("https://www.aliyundrive.com/s/UAhNowcSsBR")));
-        System.out.println(ali.playerContent("原畫", "646734b8a921719397cb4486b0a97ab50a15af57", null));
+        String content = ali.detailContent(Arrays.asList("https://www.aliyundrive.com/s/UAhNowcSsBR"));
+        Result result = new Gson().fromJson(content, Result.class);
+        String id = result.getList().get(0).getVodPlayUrl().split("#")[0].split("\\$")[1];
+        System.out.println(ali.playerContent("原畫", id, null));
     }
 
 }

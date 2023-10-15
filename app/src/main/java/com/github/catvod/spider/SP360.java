@@ -5,7 +5,7 @@ import android.text.TextUtils;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.utils.okhttp.OkHttpUtil;
+import com.github.catvod.net.OkHttp;
 
 import java.net.URL;
 import java.net.URLEncoder;
@@ -51,7 +51,7 @@ public class SP360 extends Spider {
                     continue;
                 url += "&" + key + "=" + URLEncoder.encode(val);
             }
-            String content = OkHttpUtil.string(url, getHeader());
+            String content = OkHttp.string(url, getHeader());
             JSONObject dataObject = new JSONObject(content).getJSONObject("data");
             JSONArray jsonArray = dataObject.getJSONArray("movies");
             JSONArray videos = new JSONArray();
@@ -102,7 +102,7 @@ public class SP360 extends Spider {
         try {
             String[] split = ids.get(0).split("_");
             String format = String.format("%s?cat=%s&id=%s", SiteDetail, split[0], split[1]);
-            JSONObject jSONObject6 = new JSONObject(OkHttpUtil.string(format, getHeader())).getJSONObject("data");
+            JSONObject jSONObject6 = new JSONObject(OkHttp.string(format, getHeader())).getJSONObject("data");
             JSONArray jSONArray = new JSONArray();
             JSONObject list = new JSONObject();
             jSONArray.put(list);
@@ -191,7 +191,7 @@ public class SP360 extends Spider {
                         sb2.append(str9);
                         str = sb2.toString();
                     }
-                    JSONObject optJSONObject4 = new JSONObject(OkHttpUtil.string(str, getHeader())).getJSONObject("data").optJSONObject("allepidetail");
+                    JSONObject optJSONObject4 = new JSONObject(OkHttp.string(str, getHeader())).getJSONObject("data").optJSONObject("allepidetail");
                     ArrayList arrayList10 = new ArrayList();
                     JSONArray jSONArray2 = optJSONObject4.getJSONArray(str9);
                     int i7 = 0;
@@ -221,7 +221,7 @@ public class SP360 extends Spider {
                             if (i9 > parseInt) {
                                 i9 = parseInt;
                             }
-                            JSONObject optJSONObject5 = new JSONObject(OkHttpUtil.string(String.format("%s?cat=%s&id=%s&start=%s&end=%s&site=%s", SiteDetail, split[0], split[1], Integer.valueOf(i8), Integer.valueOf(i9), str9), getHeader())).optJSONObject("data");
+                            JSONObject optJSONObject5 = new JSONObject(OkHttp.string(String.format("%s?cat=%s&id=%s&start=%s&end=%s&site=%s", SiteDetail, split[0], split[1], Integer.valueOf(i8), Integer.valueOf(i9), str9), getHeader())).optJSONObject("data");
                             if (optJSONObject5 == null) {
                                 break;
                             }
@@ -284,7 +284,7 @@ public class SP360 extends Spider {
         JSONObject list = new JSONObject();
         try {
             String str = SiteHost;
-            String i = OkHttpUtil.string(str, getHeader());
+            String i = OkHttp.string(str, getHeader());
             SpiderDebug.log("响应请求：" + str);
             JSONArray optJSONArray = new JSONObject(i).optJSONArray("data");
             JSONArray jSONArray = new JSONArray();
@@ -323,7 +323,7 @@ public class SP360 extends Spider {
         JSONObject optJSONObject;
         JSONObject list = new JSONObject();
         try {
-            JSONObject optJSONObject2 = new JSONObject(OkHttpUtil.string(String.format(SiteSearch, str), getHeader())).optJSONObject("data");
+            JSONObject optJSONObject2 = new JSONObject(OkHttp.string(String.format(SiteSearch, str), getHeader())).optJSONObject("data");
             if (!(optJSONObject2 == null || (optJSONObject = optJSONObject2.optJSONObject("longData")) == null)) {
                 JSONArray jSONArray = optJSONObject.getJSONArray("rows");
                 JSONArray videos = new JSONArray();

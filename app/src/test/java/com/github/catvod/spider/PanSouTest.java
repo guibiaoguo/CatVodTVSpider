@@ -7,7 +7,9 @@ import android.content.SharedPreferences;
 
 import androidx.annotation.Nullable;
 
+import com.github.catvod.bean.Result;
 import com.github.catvod.crawler.Spider;
+import com.google.gson.Gson;
 import com.guibiaoguo.myapplication.RoboApp;
 
 import org.junit.After;
@@ -41,6 +43,7 @@ public class PanSouTest {
 
     @Test
     public void init() {
+        Proxy.port = 9978;
 //        when(mMockContext.getString(R.string.app_name)).thenReturn(FAKE_STRING);
         when(mMockContext.getPackageName()).thenReturn("com.github.androidunittest");
 //        when(mMockContext.getApplicationContext()).thenReturn(new Application());
@@ -155,16 +158,27 @@ public class PanSouTest {
             }
         });
         Init.init(mMockContext);
-        pansou.init(mMockContext, "");
+        pansou.init(mMockContext, "0ac3580008b64f20bc72877bba446e6d");
     }
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(pansou.detailContent(Arrays.asList("/s/KeksNqYkc48pdqJwZTQ1TzW05V7sj")));
+        String content = pansou.detailContent(Arrays.asList("/s/KeksNqYkc48pdqJwZTQ1TzW05V7sj"));
+        System.out.println("*************************");
+        System.out.println(content);
+        System.out.println("*************************");
     }
 
     @Test
     public void searchContent() throws Exception {
         System.out.println(pansou.searchContent("暮色黄昏", false));
+    }
+
+    @Test
+    public void playerContent() throws Exception {
+        String content = pansou.detailContent(Arrays.asList("/s/KeksNqYkc48pdqJwZTQ1TzW05V7sj"));
+        Result result = new Gson().fromJson(content, Result.class);
+        String id = result.getList().get(0).getVodPlayUrl().split("#")[0].split("\\$")[1];
+        System.out.println(pansou.playerContent("原畫", id, null));
     }
 }

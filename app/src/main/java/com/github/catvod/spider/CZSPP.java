@@ -8,6 +8,7 @@ import com.github.catvod.bean.Filter;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.net.OkHttp;
+import com.github.catvod.parser.NetworkUtils;
 import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.CBC;
 import com.github.catvod.utils.StringUtil;
@@ -34,6 +35,8 @@ import java.util.regex.Pattern;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+
+import cn.hutool.core.util.StrUtil;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
@@ -48,7 +51,9 @@ import org.jsoup.select.Elements;
 
 public class CZSPP extends Spider {
 
-    private String siteUrl = "https://czzy03.com";
+    private String siteUrl = "https://www.cz01.org";
+    private String siteHost = "www.cz01.org";
+
     private static final Pattern g = Pattern.compile("\"([^\"]+)\";var [\\d\\w]+=function dncry.*md5.enc.Utf8.parse\\(\"([\\d\\w]+)\".*md5.enc.Utf8.parse\\(([\\d]+)\\)");
     private static final Pattern l = Pattern.compile("video: \\{url: \"([^\"]+)\"");
     private static final Pattern J = Pattern.compile("subtitle: \\{url:\"([^\"]+\\.vtt)\"");
@@ -66,10 +71,34 @@ public class CZSPP extends Spider {
     private Pattern regexDetail = Pattern.compile("(.*)[:|：](.*)");
     private Pattern regexSearch = Pattern.compile("(\\d+) \\+ (\\d+)");
 
+    public void setSiteUrl(String extend) {
+        if (StrUtil.isEmpty(extend)) {
+            extend = "https://www.cz01.vip";
+        }
+        String content = OkHttp.string(extend);
+        Document document = Jsoup.parse(content);
+        for(Element element:document.select("h2 a")) {
+            String site = element.select("a").attr("href");
+            System.out.println("厂长资源：" + site);
+            String subContent = OkHttp.string(site);
+            if (StrUtil.isNotEmpty(subContent) && !subContent.contains("Loading......")) {
+                siteUrl = site;
+                siteHost = NetworkUtils.INSTANCE.getSubDomain(siteUrl);
+                break;
+            }
+        }
+    }
+
+    @Override
+    public void init(Context context) {
+        super.init(context);
+        setSiteUrl("https://www.cz01.vip");
+    }
+
     @Override
     public void init(Context context, String extend) {
-        if (!TextUtils.isEmpty(extend))
-            siteUrl = extend;
+        super.init(context, extend);
+        setSiteUrl(extend);
     }
 
     private String md5(String str) {

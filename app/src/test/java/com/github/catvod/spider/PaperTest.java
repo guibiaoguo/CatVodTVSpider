@@ -160,7 +160,7 @@ public class PaperTest {
             }
         });
         Init.init(mMockContext);
-        paper.init(mMockContext, "344d4e2759d14e349c6591ef4e5e772a");
+        paper.init(mMockContext, "0ac3580008b64f20bc72877bba446e6d");
     }
 
     @Test
@@ -175,7 +175,7 @@ public class PaperTest {
 
     @Test
     public void categoryContent() throws Exception {
-        System.out.println(paper.categoryContent("hyds","1",true,new HashMap<>()));
+        System.out.println(paper.categoryContent("hyds","2",true,new HashMap<>()));
 //        System.out.println(paper.categoryContent("https://www.aliyundrive.com/s/BfFQz6zbfYm","1",true,new HashMap<>()));
 //        System.out.println(paper.categoryContent("https://www.aliyundrive.com/s/BfFQz6zbfYm/folder/646f5d3147fd14c065c14811ac2cc1773e3474bd","1",true,new HashMap<>()));
     }
@@ -192,18 +192,7 @@ public class PaperTest {
     }
 
     @Test
-    public void
-
-
-
-
-
-
-
-
-
-
-    playerContent() throws Exception {
+    public void playerContent() throws Exception {
 //        String content = paper.detailContent(List.of("https://www.aliyundrive.com/s/BfFQz6zbfYm/folder/646f5d3147fd14c065c14811ac2cc1773e3474bd"));
         String content = paper.detailContent(List.of("https://www.aliyundrive.com/s/KwUCz4H31JK/folder/619ae206f21fe67ebabb402d9429931729e7c039"));
         Result result = new Gson().fromJson(content, Result.class);

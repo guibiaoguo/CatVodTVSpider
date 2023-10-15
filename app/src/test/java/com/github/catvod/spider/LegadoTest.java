@@ -123,10 +123,10 @@ public class LegadoTest {
         legadoRule.setCateVodTag("$.key||$.type@js:if(result!='folder' && result!='file'){content=java.post('https://api.aliyundrive.com/adrive/v3/share_link/get_share_by_anonymous','{share_id:'+result+'}',{'referer':'https://www.aliyundrive.com/'}).body();type=java.getString('$.file_infos[*].type',String(content),false);result=type;};result");
         legadoRule.setTypeFlag("@js:'1'");
         legadoRule.setPageCount("@js:1");
-//        legado.init(null, new GsonBuilder().disableHtmlEscaping().create().toJson(legadoRule));
+        legado.init(null, new GsonBuilder().disableHtmlEscaping().create().toJson(legadoRule));
 //        legado.init(null, "https://gitlab.com/mao4284120/js/-/raw/main/sub/paper.json");
 //        legado.init(null, "https://aria2.guibiaoguo.ml/paper.json");
-        legado.init(null, "https://aria2.guibiaoguo.ml/ahhfs.json");
+//        legado.init(null, "https://aria2.guibiaoguo.ml/ahhfs.json");
     }
 
     @Test

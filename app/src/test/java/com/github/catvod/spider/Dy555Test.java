@@ -38,7 +38,7 @@ public class Dy555Test {
 
     @Test
     public void init() {
-        dy555.init(null);
+        dy555.init(null,"https://555dy.shop/");
     }
 
     @Test
@@ -55,7 +55,7 @@ public class Dy555Test {
 
     @Test
     public void playerContent() throws Exception {
-        System.out.println(dy555.playerContent("","425288-2-1",null));
+        System.out.println(dy555.playerContent("","425288-4-1",null));
     }
 
     @Test
@@ -65,6 +65,6 @@ public class Dy555Test {
 
     @Test
     public void categoryContent() throws Exception {
-        System.out.println(dy555.categoryContent("1","1",true,new HashMap<>()));
+        System.out.println(dy555.categoryContent("124","1",true,new HashMap<>()));
     }
 }

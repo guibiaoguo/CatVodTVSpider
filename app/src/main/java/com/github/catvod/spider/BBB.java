@@ -1,14 +1,28 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
+import android.text.TextUtils;
+
+import com.github.catvod.bean.Result;
+import com.github.catvod.bean.Vod;
+import com.github.catvod.bean.bili.Data;
+import com.github.catvod.bean.bili.Page;
+import com.github.catvod.bean.bili.Resp;
+import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.StringUtil;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -48,7 +62,7 @@ public class BBB extends Spider {
                     if (string.startsWith("//")) {
                         string = "https:" + string;
                     }
-                    jSONObject3.put("vod_id", jSONObject2.optString("bvid"));
+                    jSONObject3.put("vod_id", jSONObject2.optString("bvid")+"@"+jSONObject2.optString("aid"));
                     jSONObject3.put("vod_name", jSONObject2.optString("title"));
                     jSONObject3.put("vod_pic", string);
                     jSONObject3.put("vod_remarks", jSONObject2.optString("duration").split(":")[0] + "分钟");
@@ -71,46 +85,86 @@ public class BBB extends Spider {
         return "";
     }
 
-    public String detailContent(List<String> list) {
-        try {
-            String str = list.get(0);
-            JSONObject jSONObject = new JSONObject(OkHttpUtil.string("https://api.bilibili.com/x/web-interface/archive/stat?bvid=" + str, getHeaders()));
-            String str2 = jSONObject.optJSONObject("data").getLong("aid") + "";
-            JSONObject jSONObject2 = new JSONObject(OkHttpUtil.string("https://api.bilibili.com/x/web-interface/view?aid=" + str2, getHeaders())).optJSONObject("data");
-            JSONObject jSONObject3 = new JSONObject();
-            jSONObject3.put("vod_id", str);
-            jSONObject3.put("vod_name", jSONObject2.optString("title"));
-            jSONObject3.put("vod_pic", jSONObject2.optString("pic"));
-            jSONObject3.put("type_name", jSONObject2.optString("tname"));
-            jSONObject3.put("vod_year", "");
-            jSONObject3.put("vod_area", "");
-            jSONObject3.put("vod_remarks", (jSONObject2.getLong("duration") / 60) + "分钟");
-            jSONObject3.put("vod_actor", "");
-            jSONObject3.put("vod_director", "");
-            jSONObject3.put("vod_content", jSONObject2.optString("desc"));
-            jSONObject3.put("vod_play_from", "B站");
-            ArrayList arrayList = new ArrayList();
-            JSONArray jSONArray = jSONObject2.optJSONArray("pages");
-            for (int i = 0; i < jSONArray.length(); i++) {
-                JSONObject jSONObject4 = jSONArray.optJSONObject(i);
-                arrayList.add(jSONObject4.optString("part").replace("$", "_").replace("#", "_") + "$" + str2 + "+ " + jSONObject4.getLong("cid"));
-            }
-            jSONObject3.put("vod_play_url", StringUtil.join("#", arrayList));
-            JSONArray jSONArray2 = new JSONArray();
-            jSONArray2.put(jSONObject3);
-            JSONObject jSONObject5 = new JSONObject();
-            jSONObject5.put("list", jSONArray2);
-            return jSONObject5.toString();
-        } catch (Exception e) {
-            SpiderDebug.log(e);
-            return "";
+    @Override
+    public String detailContent(List<String> ids) throws Exception {
+        String[] split = ids.get(0).split("@");
+        String bvid = split[0];
+        String aid = split[1];
+
+        String api = "https://api.bilibili.com/x/web-interface/view?aid=" + aid;
+        String json = OkHttp.string(api, getHeaders());
+//        System.out.println("************Resp 前****************" + json);
+//        Data detail = Resp.objectFrom(json).getData();
+        JsonObject jsonObject = new Gson().fromJson(json, JsonObject.class);
+//        System.out.println(jsonObject.getAsJsonObject("data").toString());
+//        Data detail1 = new Gson().fromJson(jsonObject.getAsJsonObject("data").toString(),Data.class);
+//        System.out.println("************Resp detail 后****************" + new Gson().toJson(detail));
+        Vod vod = new Vod();
+        vod.setVodId(ids.get(0));
+//        vod.setVodPic(detail.getPic());
+//        vod.setVodName(detail.getTitle());
+//        vod.setTypeName(detail.getType());
+//        vod.setVodContent(detail.getDesc());
+//        vod.setVodRemarks(detail.getDuration() / 60 + "分鐘");
+        JsonObject detail = jsonObject.getAsJsonObject("data");
+        vod.setVodPic(detail.get("pic").toString());
+        vod.setVodName(detail.get("title").toString());
+        vod.setTypeName(detail.get("tname").toString());
+        vod.setVodContent(detail.get("desc").toString());
+        vod.setVodRemarks(detail.get("duration").getAsDouble() / 60 + "分鐘");
+
+        List<String> acceptDesc = new ArrayList<>();
+        List<Integer> acceptQuality = new ArrayList<>();
+        api = "https://api.bilibili.com/x/player/playurl?avid=" + aid + "&cid=" + detail.get("cid").toString() + "&qn=127&fnval=4048&fourk=1";
+        json = OkHttp.string(api, getHeaders());
+//        Data play = Resp.objectFrom(json).getData();
+        jsonObject = new Gson().fromJson(json, JsonObject.class);
+//        Data play = new Gson().fromJson(jsonObject.getAsJsonObject("data"),Data.class);
+        JsonObject play = jsonObject.getAsJsonObject("data");
+//        System.out.println("************Resp play 后****************" + new Gson().toJson(play));
+//        for (int i = 0; i < play.getAcceptQuality().size(); i++) {
+//            int qn = play.getAcceptQuality().get(i);
+//            acceptQuality.add(play.getAcceptQuality().get(i));
+//            acceptDesc.add(play.getAcceptDescription().get(i));
+//        }
+        JsonArray acceptQualitys = play.getAsJsonArray("accept_quality");
+        for (int i = 0; i < acceptQualitys.size(); i++) {
+            int qn = acceptQualitys.get(i).getAsInt();
+            acceptQuality.add(acceptQualitys.get(i).getAsInt());
+            acceptDesc.add(play.getAsJsonArray("accept_description").get(i).toString());
         }
+        List<String> episode = new ArrayList<>();
+        LinkedHashMap<String, String> flag = new LinkedHashMap<>();
+//        for (Page page : detail.getPages()) episode.add(page.getPart() + "$" + aid + "+" + page.getCid() + "+" + TextUtils.join(":", acceptQuality) + "+" + TextUtils.join(":", acceptDesc));
+        JsonArray pages = detail.getAsJsonArray("pages");
+        for (JsonElement element : pages) {
+            JsonObject page = element.getAsJsonObject();
+            episode.add(page.get("part").toString() + "$" + aid + "+" + page.get("cid").toString() + "+" + TextUtils.join(":", acceptQuality) + "+" + TextUtils.join(":", acceptDesc));
+        }
+//        for (Page page : detail.getAsJsonArray("pages")) {
+//            episode.add(page.getPart() + "$" + aid + "+" + page.getCid() + "+" + TextUtils.join(":", acceptQuality) + "+" + TextUtils.join(":", acceptDesc));
+//        }
+        flag.put("B站", TextUtils.join("#", episode));
+
+        episode = new ArrayList<>();
+        api = "https://api.bilibili.com/x/web-interface/archive/related?bvid=" + bvid;
+        json = OkHttp.string(api, getHeaders());
+        JsonArray array = JsonParser.parseString(json).getAsJsonObject().getAsJsonArray("data");
+        for (int i = 0; i < array.size(); i++) {
+            JsonObject object = array.get(i).getAsJsonObject();
+            episode.add(object.get("title").getAsString() + "$" + object.get("aid").getAsInt() + "+" + object.get("cid").getAsInt() + "+" + TextUtils.join(":", acceptQuality) + "+" + TextUtils.join(":", acceptDesc));
+        }
+        flag.put("相关", TextUtils.join("#", episode));
+
+        vod.setVodPlayFrom(TextUtils.join("$$$", flag.keySet()));
+        vod.setVodPlayUrl(TextUtils.join("$$$", flag.values()));
+        return Result.string(vod);
     }
 
     public String homeContent(boolean z) {
         try {
             JSONObject jSONObject = new JSONObject();
-            jSONObject.put("class", this.g.optJSONArray("class"));
+            jSONObject.put("class", this.g.optJSONArray("classes"));
             if (z) {
                 jSONObject.put("filters", this.g.optJSONObject("filter"));
             }
@@ -124,7 +178,7 @@ public class BBB extends Spider {
     public String homeVideoContent() {
         try {
             JSONArray jSONArray = new JSONArray();
-            JSONArray jSONArray2 = new JSONObject(OkHttpUtil.string("https://api.bilibili.com/x/web-interface/search/type?search_type=video&keyword=相声小品", getHeaders())).optJSONObject("data").optJSONArray("result");
+            JSONArray jSONArray2 = new JSONObject(OkHttpUtil.string("https://api.bilibili.com/x/web-interface/popular?ps=20", getHeaders())).optJSONObject("data").optJSONArray("list");
             for (int i = 0; i < jSONArray2.length(); i++) {
                 JSONObject jSONObject = jSONArray2.optJSONObject(i);
                 JSONObject jSONObject2 = new JSONObject();
@@ -132,7 +186,7 @@ public class BBB extends Spider {
                 if (string.startsWith("//")) {
                     string = "https:" + string;
                 }
-                jSONObject2.put("vod_id", jSONObject.optString("bvid"));
+                jSONObject2.put("vod_id", jSONObject.optString("bvid")+"@"+jSONObject.optString("aid"));
                 jSONObject2.put("vod_name", jSONObject.optString("title"));
                 jSONObject2.put("vod_pic", string);
                 jSONObject2.put("vod_remarks", jSONObject.optString("duration").split(":")[0] + "分钟");
@@ -156,12 +210,22 @@ public class BBB extends Spider {
         }
     }
 
+    public void init(Context context,String extend) {
+        BBB.super.init(context,extend);
+        try {
+            String conntent = OkHttp.string(extend);
+            this.g = new JSONObject(conntent);
+        } catch (Exception e) {
+            SpiderDebug.log(e);
+        }
+    }
+
     public String playerContent(String str, String str2, List<String> list) {
         try {
             String[] split = str2.split("\\+");
             String str3 = split[0];
             String str4 = split[1];
-            JSONObject jSONObject = new JSONObject(OkHttpUtil.string("https://api.bilibili.com/x/player/playurl?avid=" + str3 + "&cid= " + str4 + "&qn=112", getHeaders()));
+            JSONObject jSONObject = new JSONObject(OkHttpUtil.string("https://api.bilibili.com/x/player/playurl?avid=" + str3 + "&cid= " + str4 + "&qn=120", getHeaders()));
             JSONObject jSONObject2 = new JSONObject();
             jSONObject2.put("parse", "0");
             jSONObject2.put("playUrl", "");

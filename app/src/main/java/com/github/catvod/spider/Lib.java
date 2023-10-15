@@ -2,8 +2,11 @@ package com.github.catvod.spider;
 import android.content.Context;
 import android.text.TextUtils;
 
+import com.github.catvod.bean.Result;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
+import com.github.catvod.utils.Base64;
+import com.github.catvod.utils.Misc;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.json.JSONArray;
@@ -14,6 +17,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -24,6 +28,8 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import cn.hutool.core.util.StrUtil;
 
 public class Lib extends Spider {
     private static final String siteUrl = "https://www.libvio.me/";
@@ -296,17 +302,17 @@ public class Lib extends Spider {
             Map<String, String> vod_play = new TreeMap<>(new Comparator<String>() {
                 @Override
                 public int compare(String o1, String o2) {
-                    try {
-                        int sort1 = playerConfig.getJSONObject(o1).getInt("or");
-                        int sort2 = playerConfig.getJSONObject(o2).getInt("or");
-
-                        if (sort1 == sort2) {
-                            return 1;
-                        }
-                        return sort1 - sort2 > 0 ? 1 : -1;
-                    } catch (JSONException e) {
-                        SpiderDebug.log(e);
-                    }
+//                    try {
+//                        int sort1 = playerConfig.getJSONObject(o1).getInt("or");
+//                        int sort2 = playerConfig.getJSONObject(o2).getInt("or");
+//
+//                        if (sort1 == sort2) {
+//                            return 1;
+//                        }
+//                        return sort1 - sort2 > 0 ? 1 : -1;
+//                    } catch (JSONException e) {
+//                        SpiderDebug.log(e);
+//                    }
                     return 1;
                 }
             });
@@ -315,20 +321,20 @@ public class Lib extends Spider {
             Elements sources = doc.select("div.stui-vodlist__head h3");
             Elements sourceList = doc.select("ul.stui-content__playlist");
 
-            for (int i = 0; i < sources.size(); i++) {
+            for (int i = 0; i < sourceList.size(); i++) {
                 Element source = sources.get(i);
                 String sourceName = source.text();
-                boolean found = false;
-                for (Iterator<String> it = playerConfig.keys(); it.hasNext(); ) {
-                    String flag = it.next();
-                    if (playerConfig.getJSONObject(flag).getString("sh").equals(sourceName)) {
-                        sourceName = flag;
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found)
-                    continue;
+//                boolean found = false;
+//                for (Iterator<String> it = playerConfig.keys(); it.hasNext(); ) {
+//                    String flag = it.next();
+//                    if (playerConfig.getJSONObject(flag).getString("sh").equals(sourceName)) {
+//                        sourceName = flag;
+//                        found = true;
+//                        break;
+//                    }
+//                }
+//                if (!found)
+//                    continue;
                 String playList = "";
                 Elements playListA = sourceList.get(i).select("li a");
                 List<String> vodItems = new ArrayList<>();
@@ -375,66 +381,161 @@ public class Lib extends Spider {
      * @param vipFlags 所有可能需要vip解析的源
      * @return
      */
+//    @Override
+//    public String playerContent(String flag, String id, List<String> vipFlags) {
+//        try {
+//            //定义播放用的headers
+//            JSONObject headers = new JSONObject();
+//            headers.put("origin", siteUrl);
+//            headers.put("User-Agent", " Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
+//            headers.put("Accept", " */*");
+//            headers.put("Accept-Language", " zh-CN,zh;q=0.9,en-US;q=0.3,en;q=0.7");
+//            headers.put("Accept-Encoding", " gzip, deflate");
+//            headers.put("referer", siteUrl);
+//            // 播放页 url
+//            String url = siteUrl + "/play/" + id + ".html";
+//            Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
+//
+//            Elements allScript = doc.select("script");
+//            for (int i = 0; i < allScript.size(); i++) {
+//                String scContent = allScript.get(i).html().trim();
+//                if (scContent.startsWith("var player_")) { // 取直链
+//                    int start = scContent.indexOf('{');
+//                    int end = scContent.lastIndexOf('}') + 1;
+//                    String json = scContent.substring(start, end);
+//                    JSONObject player = new JSONObject(json);
+//                    if (playerConfig.has(player.getString("from"))) {
+//                        JSONObject pCfg = playerConfig.getJSONObject(player.getString("from"));
+//                        if (player.getString("from").contains("LINE")) {
+//                            String videoUrl = pCfg.getString("pu") + player.getString("url");
+//                            Document docs = Jsoup.parse(OkHttpUtil.string(videoUrl, Headers()));
+//                            Pattern pattern = Pattern.compile("(?<=urls\\s=\\s').*?(?=')");
+//                            Elements allScripts = docs.select("body script");
+//                            for (int j = 0; j < allScripts.size(); j++) {
+//                                String scContents = allScripts.get(j).html().trim();
+//                                Matcher matcher = pattern.matcher(scContents);
+//                                if (matcher.find()) {
+//                                    JSONObject result = new JSONObject();
+//                                    String players = matcher.group(0);
+//                                    result.put("parse", 0);
+//                                    result.put("playUrl", "");
+//                                    result.put("url", players);
+//                                    return result.toString();
+//                                }
+//                            }
+//                        }
+//                        else {
+//                            SpiderDebug.log(url);
+//                            JSONObject result = new JSONObject();
+//                            result.put("parse", 1);
+//                            result.put("playUrl", "");
+//                            result.put("url", url);
+//                            //   result.put("header", "{\"Referer\", \"https://www.libvio.me/\"}");
+//                            return result.toString();
+//                        }
+//                        break;
+//                    }
+//                }
+//            }
+//        } catch (Exception e) {
+//            SpiderDebug.log(e);
+//        }
+//        return "";
+//    }
+
+    /**
+     * 获取视频播放信息
+     *
+     * @param flag     播放源
+     * @param id       视频id
+     * @param vipFlags 所有可能需要vip解析的源
+     * @return
+     */
     @Override
     public String playerContent(String flag, String id, List<String> vipFlags) {
         try {
-            //定义播放用的headers
-            JSONObject headers = new JSONObject();
-            headers.put("origin", " https://www.libvio.me/");
-            headers.put("User-Agent", " Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
-            headers.put("Accept", " */*");
-            headers.put("Accept-Language", " zh-CN,zh;q=0.9,en-US;q=0.3,en;q=0.7");
-            headers.put("Accept-Encoding", " gzip, deflate");
-            headers.put("referer", " https://www.libvio.me/");
             // 播放页 url
             String url = siteUrl + "/play/" + id + ".html";
+            String videoUrl = null;
             Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
-
             Elements allScript = doc.select("script");
+            JSONObject result = new JSONObject();
             for (int i = 0; i < allScript.size(); i++) {
                 String scContent = allScript.get(i).html().trim();
-                if (scContent.startsWith("var player_")) { // 取直链
+                if (scContent.startsWith("var player_")) {
                     int start = scContent.indexOf('{');
                     int end = scContent.lastIndexOf('}') + 1;
                     String json = scContent.substring(start, end);
                     JSONObject player = new JSONObject(json);
-                    if (playerConfig.has(player.getString("from"))) {
-                        JSONObject pCfg = playerConfig.getJSONObject(player.getString("from"));
-                        if (player.getString("from").contains("LINE")) {
-                            String videoUrl = pCfg.getString("pu") + player.getString("url");
-                            Document docs = Jsoup.parse(OkHttpUtil.string(videoUrl, Headers()));
-                            Pattern pattern = Pattern.compile("(?<=urls\\s=\\s').*?(?=')");
-                            Elements allScripts = docs.select("body script");
-                            for (int j = 0; j < allScripts.size(); j++) {
-                                String scContents = allScripts.get(j).html().trim();
-                                Matcher matcher = pattern.matcher(scContents);
-                                if (matcher.find()) {
-                                    JSONObject result = new JSONObject();
-                                    String players = matcher.group(0);
-                                    result.put("parse", 0);
-                                    result.put("playUrl", "");
-                                    result.put("url", players);
-                                    return result.toString();
-                                }
-                            }
+                    String videoUrlTmp = player.optString("url");
+                    if (player.has("encrypt")) {
+                        int encrypt = player.getInt("encrypt");
+                        if (encrypt == 1) {
+                            videoUrlTmp = URLDecoder.decode(videoUrlTmp,"utf-8");
+                        } else if (encrypt == 2) {
+                            videoUrlTmp = new String(Base64.decode(videoUrlTmp, Base64.DEFAULT));
+                            videoUrlTmp = URLDecoder.decode(videoUrlTmp,"utf-8");
                         }
-                        else {
-                            SpiderDebug.log(url);
-                            JSONObject result = new JSONObject();
-                            result.put("parse", 1);
-                            result.put("playUrl", "");
-                            result.put("url", url);
-                            //   result.put("header", "{\"Referer\", \"https://www.libvio.me/\"}");
-                            return result.toString();
-                        }
-                        break;
                     }
+                    videoUrl = videoUrlTmp;
+                    break;
                 }
             }
+            if (videoUrl != null) {
+                // 适配2.0.6的调用应用内解析列表的支持, 需要配合直连分析和匹配官源解析一起使用，参考cjt影视和极品直连
+                if (Misc.isVip(videoUrl)) { // 使用jx:1
+                    try {
+                        result.put("parse", 1);
+                        result.put("jx", "1");
+                        result.put("url", videoUrl);
+                        return result.toString();
+                    } catch (Exception e) {
+                        SpiderDebug.log(e);
+                    }
+                } else if (vipFlags.contains(flag)) { // 是否使用应用内解析列表解析官源
+                    try {
+                        result.put("parse", 1);
+                        result.put("playUrl", "");
+                        result.put("url", videoUrl);
+                        result.put("header", "");
+                        return result.toString();
+                    } catch (Exception e) {
+                        SpiderDebug.log(e);
+                    }
+                }
+                // 如果是视频直连 直接返回免解
+                else if (isVideoFormat(videoUrl)) {
+                    try {
+                        result.put("parse", 0);
+                        result.put("playUrl", "");
+                        result.put("url", videoUrl);
+                        result.put("header", "");
+                        return result.toString();
+                    } catch (Exception e) {
+                        SpiderDebug.log(e);
+                    }
+                } else {
+                    return Result.get().url(url).parse().string();
+                }
+            }
+            return result.toString();
         } catch (Exception e) {
             SpiderDebug.log(e);
         }
         return "";
+    }
+
+    @Override
+    public boolean isVideoFormat(String url) {
+        String[] videoFormatList = {".M3U8", ".3G2", ".3GP", ".3GP2", ".3GPP", ".AMV", ".ASF", ".AVI", ".DIVX", ".DPG", ".DVR-MS", ".EVO", ".F4V", ".FLV", ".IFO", ".K3G", ".M1V", ".M2T", ".M2TS", ".M2V", ".M4B", ".M4P", ".M4V", ".MKV", ".MOV", ".MP2V", ".MP4", ".MPE", ".MPEG", ".MPG", ".MPV2", ".MTS", ".MXF", ".NSR", ".NSV", ".OGM", ".OGV", ".QT", ".RAM", ".RM", ".RMVB", ".RPM", ".SKM", ".TP", ".TPR", ".TRP", ".TS", ".VOB", ".WEBM", ".WM", ".WMP", ".WMV", ".WTV"};
+        url = url.toLowerCase();
+        if (url.contains("=http") || url.contains("=https") || url.contains("=https%3a%2f") || url.contains("=http%3a%2f")) {
+            return false;
+        }
+        if(StrUtil.endWithAny(url.toUpperCase(),videoFormatList)) {
+            return true;
+        }
+        return false;
     }
 
     protected static HashMap<String, String> sHeaders() {

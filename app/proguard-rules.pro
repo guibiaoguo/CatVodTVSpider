@@ -81,3 +81,7 @@
 -dontwarn cn.hutool.**
 # quickjs引擎
 -keep class com.github.tvbox.quickjs.** {*;}
+#
+-keep class org.bouncycastle.jcajce.provider.** { *; }
+-keep class org.bouncycastle.jce.provider.** { *; }
+-dontwarn org.bouncycastle.**

@@ -127,10 +127,10 @@ public class Bttoo extends Spider {
         }
         int limit = 90;
         for (Element element : doc.select("div.bt_img > ul > li")) {
-            String name = element.selectFirst("h3.dytit > a").text();
-            String img = element.selectFirst("a img").attr("data-original");
-            String remark = element.selectFirst("div.jidi > span").text();
-            Matcher matcher = regexVid.matcher(element.selectFirst("a").attr("href"));
+            String name = element.select("h3.dytit > a").text();
+            String img = element.select("a img").attr("data-original");
+            String remark = element.select("div.jidi > span").text();
+            Matcher matcher = regexVid.matcher(element.select("a").attr("href"));
             if (!matcher.find())
                 continue;
             String id = matcher.group(1);

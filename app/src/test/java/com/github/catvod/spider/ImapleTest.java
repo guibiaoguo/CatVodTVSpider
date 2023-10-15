@@ -57,6 +57,6 @@ public class ImapleTest {
 
     @Test
     public void searchContent() throws Exception {
-        System.out.println(imaple.searchContent("火影",true));
+        System.out.println(imaple.searchContent("火影",false));
     }
 }

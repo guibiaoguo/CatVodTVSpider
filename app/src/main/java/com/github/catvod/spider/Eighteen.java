@@ -21,13 +21,24 @@ import java.util.List;
 
 public class Eighteen extends Spider {
 
-    private final String url = "https://maa1818.com/zh/";
+    private final String url = "https://maa1830.com/zh/";
+
+    protected HashMap<String, String> getHeaders() {
+        HashMap<String, String> hashMap = new HashMap<>();
+        hashMap.put("Upgrade-Insecure-Requests", "1");
+        hashMap.put("DNT", "1");
+        hashMap.put("Cookie","PHPSESSID=rl6od2v84693upc7hf3qbg7sh4; TSCvalue=gb");
+        hashMap.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36");
+        hashMap.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+        hashMap.put("Accept-Language", "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2");
+        return hashMap;
+    }
 
     @Override
     public String homeContent(boolean filter) throws Exception {
         List<Class> classes = new ArrayList<>();
         List<Vod> list = new ArrayList<>();
-        Document doc = Jsoup.parse(OkHttp.string(url));
+        Document doc = Jsoup.parse(OkHttp.string(url, getHeaders()));
         for (Element a : doc.select("ul.animenu__nav > li > a")) {
             String typeName = a.text();
             String typeId = a.attr("href").replace(url, "");
@@ -50,7 +61,7 @@ public class Eighteen extends Spider {
         List<Vod> list = new ArrayList<>();
         tid = tid.replace("random", "list");
         tid = tid.replace("index", pg);
-        Document doc = Jsoup.parse(OkHttp.string(url + tid));
+        Document doc = Jsoup.parse(OkHttp.string(url + tid,getHeaders()));
         for (Element div : doc.select("div.post")) {
             String id = div.select("a").attr("href").replace(url, "");
             String name = div.select("h3").text();
@@ -63,7 +74,7 @@ public class Eighteen extends Spider {
 
     @Override
     public String detailContent(List<String> ids) throws Exception {
-        Document doc = Jsoup.parse(OkHttp.string(url + ids.get(0)));
+        Document doc = Jsoup.parse(OkHttp.string(url + ids.get(0),getHeaders()));
         Element wrap = doc.select("div.video-wrap").get(0);
         String name = wrap.select("div.archive-title > h1").text();
         String pic = wrap.select("div.player-wrap > img").attr("src");
@@ -82,7 +93,7 @@ public class Eighteen extends Spider {
         params.put("search_keyword", key);
         params.put("search_type", "fc");
         params.put("op", "search");
-        String res = OkHttp.post(url + "searchform_search/all/index.html", params);
+        String res = OkHttp.post(url + "searchform_search/all/index.html", params,getHeaders());
         List<Vod> list = new ArrayList<>();
         for (Element div : Jsoup.parse(res).select("div.post")) {
             String id = div.select("a").attr("href").replace(url, "");

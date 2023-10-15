@@ -2,7 +2,9 @@ package com.github.catvod.bean.upyun;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
 
@@ -14,7 +16,8 @@ public class Data {
     private List<Item> items;
 
     public static Data objectFrom(String str) {
-        return new Gson().fromJson(str, Data.class);
+        Type listType = new TypeToken<Data>() {}.getType();
+        return new Gson().fromJson(str, listType);
     }
 
     public Data getResult() {

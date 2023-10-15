@@ -8,6 +8,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+
 public class DY1990Test {
 
     private Spider dy1990;
@@ -23,11 +27,13 @@ public class DY1990Test {
     }
 
     @Test
-    public void categoryContent() {
+    public void categoryContent() throws Exception {
+        System.out.println(dy1990.categoryContent("dianshiju","1",true,new HashMap<>()));
     }
 
     @Test
-    public void detailContent() {
+    public void detailContent() throws Exception {
+        System.out.println(dy1990.detailContent(Arrays.asList("50655")));
     }
 
     @Test
@@ -36,14 +42,17 @@ public class DY1990Test {
     }
 
     @Test
-    public void homeVideoContent() {
+    public void homeVideoContent() throws Exception {
+        System.out.println(dy1990.homeVideoContent());
     }
 
     @Test
-    public void playerContent() {
+    public void playerContent() throws Exception {
+        System.out.println(dy1990.playerContent("","50655-1-1",new ArrayList<>()));
     }
 
     @Test
-    public void searchContent() {
+    public void searchContent() throws Exception {
+        System.out.println(dy1990.searchContent("火影",false));
     }
 }

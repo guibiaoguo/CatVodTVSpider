@@ -57,6 +57,7 @@ public class MGTVTest {
     }
 
     @Test
-    public void searchContent() {
+    public void searchContent() throws Exception {
+        System.out.println(mgtv.searchContent("火影",false));
     }
 }

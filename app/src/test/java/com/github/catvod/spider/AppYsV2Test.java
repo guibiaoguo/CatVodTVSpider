@@ -38,7 +38,8 @@ public class AppYsV2Test {
 
     @Test
     public void init() {
-        appysv2.init(null, "https://www.naifei.org/api.php/v1.vod");
+//        appysv2.init(null, "https://www.naifei.org/api.php/v1.vod");
+        appysv2.init(null, "http://slapibf.com/api.php/provide/vod/");
     }
 
     @Test
@@ -116,7 +117,7 @@ public class AppYsV2Test {
 
     @Test
     public void testAppYSV2() {
-        String content = OkHttp.string("https://aria2.guibiaoguo.ml/212757_debug.json");
+        String content = OkHttp.string("https://gitlab.com/mao4284120/js/-/raw/main/212757_bad.json");
         JsonObject jsonObject = new Gson().fromJson(content, JsonObject.class);
         JsonArray jsonArray = jsonObject.getAsJsonArray("sites");
         JsonArray bad = new JsonArray();

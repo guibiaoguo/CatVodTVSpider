@@ -6,7 +6,9 @@ import android.content.SharedPreferences;
 
 import androidx.annotation.Nullable;
 
+import com.github.catvod.bean.Result;
 import com.github.catvod.crawler.Spider;
+import com.google.gson.Gson;
 import com.guibiaoguo.myapplication.RoboApp;
 
 import org.junit.After;
@@ -107,7 +109,7 @@ public class UpYunTest {
         });
         Init.init(mMockContext);
         Proxy.port = 9997;
-        upyun.init(mMockContext, "43073a876e9f4d6c906f1d7df92af59a");
+        upyun.init(mMockContext, "0ac3580008b64f20bc72877bba446e6d");
     }
 
     @Test
@@ -117,12 +119,14 @@ public class UpYunTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(upyun.detailContent(Arrays.asList("https://www.aliyundrive.com/s/KQQNDwPNF8M/folder/6418449a6cb74c72223d4f549040cb87a45129a8")));
+        System.out.println(upyun.detailContent(Arrays.asList("https://www.aliyundrive.com/s/dCTAQ2TUf1n/folder/645ba82aedd0ace5aa644c1e9a8a3943ede23597")));
     }
 
     @Test
     public void playerContent() throws Exception {
-        System.out.println(upyun.detailContent(Arrays.asList("https://www.aliyundrive.com/s/KQQNDwPNF8M/folder/6418449a6cb74c72223d4f549040cb87a45129a8")));
-        System.out.println(upyun.playerContent("原畫","641844e696f191d7402b493f80e949047d060669+203@@@srt@@@641844e7d2156b551b59469fa665a4ef6ac45f8e",null));
+        String content = upyun.detailContent(Arrays.asList("https://www.aliyundrive.com/s/dCTAQ2TUf1n/folder/645ba82aedd0ace5aa644c1e9a8a3943ede23597"));
+        Result result = new Gson().fromJson(content, Result.class);
+        String id = result.getList().get(0).getVodPlayUrl().split("#")[0].split("\\$")[1];
+        System.out.println(upyun.playerContent("原畫", id, null));
     }
 }

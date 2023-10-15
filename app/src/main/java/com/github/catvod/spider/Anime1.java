@@ -115,7 +115,7 @@ public class Anime1 extends Spider {
             int doy = cal.get(Calendar.YEAR) + 1;
             if( cateId==0 ){
                 for (int i = 0; i < 100; i++) {
-                    JSONObject subobj = srcArray.getJSONObject(i);
+                    JSONObject subobj = srcArray.optJSONObject(i);
                     srccate.put(subobj);
                 }
             } else if( cateId > 0 && cateId < 7 ){

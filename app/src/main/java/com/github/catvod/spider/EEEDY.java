@@ -25,11 +25,12 @@ import org.jsoup.select.Elements;
 
 public class EEEDY extends Spider {
 
-    private Pattern B = Pattern.compile("/vodtype/(\\d+).html");
-    private Pattern Pd = Pattern.compile("/vodplay/(\\d+)-(\\d+)-(\\d+).html");
-    private Pattern W = Pattern.compile("/voddetail/(\\d+).html");
+    private static String siteUrl = "https://www.3edy.com";
+    private Pattern regexCategory = Pattern.compile("/vodtype/(\\d+).html");
+    private Pattern regexPlay = Pattern.compile("/vodplay/(\\d+)-(\\d+)-(\\d+).html");
+    private Pattern regexVoddetail = Pattern.compile("/voddetail/(\\d+).html");
     private JSONObject u;
-    private Pattern u6 = Pattern.compile("/vodshow/(\\S+).html");
+    private Pattern regexPage = Pattern.compile("/vodshow/(\\S+).html");
     private JSONObject ue;
 
     /* renamed from: com.github.catvod.spider.EEEDY$1  reason: invalid class name */
@@ -65,8 +66,8 @@ public class EEEDY extends Spider {
                     strArr[Integer.parseInt(str3)] = URLEncoder.encode(hashMap.get(str3));
                 }
             }
-            String str4 = "https://www.3edy.com/vodshow/" + TextUtils.join($3, strArr) + ".html";
-            String h = OkHttpUtil.string(str4, u(str4));
+            String str4 = siteUrl + "/vodshow/" + TextUtils.join($3, strArr) + ".html";
+            String h = OkHttpUtil.string(str4, getHeaders(str4));
             Document ue2 = Jsoup.parse(h);
             JSONObject jSONObject = new JSONObject();
             Elements B1 = ue2.select("ul.pagination-lg>li");
@@ -91,11 +92,11 @@ public class EEEDY extends Spider {
                         if (i5 != i4 || !hq.hasClass("disabled")) {
                             i = i5;
                         } else {
-                            Matcher matcher = this.u6.matcher(O.attr($4));
+                            Matcher matcher = this.regexPage.matcher(O.attr($4));
                             i = matcher.find() ? Integer.parseInt(matcher.group(1).split($3)[8]) : 0;
                         }
                         if (pE.contains("...")) {
-                            Matcher matcher2 = this.u6.matcher(O.attr($4));
+                            Matcher matcher2 = this.regexPage.matcher(O.attr($4));
                             if (matcher2.find()) {
                                 i2 = Integer.parseInt(matcher2.group(1).split($3)[8]);
                             }
@@ -117,7 +118,7 @@ public class EEEDY extends Spider {
                     String ue3 = hq2.select($2).attr("title");
                     String Pd2 = hq2.selectFirst("img").attr("data-original");
                     String jw = hq2.select("em.littplus").text();
-                    Matcher matcher3 = this.W.matcher(hq2.select($2).attr($4));
+                    Matcher matcher3 = this.regexVoddetail.matcher(hq2.select($2).attr($4));
                     if (matcher3.find()) {
                         String group = matcher3.group(i3);
                         JSONObject jSONObject2 = new JSONObject();
@@ -152,8 +153,8 @@ public class EEEDY extends Spider {
         String $3 = ",";
         String $4 = "a";
         try {
-            String str3 = "https://www.3edy.com/voddetail/" + list.get(0) + ".html";
-            Document ue2 = Jsoup.parse(OkHttpUtil.string(str3, u(str3)));
+            String str3 = siteUrl + "/voddetail/" + list.get(0) + ".html";
+            Document ue2 = Jsoup.parse(OkHttpUtil.string(str3, getHeaders(str3)));
             JSONObject jSONObject = new JSONObject();
             JSONObject jSONObject2 = new JSONObject();
             Elements B1 = ue2.select("ul.vod-infos>li");
@@ -203,7 +204,7 @@ public class EEEDY extends Spider {
                     int i4 = 0;
                     while (i4 < B15.size()) {
                         Element hq = (Element) B15.get(i4);
-                        Matcher matcher = this.Pd.matcher(hq.attr("href"));
+                        Matcher matcher = this.regexPlay.matcher(hq.attr("href"));
                         if (!matcher.find()) {
                             exVar = u62;
                             str2 = str4;
@@ -253,18 +254,18 @@ public class EEEDY extends Spider {
 
     public String homeContent(boolean z) {
         int i;
-        String $2;
-        String $3 = "h4 > a";
-        String $4 = "https://www.3edy.com";
+        String selector;
+        String oldSelector = "h4 > a";
         try {
-            Document ue2 = Jsoup.parse(OkHttpUtil.string($4, u($4)));
+            String content = OkHttpUtil.string(siteUrl, getHeaders(siteUrl));
+            Document ue2 = Jsoup.parse(content);
             Elements B1 = ue2.select("ul.navbar-left>li a");
             JSONArray jSONArray = new JSONArray();
             Iterator it = B1.iterator();
             while (true) {
                 boolean hasNext = it.hasNext();
                 i = 0;
-                $2 = "href";
+                selector = "href";
                 if (!hasNext) {
                     break;
                 }
@@ -274,7 +275,7 @@ public class EEEDY extends Spider {
                     i = 1;
                 }
                 if (i != 0) {
-                    Matcher matcher = this.B.matcher(hq.attr($2));
+                    Matcher matcher = this.regexCategory.matcher(hq.attr(selector));
                     if (matcher.find()) {
                         String trim = matcher.group(1).trim();
                         JSONObject jSONObject = new JSONObject();
@@ -294,10 +295,10 @@ public class EEEDY extends Spider {
                 JSONArray jSONArray2 = new JSONArray();
                 while (i < B12.size()) {
                     Element hq2 = (Element) B12.get(i);
-                    String ue3 = hq2.select($3).attr("title");
+                    String ue3 = hq2.select(oldSelector).attr("title");
                     String Pd2 = hq2.selectFirst("img").attr("src");
                     String jw = hq2.select("em.littplus").text();
-                    Matcher matcher2 = this.W.matcher(hq2.select($3).attr($2));
+                    Matcher matcher2 = this.regexVoddetail.matcher(hq2.select(oldSelector).attr(selector));
                     if (matcher2.find()) {
                         String group = matcher2.group(1);
                         JSONObject jSONObject3 = new JSONObject();
@@ -324,7 +325,7 @@ public class EEEDY extends Spider {
         EEEDY.super.init(context);
         try {
             this.ue = new JSONObject("{\"789pan\":{\"sh\":\" 飘花速播\",\"pu\":\"https://dp.jiexi.work/jsonno.php?url=\",\"sn\":1,\"or\":999}}");
-            this.u = new JSONObject("");
+            this.u = new JSONObject("{}");
         } catch (JSONException e) {
             SpiderDebug.log(e);
         }
@@ -333,8 +334,9 @@ public class EEEDY extends Spider {
     public String playerContent(String str, String str2, List<String> list) {
         String $2 = "url";
         try {
-            String str3 = "https://www.3edy.com/vodplay/" + str2 + ".html";
-            Elements B1 = Jsoup.parse(OkHttpUtil.string(str3, u(str3))).select("div.ff-player script");
+            String str3 = siteUrl + "/vodplay/" + str2 + ".html";
+            Document doc = Jsoup.parse(OkHttpUtil.string(str3, getHeaders(str3)));
+            Elements B1 = doc.select("div.ff-player script");
             JSONObject jSONObject = new JSONObject();
             System.out.println("scriptnum:  "+B1.size());
             for (int i = 0; i < B1.size(); i++) {
@@ -342,9 +344,9 @@ public class EEEDY extends Spider {
 //                System.out.println("trim:  "+trim);
                 if (trim.startsWith("var player_")) {
                     JSONObject jSONObject2 = new JSONObject(trim.substring(trim.indexOf(123), trim.lastIndexOf(125) + 1));
-                    String str4 = "https://dp.jiexi.work/jsonno.php?url=" + jSONObject2.getString($2);
+                    String str4 = "https://dp.mp4.work/jsonno.php?url=" + jSONObject2.getString($2);
 //                    System.out.println(str4);
-                    String string = new JSONObject(OkHttpUtil.string(str4, u(str3))).getString($2);
+                    String string = new JSONObject(OkHttpUtil.string(str4, getHeaders(str3))).getString($2);
                     jSONObject.put("parse", 0);
                     jSONObject.put("playUrl", "");
                     jSONObject.put($2, string);
@@ -362,8 +364,8 @@ public class EEEDY extends Spider {
             return "";
         }
         try {
-            String str2 = "https://www.3edy.com/index.php/ajax/suggest?mid=1&wd=" + URLEncoder.encode(str) + "&limit=10&timestamp=" + System.currentTimeMillis();
-            JSONObject jSONObject = new JSONObject(OkHttpUtil.string(str2, u(str2)));
+            String str2 = siteUrl + "/index.php/ajax/suggest?mid=1&wd=" + URLEncoder.encode(str) + "&limit=10&timestamp=" + System.currentTimeMillis();
+            JSONObject jSONObject = new JSONObject(OkHttpUtil.string(str2, getHeaders(str2)));
             JSONObject jSONObject2 = new JSONObject();
             JSONArray jSONArray = new JSONArray();
             int i = jSONObject.getInt("total");
@@ -392,13 +394,11 @@ public class EEEDY extends Spider {
     }
 
     /* access modifiers changed from: protected */
-    public HashMap<String, String> u(String str) {
+    public HashMap<String, String> getHeaders(String str) {
         HashMap<String, String> hashMap = new HashMap<>();
         hashMap.put("method", "GET");
-        String $2 = "Upgrade-Insecure-Requests";
-        String $3 = "1";
-        hashMap.put($2, $3);
-        hashMap.put("DNT", $3);
+        hashMap.put("Upgrade-Insecure-Requests", "1");
+        hashMap.put("DNT", "1");
         hashMap.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
         hashMap.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
         hashMap.put("Accept-Language", "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2");

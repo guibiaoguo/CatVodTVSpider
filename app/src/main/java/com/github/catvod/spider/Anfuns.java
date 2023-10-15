@@ -3,10 +3,10 @@ package com.github.catvod.spider;
 
 import android.content.Context;
 import android.text.TextUtils;
-import android.util.Base64;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
+import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.json.JSONArray;
@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import cn.hutool.core.util.StrUtil;
 
 public class Anfuns extends Spider {
     private static final String siteUrl = "https://www.anfuns.cc";
@@ -272,7 +274,7 @@ public class Anfuns extends Spider {
                     urlreq = URLDecoder.decode(urlreq);
                     if(urlreq.contains("yanm")){
                         urlreq = "https://api.peizq.online/play/anfuns.php?url="+urlreq+"&next=//www.anfuns.cc"+urlnext;
-                    }else {
+                    } else {
                         if(urlreq.contains("%u")){
                             start = urlreq.indexOf("%u");
                             end = urlreq.lastIndexOf("%u")+6;
@@ -290,7 +292,9 @@ public class Anfuns extends Spider {
                             }
                             urlreq = urlreqtmps+urlreqtmp+urlreqtmpe;
                         }
-                        urlreq = urlreq+"&next=//www.anfuns.cc"+urlnext;
+                        if (!isVideoFormat(urlreq)) {
+                            urlreq = urlreq + "&next=//www.anfuns.cc" + urlnext;
+                        }
                     }
                     break;
                 }
@@ -320,13 +324,15 @@ public class Anfuns extends Spider {
                         OkHttpUtil.stringNoRedirect(m3ubrawf1req, getHeaders2(m3ubrawf1req,"origin:https://api.peizq.online"), respHeaders);
                         String m3ubrawf1 = OkHttpUtil.getRedirectLocation(respHeaders);
                         m3u8raw = m3u8raw.replace(m3u8raw.substring(start,start+end),m3ubrawf1);
-                        String realm3u8b64=Base64.encodeToString(m3u8raw.getBytes(), 2);
+                        String realm3u8b64= Base64.encodeToString(m3u8raw.getBytes(), 2);
                         result.put("url", "data:application/vnd.apple.mpegurl;base64,"+realm3u8b64);
                         result.put("header", new JSONObject(getHeaders2(m3ubrawf1,"origin:https://api.peizq.online")).toString());
                         break;
                     }
                 }
-           }else {
+           } else if (isVideoFormat(urlreq)) {
+                result.put("url", urlreq);
+            } else {
                 Map<String, List<String>> respHeaders = new HashMap<>();
                 OkHttpUtil.stringNoRedirect(urlreq, getHeaders2(urlreq,""), respHeaders);
                 String redirect = OkHttpUtil.getRedirectLocation(respHeaders);
@@ -340,6 +346,19 @@ public class Anfuns extends Spider {
             SpiderDebug.log(e);
         }
         return "";
+    }
+
+    @Override
+    public boolean isVideoFormat(String url) {
+        String[] videoFormatList = {".M3U8", ".3G2", ".3GP", ".3GP2", ".3GPP", ".AMV", ".ASF", ".AVI", ".DIVX", ".DPG", ".DVR-MS", ".EVO", ".F4V", ".FLV", ".IFO", ".K3G", ".M1V", ".M2T", ".M2TS", ".M2V", ".M4B", ".M4P", ".M4V", ".MKV", ".MOV", ".MP2V", ".MP4", ".MPE", ".MPEG", ".MPG", ".MPV2", ".MTS", ".MXF", ".NSR", ".NSV", ".OGM", ".OGV", ".QT", ".RAM", ".RM", ".RMVB", ".RPM", ".SKM", ".TP", ".TPR", ".TRP", ".TS", ".VOB", ".WEBM", ".WM", ".WMP", ".WMV", ".WTV"};
+        url = url.toLowerCase();
+        if (url.contains("=http") || url.contains("=https") || url.contains("=https%3a%2f") || url.contains("=http%3a%2f")) {
+            return false;
+        }
+        if(StrUtil.endWithAny(url.toUpperCase(),videoFormatList)) {
+            return true;
+        }
+        return false;
     }
 
     @Override

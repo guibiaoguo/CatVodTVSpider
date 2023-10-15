@@ -3,6 +3,7 @@ package com.github.catvod.spider;
 
 import static java.lang.System.*;
 
+import cn.hutool.core.util.StrUtil;
 import okhttp3.*;
 import okio.ByteString;
 
@@ -11,9 +12,12 @@ import java.util.concurrent.TimeUnit;
 import android.content.Context;
 import android.text.TextUtils;
 
+import com.github.catvod.bean.Result;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 
+import com.github.catvod.net.OkHttp;
+import com.github.catvod.parser.NetworkUtils;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.json.JSONArray;
@@ -50,12 +54,13 @@ import okhttp3.Response;
 
 public class Dy555 extends Spider {
 
-    private static final String siteUrl = "https://www.555dianying.cc";
+    private static String siteUrl = "https://555uu.online";
+    private static String siteHost = "555uu.online";
 
     protected JSONObject playerConfig;
     protected JSONObject filterConfig;
 
-    protected Pattern regexCategory = Pattern.compile("/vodtype/(\\d+).html");
+    protected Pattern regexCategory = Pattern.compile("/vod\\w+/(\\d+)");
     protected Pattern regexVoddetail = Pattern.compile("/voddetail/(\\d+).html");
     protected Pattern regexPlay = Pattern.compile("/vodplay/(\\S+).html");
     protected Pattern regexPage = Pattern.compile("\\d+/(\\d+)");
@@ -65,9 +70,28 @@ public class Dy555 extends Spider {
     private final String playerString = "{\"xg_app_player\":{\"show\":\"app全局解析\",\"des\":\"\",\"ps\":\"1\",\"parse\":\"https://www.x-n.cc/api.php?url=\"},\"duoduozy\":{\"show\":\"555蓝光\",\"des\":\"\",\"ps\":\"0\",\"api\":\"https://zyz.sdljwomen.com/newduoduo/555tZ4pvzHE3BpiO838.php\",\"parse\":\"https://zyz.sdljwomen.com/server_player/?url=\"},\"bilibili\":{\"show\":\"bilibili\",\"des\":\"\",\"ps\":\"0\",\"api\":\"https://jhpc.021huaying.com/newplayer/5348837768203767939.php\",\"parse\":\"https://jhpc.021huaying.com/newplayer/?url=\"},\"youku\":{\"show\":\"优酷\",\"des\":\"\",\"ps\":\"0\",\"api\":\"https://jhpc.021huaying.com/newplayer/5348837768203767939.php\",\"parse\":\"https://jhpc.021huaying.com/newplayer/?url=\"},\"qiyi\":{\"show\":\"爱奇艺\",\"des\":\"\",\"ps\":\"0\",\"api\":\"https://jhpc.021huaying.com/newplayer/5348837768203767939.php\",\"parse\":\"https://jhpc.021huaying.com/newplayer/?url=\"},\"mgtv\":{\"show\":\"芒果\",\"des\":\"\",\"ps\":\"0\",\"api\":\"https://jhpc.021huaying.com/newplayer/5348837768203767939.php\",\"parse\":\"https://jhpc.021huaying.com/newplayer/?url=\"},\"qq\":{\"show\":\"腾讯\",\"des\":\"\",\"ps\":\"0\",\"api\":\"https://jhpc.021huaying.com/newplayer/5348837768203767939.php\",\"parse\":\"https://jhpc.021huaying.com/newplayer/?url=\"},\"sohu\":{\"show\":\"搜狐\",\"des\":\"\",\"ps\":\"0\",\"api\":\"https://jhpc.021huaying.com/newplayer/5348837768203767939.php\",\"parse\":\"https://jhpc.021huaying.com/newplayer/?url=\"},\"pptv\":{\"show\":\"PPTV\",\"des\":\"\",\"ps\":\"0\",\"api\":\"https://jhpc.021huaying.com/newplayer/5348837768203767939.php\",\"parse\":\"https://jhpc.021huaying.com/newplayer/?url=\"},\"m1905\":{\"show\":\"m1905\",\"des\":\"\",\"ps\":\"0\",\"api\":\"https://jhpc.021huaying.com/newplayer/5348837768203767939.php\",\"parse\":\"https://jhpc.021huaying.com/newplayer/?url=\"},\"xigua\":{\"show\":\"西瓜视频\",\"des\":\"\",\"ps\":\"0\",\"api\":\"https://jhpc.021huaying.com/newplayer/5348837768203767939.php\",\"parse\":\"https://jhpc.021huaying.com/newplayer/?url=\"},\"fuckapp\":{\"show\":\"独家线路\",\"des\":\"555自建资源\",\"ps\":\"0\",\"parse\":\"https://dp.dd520.cc/p.php?url=\"},\"letv\":{\"show\":\"乐视\",\"des\":\"\",\"ps\":\"0\",\"api\":\"https://jhpc.021huaying.com/newplayer/5348837768203767939.php\",\"parse\":\"https://jhpc.021huaying.com/newplayer/?url=\"},\"yemao\":{\"show\":\"优质线路1\",\"des\":\"极速蓝光\",\"ps\":\"0\",\"parse\":\"https://jx.manduhu.com/?url=\"},\"sdm3u8\":{\"show\":\"闪电线路\",\"des\":\"闪电\",\"ps\":\"0\",\"api\":\"https://zyz.sdljwomen.com/newm3u8/5348837768203767939.php\",\"parse\":\"https://zyz.sdljwomen.com/newm3u8/?url=\"},\"fsm3u8\":{\"show\":\"飞速线路\",\"des\":\"飞速\",\"ps\":\"0\",\"api\":\"https://zyz.sdljwomen.com/newm3u8/5348837768203767939.php\",\"parse\":\"https://zyz.sdljwomen.com/newm3u8/?url=\"},\"wjm3u8\":{\"show\":\"无尽线路\",\"des\":\"无尽\",\"ps\":\"0\",\"api\":\"https://zyz.sdljwomen.com/newm3u8/5348837768203767939.php\",\"parse\":\"https://zyz.sdljwomen.com/newm3u8/?url=\"},\"dbm3u8\":{\"show\":\"百度线路\",\"des\":\"百度\",\"ps\":\"0\",\"api\":\"https://zyz.sdljwomen.com/newm3u8/5348837768203767939.php\",\"parse\":\"https://zyz.sdljwomen.com/newm3u8/?url=\"},\"tkm3u8\":{\"show\":\"天空线路\",\"des\":\"天空\",\"ps\":\"0\",\"api\":\"https://zyz.sdljwomen.com/newm3u8/5348837768203767939.php\",\"parse\":\"https://zyz.sdljwomen.com/newm3u8/?url=\"},\"kbm3u8\":{\"show\":\"快播线路\",\"des\":\"快播\",\"ps\":\"0\",\"api\":\"https://zyz.sdljwomen.com/newm3u8/5348837768203767939.php\",\"parse\":\"https://zyz.sdljwomen.com/newm3u8/?url=\"},\"zhibo\":{\"show\":\"直播\",\"des\":\"\",\"ps\":\"1\",\"parse\":\"http://suoyou.live/dplay/zb.php?url=\"},\"dujia\":{\"show\":\"独家专线\",\"des\":\"\",\"ps\":\"0\",\"api\":\"https://zyz.sdljwomen.com/newm3u8/5348837768203767939.php\",\"parse\":\"https://zyz.sdljwomen.com/newm3u8/?url=\"}}";
     private String rs="";
 
+    public void setSiteUrl(String extend) {
+        if (StrUtil.isEmpty(extend)) {
+            extend = "https://555dy.shop";
+        }
+        String content = OkHttp.string(extend);
+        Document document = Jsoup.parse(content);
+        for(Element element:document.select(".btn-down:contains(点击)")) {
+            String site = element.select("a").attr("href");
+            System.out.println("555影视：" + site);
+            String subContent = OkHttp.string(site);
+            if (StrUtil.isNotEmpty(subContent) && !subContent.contains("Loading......")) {
+                siteUrl = site;
+                siteHost = NetworkUtils.INSTANCE.getSubDomain(siteUrl);
+                break;
+            }
+        }
+    }
+
     @Override
     public void init(Context context) {
         super.init(context);
+        setSiteUrl("https://555dy.shop/");
         try {
             playerConfig = new JSONObject(playerString);
             filterConfig = new JSONObject(filterString);
@@ -76,6 +100,17 @@ public class Dy555 extends Spider {
         }
     }
 
+    @Override
+    public void init(Context context,String extend) {
+        super.init(context);
+        setSiteUrl(extend);
+        try {
+            playerConfig = new JSONObject(playerString);
+            filterConfig = new JSONObject(filterString);
+        } catch (JSONException e) {
+            SpiderDebug.log(e);
+        }
+    }
     /**
      * 爬虫headers
      *
@@ -110,7 +145,7 @@ public class Dy555 extends Spider {
                 String name = ele.text();
                 String href = ele.attr("href");
                 Matcher mather = regexCategory.matcher(href);
-                if (!mather.find() || name.contains("福利"))
+                if (!mather.find())
                     continue;
                 // 把分类的id和名称取出来加到列表里
                 String id = mather.group(1).trim();
@@ -333,75 +368,80 @@ public class Dy555 extends Spider {
      */
     @Override
     public String playerContent(String flag, String id, List<String> vipFlags) {
-        try {
-            // 播放页 url
-            String url = siteUrl + "/vodplay/" + id + ".html";
-            JSONObject result = new JSONObject();
-            rs="";
-            SpiderDebug.log(url );
-
-            String htmlsrc = OkHttpUtil.string(url, getHeaders(url));
-            Document doc = Jsoup.parse(htmlsrc);
-            Elements allScript = doc.select("script");
-            String urlsrc="";  //加密url
-            for (int i = 0; i < allScript.size(); i++) {
-                String scContent = allScript.get(i).toString();
-                if (scContent.contains("var player_")) { // 取直链
-                    int start = scContent.indexOf('{');
-                    int end = scContent.lastIndexOf('}') + 1;
-                    String json = scContent.substring(start, end);
-                    JSONObject player = new JSONObject(json);
-                    urlsrc = player.getString("url");
-                    break;
-                }
-            }
-            String key="55ca5c48a943afdc";
-            String iv ="d11424dcecfe16c0";
-            String salt="55ca5c4d11424dcecfe16c08a943afdc";
-            String wssreqsrc="{\"type\":\"getUrl\",\"url\":\"\",\"sign\":\"\"}";
-            byte[] sasBytes = salt.getBytes();
-            Key hmacKey = new SecretKeySpec(sasBytes, "HmacSHA256");
-            Mac hmacSHA256 = Mac.getInstance("HmacSHA256");
-            hmacSHA256.init(hmacKey);
-            byte [] macData = hmacSHA256.doFinal(urlsrc.getBytes());
-            String sign = bytesToHexStr(macData) ;
-            JSONObject wssreq =new JSONObject(wssreqsrc);
-            wssreq.put("url",urlsrc);
-            wssreq.put("sign",sign);
-            String wssreqeny = encrypt(wssreq.toString(), key, iv);
-            String wss1="wss://player.sakurot.com:3458/wss";
-            String wss2="wss://player2.lscsfw.com:6723/wss";
-            int[] items = new int[]{1,2};
-            Random rand = new Random();
-            int wssurlint = items[rand.nextInt(items.length)];
-            String wssurl ="";
-            if( wssurlint==2 ){
-                wssurl =wss2;
-            }else{
-                wssurl =wss1;
-            }
-
-            wssClient(wssurl,wssreqeny);
-            Thread.sleep(100);
-            String wssrsp=rs;
-            String m3u8link = decrypt(wssrsp,key,iv);
-            JSONObject m3u8obj= new JSONObject(m3u8link);
-            String reallink = m3u8obj.getString("url");
-            if (reallink.length()>0){
-                result.put("parse", 0);
-                result.put("url", reallink);
-                result.put("header", new JSONObject(getHeaders2(url)).toString());
-            }else{
-                result.put("parse", 1);
-                result.put("url", url);
-            }
-            result.put("playUrl", "");
-            return result.toString();
-        } catch (Exception e) {
-            SpiderDebug.log(e);
-        }
-        return "";
+        String url = siteUrl + "/vodplay/" + id + ".html";
+        return Result.get().url(url).parse().string();
     }
+//    @Override
+//    public String playerContent(String flag, String id, List<String> vipFlags) {
+//        try {
+//            // 播放页 url
+//            String url = siteUrl + "/vodplay/" + id + ".html";
+//            JSONObject result = new JSONObject();
+//            rs="";
+//            SpiderDebug.log(url );
+//
+//            String htmlsrc = OkHttpUtil.string(url, getHeaders(url));
+//            Document doc = Jsoup.parse(htmlsrc);
+//            Elements allScript = doc.select("script");
+//            String urlsrc="";  //加密url
+//            for (int i = 0; i < allScript.size(); i++) {
+//                String scContent = allScript.get(i).toString();
+//                if (scContent.contains("var player_")) { // 取直链
+//                    int start = scContent.indexOf('{');
+//                    int end = scContent.lastIndexOf('}') + 1;
+//                    String json = scContent.substring(start, end);
+//                    JSONObject player = new JSONObject(json);
+//                    urlsrc = player.getString("url");
+//                    break;
+//                }
+//            }
+//            String key="55ca5c48a943afdc";
+//            String iv ="d11424dcecfe16c0";
+//            String salt="55ca5c4d11424dcecfe16c08a943afdc";
+//            String wssreqsrc="{\"type\":\"getUrl\",\"url\":\"\",\"sign\":\"\"}";
+//            byte[] sasBytes = salt.getBytes();
+//            Key hmacKey = new SecretKeySpec(sasBytes, "HmacSHA256");
+//            Mac hmacSHA256 = Mac.getInstance("HmacSHA256");
+//            hmacSHA256.init(hmacKey);
+//            byte [] macData = hmacSHA256.doFinal(urlsrc.getBytes());
+//            String sign = bytesToHexStr(macData) ;
+//            JSONObject wssreq =new JSONObject(wssreqsrc);
+//            wssreq.put("url",urlsrc);
+//            wssreq.put("sign",sign);
+//            String wssreqeny = encrypt(wssreq.toString(), key, iv);
+//            String wss1="wss://player.sakurot.com:3458/wss";
+//            String wss2="wss://player2.lscsfw.com:6723/wss";
+//            int[] items = new int[]{1,2};
+//            Random rand = new Random();
+//            int wssurlint = items[rand.nextInt(items.length)];
+//            String wssurl ="";
+//            if( wssurlint==2 ){
+//                wssurl =wss2;
+//            }else{
+//                wssurl =wss1;
+//            }
+//
+//            wssClient(wssurl,wssreqeny);
+//            Thread.sleep(100);
+//            String wssrsp=rs;
+//            String m3u8link = decrypt(wssrsp,key,iv);
+//            JSONObject m3u8obj= new JSONObject(m3u8link);
+//            String reallink = m3u8obj.getString("url");
+//            if (reallink.length()>0){
+//                result.put("parse", 0);
+//                result.put("url", reallink);
+//                result.put("header", new JSONObject(getHeaders2(url)).toString());
+//            }else{
+//                result.put("parse", 1);
+//                result.put("url", url);
+//            }
+//            result.put("playUrl", "");
+//            return result.toString();
+//        } catch (Exception e) {
+//            SpiderDebug.log(e);
+//        }
+//        return "";
+//    }
 
     @Override
     public boolean manualVideoCheck() {
@@ -458,7 +498,7 @@ public class Dy555 extends Spider {
 
     protected String decrypt(String src, String KEY, String IV) {
         try {
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             SecretKeySpec keySpec = new SecretKeySpec(KEY.getBytes(), "AES");
             AlgorithmParameterSpec paramSpec = new IvParameterSpec(IV.getBytes());
             cipher.init(Cipher.DECRYPT_MODE, keySpec, paramSpec);
@@ -470,7 +510,7 @@ public class Dy555 extends Spider {
     }
     protected String encrypt(String src, String KEY, String IV) {
         try {
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             SecretKeySpec keySpec = new SecretKeySpec(KEY.getBytes(), "AES");
             AlgorithmParameterSpec paramSpec = new IvParameterSpec(IV.getBytes());
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, paramSpec);

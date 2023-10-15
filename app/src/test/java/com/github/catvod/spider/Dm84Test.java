@@ -19,7 +19,7 @@ public class Dm84Test {
     @Before
     public void setUp() throws Exception {
         dm84 = new Dm84();
-        dm84.init(null);
+        dm84.init(null,"http://dm84.site");
     }
 
     @After

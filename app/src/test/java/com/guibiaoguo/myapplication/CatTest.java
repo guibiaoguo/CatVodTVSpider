@@ -23,7 +23,6 @@ import com.github.catvod.spider.Hsck;
 import com.github.catvod.parser.HttpParser;
 import com.github.catvod.spider.IQIYI;
 import com.github.catvod.spider.Imaple;
-import com.github.catvod.spider.Juhi;
 import com.github.catvod.spider.Jumi;
 import com.github.catvod.spider.Legado1;
 import com.github.catvod.spider.MGTV;
@@ -235,10 +234,10 @@ public class CatTest {
         }
     }
 
-    @Test
-    public void juhi() throws Exception {
-        spider(new Juhi());
-    }
+//    @Test
+//    public void juhi() throws Exception {
+//        spider(new Juhi());
+//    }
 
     @Test
     public void jumi() throws Exception {
