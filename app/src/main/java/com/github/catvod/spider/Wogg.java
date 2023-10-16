@@ -5,7 +5,7 @@
 //import com.github.catvod.bean.Class;
 //import com.github.catvod.bean.Result;
 //import com.github.catvod.bean.Vod;
-//import com.github.catvod.net.OkHttp;
+//
 //import com.github.catvod.utils.Utils;
 //import com.google.gson.JsonObject;
 //import com.google.gson.JsonParser;
@@ -50,7 +50,7 @@
 //    public String homeContent(boolean filter) {
 //        List<Class> classes = new ArrayList<>();
 //        String url = extend.get("filter").getAsString();
-//        Document doc = Jsoup.parse(OkHttp.string(siteUrl, getHeader()));
+//        Document doc = Jsoup.parse (OkHttpUtil.string(siteUrl, getHeader()));
 //        Elements elements = doc.select(".nav-link");
 //        for (Element e : elements) {
 //            Matcher mather = regexCategory.matcher(e.attr("href"));
@@ -58,7 +58,7 @@
 //                classes.add(new Class(mather.group(1), e.text().trim()));
 //            }
 //        }
-//        return Result.string(classes, parseVodListFromDoc(doc), filter ? JsonParser.parseString(OkHttp.string(url)) : null);
+//        return Result.string(classes, parseVodListFromDoc(doc), filter ? JsonParser.parseString (OkHttpUtil.string(url)) : null);
 //    }
 //
 //    @Override
@@ -69,7 +69,7 @@
 //                urlParams[Integer.parseInt(key)] = extend.get(key);
 //            }
 //        }
-//        Document doc = Jsoup.parse(OkHttp.string(String.format("%s/index.php/vodshow/%s.html", siteUrl, String.join("-", urlParams)), getHeader()));
+//        Document doc = Jsoup.parse (OkHttpUtil.string(String.format("%s/index.php/vodshow/%s.html", siteUrl, String.join("-", urlParams)), getHeader()));
 //        int page = Integer.parseInt(pg), limit = 72, total = 0;
 //        Matcher matcher = regexPageTotal.matcher(doc.html());
 //        if (matcher.find()) total = Integer.parseInt(matcher.group(1));
@@ -93,7 +93,7 @@
 //    @Override
 //    public String detailContent(List<String> ids) throws Exception {
 //        String vodId = ids.get(0);
-//        Document doc = Jsoup.parse(OkHttp.string(siteUrl + vodId, getHeader()));
+//        Document doc = Jsoup.parse (OkHttpUtil.string(siteUrl + vodId, getHeader()));
 //
 //        Vod item = new Vod();
 //        item.setVodId(vodId);
@@ -139,7 +139,7 @@
 //
 //    private String searchContent(String key, String pg) {
 //        String searchURL = siteUrl + String.format("/index.php/vodsearch/%s----------%s---.html", URLEncoder.encode(key), pg);
-//        String html = OkHttp.string(searchURL, getHeader());
+//        String html = OkHttpUtil.string(searchURL, getHeader());
 //        Elements items = Jsoup.parse(html).select(".module-search-item");
 //        List<Vod> list = new ArrayList<>();
 //        for (Element item : items) {

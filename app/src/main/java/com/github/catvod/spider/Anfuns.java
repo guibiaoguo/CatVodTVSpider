@@ -4,6 +4,8 @@ package com.github.catvod.spider;
 import android.content.Context;
 import android.text.TextUtils;
 
+import com.github.catvod.bean.Result;
+import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Base64;
@@ -141,6 +143,27 @@ public class Anfuns extends Spider {
             SpiderDebug.log(e);
         }
         return "";
+    }
+
+    /**
+     * 首页最近更新数据 如果上面的homeContent中不包含首页最近更新视频的数据 可以使用这个接口返回
+     *
+     * @return
+     */
+    @Override
+    public String homeVideoContent() throws Exception {
+        Document doc = Jsoup.parse(OkHttpUtil.string(siteUrl, getHeaders(siteUrl,referer)));
+        List<Vod> list = new ArrayList<>();
+        Element homeList = doc.select("ul.hl-vod-list.swiper-wrapper").get(0);
+        Elements elements = homeList.select("li");
+        for (Element vod:elements) {
+            String title = vod.selectFirst("a").attr("title");
+            String cover = vod.selectFirst("a" ).attr("data-original");
+            String remark = vod.selectFirst(" a > div.hl-pic-text > span").text();
+            String id =vod.selectFirst("a").attr("href");
+            list.add(new Vod(id,title,cover,remark));
+        }
+        return Result.string(list);
     }
 
     @Override

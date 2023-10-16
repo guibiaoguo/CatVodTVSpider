@@ -8,8 +8,9 @@ import com.github.catvod.bean.Class;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
-import com.github.catvod.net.OkHttp;
+
 import com.github.catvod.utils.Utils;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -38,7 +39,7 @@ public class Eighteen extends Spider {
     public String homeContent(boolean filter) throws Exception {
         List<Class> classes = new ArrayList<>();
         List<Vod> list = new ArrayList<>();
-        Document doc = Jsoup.parse(OkHttp.string(url, getHeaders()));
+        Document doc = Jsoup.parse (OkHttpUtil.string(url, getHeaders()));
         for (Element a : doc.select("ul.animenu__nav > li > a")) {
             String typeName = a.text();
             String typeId = a.attr("href").replace(url, "");
@@ -56,12 +57,31 @@ public class Eighteen extends Spider {
         return Result.string(classes, list);
     }
 
+    /**
+     * 首页最近更新数据 如果上面的homeContent中不包含首页最近更新视频的数据 可以使用这个接口返回
+     *
+     * @return
+     */
+    @Override
+    public String homeVideoContent() throws Exception {
+        List<Vod> list = new ArrayList<>();
+        Document doc = Jsoup.parse (OkHttpUtil.string(url, getHeaders()));
+        for (Element div : doc.select("div.post")) {
+            String id = div.select("a").attr("href").replace(url, "");
+            String name = div.select("h3").text();
+            String pic = div.select("a > img").attr("src");
+            String remark = div.select("div.meta").text();
+            list.add(new Vod(id, name, pic, remark));
+        }
+        return Result.string(list);
+    }
+
     @Override
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) throws Exception {
         List<Vod> list = new ArrayList<>();
         tid = tid.replace("random", "list");
         tid = tid.replace("index", pg);
-        Document doc = Jsoup.parse(OkHttp.string(url + tid,getHeaders()));
+        Document doc = Jsoup.parse (OkHttpUtil.string(url + tid,getHeaders()));
         for (Element div : doc.select("div.post")) {
             String id = div.select("a").attr("href").replace(url, "");
             String name = div.select("h3").text();
@@ -74,7 +94,7 @@ public class Eighteen extends Spider {
 
     @Override
     public String detailContent(List<String> ids) throws Exception {
-        Document doc = Jsoup.parse(OkHttp.string(url + ids.get(0),getHeaders()));
+        Document doc = Jsoup.parse (OkHttpUtil.string(url + ids.get(0),getHeaders()));
         Element wrap = doc.select("div.video-wrap").get(0);
         String name = wrap.select("div.archive-title > h1").text();
         String pic = wrap.select("div.player-wrap > img").attr("src");
@@ -93,7 +113,7 @@ public class Eighteen extends Spider {
         params.put("search_keyword", key);
         params.put("search_type", "fc");
         params.put("op", "search");
-        String res = OkHttp.post(url + "searchform_search/all/index.html", params,getHeaders());
+        String res = OkHttpUtil.post(url + "searchform_search/all/index.html", params,getHeaders());
         List<Vod> list = new ArrayList<>();
         for (Element div : Jsoup.parse(res).select("div.post")) {
             String id = div.select("a").attr("href").replace(url, "");

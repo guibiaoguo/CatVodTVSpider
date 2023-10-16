@@ -13,10 +13,11 @@ import android.content.Context;
 import android.text.TextUtils;
 
 import com.github.catvod.bean.Result;
+import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 
-import com.github.catvod.net.OkHttp;
+
 import com.github.catvod.parser.NetworkUtils;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
@@ -29,18 +30,15 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.net.URLEncoder;
-import java.security.Key;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import javax.crypto.Cipher;
@@ -74,12 +72,12 @@ public class Dy555 extends Spider {
         if (StrUtil.isEmpty(extend)) {
             extend = "https://555dy.shop";
         }
-        String content = OkHttp.string(extend);
+        String content = OkHttpUtil.string(extend);
         Document document = Jsoup.parse(content);
         for(Element element:document.select(".btn-down:contains(点击)")) {
             String site = element.select("a").attr("href");
             System.out.println("555影视：" + site);
-            String subContent = OkHttp.string(site);
+            String subContent = OkHttpUtil.string(site);
             if (StrUtil.isNotEmpty(subContent) && !subContent.contains("Loading......")) {
                 siteUrl = site;
                 siteHost = NetworkUtils.INSTANCE.getSubDomain(siteUrl);
@@ -191,6 +189,27 @@ public class Dy555 extends Spider {
         return "";
     }
 
+    /**
+     * 首页最近更新数据 如果上面的homeContent中不包含首页最近更新视频的数据 可以使用这个接口返回
+     *
+     * @return
+     */
+    @Override
+    public String homeVideoContent() throws Exception {
+        List<Vod> list = new ArrayList<>();
+        Document doc = Jsoup.parse(OkHttpUtil.string(siteUrl, getHeaders(siteUrl)));
+        for (Element vod:doc.select("div.module-items> a[href*='voddetail']")) {
+            String title = vod.attr("title");
+            String cover = vod.selectFirst("img").attr("data-original");
+            String remark = vod.selectFirst("div.module-item-note").text();
+            Matcher matcher = regexVoddetail.matcher(vod.attr("href"));
+            if (!matcher.find())
+                continue;
+            String id = matcher.group(1);
+            list.add(new Vod(id,title,cover,remark));
+        }
+        return Result.string(list);
+    }
 
     /**
      * 获取分类信息数据

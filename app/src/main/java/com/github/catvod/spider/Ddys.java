@@ -207,6 +207,15 @@ public class Ddys extends Spider {
         return "";
     }
 
+    /**
+     * 首页最近更新数据 如果上面的homeContent中不包含首页最近更新视频的数据 可以使用这个接口返回
+     *
+     * @return
+     */
+    @Override
+    public String homeVideoContent() throws Exception {
+        return super.homeVideoContent();
+    }
 
     /**
      * 获取分类信息数据

@@ -2,8 +2,9 @@ package com.github.catvod.spider;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.live.TxtSubscribe;
-import com.github.catvod.net.OkHttp;
+
 import com.github.catvod.utils.Base64;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import java.io.ByteArrayInputStream;
 import java.util.Map;
@@ -16,7 +17,7 @@ public class Proxy extends Spider {
         if (Proxy.port > 0) return;
         int port = 9978;
         while (port < 10000) {
-            String resp = OkHttp.string("http://127.0.0.1:" + port + "/proxy?do=ck", null);
+            String resp = OkHttpUtil.string("http://127.0.0.1:" + port + "/proxy?do=ck", null);
             if (resp.equals("ok")) {
                 SpiderDebug.log("Found local server port " + port);
                 Proxy.port = port;

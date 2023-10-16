@@ -5,11 +5,7 @@ import android.text.TextUtils;
 
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
-import com.github.catvod.bean.bili.Data;
-import com.github.catvod.bean.bili.Page;
-import com.github.catvod.bean.bili.Resp;
-import com.github.catvod.net.OkHttp;
-import com.github.catvod.utils.StringUtil;
+
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
@@ -92,7 +88,7 @@ public class BBB extends Spider {
         String aid = split[1];
 
         String api = "https://api.bilibili.com/x/web-interface/view?aid=" + aid;
-        String json = OkHttp.string(api, getHeaders());
+        String json = OkHttpUtil.string(api, getHeaders());
 //        System.out.println("************Resp 前****************" + json);
 //        Data detail = Resp.objectFrom(json).getData();
         JsonObject jsonObject = new Gson().fromJson(json, JsonObject.class);
@@ -116,7 +112,7 @@ public class BBB extends Spider {
         List<String> acceptDesc = new ArrayList<>();
         List<Integer> acceptQuality = new ArrayList<>();
         api = "https://api.bilibili.com/x/player/playurl?avid=" + aid + "&cid=" + detail.get("cid").toString() + "&qn=127&fnval=4048&fourk=1";
-        json = OkHttp.string(api, getHeaders());
+        json = OkHttpUtil.string(api, getHeaders());
 //        Data play = Resp.objectFrom(json).getData();
         jsonObject = new Gson().fromJson(json, JsonObject.class);
 //        Data play = new Gson().fromJson(jsonObject.getAsJsonObject("data"),Data.class);
@@ -148,7 +144,7 @@ public class BBB extends Spider {
 
         episode = new ArrayList<>();
         api = "https://api.bilibili.com/x/web-interface/archive/related?bvid=" + bvid;
-        json = OkHttp.string(api, getHeaders());
+        json = OkHttpUtil.string(api, getHeaders());
         JsonArray array = JsonParser.parseString(json).getAsJsonObject().getAsJsonArray("data");
         for (int i = 0; i < array.size(); i++) {
             JsonObject object = array.get(i).getAsJsonObject();
@@ -213,7 +209,7 @@ public class BBB extends Spider {
     public void init(Context context,String extend) {
         BBB.super.init(context,extend);
         try {
-            String conntent = OkHttp.string(extend);
+            String conntent = OkHttpUtil.string(extend);
             this.g = new JSONObject(conntent);
         } catch (Exception e) {
             SpiderDebug.log(e);

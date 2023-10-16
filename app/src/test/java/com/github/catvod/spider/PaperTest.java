@@ -12,6 +12,7 @@ import com.google.gson.Gson;
 import com.guibiaoguo.myapplication.RoboApp;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -165,12 +166,19 @@ public class PaperTest {
 
     @Test
     public void homeContent() throws Exception {
-        System.out.println(paper.homeContent(true));
+        String content = paper.homeContent(true);
+        System.out.println(content);
+        Result result = new Gson().fromJson(content, Result.class);
+        Assert.assertTrue(result.getClasses().size()>0);
+        Assert.assertTrue(result.getList().isEmpty() || result.getList().size() > 0);
     }
 
     @Test
     public void homeVideoContent() throws Exception {
-        System.out.println(paper.homeVideoContent());
+        String content = paper.homeVideoContent();
+        System.out.println(content);
+        Result result = new Gson().fromJson(content, Result.class);
+        Assert.assertTrue(result.getList().size() > 0);
     }
 
     @Test
@@ -182,7 +190,11 @@ public class PaperTest {
 
     @Test
     public void searchContent() throws Exception {
-        System.out.println(paper.searchContent("火影", true));
+        String content = paper.searchContent("宝可梦",false);
+        System.out.println(content);
+        Assert.assertTrue(content.contains("宝可梦"));
+        Result result = new Gson().fromJson(content, Result.class);
+        Assert.assertTrue(result.getList().size() > 0);
     }
 
     @Test
@@ -194,7 +206,7 @@ public class PaperTest {
     @Test
     public void playerContent() throws Exception {
 //        String content = paper.detailContent(List.of("https://www.aliyundrive.com/s/BfFQz6zbfYm/folder/646f5d3147fd14c065c14811ac2cc1773e3474bd"));
-        String content = paper.detailContent(List.of("https://www.aliyundrive.com/s/KwUCz4H31JK/folder/619ae206f21fe67ebabb402d9429931729e7c039"));
+        String content = paper.detailContent(Arrays.asList("https://www.aliyundrive.com/s/KwUCz4H31JK/folder/619ae206f21fe67ebabb402d9429931729e7c039"));
         Result result = new Gson().fromJson(content, Result.class);
         String id = result.getList().get(0).getVodPlayUrl().split("#")[0].split("\\$")[1];
         System.out.println(paper.playerContent("原畫",id,new ArrayList<>()));

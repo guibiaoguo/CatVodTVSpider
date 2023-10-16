@@ -2,6 +2,9 @@ package com.github.catvod.spider;
 
 import android.content.Context;
 import android.text.TextUtils;
+
+import com.github.catvod.bean.Result;
+import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
@@ -319,6 +322,29 @@ public class EEEDY extends Spider {
             SpiderDebug.log(e2);
             return "";
         }
+    }
+
+    /**
+     * 首页最近更新数据 如果上面的homeContent中不包含首页最近更新视频的数据 可以使用这个接口返回
+     *
+     * @return
+     */
+    @Override
+    public String homeVideoContent() throws Exception {
+        String content = OkHttpUtil.string(siteUrl, getHeaders(siteUrl));
+        Document doc = Jsoup.parse(content);
+        List<Vod> list = new ArrayList<>();
+        for (Element element:doc.select("ul.list-unstyled-index li")) {
+            String title = element.select("h4 > a").attr("title");
+            String cover = element.selectFirst("img").attr("src");
+            String remark = element.select("em.littplus").text();
+            Matcher matcher = this.regexVoddetail.matcher(element.select("h4 > a").attr("href"));
+            if (!matcher.find())
+                continue;
+            String id = matcher.group(1);
+            list.add(new Vod(id,title,cover,remark));
+        }
+        return Result.string(list);
     }
 
     public void init(Context context) {

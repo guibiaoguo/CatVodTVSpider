@@ -5,7 +5,7 @@ import android.text.TextUtils;
 
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
-import com.github.catvod.net.OkHttp;
+
 import com.github.catvod.utils.StringUtil;
 
 import com.github.catvod.crawler.Spider;
@@ -295,7 +295,7 @@ public class AppYsV2 extends Spider {
             String url = getPlayUrlPrefix(apiUrl) + ids.get(0);
             SpiderDebug.log(url);
             if (url.contains("app.bl210.com")) {
-                Document doc = Jsoup.parse(OkHttp.string("https://app.bl210.com/index.php/vod/detail/id/".concat(ids.get(0)).concat(".html"), getHeaders("")));
+                Document doc = Jsoup.parse (OkHttpUtil.string("https://app.bl210.com/index.php/vod/detail/id/".concat(ids.get(0)).concat(".html"), getHeaders("")));
                 // 取基本数据
                 String img = doc.selectFirst(".stui-content__thumb img").attr("data-original");
                 String name = doc.selectFirst("div.stui-content__detail h3.title").text();

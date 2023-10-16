@@ -1,78 +1,66 @@
-//package com.github.catvod.demo;
-//
+package com.github.catvod.demo;
+
 //import static org.junit.Assert.assertArrayEquals;
 //import static org.junit.Assert.assertEquals;
 //import static org.junit.Assert.assertNotNull;
 //import static org.junit.Assert.assertTrue;
-//
-//import android.app.Activity;
-//import android.content.pm.PackageManager;
-//import android.os.Bundle;
-//
-//import androidx.core.app.ActivityCompat;
-//
-//import com.github.catvod.bean.Class;
-//import com.github.catvod.bean.Result;
-//import com.github.catvod.bean.Vod;
-//import com.github.catvod.crawler.Spider;
-//import com.github.catvod.crawler.SpiderDebug;
+
+import android.app.Activity;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
+
+import androidx.core.app.ActivityCompat;
+
+import com.github.catvod.crawler.Spider;
 //import com.github.catvod.js.JSEngine;
 //import com.github.catvod.js.SpiderJS;
-//import com.github.catvod.legado.LegadoData;
-//import com.github.catvod.net.OkHttp;
-//import com.github.catvod.parser.AnalyzeRule;
-//import com.github.catvod.spider.Init;
-//import com.github.catvod.spider.Legado;
-//import com.github.catvod.spider.LegadoRule;
-//import com.github.catvod.spider.Paper;
-//import com.github.catvod.spider.Proxy;
-//import com.github.catvod.spider.QQ;
-//import com.github.catvod.utils.okhttp.OkHttpUtil;
+import com.github.catvod.spider.Dm84;
+import com.github.catvod.spider.Init;
+import com.github.catvod.spider.Proxy;
 //import com.github.tvbox.quickjs.QuickJSContext;
-//import com.google.gson.Gson;
-//import com.google.gson.GsonBuilder;
-//import com.google.gson.JsonArray;
-//import com.google.gson.JsonElement;
-//import com.google.gson.JsonObject;
-//
-//import java.util.ArrayList;
-//import java.util.Arrays;
-//import java.util.HashMap;
-//import java.util.List;
-//
-//import cn.hutool.core.io.FileUtil;
-//import cn.hutool.core.lang.Console;
-//import cn.hutool.core.util.StrUtil;
-//
-//
-//public class MainActivity extends Activity {
-//
-//    private static final int REQUEST_EXTERNAL_STORAGE = 1;
-//    private static String[] PERMISSIONS_STORAGE = {
-//            "android.permission.READ_EXTERNAL_STORAGE",
-//            "android.permission.WRITE_EXTERNAL_STORAGE" };
-//
-//
-//    public static void verifyStoragePermissions(Activity activity) {
-//
-//        try {
-//            //检测是否有写的权限
-//            int permission = ActivityCompat.checkSelfPermission(activity,
-//                    "android.permission.WRITE_EXTERNAL_STORAGE");
-//            if (permission != PackageManager.PERMISSION_GRANTED) {
-//                // 没有写的权限，去申请写的权限，会弹出对话框
-//                ActivityCompat.requestPermissions(activity, PERMISSIONS_STORAGE,REQUEST_EXTERNAL_STORAGE);
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-//
-//    @Override
-//    protected void onCreate(Bundle savedInstanceState) {
-//        verifyStoragePermissions(this);
-//        super.onCreate(savedInstanceState);
-//
+
+
+public class MainActivity extends Activity {
+
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            "android.permission.READ_EXTERNAL_STORAGE",
+            "android.permission.WRITE_EXTERNAL_STORAGE" };
+
+
+    public static void verifyStoragePermissions(Activity activity) {
+
+        try {
+            //检测是否有写的权限
+            int permission = ActivityCompat.checkSelfPermission(activity,
+                    "android.permission.WRITE_EXTERNAL_STORAGE");
+            if (permission != PackageManager.PERMISSION_GRANTED) {
+                // 没有写的权限，去申请写的权限，会弹出对话框
+                ActivityCompat.requestPermissions(activity, PERMISSIONS_STORAGE,REQUEST_EXTERNAL_STORAGE);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        verifyStoragePermissions(this);
+        super.onCreate(savedInstanceState);
+        Init.init(this.getApplicationContext());
+        Proxy.port = 9988;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Spider qq = new Dm84();
+                qq.init(MainActivity.this.getApplicationContext());
+                try {
+                    System.out.println(qq.homeContent(true));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }).start();
 //        new Thread(new Runnable() {
 //            @Override
 //            public void run() {
@@ -80,10 +68,10 @@
 //                Init.init(MainActivity.this.getApplicationContext());
 //                Proxy.port = 9978;
 ////                System.loadLibrary("quickjs");
-//                JSEngine.getInstance().create();
+////                JSEngine.getInstance().create();
 //                Console.log("****************************初始化结束************************************************");
 //                Console.log("****************************测试爬虫开始************************************************");
-//                String content = OkHttp.string("https://gitlab.com/mao4284120/js/-/raw/main/212757_debug.json");
+//                String content = OkHttpUtil.string("https://gitlab.com/mao4284120/js/-/raw/main/212757_debug.json");
 //                JsonObject jsonObject = new Gson().fromJson(content, JsonObject.class);
 //                JsonArray jsonArray = jsonObject.getAsJsonArray("sites");
 //                JsonArray bad = new JsonArray();
@@ -493,6 +481,6 @@
 //                }
 //            }
 //        }).start();
-//    }
-//
-//}
+    }
+
+}

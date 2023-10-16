@@ -34,7 +34,7 @@
 //    }
 //
 //    private OkHttpClient.Builder getBuilder() {
-//        OkHttpClient.Builder builder = OkHttp.getBuilder();
+//        OkHttpClient.Builder builder = OkHttpUtil.getBuilder();
 //        addInterceptor(builder);
 //        return builder;
 //    }

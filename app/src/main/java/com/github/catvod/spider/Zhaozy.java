@@ -4,8 +4,9 @@ import android.content.Context;
 
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
-import com.github.catvod.net.OkHttp;
+
 import com.github.catvod.utils.Utils;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -45,7 +46,7 @@ public class Zhaozy extends Ali {
         headers.put("Referer", siteUrl + "login.html");
         headers.put("Origin", siteUrl);
         Map<String, List<String>> resp = new HashMap<>();
-        OkHttp.post(siteUrl + "logiu.html", params, headers, resp);
+        OkHttpUtil.post(siteUrl + "logiu.html", params, headers);
         StringBuilder sb = new StringBuilder();
         for (String item : resp.get("set-cookie")) sb.append(item.split(";")[0]).append(";");
         return sb.toString();
@@ -62,7 +63,7 @@ public class Zhaozy extends Ali {
     @Override
     public String detailContent(List<String> ids) throws Exception {
         if (pattern.matcher(ids.get(0)).find()) return super.detailContent(ids);
-        Matcher matcher = regexAli.matcher(OkHttp.string(siteUrl + ids.get(0), getHeader()));
+        Matcher matcher = regexAli.matcher (OkHttpUtil.string(siteUrl + ids.get(0), getHeader()));
         if (matcher.find()) return super.detailContent(Arrays.asList(matcher.group(1)));
         return "";
     }
@@ -70,7 +71,7 @@ public class Zhaozy extends Ali {
     @Override
     public String searchContent(String key, boolean quick) throws Exception {
         String url = siteUrl + "so?filename=" + URLEncoder.encode(key);
-        Document doc = Jsoup.parse(OkHttp.string(url, getHeader()));
+        Document doc = Jsoup.parse (OkHttpUtil.string(url, getHeader()));
         List<Vod> list = new ArrayList<>();
         for (Element element : doc.select("div.li_con div.news_text")) {
             String href = element.select("div.news_text a").attr("href");

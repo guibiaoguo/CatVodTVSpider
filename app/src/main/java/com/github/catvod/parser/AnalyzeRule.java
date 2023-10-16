@@ -1,20 +1,20 @@
 package com.github.catvod.parser;
 
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.script.JsExtensions;
-import com.github.catvod.script.quickjs.QuickJSScriptEngine;
+//import com.github.catvod.script.JsExtensions;
+//import com.github.catvod.script.quickjs.QuickJSScriptEngine;
 import com.github.catvod.utils.StringUtil;
 import com.google.gson.Gson;
 import com.github.catvod.script.Bindings;
-import com.github.catvod.script.ScriptEngine;
+//import com.github.catvod.script.ScriptEngine;
 import com.github.catvod.script.SimpleBindings;
-import com.github.catvod.script.rhino.RhinoScriptEngine;
+//import com.github.catvod.script.rhino.RhinoScriptEngine;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Entities;
-import org.mozilla.javascript.NativeObject;
+//import org.mozilla.javascript.NativeObject;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ import cn.hutool.core.lang.Console;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.asymmetric.KeyType;
 
-public class AnalyzeRule extends JsExtensions {
+public class AnalyzeRule {
 
     public static Gson gson = new GsonBuilder()
             .registerTypeAdapter(new TypeToken<Map<String, Object>>() {
@@ -163,18 +163,18 @@ public class AnalyzeRule extends JsExtensions {
         Object content = mContent != null ? mContent : this.content;
         if (content != null && ruleList != null && !ruleList.isEmpty()) {
             result = content;
-            if (result instanceof NativeObject) {
-                SourceRule sourceRule = ruleList.get(0);
-                putRule(sourceRule.putMap);
-                sourceRule.makeUpRule(result);
-                if (sourceRule.getParamSize() > 1) {
-                    result = sourceRule.rule;
-                } else {
-                    result = ((NativeObject) result).get(sourceRule.rule);
-                }
-                if (result != null)
-                    result = replaceRegex(result.toString(), sourceRule);
-            }
+//            if (result instanceof NativeObject) {
+//                SourceRule sourceRule = ruleList.get(0);
+//                putRule(sourceRule.putMap);
+//                sourceRule.makeUpRule(result);
+//                if (sourceRule.getParamSize() > 1) {
+//                    result = sourceRule.rule;
+//                } else {
+//                    result = ((NativeObject) result).get(sourceRule.rule);
+//                }
+//                if (result != null)
+//                    result = replaceRegex(result.toString(), sourceRule);
+//            }
             for (SourceRule sourceRule : ruleList) {
                 putRule(sourceRule.putMap);
                 sourceRule.makeUpRule(result);
@@ -230,15 +230,15 @@ public class AnalyzeRule extends JsExtensions {
     }
 
     private Object evalJS(String rule, Object result) {
-        Bindings bindings = new SimpleBindings();
-        ScriptEngine scriptEngine = new RhinoScriptEngine(bindings);
-        bindings.put("java", this);
-        bindings.put("result", result);
-        bindings.put("src", content);
-        bindings.put("baseUrl", baseUrl);
-        bindings.put("PublicKey", KeyType.PublicKey);
-        bindings.put("PrivateKey", KeyType.PrivateKey);
-        result = scriptEngine.eval(rule, bindings);
+//        Bindings bindings = new SimpleBindings();
+//        ScriptEngine scriptEngine = new RhinoScriptEngine(bindings);
+//        bindings.put("java", this);
+//        bindings.put("result", result);
+//        bindings.put("src", content);
+//        bindings.put("baseUrl", baseUrl);
+//        bindings.put("PublicKey", KeyType.PublicKey);
+//        bindings.put("PrivateKey", KeyType.PrivateKey);
+//        result = scriptEngine.eval(rule, bindings);
 //        try {
 //            bindings = new SimpleBindings();
 //            bindings.put("java", this);
@@ -279,18 +279,18 @@ public class AnalyzeRule extends JsExtensions {
         Object content = mContent != null ? mContent : this.content;
         if (content != null && ruleList != null && !ruleList.isEmpty()) {
             result = content;
-            if (result instanceof NativeObject) {
-                SourceRule sourceRule = ruleList.get(0);
-                putRule(sourceRule.putMap);
-                sourceRule.makeUpRule(result);
-                if (sourceRule.getParamSize() > 1) {
-                    result = sourceRule.rule;
-                } else {
-                    result = ((NativeObject) result).get(sourceRule.rule);
-                }
-                if (result != null)
-                    result = replaceRegex(result.toString(), sourceRule);
-            }
+//            if (result instanceof NativeObject) {
+//                SourceRule sourceRule = ruleList.get(0);
+//                putRule(sourceRule.putMap);
+//                sourceRule.makeUpRule(result);
+//                if (sourceRule.getParamSize() > 1) {
+//                    result = sourceRule.rule;
+//                } else {
+//                    result = ((NativeObject) result).get(sourceRule.rule);
+//                }
+//                if (result != null)
+//                    result = replaceRegex(result.toString(), sourceRule);
+//            }
             for (SourceRule sourceRule : ruleList) {
                 putRule(sourceRule.putMap);
                 sourceRule.makeUpRule(result);
@@ -514,7 +514,7 @@ public class AnalyzeRule extends JsExtensions {
 
     public Object put(String key, Object value) {
         if (value != null) {
-            logType(value);
+//            logType(value);
             ruleData.putVariable(key, value);
         }
         return value;
@@ -522,7 +522,7 @@ public class AnalyzeRule extends JsExtensions {
 
     public Object get(String key) {
         Object data = ruleData.getVariable(key);
-        logType(data);
+//        logType(data);
         if (data instanceof String) {
             return data.toString();
         }

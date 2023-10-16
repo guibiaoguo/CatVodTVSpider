@@ -13,6 +13,7 @@ import com.google.gson.Gson;
 import com.guibiaoguo.myapplication.RoboApp;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -171,7 +172,11 @@ public class PanSouTest {
 
     @Test
     public void searchContent() throws Exception {
-        System.out.println(pansou.searchContent("暮色黄昏", false));
+        String content = pansou.searchContent("宝可梦",false);
+        System.out.println(content);
+        Assert.assertTrue(content.contains("宝可梦"));
+        Result result = new Gson().fromJson(content, Result.class);
+        Assert.assertTrue(result.getList().size() > 0);
     }
 
     @Test

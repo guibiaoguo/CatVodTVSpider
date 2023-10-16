@@ -2,9 +2,12 @@ package com.github.catvod.spider;
 
 import static org.junit.Assert.*;
 
+import com.github.catvod.bean.Result;
 import com.github.catvod.crawler.Spider;
+import com.google.gson.Gson;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,7 +36,11 @@ public class AListTest {
 
     @Test
     public void homeContent() throws Exception {
-        System.out.println(alist.homeContent(true));
+        String content = alist.homeContent(true);
+        System.out.println(content);
+        Result result = new Gson().fromJson(content, Result.class);
+        Assert.assertTrue(result.getClasses().size()>0);
+        Assert.assertTrue(result.getList().isEmpty() || result.getList().size() > 0);
     }
 
     @Test

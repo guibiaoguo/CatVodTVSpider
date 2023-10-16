@@ -6,8 +6,9 @@ import com.github.catvod.bean.Class;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
-import com.github.catvod.net.OkHttp;
+
 import com.github.catvod.utils.Utils;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -26,7 +27,7 @@ public class Doll extends Spider {
     public String homeContent(boolean filter) throws Exception {
         List<Class> classes = new ArrayList<>();
         List<Vod> list = new ArrayList<>();
-        Document doc = Jsoup.parse(OkHttp.string(url));
+        Document doc = Jsoup.parse (OkHttpUtil.string(url));
         for (Element a : doc.select("ul#side-menu").get(0).select("li > a")) {
             String typeName = a.text();
             String typeId = a.attr("href").replace(url, "");
@@ -46,7 +47,7 @@ public class Doll extends Spider {
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) throws Exception {
         List<Vod> list = new ArrayList<>();
         String target = pg.equals("1") ? url + tid : url + tid + "/" + pg + ".html";
-        Document doc = Jsoup.parse(OkHttp.string(target));
+        Document doc = Jsoup.parse (OkHttpUtil.string(target));
         for (Element div : doc.select("div.video-detail")) {
             String id = div.select("h3.video-title > a").attr("href").replace(url, "");
             String name = div.select("h3.video-title > a").text();
@@ -59,7 +60,7 @@ public class Doll extends Spider {
 
     @Override
     public String detailContent(List<String> ids) throws Exception {
-        String html = OkHttp.string(url + ids.get(0));
+        String html = OkHttpUtil.string(url + ids.get(0));
         Document doc = Jsoup.parse(html);
         StringBuilder sb = new StringBuilder();
         String videoId = ids.get(0).split("/")[1].split("\\.")[0];

@@ -12,6 +12,7 @@ import com.google.gson.Gson;
 import com.guibiaoguo.myapplication.RoboApp;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -111,7 +112,11 @@ public class YiSoTest {
 
     @Test
     public void searchContent() throws Exception {
-        System.out.println(yiso.searchContent("火影忍者", false));
+        String content = yiso.searchContent("宝可梦",false);
+        System.out.println(content);
+        Assert.assertTrue(content.contains("宝可梦"));
+        Result result = new Gson().fromJson(content, Result.class);
+        Assert.assertTrue(result.getList().size() > 0);
     }
 
     @Test

@@ -5,7 +5,7 @@ import android.text.TextUtils;
 import android.util.Base64;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.net.OkHttp;
+
 import com.github.catvod.utils.Prefers;
 import com.github.catvod.utils.okhttp.OKCallBack;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
@@ -1503,7 +1503,7 @@ public class XBPQ1 extends Spider {
             }
             try {
                 if (sb3.indexOf(";post;") < 0) {
-                    OkHttp.post(sb3, m3765F);
+                    OkHttpUtil.post(sb3, m3765F,getHeaders(""));
                 } else {
                     OKCallBack.OKCallBackString callBack = new OKCallBack.OKCallBackString() {
 
@@ -1923,7 +1923,7 @@ public class XBPQ1 extends Spider {
             }
             hashMap.put("Referer", str3);
             hashMap.put("Origin", this.f143f + "/");
-            OkHttp.post(str3, hashMap2, hashMap, hashMap3);
+            OkHttpUtil.post(str3, hashMap2, hashMap);
             m3718z = str4;
         }
         m3756O(hashMap3);

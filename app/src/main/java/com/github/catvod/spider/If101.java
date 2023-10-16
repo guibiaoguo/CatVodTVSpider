@@ -3,6 +3,8 @@ package com.github.catvod.spider;
 import android.content.Context;
 import android.text.TextUtils;
 
+import com.github.catvod.bean.Result;
+import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Base64;
@@ -146,6 +148,31 @@ public class If101 extends Spider {
             SpiderDebug.log(e);
         }
         return "";
+    }
+
+    /**
+     * 首页最近更新数据 如果上面的homeContent中不包含首页最近更新视频的数据 可以使用这个接口返回
+     *
+     * @return
+     */
+    @Override
+    public String homeVideoContent() throws Exception {
+        List<Vod> list = new ArrayList<>();
+        Document doc = Jsoup.parse(OkHttpUtil.string(siteUrl, getHeaders(siteUrl)));
+        Element homeList = doc.select("ul.hl-vod-list").get(0);
+        Elements elements = homeList.select("li.hl-list-item");
+        JSONArray videos = new JSONArray();
+        for (Element vod:elements) {
+            String title = vod.selectFirst("div.hl-item-title a").text();
+            String cover = vod.selectFirst(".hl-item-thumb").attr("data-original");
+            String remark = vod.selectFirst(".hl-pic-text span").text();
+            Matcher matcher = regexVid.matcher(vod.selectFirst("div.hl-item-title a").attr("href"));
+            if (!matcher.find())
+                continue;
+            String id = matcher.group(1);
+            list.add(new Vod(id,title,cover,remark));
+        }
+        return Result.string(list);
     }
 
     /**

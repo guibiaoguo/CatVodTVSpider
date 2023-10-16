@@ -271,6 +271,28 @@ public class Bttoo extends Spider {
     }
 
     /**
+     * 首页最近更新数据 如果上面的homeContent中不包含首页最近更新视频的数据 可以使用这个接口返回
+     *
+     * @return
+     */
+    @Override
+    public String homeVideoContent() throws Exception {
+        List<Vod> list = new ArrayList<>();
+        Document doc = Jsoup.parse(OkHttpUtil.string(siteUrl, getHeaders(siteUrl)));
+        for (Element element : doc.select("div.leibox > ul > li ")) {
+            String name = element.selectFirst("h3.dytit > a").text();
+            String img = element.selectFirst("a img").attr("data-original");
+            String remark = element.select("div.jidi").text();
+            Matcher matcher = regexVid.matcher(element.selectFirst("a").attr("href"));
+            if (!matcher.find())
+                continue;
+            String id = matcher.group(1);
+            list.add(new Vod(id, name, img, remark));
+        }
+        return Result.string(list);
+    }
+
+    /**
      * 获取视频播放信息
      *
      * @param flag     播放源

@@ -2,14 +2,18 @@ package com.github.catvod.utils.okhttp;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
+import com.github.catvod.utils.Utils;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
+import okhttp3.Headers;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.Response;
 
 public class OkHttpUtil {
@@ -144,6 +148,68 @@ public class OkHttpUtil {
 
     public static void postJson(OkHttpClient client, String url, String jsonStr, Map<String, String> headerMap, OKCallBack callBack) {
         new OKRequest(METHOD_POST, url, jsonStr, headerMap, callBack).execute(client);
+    }
+
+    public static String post(String url, Map<String, String> params, Map<String, String> header) {
+        OKCallBack<String> okCallBack = new OKCallBack.OKCallBackString() {
+            /**
+             * @param call 回调
+             * @param e 错误信息
+             */
+            @Override
+            protected void onFailure(Call call, Exception e) {
+
+            }
+
+            /**
+             * @param response 返回响应
+             */
+            @Override
+            protected void onResponse(String response) {
+
+            }
+        };
+        post(OkHttpUtil.defaultClient(),url,params,header, okCallBack);
+        return okCallBack.getResult();
+    }
+
+    public static String postJson(String url, String json, Map<String, String> header) {
+        OKCallBack<String> okCallBack = new OKCallBack.OKCallBackString() {
+            /**
+             * @param call 回调
+             * @param e 错误信息
+             */
+            @Override
+            protected void onFailure(Call call, Exception e) {
+
+            }
+
+            /**
+             * @param response 返回响应
+             */
+            @Override
+            protected void onResponse(String response) {
+
+            }
+        };
+        postJson(OkHttpUtil.defaultClient(),url,json,header, okCallBack);
+        return okCallBack.getResult();
+    }
+
+    public static String postJson(String url, String json) {
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("User-Agent", Utils.CHROME);
+        return postJson(url,json,headers);
+    }
+
+    public static String string(String url) {
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("User-Agent", Utils.CHROME);
+        return string(url,headers);
+    }
+
+    public static Response newCall(String url, Map<String, String> header) throws IOException {
+        return defaultClient().newCall(new Request.Builder().url(url).headers(Headers.of(header)).build()).execute();
     }
 
     /**

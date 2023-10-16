@@ -10,7 +10,7 @@ android {
         applicationId "com.github.catvod.demo"
         minSdk 19
         targetSdk 28
-        ndk { abiFilters "armeabi-v7a" }
+//        ndk { abiFilters "armeabi-v7a" }
         buildConfigField("String", "APP_ID", "\"${appId}\"")
         buildConfigField("String", "CLIENT_ID", "\"${clientId}\"")
         multiDexEnabled true
@@ -51,10 +51,14 @@ dependencies {
     implementation 'com.starkbank.ellipticcurve:starkbank-ecdsa:1.0.2'
 //    implementation 'com.google.net.cronet:cronet-okhttp:0.1.0'
 //    implementation 'androidx.annotation:annotation:1.5.0'
-//    implementation('com.github.thegrizzlylabs:sardine-android:0.8') { exclude group: 'com.squareup.okhttp3', module: 'okhttp' }
+
+    implementation ('com.github.thegrizzlylabs:sardine-android:0.8') {
+        exclude group: 'com.squareup.okhttp3'
+    }
+
     implementation 'com.googlecode.juniversalchardet:juniversalchardet:1.0.3'
-    implementation 'wang.harlon.quickjs:wrapper-android:0.21.1'
-    implementation 'com.google.net.cronet:cronet-okhttp:0.1.0'
+//    implementation 'wang.harlon.quickjs:wrapper-android:0.21.1'
+//    implementation 'com.google.net.cronet:cronet-okhttp:0.1.0'
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'cn.wanghaomiao:JsoupXpath:2.5.1'
@@ -63,16 +67,13 @@ dependencies {
 
     implementation 'com.jayway.jsonpath:json-path:2.8.0'
         //Rhino
-    implementation 'org.mozilla:rhino:1.7.12'
+//    implementation 'org.mozilla:rhino:1.7.12'
     //加密解密库
     implementation('cn.hutool:hutool-crypto:4.5.15')
-    implementation 'org.bouncycastle:bcprov-jdk15to18:1.68'
 //    implementation 'androidx.test:runner:1.5.2'
-    implementation project(path: ':quickjs')
-    implementation 'androidx.core:core:1.7.0'
+//    implementation project(path: ':quickjs')
+//    implementation 'androidx.core:core:1.7.0'
 
-    //junit 打包删除
-//    implementation group: 'org.json', name: 'json', version: '20190722'
 //    testImplementation 'junit:junit:4.13.2'
 //    mockito
     testImplementation "org.mockito:mockito-core:3.7.7"
@@ -83,15 +84,19 @@ dependencies {
 //    testImplementation "org.powermock:powermock-api-mockito2:2.0.9"
 //    testImplementation "org.powermock:powermock-classloading-xstream:2.0.9"
 //    testImplementation 'org.robolectric:robolectric:4.9'
-    androidTestImplementation 'com.android.support:support-annotations:27.1.1'
+//    androidTestImplementation 'com.android.support:support-annotations:27.1.1'
 //    androidTestImplementation 'com.android.support.test:runner:1.0.2'
 //    androidTestImplementation 'com.android.support.test:rules:1.0.2'
 //    testImplementation 'org.mock-server:mockserver-junit-rule-no-dependencies:5.14.0'
     //test框架
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.8.0'
-    implementation 'junit:junit:4.13.2'
+//    implementation 'com.google.android.material:material:1.8.0'
+    testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+
+    //junit 打包删除
+    testImplementation group: 'org.json', name: 'json', version: '20190722'
+    testImplementation 'org.bouncycastle:bcprov-jdk15to18:1.68'
 
 }

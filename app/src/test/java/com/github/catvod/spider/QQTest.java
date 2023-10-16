@@ -1,13 +1,16 @@
 package com.github.catvod.spider;
 
+import com.github.catvod.bean.Result;
 import com.github.catvod.crawler.Spider;
-import com.github.catvod.net.OkHttp;
-import com.github.catvod.parser.AnalyzeByJSonPath;
-import com.github.catvod.parser.AnalyzeRule;
+
+//import com.github.catvod.parser.AnalyzeByJSonPath;
+//import com.github.catvod.parser.AnalyzeRule;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -43,22 +46,29 @@ public class QQTest {
         data.put("v",1);
         data.put("n",2);
         System.out.println(new Gson().toJson(data));
-        String content = OkHttp.string("https://github.moeyy.xyz/https://raw.githubusercontent.com/52670576/tvbox/main/ysc.json");
+        String content = OkHttpUtil.string("https://github.moeyy.xyz/https://raw.githubusercontent.com/52670576/tvbox/main/ysc.json");
 //        System.out.println(content);
         JsonObject jsonObject = new Gson().fromJson(content, JsonObject.class);
         System.out.println(jsonObject.get("wallpaper").getAsString());
-        AnalyzeByJSonPath analyzeByJSonPath = new AnalyzeByJSonPath(content);
-        System.out.println(analyzeByJSonPath.getStringList("$.sites"));
+//        AnalyzeByJSonPath analyzeByJSonPath = new AnalyzeByJSonPath(content);
+//        System.out.println(analyzeByJSonPath.getStringList("$.sites"));
     }
 
     @Test
     public void homeContent() throws Exception {
-        System.out.println(qq.homeContent(true));
+        String content = qq.homeContent(true);
+        System.out.println(content);
+        Result result = new Gson().fromJson(content, Result.class);
+        Assert.assertTrue(result.getClasses().size()>0);
+        Assert.assertTrue(result.getList().isEmpty() || result.getList().size() > 0);
     }
 
     @Test
     public void homeVideoContent() throws Exception {
-        System.out.println(qq.homeVideoContent());
+        String content = qq.homeVideoContent();
+        System.out.println(content);
+        Result result = new Gson().fromJson(content, Result.class);
+        Assert.assertTrue(result.getList().size() > 0);
     }
 
     @Test
@@ -73,7 +83,11 @@ public class QQTest {
 
     @Test
     public void searchContent() throws Exception {
-        System.out.println(qq.searchContent("熊出没", false));
+        String content = qq.searchContent("宝可梦",false);
+        System.out.println(content);
+        Assert.assertTrue(content.contains("宝可梦"));
+        Result result = new Gson().fromJson(content, Result.class);
+        Assert.assertTrue(result.getList().size() > 0);
     }
 
     @Test
@@ -119,6 +133,6 @@ public class QQTest {
 
     @Test
     public void testSearchContent() {
-        AnalyzeRule analyzeRule = new AnalyzeRule();
+//        AnalyzeRule analyzeRule = new AnalyzeRule();
     }
 }

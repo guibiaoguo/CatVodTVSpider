@@ -4,8 +4,8 @@ import android.content.Context;
 
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
-import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.Utils;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
@@ -43,8 +43,8 @@ public class PanSou extends Ali {
         if (pattern.matcher(ids.get(0)).find()) return super.detailContent(ids);
         String url = siteUrl + ids.get(0).replace("/s/", "/cv/");
         Map<String, List<String>> respHeaders = new HashMap<>();
-        OkHttp.stringNoRedirect(url, getHeaders(ids.get(0)), respHeaders);
-        url = OkHttp.getRedirectLocation(respHeaders);
+        OkHttpUtil.stringNoRedirect(url, getHeaders(ids.get(0)), respHeaders);
+        url = OkHttpUtil.getRedirectLocation(respHeaders);
         String content = super.detailContent(Arrays.asList(url));
         return content;
     }
@@ -59,7 +59,7 @@ public class PanSou extends Ali {
             String typeId = entry.getKey();
             String typeName = entry.getValue();
             String url = siteUrl + "/search?k=" + URLEncoder.encode(key) + "&t=" + typeId;
-            Elements items = Jsoup.parse(OkHttp.string(url)).select("van-row > a");
+            Elements items = Jsoup.parse(OkHttpUtil.string(url,getHeaders(""))).select("van-row > a");
             for (Element item : items) {
                 String title = item.selectFirst("template").text().trim();
                 if (!title.contains(key)) continue;

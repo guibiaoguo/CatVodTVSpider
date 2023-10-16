@@ -125,6 +125,28 @@ public class Imaple extends Spider {
         return Result.string(classes, list, filters);
     }
 
+    /**
+     * 首页最近更新数据 如果上面的homeContent中不包含首页最近更新视频的数据 可以使用这个接口返回
+     *
+     * @return
+     */
+    @Override
+    public String homeVideoContent() throws Exception {
+        List<Vod> list = new ArrayList<>();
+        Document doc = Jsoup.parse(OkHttpUtil.string(siteUrl, getHeaders(siteUrl)));
+        for (Element element : doc.select("li.col-lg-6 >div.myui-vodlist__box")) {
+            String name = element.selectFirst(".title").text();
+            String img = element.selectFirst(".myui-vodlist__thumb").attr("data-original");
+            String remark = element.selectFirst("span.pic-text").text();
+
+            Matcher matcher = regexVid.matcher(element.selectFirst(".myui-vodlist__thumb").attr("href"));
+            if (!matcher.find())
+                continue;
+            String id = matcher.group(1);
+            list.add(new Vod(id, name, img, remark));
+        }
+        return Result.string(list);
+    }
 
     /**
      * 获取分类信息数据

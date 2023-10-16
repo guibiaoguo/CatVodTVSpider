@@ -8,10 +8,11 @@ import com.github.catvod.bean.Filter;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
-import com.github.catvod.net.OkHttp;
+
 import com.github.catvod.parser.NetworkUtils;
 import com.github.catvod.utils.Utils;
 import com.github.catvod.utils.Trans;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -45,12 +46,12 @@ public class Dm84 extends Spider {
         if (StrUtil.isEmpty(extend)) {
             extend = "http://dm84.site/";
         }
-        String content = OkHttp.string(extend);
+        String content = OkHttpUtil.string(extend);
         Document document = Jsoup.parse(content);
         for(Element element:document.select("li a")) {
             String site = element.select("a").attr("href");
             System.out.println("动漫巴士：" + site);
-            String subContent = OkHttp.string(site);
+            String subContent = OkHttpUtil.string(site);
             if (StrUtil.isNotEmpty(subContent) && !subContent.contains("Loading......")) {
                 siteUrl = site;
                 siteHost = NetworkUtils.INSTANCE.getSubDomain(siteUrl);
@@ -91,7 +92,7 @@ public class Dm84 extends Spider {
         List<Vod> list = new ArrayList<>();
         List<Class> classes = new ArrayList<>();
         LinkedHashMap<String, List<Filter>> filters = new LinkedHashMap<>();
-        Document doc = Jsoup.parse(OkHttp.string(siteUrl, getHeaders()));
+        Document doc = Jsoup.parse (OkHttpUtil.string(siteUrl, getHeaders()));
         for (Element element : doc.select("ul.nav_row > li > a")) {
             if (element.attr("href").startsWith("/list")) {
                 String id = element.attr("href").split("-")[1].substring(0, 1);
@@ -99,8 +100,9 @@ public class Dm84 extends Spider {
                 classes.add(new Class(id, name));
             }
         }
+        Elements vods = doc.select("div.item");
         for (Class item : classes) {
-            doc = Jsoup.parse(OkHttp.string(siteUrl + "/list-" + item.getTypeId() + ".html", getHeaders()));
+            doc = Jsoup.parse (OkHttpUtil.string(siteUrl + "/list-" + item.getTypeId() + ".html", getHeaders()));
             Elements elements = doc.select("ul.list_filter > li > div");
             List<Filter> array = new ArrayList<>();
             array.add(getFilter("類型", "type", elements.get(0).select("a").eachText()));
@@ -108,7 +110,7 @@ public class Dm84 extends Spider {
             array.add(getFilter("排序", "by", elements.get(2).select("a").eachText()));
             filters.put(item.getTypeId(), array);
         }
-        for (Element element : doc.select("div.item")) {
+        for (Element element : vods) {
             String img = element.select("a.cover").attr("data-bg");
             String url = element.select("a.title").attr("href");
             String name = element.select("a.title").text();
@@ -117,6 +119,26 @@ public class Dm84 extends Spider {
             list.add(new Vod(id, name, img, remark));
         }
         return Result.string(classes, list, filters);
+    }
+
+    /**
+     * 首页最近更新数据 如果上面的homeContent中不包含首页最近更新视频的数据 可以使用这个接口返回
+     *
+     * @return
+     */
+    @Override
+    public String homeVideoContent() throws Exception {
+        List<Vod> list = new ArrayList<>();
+        Document doc = Jsoup.parse (OkHttpUtil.string(siteUrl, getHeaders()));
+        for (Element element : doc.select("div.item")) {
+            String img = element.select("a.cover").attr("data-bg");
+            String url = element.select("a.title").attr("href");
+            String name = element.select("a.title").text();
+            String remark = element.select("span.desc").text();
+            String id = url.split("/")[2];
+            list.add(new Vod(id, name, img, remark));
+        }
+        return Result.string(list);
     }
 
     @Override
@@ -129,7 +151,7 @@ public class Dm84 extends Spider {
         String type = URLEncoder.encode(extend.get("type"));
         String year = extend.get("year");
         String target = siteUrl + String.format("/show-%s--%s-%s--%s-%s.html", tid, by, type, year, pg);
-        Document doc = Jsoup.parse(OkHttp.string(target, getHeaders()));
+        Document doc = Jsoup.parse (OkHttpUtil.string(target, getHeaders()));
         for (Element element : doc.select("div.item")) {
             String img = element.select("a.cover").attr("data-bg");
             String url = element.select("a.title").attr("href");
@@ -143,7 +165,7 @@ public class Dm84 extends Spider {
 
     @Override
     public String detailContent(List<String> ids) {
-        Document doc = Jsoup.parse(OkHttp.string(siteUrl.concat("/v/").concat(ids.get(0)), getHeaders()));
+        Document doc = Jsoup.parse (OkHttpUtil.string(siteUrl.concat("/v/").concat(ids.get(0)), getHeaders()));
         String name = doc.select("h1.v_title").text();
         String remarks = doc.select("p.v_desc > span.desc").text();
         String img = doc.select("meta[property=og:image]").attr("content");
@@ -193,7 +215,7 @@ public class Dm84 extends Spider {
     public String searchContent(String key, boolean quick) {
         List<Vod> list = new ArrayList<>();
         String target = siteUrl.concat("/s----------.html?wd=").concat(key);
-        Document doc = Jsoup.parse(OkHttp.string(target, getHeaders()));
+        Document doc = Jsoup.parse (OkHttpUtil.string(target, getHeaders()));
         for (Element element : doc.select("div.item")) {
             String img = element.select("a.cover").attr("data-bg");
             String url = element.select("a.title").attr("href");
@@ -207,7 +229,7 @@ public class Dm84 extends Spider {
 
     @Override
     public String playerContent(String flag, String id, List<String> vipFlags) {
-        Document doc = Jsoup.parse(OkHttp.string(siteUrl.concat(id), getHeaders()));
+        Document doc = Jsoup.parse (OkHttpUtil.string(siteUrl.concat(id), getHeaders()));
         String url = doc.select("iframe").attr("src");
         return Result.get().url(url).parse().header(getHeaders()).string();
     }

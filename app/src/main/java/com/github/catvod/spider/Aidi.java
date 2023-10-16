@@ -7,7 +7,7 @@ import com.github.catvod.bean.Class;
 import com.github.catvod.bean.Filter;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
-import com.github.catvod.net.OkHttp;
+
 import com.github.catvod.parser.NetworkUtils;
 import com.github.catvod.utils.StringUtil;
 
@@ -62,12 +62,12 @@ public class Aidi extends Spider {
         if (StrUtil.isEmpty(extend)) {
             extend = "https://adys123.com/";
         }
-        String content = OkHttp.string(extend);
+        String content = OkHttpUtil.string(extend);
         Document document = Jsoup.parse(content);
         for(Element element:document.select("nav a")) {
             String site = element.select("a").attr("href");
             System.out.println("爱迪影视：" + site);
-            String subContent = OkHttp.string(site);
+            String subContent = OkHttpUtil.string(site);
             if (StrUtil.isNotEmpty(subContent) && !subContent.contains("Loading......")) {
                 siteUrl = site;
                 siteHost = NetworkUtils.INSTANCE.getSubDomain(siteUrl);
@@ -111,7 +111,7 @@ public class Aidi extends Spider {
         List<Vod> list = new ArrayList<>();
         List<Class> classes = new ArrayList<>();
         LinkedHashMap<String, List<Filter>> filters = null;
-        Document doc = Jsoup.parse(OkHttp.string(siteUrl, getHeaders(siteUrl)));
+        Document doc = Jsoup.parse (OkHttpUtil.string(siteUrl, getHeaders(siteUrl)));
         for (Element element: doc.select("ul.nav_list > li a")) {
             String name = element.select("span").text();
             if (name.equals("樱花动漫")) {
@@ -146,6 +146,28 @@ public class Aidi extends Spider {
             filters = new Gson().fromJson(filterConfig, new TypeToken<LinkedHashMap<String, List<Filter>>>(){}.getType());
         }
         return Result.string(classes, list, filters);
+    }
+
+    /**
+     * 首页最近更新数据 如果上面的homeContent中不包含首页最近更新视频的数据 可以使用这个接口返回
+     *
+     * @return
+     */
+    @Override
+    public String homeVideoContent() throws Exception {
+        List<Vod> list = new ArrayList<>();
+        Document doc = Jsoup.parse (OkHttpUtil.string(siteUrl, getHeaders(siteUrl)));
+        for (Element element : doc.select("div.vod_row").get(1).select("div.cbox1 > ul.vodlist li a.vodlist_thumb")) {
+            String name = element.attr("title");
+            String img = element.attr("data-background-image");
+            String remark = element.select("span.pack_tagtext").text();
+            Matcher matcher = regexVid.matcher(element.attr("href"));
+            if (!matcher.find())
+                continue;
+            String id = matcher.group(1);
+            list.add(new Vod(id, name, img, remark));
+        }
+        return Result.string(list);
     }
 
     /**
@@ -226,7 +248,7 @@ public class Aidi extends Spider {
      */
     @Override
     public String detailContent(List<String> ids) {
-        Document doc = Jsoup.parse(OkHttp.string(siteUrl.concat("/movie/").concat(ids.get(0)).concat(".html"), getHeaders(siteUrl)));
+        Document doc = Jsoup.parse (OkHttpUtil.string(siteUrl.concat("/movie/").concat(ids.get(0)).concat(".html"), getHeaders(siteUrl)));
         // 取基本数据
         String img = doc.select("div.detail_list_box a.vodlist_thumb").attr("data-background-image");
         String name = doc.select("div.detail_list_box h1.title").text();

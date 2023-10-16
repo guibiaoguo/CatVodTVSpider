@@ -5,7 +5,7 @@ import android.text.TextUtils;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Utils;
 
-import java.io.IOException;
+
 import java.util.List;
 import java.util.Map;
 

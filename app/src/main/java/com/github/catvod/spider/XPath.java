@@ -9,9 +9,10 @@ import com.github.catvod.bean.Vod;
 import com.github.catvod.bean.xpath.Rule;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.net.OkHttp;
+
 import com.github.catvod.utils.Trans;
 import com.github.catvod.utils.Utils;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -350,7 +351,7 @@ public class XPath extends Spider {
         if (rule == null) {
             if (ext != null) {
                 if (ext.startsWith("http")) {
-                    String json = OkHttp.string(ext, null);
+                    String json = OkHttpUtil.string(ext, null);
                     rule = Rule.fromJson(json);
                     loadRuleExt(json);
                 } else {
@@ -366,6 +367,6 @@ public class XPath extends Spider {
 
     protected String fetch(String webUrl) {
         SpiderDebug.log(webUrl);
-        return OkHttp.string(webUrl, getHeaders(""));
+        return OkHttpUtil.string(webUrl, getHeaders(""));
     }
 }

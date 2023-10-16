@@ -2,9 +2,12 @@ package com.github.catvod.spider;
 
 import static org.junit.Assert.*;
 
+import com.github.catvod.bean.Result;
 import com.github.catvod.crawler.Spider;
+import com.google.gson.Gson;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -28,6 +31,14 @@ public class EEEDYTest {
     }
 
     @Test
+    public void homeVideoContent() throws Exception {
+        String content = eeedy.homeVideoContent();
+        System.out.println(content);
+        Result result = new Gson().fromJson(content, Result.class);
+        Assert.assertTrue(result.getList().size() > 0);
+    }
+
+    @Test
     public void categoryContent() throws Exception {
         System.out.println(eeedy.categoryContent("36","1",true,new HashMap<>()));
     }
@@ -39,7 +50,11 @@ public class EEEDYTest {
 
     @Test
     public void homeContent() throws Exception {
-        System.out.println(eeedy.homeContent(true));
+        String content = eeedy.homeContent(true);
+        System.out.println(content);
+        Result result = new Gson().fromJson(content, Result.class);
+        Assert.assertTrue(result.getClasses().size()>0);
+        Assert.assertTrue(result.getList().isEmpty() || result.getList().size() > 0);
     }
 
     @Test
@@ -49,6 +64,10 @@ public class EEEDYTest {
 
     @Test
     public void searchContent() throws Exception {
-        System.out.println(eeedy.searchContent("姐姐",false));
+        String content = eeedy.searchContent("宝可梦",false);
+        System.out.println(content);
+        Assert.assertTrue(content.contains("宝可梦"));
+        Result result = new Gson().fromJson(content, Result.class);
+        Assert.assertTrue(result.getList().size() > 0);
     }
 }

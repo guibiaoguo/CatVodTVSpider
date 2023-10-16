@@ -7,7 +7,7 @@ import com.github.catvod.bean.Class;
 import com.github.catvod.bean.Filter;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
-import com.github.catvod.net.OkHttp;
+
 import com.github.catvod.parser.NetworkUtils;
 import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.CBC;
@@ -75,12 +75,12 @@ public class CZSPP extends Spider {
         if (StrUtil.isEmpty(extend)) {
             extend = "https://www.cz01.vip";
         }
-        String content = OkHttp.string(extend);
+        String content = OkHttpUtil.string(extend);
         Document document = Jsoup.parse(content);
         for(Element element:document.select("h2 a")) {
             String site = element.select("a").attr("href");
             System.out.println("厂长资源：" + site);
-            String subContent = OkHttp.string(site);
+            String subContent = OkHttpUtil.string(site);
             if (StrUtil.isNotEmpty(subContent) && !subContent.contains("Loading......")) {
                 siteUrl = site;
                 siteHost = NetworkUtils.INSTANCE.getSubDomain(siteUrl);
@@ -182,6 +182,28 @@ public class CZSPP extends Spider {
             SpiderDebug.log(e);
             return null;
         }
+    }
+
+    /**
+     * 首页最近更新数据 如果上面的homeContent中不包含首页最近更新视频的数据 可以使用这个接口返回
+     *
+     * @return
+     */
+    @Override
+    public String homeVideoContent() throws Exception {
+        List<Vod> list = new ArrayList<>();
+        Document doc = Jsoup.parse(OkHttpUtil.string(siteUrl, getHeaders("")));
+        for (Element element : doc.select("div.mi_ne_kd > ul > li")) {
+            String name = element.selectFirst("h3 a").text();
+            String img = element.selectFirst("a img").attr("data-original");
+            String remark = element.select(".jidi").text();
+            Matcher matcher = regexVid.matcher(element.selectFirst("a").attr("href"));
+            if (!matcher.find())
+                continue;
+            String id = matcher.group(1);
+            list.add(new Vod(id, name, img, remark));
+        }
+        return Result.string(list);
     }
 
     public String categoryContent(String str, String str2, boolean z, HashMap<String, String> hashMap) {
@@ -485,7 +507,7 @@ public class CZSPP extends Spider {
             data.put("result", result + "");
             Map<String, String> headers = getHeaders(url);
             headers.put("cookie","esc_search_captcha=1; result="+result);
-            doc = Jsoup.parse(OkHttp.post(url, data, headers));
+            doc = Jsoup.parse( OkHttpUtil.post(url, data, headers));
         }
         for (Element element : doc.select(".search_list li")) {
             String name = element.selectFirst("h3 a").text();

@@ -10,8 +10,8 @@ import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.bean.ali.Item;
 import com.github.catvod.bean.paper.Data;
-import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.Utils;
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -60,7 +60,9 @@ public class Paper extends Ali {
 
     @Override
     public String homeContent(boolean filter) {
-        Document doc = Jsoup.parse(OkHttp.string(siteUrl, getHeaders()));
+        String content = OkHttpUtil.string(siteUrl, getHeaders());
+        System.out.println(content);
+        Document doc = Jsoup.parse(content);
         Elements trs = doc.select("table.tableizer-table > tbody > tr");
         LinkedHashMap<String, List<Filter>> filters = new LinkedHashMap<>();
         List<Class> classes = new ArrayList<>();
@@ -84,20 +86,23 @@ public class Paper extends Ali {
     @Override
     public String homeVideoContent() throws Exception {
         List<Vod> list = new ArrayList<>();
-        JSONObject homeData = new JSONObject(OkHttp.string(siteUrl + "home.json", getHeaders()));
+        String content = OkHttpUtil.string(siteUrl + "home.json", getHeaders());
+        System.out.println(content);
+        JSONObject homeData = new JSONObject(content);
         List<Data> items = Data.arrayFrom(homeData.getJSONObject("info").getJSONArray("new").toString());
         for (Data item : items) if (types.contains(item.getCat())) list.add(item.getVod());
         return Result.string(list);
     }
 
     @Override
-    public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) {
+    public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) throws JSONException {
         String type = extend.containsKey("type") ? extend.get("type") : tid;
         List<Vod> list = new ArrayList<>();
         Map<String, String> params = new HashMap<>();
         params.put("action", "viewcat");
         params.put("cat", type);
         params.put("num", pg);
+        params.put("token",getToken());
         if (StringUtils.contains(tid,"aliyundrive.com")) {
             Map<String,Object> body = new HashMap<>();
             String shareId = ReUtil.get(pattern, tid,1);
@@ -114,15 +119,15 @@ public class Paper extends Ali {
                 list.add(vod);
             }
         } else {
-            String result = OkHttp.post(api, params, getHeaders());
+            String result = OkHttpUtil.post(api, params, getHeaders());
             result = new Gson().fromJson(result, JsonObject.class).get("data").toString();
             for (Data item : Data.arrayFrom(result)) {
                 Vod vod = item.getVod();
                 Map<String, Object> data = new HashMap<>();
                 data.put("share_id", item.getKey());
-                String json = OkHttp.postJson("https://api.aliyundrive.com/adrive/v3/share_link/get_share_by_anonymous", new Gson().toJson(data), API.get().getHeader());
+                String json = OkHttpUtil.postJson("https://api.aliyundrive.com/adrive/v3/share_link/get_share_by_anonymous", new Gson().toJson(data), API.get().getHeader());
                 JsonArray fileInfos = new Gson().fromJson(json, JsonObject.class).getAsJsonArray("file_infos");
-                if (fileInfos != null && fileInfos.get(0).getAsJsonObject().get("type").getAsString().equals("folder")) {
+                if (fileInfos != null && fileInfos.size() > 0 && fileInfos.get(0).getAsJsonObject().get("type").getAsString().equals("folder")) {
                     vod.setVodTag("folder");
                 }
                 list.add(vod);
@@ -139,11 +144,12 @@ public class Paper extends Ali {
         params.put("from","web");
         params.put("keyword", key);
         params.put("token", getToken());
-        String result = OkHttp.post(api, params, getHeaders());
+        String result = OkHttpUtil.post(api, params, getHeaders());
 //        for (Data item : Data.arrayFrom(result)) if (types.contains(item.getCat()) && item.getTitle().contains(key)) list.add(item.getVod());
         JsonObject jsonObject = new Gson().fromJson(result, JsonObject.class);
+        if (!jsonObject.get("success").getAsBoolean()) return "";
         for (JsonElement jsonElement : jsonObject.getAsJsonArray("data")) {
-            String id = jsonElement.getAsJsonObject().get("key").getAsString();
+            String id = jsonElement.getAsJsonObject().get("alikey").getAsString();
             String name = jsonElement.getAsJsonObject().get("title").getAsString();
             String remarks = jsonElement.getAsJsonObject().get("des").getAsString();
             String img = "https://www.lgstatic.com/i/image2/M01/15/7E/CgoB5lysLXCADg6ZAABapAHUnQM321.jpg";
@@ -160,7 +166,7 @@ public class Paper extends Ali {
             Map<String, String> params = new HashMap<>();
             params.put("action", "get_token");
             params.put("from", "web");
-            String content = OkHttp.post(siteUrl, params, getHeaders());
+            String content = OkHttpUtil.post(api, params, getHeaders());
             JSONObject object = new JSONObject(content);
             if (object.getBoolean("success")) {
                 token = object.getString("data");

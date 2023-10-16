@@ -12,16 +12,24 @@ import com.google.gson.Gson;
 import com.guibiaoguo.myapplication.RoboApp;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.crypto.Cipher;
+
+import cn.hutool.crypto.SecureUtil;
+import cn.hutool.crypto.symmetric.AES;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UpYunTest {
@@ -32,10 +40,26 @@ public class UpYunTest {
 
     private Spider upyun;
 
+    @Test
+    public void CBC() {
+        AES aes = new AES("CBC", "PKCS7Padding",
+                // 密钥，可以自定义
+                "qq1920520460qqzz".getBytes(),
+                // iv加盐，按照实际需求添加
+                "qq1920520460qqzz".getBytes());
+
+// 解密
+        String decryptStr = aes.decryptStr("5ecafb798196ba3aecb1fa2f8f7f3904fa4699259863119e9014d4df8a43b46ff75e3d21fff50166bd4191c9e920a5a1f3da470f09c4c523d176e8faedac3d26d467d23900035248e5a2e17a7a3b2ed86c2f3c56e98c00fffcde5ffbdfbbcfd3");
+        System.out.println(decryptStr);
+    }
     @Before
     public void setUp() throws Exception {
         upyun = new UpYun();
         init();
+//        MockedStatic<AES> mockedStatic = Mockito.mockStatic(AES.class);
+//        mockedStatic.when(()->{
+//            AES.createCipher("");
+//        }).thenReturn(SecureUtil.createCipher("AES/CBC/PKCS7Padding"));
     }
 
     @After
@@ -114,12 +138,17 @@ public class UpYunTest {
 
     @Test
     public void searchContent() throws Exception {
-        System.out.println(upyun.searchContent("火影忍者", false));
+        String content = upyun.searchContent("宝可梦",false);
+        System.out.println(content);
+        Assert.assertTrue(content.contains("宝可梦"));
+        Result result = new Gson().fromJson(content, Result.class);
+        Assert.assertTrue(result.getList().size() > 0);
     }
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(upyun.detailContent(Arrays.asList("https://www.aliyundrive.com/s/dCTAQ2TUf1n/folder/645ba82aedd0ace5aa644c1e9a8a3943ede23597")));
+//        System.out.println(upyun.detailContent(Arrays.asList("https://www.aliyundrive.com/s/dCTAQ2TUf1n/folder/645ba82aedd0ace5aa644c1e9a8a3943ede23597")));
+        System.out.println(upyun.detailContent(Arrays.asList("https://www.aliyundrive.com/s/Ww2yRgrsQ2C/folder/64544fe8c5bb130c4e90418ebcc7e109f1eb143c")));
     }
 
     @Test

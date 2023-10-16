@@ -19,7 +19,7 @@ import com.github.catvod.bean.ali.Auth;
 import com.github.catvod.bean.ali.Data;
 import com.github.catvod.bean.ali.Item;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.net.OkHttp;
+
 import com.github.catvod.spider.Init;
 import com.github.catvod.spider.Proxy;
 import com.github.catvod.utils.Prefers;
@@ -135,7 +135,7 @@ public class API {
 
     private String post(String url, JSONObject body) {
         url = url.startsWith("https") ? url : "https://api.aliyundrive.com/" + url;
-        return OkHttp.postJson(url, body.toString(), getHeader());
+        return OkHttpUtil.postJson(url, body.toString(), getHeader());
     }
 
     private String auth(String url, JSONObject body, boolean retry) {
@@ -144,7 +144,7 @@ public class API {
 
     private String auth(String url, String json, boolean retry) {
         url = url.startsWith("https") ? url : "https://api.aliyundrive.com/" + url;
-        String result = OkHttp.postJson(url, json, getHeaderAuth());
+        String result = OkHttpUtil.postJson(url, json, getHeaderAuth());
         Log.e("auth", result);
         if (retry && checkAuth(result)) return auth(url, json, false);
         return result;
@@ -152,7 +152,7 @@ public class API {
 
     private String oauth(String url, String json, boolean retry) {
         url = url.startsWith("https") ? url : "https://api.aliyundrive.com/" + url;
-        String result = OkHttp.postJson(url, json, getHeaderOpen());
+        String result = OkHttpUtil.postJson(url, json, getHeaderOpen());
         Log.e("oauth", result);
         if (retry && checkOpen(result)) return oauth(url, json, false);
         return result;
@@ -160,7 +160,7 @@ public class API {
 
     private String sign(String url, String json, boolean retry) {
         url = url.startsWith("https") ? url : "https://api.aliyundrive.com/" + url;
-        String result = OkHttp.postJson(url, json, getHeaderSign());
+        String result = OkHttpUtil.postJson(url, json, getHeaderSign());
         Log.e("sign", result);
         if (retry && checkAuth(result)) return sign(url, json, false);
         return result;
@@ -199,7 +199,7 @@ public class API {
                     SpiderDebug.log("请求共享token");
                     Map<String, String> header = getHeader();
                     header.put("Referer", "arsenal");
-                    String result = OkHttp.string("https://video.t4tv.hz.cz/roblox", header);
+                    String result = OkHttpUtil.string("https://video.t4tv.hz.cz/roblox", header);
                     if (StrUtil.isEmpty(result)) {
                         refreshOpenToken();
                     }
@@ -223,7 +223,7 @@ public class API {
                 }
                 return true;
             }
-            if (token.startsWith("http")) token = OkHttp.string(token).replaceAll("[^A-Za-z0-9]", "");
+            if (token.startsWith("http")) token = OkHttpUtil.string(token).replaceAll("[^A-Za-z0-9]", "");
             body.put("refresh_token", token);
             body.put("grant_type", "refresh_token");
             JSONObject object = new JSONObject(post("https://auth.aliyundrive.com/v2/account/token", body));
@@ -262,7 +262,7 @@ public class API {
             JSONObject body = new JSONObject();
             body.put("code", code);
             body.put("grant_type", "authorization_code");
-            JSONObject object = new JSONObject(OkHttp.postJson("https://api.nn.ci/alist/ali_open/code", body.toString(), null));
+            JSONObject object = new JSONObject( OkHttpUtil.postJson("https://api.nn.ci/alist/ali_open/code", body.toString(), null));
             Log.e("DDD", object.toString());
             auth.setRefreshTokenOpen(object.getString("refresh_token"));
             auth.setAccessTokenOpen(object.getString("token_type") + " " + object.getString("access_token"));
@@ -479,7 +479,7 @@ public class API {
 
     public Object[] proxySub(Map<String, String> params) {
         String fileId = params.get("file_id");
-        String text = OkHttp.string(getDownloadUrl(fileId), getHeaderAuth());
+        String text = OkHttpUtil.string(getDownloadUrl(fileId), getHeaderAuth());
         Object[] result = new Object[3];
         result[0] = 200;
         result[1] = "application/octet-stream";
@@ -514,7 +514,7 @@ public class API {
             Object[] result = new Object[3];
             result[0] = 200;
             result[1] = "video/MP2T";
-            result[2] = OkHttp.newCall(mediaUrl, getHeader()).body().byteStream();
+            result[2] = OkHttpUtil.newCall(mediaUrl, getHeader()).body().byteStream();
             return result;
         } catch (Exception e) {
             return null;
@@ -532,9 +532,9 @@ public class API {
             String json = sign("v2/file/get_share_link_video_preview_play_info", body.toString(), true);
             JSONArray taskList = new JSONObject(json).getJSONObject("video_preview_play_info").getJSONArray("live_transcoding_task_list");
             Map<String, List<String>> respHeaders = new HashMap<>();
-            OkHttp.stringNoRedirect(getPreviewQuality(taskList, flag), getHeader(), respHeaders);
-            String location = OkHttp.getRedirectLocation(respHeaders);
-            String m3u8 = OkHttp.string(location, getHeader());
+            OkHttpUtil.stringNoRedirect(getPreviewQuality(taskList, flag), getHeader(), respHeaders);
+            String location = OkHttpUtil.getRedirectLocation(respHeaders);
+            String m3u8 = OkHttpUtil.string(location, getHeader());
             String mediaUrlPrefix = location.substring(0, location.lastIndexOf("/")) + "/";
             List<String> lines = new ArrayList<>();
             int mediaId = 0;
@@ -577,7 +577,7 @@ public class API {
     }
 
     private void getQRCode() {
-        Data data = Data.objectFrom(OkHttp.string("https://passport.aliyundrive.com/newlogin/qrcode/generate.do?appName=aliyun_drive&fromSite=52&appName=aliyun_drive&appEntrance=web&isMobile=false&lang=zh_CN&returnUrl=&bizParams=&_bx-v=2.2.3")).getContent().getData();
+        Data data = Data.objectFrom (OkHttpUtil.string("https://passport.aliyundrive.com/newlogin/qrcode/generate.do?appName=aliyun_drive&fromSite=52&appName=aliyun_drive&appEntrance=web&isMobile=false&lang=zh_CN&returnUrl=&bizParams=&_bx-v=2.2.3")).getContent().getData();
         Init.run(() -> showQRCode(data));
     }
 
@@ -601,7 +601,7 @@ public class API {
     private void startService(Map<String, String> params) {
         service = Executors.newScheduledThreadPool(1);
         service.scheduleAtFixedRate(() -> {
-            Data result = Data.objectFrom(OkHttp.post("https://passport.aliyundrive.com/newlogin/qrcode/query.do?appName=aliyun_drive&fromSite=52&_bx-v=2.2.3", params)).getContent().getData();
+            Data result = Data.objectFrom( OkHttpUtil.post("https://passport.aliyundrive.com/newlogin/qrcode/query.do?appName=aliyun_drive&fromSite=52&_bx-v=2.2.3", params,getHeader())).getContent().getData();
             if (result.hasToken()) setToken(result.getToken());
         }, 1, 1, TimeUnit.SECONDS);
     }

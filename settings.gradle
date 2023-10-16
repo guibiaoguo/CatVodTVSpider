@@ -11,9 +11,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://jitpack.io' }
     }
 }
 rootProject.name = "CatVodSpider"
 include ':app'
-include ':tools'
-include ':quickjs'
+//include ':tools'
+//include ':quickjs'

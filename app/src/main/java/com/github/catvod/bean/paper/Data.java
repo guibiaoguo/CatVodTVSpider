@@ -10,7 +10,7 @@ import java.util.List;
 
 public class Data {
 
-    @SerializedName("key")
+    @SerializedName("alikey")
     private String key;
     @SerializedName("cat")
     private String cat;

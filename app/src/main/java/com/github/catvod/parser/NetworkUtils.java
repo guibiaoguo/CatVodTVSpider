@@ -59,6 +59,7 @@ public class NetworkUtils {
             return "";
         } else {
             return URLUtil.complateUrl(StrUtil.subBefore(baseURL, ",", false), relativePathTrim);
+//            return URLUtil.completeUrl(StrUtil.subBefore(baseURL, ",", false), relativePathTrim);
         }
     }
 
@@ -71,6 +72,7 @@ public class NetworkUtils {
             return "";
         } else {
             return URLUtil.complateUrl(baseURL.toString(), relativePath);
+//            return URLUtil.completeUrl(baseURL.toString(), relativePath);
         }
     }
 

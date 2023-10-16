@@ -4,9 +4,11 @@ import android.content.Context;
 import android.text.TextUtils;
 import android.util.Base64;
 
+import com.github.catvod.bean.Result;
+import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.net.OkHttp;
+
 import com.github.catvod.parser.NetworkUtils;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
@@ -18,7 +20,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -80,12 +81,12 @@ public class Auete extends Spider {
         if (StrUtil.isEmpty(extend)) {
             extend = "https://auete.site/";
         }
-        String content = OkHttp.string(extend);
+        String content = OkHttpUtil.string(extend);
         Document document = Jsoup.parse(content);
         for(Element element:document.select("li a")) {
             String site = element.select("a").attr("href");
             System.out.println("Auete影视：" + site);
-            String subContent = OkHttp.string(site);
+            String subContent = OkHttpUtil.string(site);
             if (StrUtil.isNotEmpty(subContent) && !subContent.contains("Loading......")) {
                 siteUrl = site;
                 siteHost = NetworkUtils.INSTANCE.getSubDomain(siteUrl);
@@ -179,6 +180,29 @@ public class Auete extends Spider {
             SpiderDebug.log(e);
         }
         return "";
+    }
+
+    /**
+     * 首页最近更新数据 如果上面的homeContent中不包含首页最近更新视频的数据 可以使用这个接口返回
+     *
+     * @return
+     */
+    @Override
+    public String homeVideoContent() throws Exception {
+        List<Vod> list = new ArrayList<>();
+        Document doc = Jsoup.parse(OkHttpUtil.string(siteUrl, getHeaders(siteUrl)));
+        Elements elements = doc.select("ul.threadlist li");
+        for (Element vod : elements) {
+            String title = vod.select("h2 a").attr("title");
+            String cover = vod.select("a img").attr("src");
+            String remark = vod.select("a button").text();
+            Matcher matcher = regexVid.matcher(vod.select("a").attr("href"));
+            if (!matcher.find())
+                continue;
+            String id = matcher.group(1);
+            list.add(new Vod(id,title,cover,remark));
+        }
+        return Result.string(list);
     }
 
     /**

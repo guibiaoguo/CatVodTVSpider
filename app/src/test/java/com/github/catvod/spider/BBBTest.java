@@ -2,9 +2,12 @@ package com.github.catvod.spider;
 
 import static org.junit.Assert.*;
 
+import com.github.catvod.bean.Result;
 import com.github.catvod.crawler.Spider;
+import com.google.gson.Gson;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -38,12 +41,19 @@ public class BBBTest {
 
     @Test
     public void homeContent() throws Exception {
-        System.out.println(bbb.homeContent(true));
+        String content = bbb.homeContent(true);
+        System.out.println(content);
+        Result result = new Gson().fromJson(content, Result.class);
+        Assert.assertTrue(result.getClasses().size()>0);
+        Assert.assertTrue(result.getList().isEmpty() || result.getList().size() > 0);
     }
 
     @Test
     public void homeVideoContent() throws Exception {
-        System.out.println(bbb.homeVideoContent());
+        String content = bbb.homeVideoContent();
+        System.out.println(content);
+        Result result = new Gson().fromJson(content, Result.class);
+        Assert.assertTrue(result.getList().isEmpty() || result.getList().size() > 0);
     }
 
     @Test

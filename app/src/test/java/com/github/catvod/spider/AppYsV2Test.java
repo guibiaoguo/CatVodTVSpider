@@ -1,23 +1,21 @@
 package com.github.catvod.spider;
 
-import static org.junit.Assert.*;
-
 import com.github.catvod.bean.Class;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
-import com.github.catvod.net.OkHttp;
+
+import com.github.catvod.utils.okhttp.OkHttpUtil;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -38,15 +36,17 @@ public class AppYsV2Test {
 
     @Test
     public void init() {
-//        appysv2.init(null, "https://www.naifei.org/api.php/v1.vod");
-        appysv2.init(null, "http://slapibf.com/api.php/provide/vod/");
+        appysv2.init(null, "https://www.naifei.life/api.php/v1.vod");
+//        appysv2.init(null, "http://slapibf.com/api.php/provide/vod/");
     }
 
     @Test
     public void homeContent() throws Exception {
         String content = appysv2.homeContent(true);
-        Result result = new Gson().fromJson(content, Result.class);
         System.out.println(content);
+        Result result = new Gson().fromJson(content, Result.class);
+        Assert.assertTrue(result.getClasses().size()>0);
+        Assert.assertTrue(result.getList().isEmpty() || result.getList().size() > 0);
     }
 
     @Test
@@ -110,14 +110,14 @@ public class AppYsV2Test {
 
     @Test
     public void desc() {
-        String content = OkHttp.string("https://app.bl210.com/api.php/v1.vod");
+        String content = OkHttpUtil.string("https://app.bl210.com/api.php/v1.vod");
         JsonObject jsonObject = new Gson().fromJson(content, JsonObject.class);
         System.out.println(content);
     }
 
     @Test
     public void testAppYSV2() {
-        String content = OkHttp.string("https://gitlab.com/mao4284120/js/-/raw/main/212757_bad.json");
+        String content = OkHttpUtil.string("https://gitlab.com/mao4284120/js/-/raw/main/212757_bad.json");
         JsonObject jsonObject = new Gson().fromJson(content, JsonObject.class);
         JsonArray jsonArray = jsonObject.getAsJsonArray("sites");
         JsonArray bad = new JsonArray();
