@@ -23,10 +23,10 @@ public class Dora extends Spider {
 //        classMap.put("110c922de7d69804467fb83d3bb664b5",new AppTT());
         classMap.put("b88de1329655cca1beba45aa9776de70",new Cokemv());
         classMap.put("f41992bd740145ed58cb212dc0876582",new Dy555());
-        classMap.put("b2e573ff040fcd54b50475660ee1a7d1",new Lgyy());
-        classMap.put("6deed4548c44b18d268a5d828f04d86e",new LiteApple());
-        classMap.put("459b1cb892e317546676a2c9dcec2bff",new Kuaikan());
-        classMap.put("a4ce9a4ba7d4f4bced2ff9dfc4ab4e50",new IKan());
+//        classMap.put("b2e573ff040fcd54b50475660ee1a7d1",new Lgyy());
+//        classMap.put("6deed4548c44b18d268a5d828f04d86e",new LiteApple());
+//        classMap.put("459b1cb892e317546676a2c9dcec2bff",new Kuaikan());
+//        classMap.put("a4ce9a4ba7d4f4bced2ff9dfc4ab4e50",new IKan());
 //        classMap.put("8e3aefcba838d8dc5102ac786719d837",new Yiqik());
 //        classMap.put("0842c1d2a8534ec62fb3a3ed848851a7",new Xiaoh());
     }

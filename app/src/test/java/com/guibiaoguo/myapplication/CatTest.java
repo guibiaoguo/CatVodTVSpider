@@ -1,5 +1,5 @@
-//package com.guibiaoguo.myapplication;
-//
+package com.guibiaoguo.myapplication;
+
 //import android.content.Context;
 //
 //import com.github.catvod.parser.AnalyzeRule;
@@ -20,7 +20,7 @@
 //import com.github.catvod.spider.Enlienli;
 //import com.github.catvod.spider.GoIndex;
 //import com.github.catvod.spider.Hsck;
-//import com.github.catvod.parser.HttpParser;
+import com.github.catvod.parser.HttpParser;
 //import com.github.catvod.spider.IQIYI;
 //import com.github.catvod.spider.Imaple;
 //import com.github.catvod.spider.Jumi;
@@ -34,18 +34,18 @@
 //import com.github.catvod.utils.CipherUtil;
 //import com.github.catvod.utils.Misc;
 //import com.github.catvod.utils.StringUtil;
-//import com.github.catvod.utils.okhttp.OKCallBack;
+import com.github.catvod.utils.okhttp.OKCallBack;
 //import com.github.catvod.utils.okhttp.OkHttpUtil;
 //
 //import org.apache.commons.lang3.StringUtils;
 //import org.json.JSONArray;
 //
-//import org.json.JSONObject;
+import org.json.JSONObject;
 //import org.jsoup.Jsoup;
 //import org.jsoup.nodes.Document;
 //import org.jsoup.nodes.Element;
 //import org.jsoup.select.Elements;
-//import org.junit.Test;
+import org.junit.Test;
 //
 //import java.io.IOException;
 //import java.lang.reflect.Method;
@@ -73,9 +73,9 @@
 //
 //import cn.hutool.core.util.StrUtil;
 //import okhttp3.Call;
-//import okhttp3.Response;
-//
-//public class CatTest {
+import okhttp3.Response;
+
+public class CatTest {
 //
 //    @Test
 //    public void test1() {
@@ -1744,28 +1744,28 @@
 //        System.out.println("ends");
 //    }
 //
-//    @Test
-//    public void testDouban() throws Exception {
-//        int page = 1;
-//        int count = 100;
-//        String weburl = "https://frodo.douban.com/api/v2/movie/movie_showing？？area=全部&" + "playable=0&sort=recommend&score_range=0,10" + "&start=0" + "&count=" + count + "&loc_id=108288&apikey=0dad551ec0f84ed02907ff5c42e8ec70?host=frodo.douban.com;post;{User-Agent@Rexxar-Core/0.1.3 api-client/1 com.douban.frodo/7.9.0.beta2(215) Android/25 product/TAS-AL00 vendor/HUAWEI model/TAS-AL00  rom/android  network/wifi  platform/mobile com.douban.frodo/7.9.0.beta2(215) Rexxar/1.2.151  platform/mobile 1.2.151}";
-//        //weburl = "https://frodo.douban.com/api/v2/movie/35376457？？apikey=0dad551ec0f84ed02907ff5c42e8ec70?host=frodo.douban.com;post;{User-Agent@Rexxar-Core/0.1.3 api-client/1 com.douban.frodo/7.9.0.beta2(215) Android/25 product/TAS-AL00 vendor/HUAWEI model/TAS-AL00  rom/android  network/wifi  platform/mobile com.douban.frodo/7.9.0.beta2(215) Rexxar/1.2.151  platform/mobile 1.2.151}";
+    @Test
+    public void testDouban() throws Exception {
+        int page = 1;
+        int count = 100;
+        String weburl = "https://frodo.douban.com/api/v2/movie/movie_showing？？area=全部&" + "playable=0&sort=recommend&score_range=0,10" + "&start=0" + "&count=" + count + "&loc_id=108288&apikey=0dad551ec0f84ed02907ff5c42e8ec70?host=frodo.douban.com;post;{User-Agent@Rexxar-Core/0.1.3 api-client/1 com.douban.frodo/7.9.0.beta2(215) Android/25 product/TAS-AL00 vendor/HUAWEI model/TAS-AL00  rom/android  network/wifi  platform/mobile com.douban.frodo/7.9.0.beta2(215) Rexxar/1.2.151  platform/mobile 1.2.151}";
+        weburl = "https://frodo.douban.com/api/v2/movie/35376457？？apikey=0dad551ec0f84ed02907ff5c42e8ec70?host=frodo.douban.com;post;{User-Agent@Rexxar-Core/0.1.3 api-client/1 com.douban.frodo/7.9.0.beta2(215) Android/25 product/TAS-AL00 vendor/HUAWEI model/TAS-AL00  rom/android  network/wifi  platform/mobile com.douban.frodo/7.9.0.beta2(215) Rexxar/1.2.151  platform/mobile 1.2.151}";
 //        weburl = "https://frodo.douban.com/api/v2/subject_collection/tv_hot/items？？playable=1&sort=recommend&score_range=0,10&start=0&count=100&apikey=0dad551ec0f84ed02907ff5c42e8ec70?host=frodo.douban.com;post;{User-Agent@Rexxar-Core/0.1.3 api-client/1 com.douban.frodo/7.9.0.beta2(215) Android/25 product/TAS-AL00 vendor/HUAWEI model/TAS-AL00  rom/android  network/wifi  platform/mobile com.douban.frodo/7.9.0.beta2(215) Rexxar/1.2.151  platform/mobile 1.2.151}";
 //        weburl = "https://frodo.douban.com/api/v2/movie/tag？？start=0&count=30&q=电影,美国&sort=recommend&score_range=0,10&start=0&count=100&apikey=0dad551ec0f84ed02907ff5c42e8ec70?host=frodo.douban.com;post;{User-Agent@Rexxar-Core/0.1.3 api-client/1 com.douban.frodo/7.9.0.beta2(215) Android/25 product/TAS-AL00 vendor/HUAWEI model/TAS-AL00  rom/android  network/wifi  platform/mobile com.douban.frodo/7.9.0.beta2(215) Rexxar/1.2.151  platform/mobile 1.2.151}";
-//        System.out.println(weburl);
-//        OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(weburl);
-//
-//        if (callBack.getResult().code() == 200) {
-//            try {
-//                String content = callBack.getResult().body().string();
-//                System.out.println(content);
-//                JSONObject jsonObject = new JSONObject(content);
-//                jsonObject.optInt("count");
-//            } catch (Exception e) {
-//                System.out.println(e);
-//            }
-//        }
-//    }
+        System.out.println(weburl);
+        OKCallBack<Response> callBack = HttpParser.parseSearchUrlForHtml(weburl);
+
+        if (callBack.getResult().code() == 200) {
+            try {
+                String content = callBack.getResult().body().string();
+                System.out.println(content);
+                JSONObject jsonObject = new JSONObject(content);
+                jsonObject.optInt("count");
+            } catch (Exception e) {
+                System.out.println(e);
+            }
+        }
+    }
 //
 //    @Test
 //    public void qindou() throws Exception {
@@ -2195,5 +2195,5 @@
 //        int lengthCmp = split1.length - split2.length;
 //        return lengthCmp;
 //    }
-//}
-//
+}
+
