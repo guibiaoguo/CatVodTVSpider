@@ -86,3 +86,4 @@
 #-dontwarn org.bouncycastle.**
 # Sardine
 -keep class com.thegrizzlylabs.sardineandroid.** { *; }
+-dontwarn com.thegrizzlylabs.sardineandroid.**

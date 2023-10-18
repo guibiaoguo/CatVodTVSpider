@@ -66,7 +66,6 @@ public class QingDou extends Spider {
     protected HashMap<String, String> getHeaders() {
         HashMap<String, String> headers = new HashMap<>();
         headers.put("referer", "https://servicewechat.com/wx2f9b06c1de1ccfca/84/page-frame.html");
-        headers.put("Referer", "frodo.douban.com");
         headers.put("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36 MicroMessenger/7.0.9.501 NetType/WIFI MiniProgramEnv/Windows WindowsWechat");
         return headers;
     }
@@ -155,6 +154,7 @@ public class QingDou extends Spider {
         String url = "https://frodo.douban.com/api/v2/" + type + "?"+TextUtils.join("&",params.entrySet())+"&apikey="+apiKey;
         System.out.println(url);
         String content = OkHttpUtil.string(url, getHeaders());
+//        System.out.println(content);
         JsonObject jsonObject = new Gson().fromJson(content, JsonObject.class);
         List<Vod> list = new ArrayList<>();
         JsonArray videos = jsonObject.getAsJsonArray("subject_collection_items");
