@@ -645,7 +645,8 @@ public class JsExtensionsTest {
     @Test
     public void testMehod() {
         System.out.println(StrUtil.str(null));
-        String url = URLUtil.complateUrl("https://m.huangdingzhijia.com/test/index.php?action=search", "novel/6098.html");
+//        String url = URLUtil.complateUrl("https://m.huangdingzhijia.com/test/index.php?action=search", "novel/6098.html");
+        String url = URLUtil.completeUrl("https://m.huangdingzhijia.com/test/index.php?action=search", "novel/6098.html");
         System.out.println(url);
         System.out.println(StringUtils.substringBefore("https://m.huangdingzhijia.com/test/index.php,{'method':'post','body':''}", ","));
         System.out.println(StrUtil.subBefore("https://m.huangdingzhijia.com/test/index.php,{'method':'post','body':''}", ",",false));

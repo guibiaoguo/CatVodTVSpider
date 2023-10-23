@@ -54,7 +54,7 @@ public class Hsck extends Spider {
 
     @Override
     public void init(Context context, String extend) {
-        super.init(context, extend);
+        //super.init(context, extend);
         try {
             domain = getDomain();
         } catch (Exception e) {

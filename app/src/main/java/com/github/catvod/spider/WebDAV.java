@@ -2,6 +2,7 @@ package com.github.catvod.spider;
 
 import android.content.Context;
 import android.text.TextUtils;
+import android.util.Base64;
 
 import com.github.catvod.bean.Class;
 import com.github.catvod.bean.Filter;
@@ -13,6 +14,7 @@ import com.github.catvod.bean.webdav.Sorter;
 import com.github.catvod.crawler.Spider;
 
 import com.github.catvod.utils.Image;
+import com.github.catvod.utils.StringUtil;
 import com.github.catvod.utils.Utils;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 import com.thegrizzlylabs.sardineandroid.DavResource;
@@ -91,7 +93,9 @@ public class WebDAV extends Spider {
         List<DavResource> files = new ArrayList<>();
         List<Vod> list = new ArrayList<>();
         Drive drive = getDrive(key);
-        for (DavResource item : getList(drive, path, Utils.MEDIA)) {
+        List<DavResource> parents = getList(drive, path, Utils.MEDIA);
+        Sorter.sort("name", "asc", parents);
+        for (DavResource item : parents) {
             if (item.isDirectory()) folders.add(item);
             else files.add(item);
         }
@@ -133,7 +137,14 @@ public class WebDAV extends Spider {
     @Override
     public String playerContent(String flag, String id, List<String> vipFlags) throws Exception {
         String[] ids = id.split("~~~");
-        return Result.get().url(getProxyUrl(ids[0])).subs(getSub(ids)).string();
+        String key = id.contains("/") ? id.substring(0, id.indexOf("/")) : id;
+        Drive drive = getDrive(key);
+        byte[] data = (drive.getUser() + ":" + drive.getPass()).getBytes("UTF-8");
+        Map<String,String> headers = new HashMap<>();
+        headers.put("authorization", "Basic " + Base64.encodeToString(data, Base64.NO_WRAP));
+        String path = id.contains("/") ? id.substring(id.indexOf("/")) : "";
+        String url = drive.getHost() + path;
+        return Result.get().url(url).header(headers).subs(getSub(ids)).string();
     }
 
     private List<DavResource> getList(Drive drive, String path, List<String> ext) throws Exception {
@@ -143,8 +154,10 @@ public class WebDAV extends Spider {
         Iterator<DavResource> iterator = items.iterator();
         while (iterator.hasNext()) {
             DavResource item = iterator.next();
-            if (!item.isDirectory() && !item.getName().contains(".")) iterator.remove();
-            if (!item.isDirectory() && !ext.contains(getExt(item))) iterator.remove();
+            if (!item.isDirectory() && !item.getName().contains("."))
+                iterator.remove();
+            else if (!item.isDirectory() && !ext.contains(getExt(item)))
+                iterator.remove();
         }
         return items;
     }

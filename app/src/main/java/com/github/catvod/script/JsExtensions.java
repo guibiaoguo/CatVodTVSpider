@@ -450,9 +450,9 @@ public abstract class JsExtensions implements JsEncodeUtils {
 
     public List<String> split(Object object, String separator) {
         if (object instanceof List) {
-            return Arrays.asList(StrUtil.split(StrUtil.join("\n", (List)object),separator));
+            return StrUtil.split(StrUtil.join("\n", (List)object),separator);
         }
-        return Arrays.asList(StrUtil.split(object.toString(), separator));
+        return StrUtil.split(object.toString(), separator);
     }
 
     public String htmlFormat(String str) {

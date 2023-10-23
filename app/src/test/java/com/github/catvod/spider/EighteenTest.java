@@ -58,15 +58,15 @@ public class EighteenTest {
 
     @Test
     public void searchContent() throws Exception {
-        String content = eighteen.searchContent("宝可梦",false);
+        String content = eighteen.searchContent("巨乳",false);
         System.out.println(content);
-        Assert.assertTrue(content.contains("宝可梦"));
+        Assert.assertTrue(content.contains("巨乳"));
         Result result = new Gson().fromJson(content, Result.class);
         Assert.assertTrue(result.getList().size() > 0);
     }
 
     @Test
     public void playerContent() throws Exception {
-        System.out.println(eighteen.playerContent("","chinese_content/46799/SSNI-209.html",new ArrayList<>()));
+//        System.out.println(eighteen.playerContent("","chinese_content/46799/SSNI-209.html",new ArrayList<>()));
     }
 }

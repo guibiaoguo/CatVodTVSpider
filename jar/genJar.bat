@@ -22,6 +22,7 @@ move "%~dp0\Smali_classes\org\mozilla\javascript" "%~dp0\spider.jar\smali\org\mo
 move "%~dp0\Smali_classes\cn\hutool\crypto" "%~dp0\spider.jar\smali\cn\hutool\"
 
 rd /s/q "%~dp0\Smali_classes"
+xcopy /e/y "%~dp0\catvod\spider" "%~dp0\spider.jar\smali\com\github\catvod\spider\"
 java -jar "%~dp0\3rd\apktool_2.4.1.jar" b "%~dp0\spider.jar" -c
 
 move "%~dp0\spider.jar\dist\dex.jar" "%~dp0\custom_spider.jar"

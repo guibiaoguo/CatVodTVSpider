@@ -15,6 +15,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import cn.hutool.core.util.StrUtil;
+
 public class Result {
 
     @SerializedName("class")
@@ -45,6 +47,8 @@ public class Result {
     private Integer limit;
     @SerializedName("total")
     private Integer total;
+    @SerializedName("subt")
+    private String subt;
 
     public static Result objectFrom(String str) {
         return new Gson().fromJson(str, Result.class);
@@ -162,6 +166,17 @@ public class Result {
     }
 
     public Result subs(List<Sub> subs) {
+        if (!subs.isEmpty()) {
+            subt = subs.get(0).getUrl();
+            if (subt.indexOf("?")>-1) {
+                subt += "&filename=" + subs.get(0).getName();
+            } else {
+                subt += "?filename=" + subs.get(0).getName();
+            }
+            if (!StrUtil.endWithAnyIgnoreCase(subs.get(0).getName(),".ttml",".ass",".srt",".stl",".ssa")) {
+                subt += "."+subs.get(0).getExt();
+            }
+        }
         this.subs = subs;
         return this;
     }

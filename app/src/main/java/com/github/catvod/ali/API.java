@@ -28,6 +28,8 @@ import com.github.catvod.utils.Trans;
 import com.github.catvod.utils.Utils;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.starkbank.ellipticcurve.Ecdsa;
 import com.starkbank.ellipticcurve.PrivateKey;
@@ -95,7 +97,7 @@ public class API {
         if (StrUtil.isEmpty(token)) {
             auth.clean();
         }
-        else if (StrUtil.isNotEmpty(token)) {
+        else if (StrUtil.isNotEmpty(token) && auth.getRefreshToken().isEmpty()) {
             auth.setRefreshToken(token);
         }
     }
@@ -174,7 +176,7 @@ public class API {
     }
 
     private boolean checkOpen(String result) {
-        if (result.contains("AccessTokenInvalid")) return refreshOpenToken();
+        if (result.contains("AccessTokenExpired") || result.contains("AccessTokenInvalid") || result.contains("TokenVerifyFailed")) return refreshOpenToken();
         return false;
     }
 
@@ -265,7 +267,7 @@ public class API {
             JSONObject object = new JSONObject( OkHttpUtil.postJson("https://api.nn.ci/alist/ali_open/code", body.toString(), null));
             Log.e("DDD", object.toString());
             auth.setRefreshTokenOpen(object.getString("refresh_token"));
-            auth.setAccessTokenOpen(object.getString("token_type") + " " + object.getString("access_token"));
+//            auth.setAccessTokenOpen(object.getString("token_type") + " " + object.getString("access_token"));
         } catch (Exception e) {
             SpiderDebug.log(e);
         }
@@ -426,8 +428,29 @@ public class API {
         return sub;
     }
 
+    private String preview(String fileId,String flag) throws Exception {
+        JSONObject body = new JSONObject();
+        body.put("file_id", fileId);
+        body.put("drive_id", auth.getDriveId());
+        body.put("category", "live_transcoding");
+        body.put("url_expire_sec", "14400");
+        String content = oauth("https://open.aliyundrive.com/adrive/v1.0/openFile/getVideoPreviewPlayInfo", body.toString(), true);;
+        JSONObject jsonObject = new JSONObject(content);
+        JSONArray jsonArray = jsonObject.optJSONObject("video_preview_play_info").optJSONArray("live_transcoding_task_list");
+        String url = getPreviewQuality(jsonArray,flag);
+        Init.execute(() -> delete(fileId));
+        return url;
+    }
+
     public String getPreviewUrl(String fileId, String flag) {
-        return Proxy.getUrl() + "?do=ali&type=m3u8&file_id=" + fileId + "&flag=" + getPreviewQuality(flag);
+        try {
+            fileId = copy(fileId);
+            return TextUtils.isEmpty(fileId) ? "" : preview(fileId,flag);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return getshareDownloadUrl(fileId);
+        }
+//        return Proxy.getUrl() + "?do=ali&type=m3u8&file_id=" + fileId + "&flag=" + getPreviewQuality(flag);
     }
 
     public String getDownloadUrl(String fileId) {
@@ -573,7 +596,7 @@ public class API {
                 return task.getString("url");
             }
         }
-        return taskList.getJSONObject(0).getString("url");
+        return taskList.getJSONObject(taskList.length()-1).getString("url");
     }
 
     private void getQRCode() {

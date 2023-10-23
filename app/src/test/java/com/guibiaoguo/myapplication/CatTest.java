@@ -34,7 +34,12 @@ import com.github.catvod.parser.HttpParser;
 //import com.github.catvod.utils.CipherUtil;
 //import com.github.catvod.utils.Misc;
 //import com.github.catvod.utils.StringUtil;
+import com.github.catvod.utils.StringUtil;
 import com.github.catvod.utils.okhttp.OKCallBack;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 //import com.github.catvod.utils.okhttp.OkHttpUtil;
 //
 //import org.apache.commons.lang3.StringUtils;
@@ -76,6 +81,686 @@ import org.junit.Test;
 import okhttp3.Response;
 
 public class CatTest {
+
+    @Test
+    public void testSites() {
+        String sites = "[\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathFilter\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/zxzj2.json\",\n" +
+                "      \"filterable\": 1,\n" +
+                "      \"key\": \"csp_xpath_zxzj2\",\n" +
+                "      \"name\": \"\uD83E\uDD8B在线之家(XPF)\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPath\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/doujiao.json\",\n" +
+                "      \"filterable\": 1,\n" +
+                "      \"key\": \"csp_xpath_doujiao\",\n" +
+                "      \"name\": \"\uD83E\uDD8B豆角影视(XP)\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPath\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/bttwoo.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_xpath_bttwoo\",\n" +
+                "      \"name\": \"\uD83E\uDD8B两个BT(XP)\",\n" +
+                "      \"quickSearch\": 0,\n" +
+                "      \"searchable\": 0,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPath\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/xqmi.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_xpath_xqmi\",\n" +
+                "      \"name\": \"\uD83E\uDD8B小 强 迷(XP)\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/tegou.json\",\n" +
+                "      \"filterable\": 1,\n" +
+                "      \"key\": \"csp_biubiu_tegou\",\n" +
+                "      \"name\": \"\uD83D\uDC1B特狗影视\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/真不卡cerrd(ns).json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_真不卡cerrd\",\n" +
+                "      \"name\": \"\uD83D\uDC1B真不卡2(NS)\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/奇优影院(ns).json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_奇优影院ns\",\n" +
+                "      \"name\": \"\uD83D\uDC1B奇优影院(NS)\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/黑狐影视(ns).json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_黑狐影视ns\",\n" +
+                "      \"name\": \"\uD83D\uDC1B黑狐影视(NS)\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/乐猪影视.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_乐猪影视\",\n" +
+                "      \"name\": \"\uD83D\uDC1B乐猪影视2\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/双十电影.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_双十电影\",\n" +
+                "      \"name\": \"\uD83D\uDC1B双十电影\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/韩剧在线.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_韩剧在线\",\n" +
+                "      \"name\": \"\uD83D\uDC1B韩剧在线\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/akmeiju.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_akmeiju\",\n" +
+                "      \"name\": \"\uD83D\uDC1B爱看美剧\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathMacFilter\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/虎牙.json\",\n" +
+                "      \"filterable\": 1,\n" +
+                "      \"key\": \"csp_xpath_huya\",\n" +
+                "      \"name\": \"\uD83D\uDC2F虎牙(XPF)\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathMacFilter\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/huya2.json\",\n" +
+                "      \"filterable\": 1,\n" +
+                "      \"key\": \"csp_xpath_huyag\",\n" +
+                "      \"name\": \"\uD83E\uDD8A虎牙G\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/小猫咪.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_小猫咪\",\n" +
+                "      \"name\": \"\uD83D\uDC1B小 猫 咪\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathMacFilter\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/Gimy2.json\",\n" +
+                "      \"filterable\": 1,\n" +
+                "      \"key\": \"csp_xpath_Gimy\",\n" +
+                "      \"name\": \"\uD83E\uDD8BGimy影院\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathMacFilter\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/omofun.json\",\n" +
+                "      \"filterable\": 1,\n" +
+                "      \"key\": \"csp_xpath_omofun\",\n" +
+                "      \"name\": \"\uD83E\uDD8Bomofun日漫\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathMacFilter\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/2gangju.json\",\n" +
+                "      \"filterable\": 1,\n" +
+                "      \"key\": \"csp_xpath_2gangju\",\n" +
+                "      \"name\": \"\uD83E\uDD8B爱港剧\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathFilter\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/lmys.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_xpath_lmys\",\n" +
+                "      \"name\": \"\uD83E\uDD8B蓝莓影视\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathFilter\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath//wnvod.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_xpath_wnvod\",\n" +
+                "      \"name\": \"\uD83E\uDD8B万能影视\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPath\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/kyikan.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_xpath_kyikan\",\n" +
+                "      \"name\": \"\uD83E\uDD8B看一看\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathMac\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/yanetflix.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_xpath_yanetflix\",\n" +
+                "      \"name\": \"\uD83E\uDD8B鸭奈非\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPath\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/zj883.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_xpath_zj883\",\n" +
+                "      \"name\": \"\uD83E\uDD8B追剧网\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPath\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/yinghua2.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_yinghua\",\n" +
+                "      \"name\": \"\uD83E\uDD8B樱花动漫\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPath\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/bidiys2.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_XPath_bidiys\",\n" +
+                "      \"name\": \"\uD83E\uDD8B哔嘀影视\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathFilter\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/auete.json\",\n" +
+                "      \"filterable\": 1,\n" +
+                "      \"key\": \"csp_xpath_auete\",\n" +
+                "      \"name\": \"\uD83E\uDD8BAuete影视\",\n" +
+                "      \"quickSearch\": 0,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathFilter\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/6d.json\",\n" +
+                "      \"filterable\": 1,\n" +
+                "      \"key\": \"csp_xpath_6d\",\n" +
+                "      \"name\": \"\uD83E\uDD8B六度TV\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathFilter\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/dandanzan10.json\",\n" +
+                "      \"filterable\": 1,\n" +
+                "      \"key\": \"csp_xpath_dandanzan10\",\n" +
+                "      \"name\": \"\uD83E\uDD8B蛋蛋赞\",\n" +
+                "      \"quickSearch\": 0,\n" +
+                "      \"searchable\": 0,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathFilter\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/cokemv.json\",\n" +
+                "      \"filterable\": 1,\n" +
+                "      \"key\": \"csp_xpath_cokemv\",\n" +
+                "      \"name\": \"\uD83E\uDD8BCokemv\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathMac\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/huigutongying.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_xpath_tjyy\",\n" +
+                "      \"name\": \"\uD83E\uDD8B奇优影院\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathMac\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/dy888.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_xpath_dy888\",\n" +
+                "      \"name\": \"\uD83E\uDD8B电影888\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathMac\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/juhuang.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_xpath_juhuang\",\n" +
+                "      \"name\": \"\uD83E\uDD8B剧荒TV\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathMac\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/doujiaow.json\",\n" +
+                "      \"filterable\": 1,\n" +
+                "      \"key\": \"csp_xpath_doujiaow\",\n" +
+                "      \"name\": \"\uD83E\uDD8B豆角网\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathMacFilter\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/ttsp.json\",\n" +
+                "      \"filterable\": 1,\n" +
+                "      \"key\": \"csp_xpath_ttsp\",\n" +
+                "      \"name\": \"\uD83E\uDD8B天天视频\",\n" +
+                "      \"quickSearch\": 0,\n" +
+                "      \"searchable\": 0,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathMacFilter\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/hancheng.json\",\n" +
+                "      \"filterable\": 1,\n" +
+                "      \"key\": \"csp_xpath_汉城影院\",\n" +
+                "      \"name\": \"\uD83E\uDD8B汉城影院\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathMacFilter\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/lranc.json\",\n" +
+                "      \"filterable\": 1,\n" +
+                "      \"key\": \"csp_xpath_lranc\",\n" +
+                "      \"name\": \"\uD83E\uDD8B天天影视\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XPathMacFilter\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/xpath/dmntv.json\",\n" +
+                "      \"filterable\": 1,\n" +
+                "      \"key\": \"csp_xpath_dmntv\",\n" +
+                "      \"name\": \"\uD83E\uDD8B弹幕影院\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/神马dyy.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_神马dyy\",\n" +
+                "      \"name\": \"\uD83D\uDC1B神马dyy\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/蓝莓影视.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_蓝莓影视\",\n" +
+                "      \"name\": \"\uD83D\uDC1B蓝莓影视\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/星空影视.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_星空影视\",\n" +
+                "      \"name\": \"\uD83D\uDC1B星空影视\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/完美看看影视.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_完美看看\",\n" +
+                "      \"name\": \"\uD83D\uDC1B完美看看\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/剧白白-蓝光.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_剧白白\",\n" +
+                "      \"name\": \"\uD83D\uDC1B剧白白2\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/厂长资源-蓝光.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_厂长资源\",\n" +
+                "      \"name\": \"\uD83D\uDC1B厂长资源\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/影视之光.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_影视之光\",\n" +
+                "      \"name\": \"\uD83D\uDC1B影视之光\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/北川影视.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_北川影视\",\n" +
+                "      \"name\": \"\uD83D\uDC1B北川影视\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/hdmoli.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_hdmoli\",\n" +
+                "      \"name\": \"\uD83D\uDC1Bhdmoli\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/口袋影院.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_口袋影院\",\n" +
+                "      \"name\": \"\uD83D\uDC1B口袋影院\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/达达龟.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_达达龟\",\n" +
+                "      \"name\": \"\uD83D\uDC1B达达龟\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/神马tv8.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_神马tv8\",\n" +
+                "      \"name\": \"\uD83D\uDC1B神马tv8\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/花猫TV.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_花猫TV\",\n" +
+                "      \"name\": \"\uD83D\uDC1B花猫TV\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/GIMY影视.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_GIMY影视\",\n" +
+                "      \"name\": \"\uD83D\uDC1BGIMY影视\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/COKEMV.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_COKEMV\",\n" +
+                "      \"name\": \"\uD83D\uDC1BCOKEMV\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/YYDS影院.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_YYDS影院\",\n" +
+                "      \"name\": \"\uD83D\uDC1BYYDS影院\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/31看影视.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_31看影视\",\n" +
+                "      \"name\": \"\uD83D\uDC1B31看影视\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/六度TV.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_六度TV\",\n" +
+                "      \"name\": \"\uD83D\uDC1B六度TV\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/如如影视.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_如如影视\",\n" +
+                "      \"name\": \"\uD83D\uDC1B如如影视\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/看一看影视.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_看一看影视\",\n" +
+                "      \"name\": \"\uD83D\uDC1B看一看影视\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/789影视.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_789影视\",\n" +
+                "      \"name\": \"\uD83D\uDC1B789影视\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/chok8电影.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_chok8电影\",\n" +
+                "      \"name\": \"\uD83D\uDC1Bchok8电影\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/爱港剧.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_爱港剧\",\n" +
+                "      \"name\": \"\uD83D\uDC1B爱港剧\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/手机看剧.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_手机看剧\",\n" +
+                "      \"name\": \"\uD83D\uDC1B手机看剧\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/哔嘀影视.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_哔嘀影视\",\n" +
+                "      \"name\": \"\uD83D\uDC1B哔嘀影视\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/利丽娅电影.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_利丽娅电影\",\n" +
+                "      \"name\": \"\uD83D\uDC1B利丽娅电影\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/4kan电影网.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_4kan电影网\",\n" +
+                "      \"name\": \"\uD83D\uDC1B4kan电影网\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/豆角网.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_豆角网\",\n" +
+                "      \"name\": \"\uD83D\uDC1B豆角网\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/凛冬又至.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_凛冬又至\",\n" +
+                "      \"name\": \"\uD83D\uDC1B凛冬又至\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"api\": \"csp_XBiubiu\",\n" +
+                "      \"ext\": \"http://9xi4o.tk/sub/biubiu/139影视.json\",\n" +
+                "      \"filterable\": 0,\n" +
+                "      \"key\": \"csp_biubiu_139影视\",\n" +
+                "      \"name\": \"\uD83D\uDC1B139影视\",\n" +
+                "      \"quickSearch\": 1,\n" +
+                "      \"searchable\": 1,\n" +
+                "      \"type\": 3\n" +
+                "    }]";
+//        JsonArray jsonArray = new Gson().fromJson(sites, JsonArray.class);
+//        for (JsonElement jsonElement : jsonArray) {
+//            jsonElement.getAsJsonObject().addProperty("ext", StringUtil.encode());
+//        }
+        System.out.println(StringUtil.encode(sites.replaceAll("http://","https://")));
+    }
 //
 //    @Test
 //    public void test1() {

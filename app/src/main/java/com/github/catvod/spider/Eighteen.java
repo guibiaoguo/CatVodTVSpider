@@ -1,5 +1,6 @@
 package com.github.catvod.spider;
 
+import android.content.Context;
 import android.os.SystemClock;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -24,10 +25,17 @@ public class Eighteen extends Spider {
 
     private final String url = "https://maa1830.com/zh/";
 
+    @Override
+    public void init(Context context) {
+        OkHttpUtil.string("https://maa1830.com/zh/chinese_IamOverEighteenYearsOld/19/index.html",getHeaders());
+        super.init(context);
+    }
+
     protected HashMap<String, String> getHeaders() {
         HashMap<String, String> hashMap = new HashMap<>();
         hashMap.put("Upgrade-Insecure-Requests", "1");
         hashMap.put("DNT", "1");
+        hashMap.put("Referer",url);
         hashMap.put("Cookie","PHPSESSID=rl6od2v84693upc7hf3qbg7sh4; TSCvalue=gb");
         hashMap.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36");
         hashMap.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");

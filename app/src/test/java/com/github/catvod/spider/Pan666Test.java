@@ -20,9 +20,13 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import cn.hutool.core.io.file.FileReader;
+import cn.hutool.core.io.file.FileWriter;
 
 @RunWith(MockitoJUnitRunner.class)
 public class Pan666Test {
@@ -45,7 +49,9 @@ public class Pan666Test {
     @Test
     public void init() {
         Proxy.port = 9978;
-//        when(mMockContext.getString(R.string.app_name)).thenReturn(FAKE_STRING);
+        FileReader fileReader = new FileReader("aliyundrive.json");
+        String aliyundrive = fileReader.readString();
+        //        when(mMockContext.getString(R.string.app_name)).thenReturn(FAKE_STRING);
         when(mMockContext.getPackageName()).thenReturn("com.github.androidunittest");
 //        when(mMockContext.getApplicationContext()).thenReturn(new Application());
 //        PowerMockito.mockStatic(Looper.class);
@@ -59,6 +65,9 @@ public class Pan666Test {
             @Nullable
             @Override
             public String getString(String key, @Nullable String defValue) {
+                if (key.equals("aliyundrive")) {
+                    return aliyundrive;
+                }
                 return null;
             }
 
@@ -98,6 +107,10 @@ public class Pan666Test {
                 return new Editor() {
                     @Override
                     public Editor putString(String key, @Nullable String value) {
+                        if (key.equals("aliyundrive")) {
+                            FileWriter writer = new FileWriter("aliyundrive.json");
+                            writer.write(value);
+                        }
                         return this;
                     }
 
@@ -191,5 +204,21 @@ public class Pan666Test {
         Assert.assertTrue(content.contains("宝可梦"));
         Result result = new Gson().fromJson(content, Result.class);
         Assert.assertTrue(result.getList().size() > 0);
+    }
+
+    @Test
+    public void detailContent() throws Exception {
+//        System.out.println(paper.detailContent(Arrays.asList("https://www.aliyundrive.com/s/GF9muMqpc16")));
+        System.out.println(pan666.detailContent(Arrays.asList("https://www.aliyundrive.com/s/PoCAexsqhko")));
+    }
+
+    @Test
+    public void playerContent() throws Exception {
+        String content = pan666.detailContent(Arrays.asList("https://www.aliyundrive.com/s/PoCAexsqhko"));
+        Result result = new Gson().fromJson(content, Result.class);
+        String id = result.getList().get(0).getVodPlayUrl().split("#")[0].split("\\$")[1];
+//        System.out.println(pansou.playerContent("原畫", id, null));
+        content = pan666.playerContent("超清", id, null);
+        System.out.println(content);
     }
 }

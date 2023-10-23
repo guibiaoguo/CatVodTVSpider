@@ -51,8 +51,8 @@ import org.jsoup.select.Elements;
 
 public class CZSPP extends Spider {
 
-    private String siteUrl = "https://www.cz01.org";
-    private String siteHost = "www.cz01.org";
+    private String siteUrl = "https://www.cz0101.com";
+    private String siteHost = "www.cz0101.com";
 
     private static final Pattern g = Pattern.compile("\"([^\"]+)\";var [\\d\\w]+=function dncry.*md5.enc.Utf8.parse\\(\"([\\d\\w]+)\".*md5.enc.Utf8.parse\\(([\\d]+)\\)");
     private static final Pattern l = Pattern.compile("video: \\{url: \"([^\"]+)\"");
@@ -81,7 +81,7 @@ public class CZSPP extends Spider {
             String site = element.select("a").attr("href");
             System.out.println("厂长资源：" + site);
             String subContent = OkHttpUtil.string(site);
-            if (StrUtil.isNotEmpty(subContent) && !subContent.contains("Loading......")) {
+            if (StrUtil.isNotEmpty(subContent) && !subContent.contains("Loading......") && !subContent.contains("Just a moment...")) {
                 siteUrl = site;
                 siteHost = NetworkUtils.INSTANCE.getSubDomain(siteUrl);
                 break;
@@ -97,7 +97,7 @@ public class CZSPP extends Spider {
 
     @Override
     public void init(Context context, String extend) {
-        super.init(context, extend);
+        //super.init(context, extend);
         setSiteUrl(extend);
     }
 

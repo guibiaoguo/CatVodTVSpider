@@ -281,8 +281,8 @@ public class Legado extends Spider {
 //        String code = analyzeRule.getString("@js:playId='619ae207b6f14e786a234bb9bf1c0c8998b75834';shareId=java.get('shareId');shareToken=java.get('shareToken');access_token=java.get('accessToken');content=java.post('https://api.aliyundrive.com/v2/file/get_share_link_download_url/',{'share_id':shareId,'file_id':playId},{'referer':'https://www.aliyundrive.com','x-canary':'client=web,app=share,version=v2.3.1','authorization':access_token,'x-share-token':shareToken}).body();java.log(content);url=JSON.parse(content).url;java.log(url);url1=java.getString('$.url',content,false);java.log(url1);java.get(url1,{'referer':'https://www.aliyundrive.com/'}).body();");
 //        System.out.println(code);
             if (nfoMap.size() > 0 && nfoMap.get("tvshow") != null) {
-                analyzeRule.put("nfo", StrUtil.split(nfoMap.get("tvshow"), "@@@")[2]);
-                analyzeRule.put("poster", StrUtil.split(nfoMap.get("poster"), "@@@")[2]);
+                analyzeRule.put("nfo", StrUtil.split(nfoMap.get("tvshow"), "@@@").toArray(new Object[]{})[2]);
+                analyzeRule.put("poster", StrUtil.split(nfoMap.get("poster"), "@@@").toArray(new Object[]{})[2]);
                 String nfo = analyzeRule.getString(rule.getDetailFileNodeNfo());
                 nfo = nfo.replace("\uFEFF", "");
 //            String json = XML.toJSONObject(nfo).toString();
@@ -478,7 +478,7 @@ public class Legado extends Spider {
 //                return Result.get().url(url).subs(API.get().getSub(ids)).header(API.get().getHeader()).parse(0).string();
 //            }
             analyzeRule.put("playFlag", flag);
-            analyzeRule.put("playId", StrUtil.split(id, "+")[0]);
+            analyzeRule.put("playId", StrUtil.split(id, "+").toArray(new Object[]{})[0]);
             analyzeRule.put("playFlags", new Gson().toJson(vipFlags));
             analyzeRule.put("subs", StrUtil.split(id, "+"));
             Console.log("flag: {}, id: {}, vipFlags: {}", flag, id, vipFlags);

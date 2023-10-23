@@ -68,7 +68,7 @@ public class Dm84 extends Spider {
 
     @Override
     public void init(Context context, String extend) {
-        super.init(context, extend);
+        //super.init(context, extend);
         setSiteUrl(extend);
     }
 

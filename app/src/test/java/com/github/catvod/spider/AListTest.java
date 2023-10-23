@@ -45,13 +45,14 @@ public class AListTest {
 
     @Test
     public void categoryContent() throws Exception {
-        System.out.println(alist.categoryContent("神童/代码神童/10TB动漫合集  wanrenmi8.com/动漫首字母J到N  wanrenmi8.com/K科学超电磁炮全三季/1","1",false, new HashMap<>()));
+        System.out.println(alist.categoryContent("觸光/影视(更新中)/凡人修仙传(更新到72)","1",false, new HashMap<>()));
     }
 
     @Test
     public void detailContent() throws Exception {
 //        System.out.println(alist.detailContent(Arrays.asList("小雅/动漫/A-Z/A/爱吃拉面的小泉同学/Season 01/[UHA-WINGS][Ramen Daisuki Koizumi-san] S01E01[x264_1080p][BIG5].mp4")));
-        System.out.println(alist.detailContent(Arrays.asList("神童/代码神童/10TB动漫合集  wanrenmi8.com/动漫首字母J到N  wanrenmi8.com/K科学超电磁炮全三季/1/某科学的超电磁炮 S1 01.mkv")));
+        System.out.println(alist.detailContent(Arrays.asList("觸光/影视(更新中)/凡人修仙传(更新到72)/72-第72话 初入星海12-1080P 高码率-AVC.mp4")));
+//        System.out.println(alist.detailContent(Arrays.asList("神童/代码神童/10TB动漫合集  wanrenmi8.com/动漫首字母J到N  wanrenmi8.com/K科学超电磁炮全三季/1/某科学的超电磁炮 S1 01.mkv")));
     }
 
     @Test

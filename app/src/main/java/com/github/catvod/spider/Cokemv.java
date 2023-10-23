@@ -92,6 +92,7 @@ public class Cokemv extends Spider {
         HashMap<String, String> headers = new HashMap<>();
         headers.put("Upgrade-Insecure-Requests", "1");
         headers.put("DNT", "1");
+        headers.put("Cookie","__51vcke__JdUYENSCnqBBEwQ9=ccb0cd7b-c4c2-510e-8e14-c00bcdca8175; __51vuft__JdUYENSCnqBBEwQ9=1697145775120; mx_style=black; PHPSESSID=dtisd9scgabqp5all97becu4je; __51uvsct__JdUYENSCnqBBEwQ9=2; showBtn=true; __vtins__JdUYENSCnqBBEwQ9=%7B%22sid%22%3A%20%22fd0afa95-d35f-5f08-91e7-8ff5ff02972d%22%2C%20%22vd%22%3A%203%2C%20%22stt%22%3A%2058637%2C%20%22dr%22%3A%206499%2C%20%22expires%22%3A%201697656818324%2C%20%22ct%22%3A%201697655018324%7D");
         headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
         headers.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
         headers.put("Accept-Language", "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2");
@@ -345,56 +346,69 @@ public class Cokemv extends Spider {
      * @param vipFlags 所有可能需要vip解析的源
      * @return
      */
-    @Override
-    public String playerContent(String flag, String id, List<String> vipFlags) {
-        //定义播放用的headers
-        HashMap<String, String> headers = new HashMap();
-        //headers.put("Host", " cokemv.co");
-        headers.put("User-Agent", " Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
-        headers.put("Accept", " */*");
-        headers.put("Accept-Language", " zh-CN,zh;q=0.9,en-US;q=0.3,en;q=0.7");
-        headers.put("Accept-Encoding", " gzip, deflate");
-
-        // 播放页 url
-        String url = siteUrl + "/vodplay/" + id + ".html";
-        Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
-        Elements allScript = doc.select("script");
-        for (int i = 0; i < allScript.size(); i++) {
-            String scContent = allScript.get(i).html().trim();
-            if (scContent.startsWith("var player_")) { // 取直链
-                int start = scContent.indexOf('{');
-                int end = scContent.lastIndexOf('}') + 1;
-                String json = scContent.substring(start, end);
-                JsonObject player = new Gson().fromJson(json, JsonObject.class);
-                if (player.get("encrypt").getAsString().equals("0")) {
-                    String videoUrl = player.get("url").getAsString();
-                    return Result.get().url(videoUrl).parse(0).header(headers).string();
-                }
-                break;
-            }
-        }
-        return Result.get().url(url).parse().string();
-    }
+//    @Override
+//    public String playerContent(String flag, String id, List<String> vipFlags) {
+//        //定义播放用的headers
+//        HashMap<String, String> headers = new HashMap();
+//        //headers.put("Host", " cokemv.co");
+//        headers.put("User-Agent", " Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
+//        headers.put("Accept", " */*");
+//        headers.put("Accept-Language", " zh-CN,zh;q=0.9,en-US;q=0.3,en;q=0.7");
+//        headers.put("Accept-Encoding", " gzip, deflate");
+//
+//        // 播放页 url
+//        String url = siteUrl + "/vodplay/" + id + ".html";
+//        Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
+//        Elements allScript = doc.select("script");
+//        for (int i = 0; i < allScript.size(); i++) {
+//            String scContent = allScript.get(i).html().trim();
+//            if (scContent.startsWith("var player_")) { // 取直链
+//                int start = scContent.indexOf('{');
+//                int end = scContent.lastIndexOf('}') + 1;
+//                String json = scContent.substring(start, end);
+//                JsonObject player = new Gson().fromJson(json, JsonObject.class);
+//                if (player.get("encrypt").getAsString().equals("0")) {
+//                    String videoUrl = player.get("url").getAsString();
+//                    return Result.get().url(videoUrl).parse(0).header(headers).string();
+//                }
+//                break;
+//            }
+//        }
+//        return Result.get().url(url).parse().string();
+//    }
 
     /**
-     * 搜索
-     * 搜索有验证码，暂时不会处理
+     * 获取视频播放信息
      *
-     * @param key
+     * @param flag     播放源
+     * @param id       视频id
+     * @param vipFlags 所有可能需要vip解析的源
+     */
+    @Override
+    public String playerContent(String flag, String id, List<String> vipFlags) {
+        String url = siteUrl + "/vodplay/" + id + ".html";
+        return Result.get().url(url).parse().string();
+    }
+    /**
+     * 搜索
+     *
+     * @param key 搜素关键字
      * @param quick 是否播放页的快捷搜索
-     * @return
      */
     @Override
     public String searchContent(String key, boolean quick) {
         List<Vod> list = new ArrayList<>();
-        long currentTime = System.currentTimeMillis();
-        String url = siteUrl + "/index.php/ajax/suggest?mid=1&wd=" + StringUtil.encode(key) + "&limit=10&timestamp=" + currentTime;
-        JsonObject jsonObject = new Gson().fromJson(OkHttpUtil.string(url, getHeaders(url)), JsonObject.class);
-        for (JsonElement jsonElement : jsonObject.getAsJsonArray("list")) {
-            String id = jsonElement.getAsJsonObject().get("id").getAsString();
-            String name = jsonElement.getAsJsonObject().get("name").getAsString();
-            String img = jsonElement.getAsJsonObject().get("pic").getAsString();
-            list.add(new Vod(id, name, img, ""));
+        String url = siteUrl + "/vodsearch/-------------.html?wd=" + StringUtil.encode(key) + "&submit=";
+        Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
+        for (Element element : doc.select(".module-item")) {
+            String name = element.select(".module-card-item-title a").text();
+            String img = element.select("img").attr("data-original");
+            String remark = element.select(".module-item-note").text();
+            Matcher matcher = regexVid.matcher(element.select(".module-card-item-title a").attr("href"));
+            if (!matcher.find())
+                continue;
+            String id = matcher.group(1);
+            list.add(new Vod(id, name, img, remark));
         }
         return Result.string(list);
     }

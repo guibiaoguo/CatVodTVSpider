@@ -69,7 +69,7 @@ dependencies {
         //Rhino
 //    implementation 'org.mozilla:rhino:1.7.12'
     //加密解密库
-    implementation('cn.hutool:hutool-crypto:4.5.15')
+    implementation('cn.hutool:hutool-crypto:5.7.11')
 //    implementation 'androidx.test:runner:1.5.2'
 //    implementation project(path: ':quickjs')
 //    implementation 'androidx.core:core:1.7.0'

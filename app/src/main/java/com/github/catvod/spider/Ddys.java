@@ -51,8 +51,8 @@ import okhttp3.ResponseBody;
 
 public class Ddys extends Spider {
 
-    private static String siteUrl = "https://ddys.mov";
-    private static String siteHost = "ddys.mov";
+    private static String siteUrl = "https://ddys.pro/";
+    private static String siteHost = "ddys.pro";
     private String cookie="";
 
     protected JSONObject filterConfig;
@@ -66,14 +66,37 @@ public class Ddys extends Spider {
 
     //   protected Pattern t = Pattern.compile("(\\S+)");
 
+    public void setSiteUrl(String extend) {
+        if (StrUtil.isEmpty(extend)) {
+            extend = "https://ddys.info/";
+        }
+        String content = OkHttpUtil.string(extend);
+        Document document = Jsoup.parse(content);
+        for(Element element:document.select("h2 a")) {
+            String site = element.select("a").attr("href");
+            System.out.println("低端影视：" + site);
+            Map<String, List<String>> cookies = new HashMap<>();
+            String subContent = OkHttpUtil.string(site,getHeaders(site),cookies);
+            if (StrUtil.isNotEmpty(subContent) && !subContent.contains("Loading......")) {
+                if (cookies.get("set-cookie")!=null && !cookies.get("set-cookie").isEmpty()) {
+                    cookie += TextUtils.join(";",cookies.get("set-cookie"));
+                }
+                siteUrl = site;
+                siteHost = NetworkUtils.INSTANCE.getSubDomain(siteUrl);
+                break;
+            }
+        }
+    }
+
+    @Override
+    public void init(Context context) {
+        super.init(context);
+        setSiteUrl("https://ddys.info/");
+    }
 
     @Override
     public void init(Context context, String extend) {
-        if (StrUtil.isNotEmpty(extend)) {
-            siteUrl = extend;
-            siteHost = NetworkUtils.INSTANCE.getSubDomain(extend);
-        }
-        super.init(context, extend);
+        setSiteUrl(extend);
     }
 
     /**
@@ -108,16 +131,9 @@ public class Ddys extends Spider {
     @Override
     public String homeContent(boolean filter) {
         try {
-            String url = siteUrl + '/';
-            cookie="";
+            String url = siteUrl;
             Map<String, List<String>> cookies = new HashMap<>();
-            Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url),cookies));
-            for( Map.Entry<String, List<String>> entry : cookies.entrySet() ){
-                if(entry.getKey().equals("set-cookie")){
-                    cookie += TextUtils.join(";",entry.getValue());
-                    break;
-                }
-            }
+            Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
             Elements elements = doc.select("li.menu-item a");
             JSONArray classes = new JSONArray();
             ArrayList<String> allClass = new ArrayList<>();
@@ -235,14 +251,14 @@ public class Ddys extends Spider {
                     String key = it.next();
                     String value = extend.get(key);
                     if (value != null && value.length() != 0 && value != " ") {
-                        url = siteUrl + "/category/" + tid + "/" + value;
+                        url = siteUrl + "category/" + tid + "/" + value;
                     } else {
-                        url = siteUrl + "/category/" + tid;
+                        url = siteUrl + "category/" + tid;
                     }
                     ;
                 }
             } else {
-                url = siteUrl + "/category/" + tid;
+                url = siteUrl + "category/" + tid;
             }
             ;
             if (pg.equals("1")) {
@@ -349,14 +365,11 @@ public class Ddys extends Spider {
     public String detailContent(List<String> ids) {
         try {
             // 视频详情url
-            String url = siteUrl + "/" + ids.get(0) + "/";
+            String url = siteUrl + ids.get(0) + "/";
             Map<String, List<String>> cookies = new HashMap<>();
             Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url),cookies));
-            for( Map.Entry<String, List<String>> entry : cookies.entrySet() ){
-                if(entry.getKey().equals("set-cookie")){
-                    cookie += TextUtils.join(";",entry.getValue());
-                    break;
-                }
+            if (cookies.get("set-cookie")!=null && !cookies.get("set-cookie").isEmpty()) {
+                cookie += TextUtils.join(";",cookies.get("set-cookie"));
             }
             JSONObject result = new JSONObject();
             JSONObject vodList = new JSONObject();
@@ -420,8 +433,8 @@ public class Ddys extends Spider {
                     JSONObject src = Track.getJSONObject(k);
                     String adk = src.getString("src1");
                     String vodName = src.getString("caption");
-                    String playURL = siteUrl + "/getvddr/video?id=" + adk +"&dim=1080P+&type=mix";
-                    String zm = siteUrl + "/subddr/" + src.getString("subsrc");
+                    String playURL = siteUrl + "getvddr2/video?id=" + adk +"&dim=1080P+&type=json";
+                    String zm = siteUrl + "subddr/" + src.getString("subsrc");
                     String pzm = playURL + "|" + zm;
                     vodItems.add(vodName + "$" + pzm);
                 }
@@ -431,7 +444,7 @@ public class Ddys extends Spider {
                     String adksrc2 = src.getString("src2");
                     String vodName = src.getString("caption");
                     String playURL = siteUrl + adksrc0 +"?ddrkey=" + adksrc2;
-                    String zm = siteUrl + "/subddr/" + src.getString("subsrc");
+                    String zm = siteUrl + "subddr/" + src.getString("subsrc");
                     String pzm = playURL + "|" + zm;
                     vodItemsos.add(vodName + "$" + pzm);
                 }
@@ -445,7 +458,7 @@ public class Ddys extends Spider {
                 for (int i = 0; i < sources.size(); i++) {
                     Element source = sources.get(i);
                     sourceName = "第" + source.text() + "季";
-                    String Purl = siteUrl + "/" + ids.get(0) + "/" + source.text() + "/";
+                    String Purl = siteUrl + "" + ids.get(0) + "/" + source.text() + "/";
                     Document docs = Jsoup.parse(OkHttpUtil.string(Purl, getHeaders(Purl)));
                     Elements allScripts = docs.select(".wp-playlist-script");
                     for (int j = 0; j < allScripts.size(); j++) {
@@ -459,8 +472,8 @@ public class Ddys extends Spider {
                             JSONObject src = Track.getJSONObject(k);
                             String adk = src.getString("src1");
                             String vodName = src.getString("caption");
-                            String playURL = siteUrl+ "/getvddr/video?id=" + adk +"&dim=1080P+&type=mix";
-                            String zm = siteUrl + "/subddr/" + src.getString("subsrc");
+                            String playURL = siteUrl+ "getvddr2/video?id=" + adk +"&dim=1080P+&type=json";
+                            String zm = siteUrl + "subddr/" + src.getString("subsrc");
                             String pzm = playURL + "|" + zm;
                             vodItems2.add(vodName + "$" + pzm);
                         }
@@ -470,7 +483,7 @@ public class Ddys extends Spider {
                             String adksrc2 = src.getString("src2");
                             String vodName = src.getString("caption");
                             String playURL = siteUrl+ adksrc0 +"?ddrkey=" + adksrc2;
-                            String zm = siteUrl + "/subddr/" + src.getString("subsrc");
+                            String zm = siteUrl + "subddr/" + src.getString("subsrc");
                             String pzm = playURL + "|" + zm;
                             vodItems2os.add(vodName + "$" + pzm);
                         }
@@ -497,34 +510,18 @@ public class Ddys extends Spider {
         return "";
     }
 
-    public static Object[] loadsub(String sub) {
+    public static Object[] loadsub(Map<String, String> params) {
         try {
-            OKCallBack.OKCallBackDefault callBack = new OKCallBack.OKCallBackDefault() {
-                @Override
-                protected void onFailure(Call call, Exception e) {
-
-                }
-
-                @Override
-                protected void onResponse(Response response) {
-
-                }
-            };
-            OkHttpClient YM = OkHttpUtil.defaultClient();
-            OkHttpUtil.get(YM, sub, null, Headers(), callBack);
-            Response result = callBack.getResult();
-            int code = result.code();
-            if (code == 404) {
+            String url = params.get("url");
+            String text = OkHttpUtil.string(url);
+            if (StrUtil.isEmpty(text)) {
                 return new Object[]{200, "application/octet-stream", new ByteArrayInputStream("WEBVTT".getBytes())};
             }
-            ResponseBody body = result.body();
-            byte[] bytes = body.bytes();
+            byte[] bytes = text.getBytes();
             byte[] tokenkey = Arrays.copyOfRange(bytes, 0, 16);
             byte[] data = Arrays.copyOfRange(bytes, 16, bytes.length);
             byte[] KS = CBC.CBC(data, tokenkey, tokenkey);
             String vtt = gZip.KS(KS);
-
-
             vtt = vtt.replaceAll("(\\d{2}:\\d{2}:\\d{2}.\\d{3}.+\\d{2}:\\d{2}:\\d{2}.\\d{3}).*", "$1");
             vtt = vtt.replaceAll("(\\d{2}:\\d{2}.\\d{3}).*?( --> )(\\d{2}:\\d{2}.\\d{3}).*", "00:$1$200:$3");
             BufferedReader br = new BufferedReader(new StringReader(vtt));
@@ -599,7 +596,7 @@ public class Ddys extends Spider {
     public String searchContent(String key, boolean quick) {
         JSONObject result = new JSONObject();
         try {
-            String url = siteUrl + "/?s="+key+"&post_type=post";
+            String url = siteUrl + "?s="+key+"&post_type=post";
             Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
             // 取首页推荐视频列表
             Elements list = doc.select("div.post-content");

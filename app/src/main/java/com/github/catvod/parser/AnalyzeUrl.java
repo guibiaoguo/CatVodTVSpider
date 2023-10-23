@@ -189,7 +189,7 @@ public class AnalyzeUrl implements IFunction {
         }
         Matcher pageMatcher = pagePattern.matcher(ruleUrl);
         while (pageMatcher.find()) {
-            List<String> pages = Arrays.asList(StrUtil.split(pageMatcher.group(1), ","));
+            List<String> pages = StrUtil.split(pageMatcher.group(1), ",");
             if (page < pages.size()) {
                 ruleUrl = ruleUrl.replace(pageMatcher.group(), pages.get(page -1));
             } else {

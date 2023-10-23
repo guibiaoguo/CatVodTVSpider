@@ -22,6 +22,10 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
+
+import cn.hutool.core.io.file.FileReader;
+import cn.hutool.core.io.file.FileWriter;
+
 @RunWith(MockitoJUnitRunner.class)
 public class YiSoTest {
 
@@ -42,7 +46,9 @@ public class YiSoTest {
 
     @Test
     public void init() {
-//        when(mMockContext.getString(R.string.app_name)).thenReturn(FAKE_STRING);
+        FileReader fileReader = new FileReader("aliyundrive.json");
+        String aliyundrive = fileReader.readString();
+        //        when(mMockContext.getString(R.string.app_name)).thenReturn(FAKE_STRING);
         when(mMockContext.getPackageName()).thenReturn("com.github.androidunittest");
 //        when(mMockContext.getApplicationContext()).thenReturn(new Application());
 //        PowerMockito.mockStatic(Looper.class);
@@ -56,6 +62,9 @@ public class YiSoTest {
             @Nullable
             @Override
             public String getString(String key, @Nullable String defValue) {
+                if (key.equals("aliyundrive")) {
+                    return aliyundrive;
+                }
                 return null;
             }
 
@@ -92,7 +101,61 @@ public class YiSoTest {
 
             @Override
             public Editor edit() {
-                return null;
+                return new Editor() {
+                    @Override
+                    public Editor putString(String key, @Nullable String value) {
+                        if (key.equals("aliyundrive")) {
+                            FileWriter writer = new FileWriter("aliyundrive.json");
+                            writer.write(value);
+                        }
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putStringSet(String key, @Nullable Set<String> values) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putInt(String key, int value) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putLong(String key, long value) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putFloat(String key, float value) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor putBoolean(String key, boolean value) {
+                        return null;
+                    }
+
+                    @Override
+                    public Editor remove(String key) {
+                        return this;
+                    }
+
+                    @Override
+                    public Editor clear() {
+                        return this;
+                    }
+
+                    @Override
+                    public boolean commit() {
+                        return false;
+                    }
+
+                    @Override
+                    public void apply() {
+
+                    }
+                };
             }
 
             @Override

@@ -77,7 +77,7 @@ public class IQIYI extends Spider {
                         if (vod.optInt("sourceId") != 0) {
                             id = "/video/video/baseinfo/" + vod.optString("tvId") + "?userInfo=verify&jsonpCbName=videoInfo39";
                         } else {
-                            id = "/albums/album/avlistinfo?aid=" + vod.optString("albumId") + "&size=5000&page=1&url=" + id;
+                            id = "/albums/album/avlistinfo?aid=" + vod.optString("albumId") + "&size=200&page=1&url=" + id;
                         }
                     } else {
                         if (vod.optLong("tvId") != 0) {
@@ -95,7 +95,7 @@ public class IQIYI extends Spider {
             } catch (Exception e) {
                 SpiderDebug.log(e);
             }
-            return result.toString(4);
+            return result.toString();
         } catch (Exception e) {
             SpiderDebug.log(e);
         }
@@ -119,12 +119,21 @@ public class IQIYI extends Spider {
                     String cover = vod.optString("imageUrl");
                     cover = fixUrl(url, cover);
                     String remark = vod.optString("score");
+                    if (vod.has("latestOrder"))
+                        remark += "分 " + vod.optString("latestOrder");
+                    else if (vod.has("duration"))
+                        remark += "分 " + vod.optString("duration");
+                    if (vod.has("latestOrder") && vod.optString("videoCount").equals(vod.optString("latestOrder"))) {
+                        remark += "集全";
+                    } else if (vod.has("latestOrder")) {
+                        remark += "/"+vod.optString("videoCount")+"集";
+                    }
                     String id = vod.optString("playUrl");
                     if (!vod.optString("albumId").equals("")) {
                         if (vod.optInt("sourceId") != 0) {
                             id = "/video/video/baseinfo/" + vod.optString("tvId") + "?userInfo=verify&jsonpCbName=videoInfo39";
                         } else {
-                            id = "/albums/album/avlistinfo?aid=" + vod.optString("albumId") + "&size=5000&page=1&url=" + id;
+                            id = "/albums/album/avlistinfo?aid=" + vod.optString("albumId") + "&size=200&page=1&url=" + id;
                         }
                     } else {
                         if (vod.optLong("tvId") != 0) {
@@ -142,7 +151,7 @@ public class IQIYI extends Spider {
             } catch (Exception e) {
                 SpiderDebug.log(e);
             }
-            return result.toString(4);
+            return result.toString();
         } catch (Exception e) {
             SpiderDebug.log(e);
         }
@@ -179,12 +188,21 @@ public class IQIYI extends Spider {
                     String cover = vod.optString("imageUrl");
                     cover = fixUrl(url, cover);
                     String remark = vod.optString("score");
+                    if (vod.has("latestOrder"))
+                        remark += "分 " + vod.optString("latestOrder");
+                    else if (vod.has("duration"))
+                        remark += "分 " + vod.optString("duration");
+                    if (vod.has("latestOrder") && vod.optString("videoCount").equals(vod.optString("latestOrder"))) {
+                        remark += "集全";
+                    } else if (vod.has("latestOrder")) {
+                        remark += "/"+vod.optString("videoCount")+"集";
+                    }
                     String id = vod.optString("playUrl");
                     if (!vod.optString("albumId").equals("")) {
                         if (vod.optInt("sourceId") != 0) {
                             id = "/video/video/baseinfo/" + vod.optString("tvId") + "?userInfo=verify&jsonpCbName=videoInfo39";
                         } else {
-                            id = "/albums/album/avlistinfo?aid=" + vod.optString("albumId") + "&size=5000&page=1&url=" + id;
+                            id = "/albums/album/avlistinfo?aid=" + vod.optString("albumId") + "&size=200&page=1&url=" + id;
                         }
                     } else {
                         if (vod.optLong("tvId") != 0) {
@@ -206,7 +224,7 @@ public class IQIYI extends Spider {
             } catch (Exception e) {
                 SpiderDebug.log(e);
             }
-            return result.toString(4);
+            return result.toString();
         } catch (Exception e) {
             SpiderDebug.log(e);
         }
@@ -255,15 +273,23 @@ public class IQIYI extends Spider {
             vodList.put("vod_actor", TextUtils.join(",", charactors));
             vodList.put("vod_director", TextUtils.join(",", directors));
             vodList.put("vod_content", vod.optString("description"));
-            JSONArray playerList = dataObject.optJSONArray("epsodelist");
-            if (playerList == null) {
-                playerList = new JSONArray();
-                playerList.put(dataObject);
-            }
+            JSONArray playerList = new JSONArray();
             List<String> plays = new ArrayList<>();
-            for (int i = 0; i < playerList.length(); i++) {
-                JSONObject epsode = playerList.optJSONObject(i);
-                plays.add(epsode.optString("order") + " " + epsode.optString("subtitle") + "$" + epsode.optString("playUrl"));
+            if (dataObject.optJSONArray("epsodelist")!=null) {
+                int page = dataObject.getInt("page");
+                int part = dataObject.getInt("part");
+                do {
+                    part++;
+                    playerList = dataObject.optJSONArray("epsodelist");
+                    for (int i = 0; i < playerList.length(); i++) {
+                        JSONObject epsode = playerList.optJSONObject(i);
+                        plays.add(epsode.optString("order") + " " + epsode.optString("subtitle") + " [" + epsode.optString("duration") + "]$" + epsode.optString("playUrl"));
+                    }
+                    jsonObject = new JSONObject(OkHttpUtil.string(url.replace("page=1", "page=" + (part + 1)), getHeaders(url.replace("page=1", "page=" + (part + 1)))));
+                    dataObject = jsonObject.optJSONObject("data");
+                } while (part < page);
+            } else {
+                plays.add(dataObject.optString("order") + " " + dataObject.optString("subtitle") + " [" + dataObject.optString("duration") + "]$" + dataObject.optString("playUrl"));
             }
             vodList.put("vod_play_from", "iqiyi");
             vodList.put("vod_play_url", TextUtils.join("#", plays));
@@ -271,7 +297,7 @@ public class IQIYI extends Spider {
             JSONArray list = new JSONArray();
             list.put(vodList);
             result.put("list", list);
-            return result.toString(4);
+            return result.toString();
         } catch (Exception e) {
             SpiderDebug.log(e);
         }
@@ -307,7 +333,7 @@ public class IQIYI extends Spider {
                 JSONObject v = new JSONObject();
                 String id = vObj.optString("albumLink");
                 if (vObj.optInt("album_type") == 0) {
-                    id = "/albums/album/avlistinfo?aid=" + vObj.optString("qipu_id") + "&size=5000&page=1&url=" + id;
+                    id = "/albums/album/avlistinfo?aid=" + vObj.optString("qipu_id") + "&size=200&page=1&url=" + id;
                 } else {
                     continue;
                 }

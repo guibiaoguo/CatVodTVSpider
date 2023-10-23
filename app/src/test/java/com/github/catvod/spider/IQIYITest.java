@@ -62,7 +62,9 @@ public class IQIYITest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(iqiyi.detailContent(Arrays.asList("/albums/album/avlistinfo?aid=5328486914190101&size=5000&page=1&url=http://www.iqiyi.com/a_1fkgtbddd2x.html")));
+//        System.out.println(iqiyi.detailContent(Arrays.asList("/albums/album/avlistinfo?aid=202861101&size=200&page=1&url=http://www.iqiyi.com/a_19rrhb3xvl.html")));
+        System.out.println(iqiyi.detailContent(Arrays.asList("/video/video/baseinfo/4252782514233100?userInfo=verify&jsonpCbName=videoInfo39")));
+//        System.out.println(iqiyi.detailContent(Arrays.asList("/albums/album/avlistinfo?aid=7714930311098201&size=5000&page=1&url=http://www.iqiyi.com/a_235iask9ohh.html")));
     }
 
     @Test

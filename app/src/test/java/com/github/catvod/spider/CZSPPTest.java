@@ -43,7 +43,7 @@ public class CZSPPTest {
 
     @Test
     public void categoryContent() throws Exception {
-        System.out.println(czspp.categoryContent("/gcj","1",true,new HashMap()));
+        System.out.println(czspp.categoryContent("/dbtop250","1",true,new HashMap()));
     }
 
     @Test

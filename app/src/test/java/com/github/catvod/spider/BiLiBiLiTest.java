@@ -11,6 +11,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+
 public class BiLiBiLiTest {
 
     Spider bilibili;
@@ -18,7 +22,7 @@ public class BiLiBiLiTest {
     @Before
     public void setUp() throws Exception {
         bilibili = new BiLiBiLi();
-        bilibili.init(null);
+        bilibili.init(null,"");
     }
 
     @After
@@ -35,22 +39,34 @@ public class BiLiBiLiTest {
     }
 
     @Test
-    public void homeVideoContent() {
+    public void homeVideoContent() throws Exception {
+        String content = bilibili.homeVideoContent();
+        System.out.println(content);
+        Result result = new Gson().fromJson(content, Result.class);
+        Assert.assertTrue(result.getList().size() > 0);
     }
 
     @Test
-    public void categoryContent() {
+    public void categoryContent() throws Exception {
+        System.out.println(bilibili.categoryContent("1", "1", true, new HashMap<>()));
     }
 
     @Test
-    public void detailContent() {
+    public void detailContent() throws Exception {
+        System.out.println(bilibili.detailContent(Arrays.asList("45574")));
     }
 
     @Test
-    public void searchContent() {
+    public void searchContent() throws Exception {
+        String content = bilibili.searchContent("宝可梦",false);
+        System.out.println(content);
+        Assert.assertTrue(content.contains("宝可梦"));
+        Result result = new Gson().fromJson(content, Result.class);
+        Assert.assertTrue(result.getList().size() > 0);
     }
 
     @Test
-    public void playerContent() {
+    public void playerContent() throws Exception {
+        System.out.println(bilibili.playerContent("B站","777174_1291851776",new ArrayList<>()));
     }
 }

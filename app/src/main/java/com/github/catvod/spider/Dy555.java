@@ -19,6 +19,7 @@ import com.github.catvod.crawler.SpiderDebug;
 
 
 import com.github.catvod.parser.NetworkUtils;
+import com.github.catvod.utils.StringUtil;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.json.JSONArray;
@@ -52,8 +53,8 @@ import okhttp3.Response;
 
 public class Dy555 extends Spider {
 
-    private static String siteUrl = "https://555uu.online";
-    private static String siteHost = "555uu.online";
+    private static String siteUrl = "https://555qq.site";
+    private static String siteHost = "555qq.site";
 
     protected JSONObject playerConfig;
     protected JSONObject filterConfig;
@@ -100,7 +101,7 @@ public class Dy555 extends Spider {
 
     @Override
     public void init(Context context,String extend) {
-        super.init(context);
+//        super.init(context);
         setSiteUrl(extend);
         try {
             playerConfig = new JSONObject(playerString);
@@ -121,6 +122,7 @@ public class Dy555 extends Spider {
         if (!TextUtils.isEmpty(refererUrl)) {
             headers.put("Referer", refererUrl);
         }
+        headers.put("Cookie","mx_style=cafb48e084ff51871ea2d6c2690cc7bb; showBtn=true; PHPSESSID=qih5j4f27ifk61k703ubkogh9l; searchneed=ok");
         headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
         headers.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
         return headers;
@@ -484,35 +486,28 @@ public class Dy555 extends Spider {
     }
 
 
+    /**
+     * 搜索
+     *
+     * @param key 搜素关键字
+     * @param quick 是否播放页的快捷搜索
+     */
     @Override
     public String searchContent(String key, boolean quick) {
-        try {
-            long currentTime = currentTimeMillis();
-            String url = siteUrl + "/index.php/ajax/suggest?mid=1&wd=" + URLEncoder.encode(key) + "&limit=10&timestamp=" + currentTime;
-            JSONObject searchResult = new JSONObject(OkHttpUtil.string(url, getHeaders(siteUrl)));
-            JSONObject result = new JSONObject();
-            JSONArray videos = new JSONArray();
-            if (searchResult.getInt("total") > 0) {
-                JSONArray lists = new JSONArray(searchResult.getString("list"));
-                for (int i = 0; i < lists.length(); i++) {
-                    JSONObject vod = lists.getJSONObject(i);
-                    String id = vod.getString("id");
-                    String title = vod.getString("name");
-                    String cover = vod.getString("pic");
-                    JSONObject v = new JSONObject();
-                    v.put("vod_id", id);
-                    v.put("vod_name", title);
-                    v.put("vod_pic", cover);
-                    v.put("vod_remarks", "");
-                    videos.put(v);
-                }
-            }
-            result.put("list", videos);
-            return result.toString();
-        } catch (Exception e) {
-            SpiderDebug.log(e);
+        List<Vod> list = new ArrayList<>();
+        String url = siteUrl + "/vodsearch/-------------.html?wd=" + StringUtil.encode(key) + "&submit=";
+        Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
+        for (Element element : doc.select(".module-item")) {
+            String name = element.select(".module-card-item-title a").text();
+            String img = element.select("img").attr("data-original");
+            String remark = element.select(".module-item-note").text();
+            Matcher matcher = regexVoddetail.matcher(element.select(".module-card-item-title a").attr("href"));
+            if (!matcher.find())
+                continue;
+            String id = matcher.group(1);
+            list.add(new Vod(id, name, img, remark));
         }
-        return "";
+        return Result.string(list);
     }
 
     protected String decrypt(String src, String KEY, String IV) {

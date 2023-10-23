@@ -115,4 +115,8 @@ public class Vod {
     public String getVodPlayUrl() {
         return vodPlayUrl;
     }
+
+    public String getVodPlayFrom() {
+        return vodPlayFrom;
+    }
 }

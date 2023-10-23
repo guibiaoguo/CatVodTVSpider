@@ -9,7 +9,9 @@ import androidx.annotation.Nullable;
 
 import com.github.catvod.bean.Result;
 import com.github.catvod.crawler.Spider;
+import com.github.catvod.utils.StringUtil;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.guibiaoguo.myapplication.RoboApp;
 
 import org.junit.After;
@@ -20,9 +22,19 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import cn.hutool.core.io.file.FileReader;
+import cn.hutool.core.io.file.FileWriter;
 
 @RunWith(MockitoJUnitRunner.class)
 public class PanSouTest {
@@ -45,7 +57,9 @@ public class PanSouTest {
     @Test
     public void init() {
         Proxy.port = 9978;
-//        when(mMockContext.getString(R.string.app_name)).thenReturn(FAKE_STRING);
+        FileReader fileReader = new FileReader("aliyundrive.json");
+        String aliyundrive = fileReader.readString();
+        //        when(mMockContext.getString(R.string.app_name)).thenReturn(FAKE_STRING);
         when(mMockContext.getPackageName()).thenReturn("com.github.androidunittest");
 //        when(mMockContext.getApplicationContext()).thenReturn(new Application());
 //        PowerMockito.mockStatic(Looper.class);
@@ -59,6 +73,9 @@ public class PanSouTest {
             @Nullable
             @Override
             public String getString(String key, @Nullable String defValue) {
+                if (key.equals("aliyundrive")) {
+                    return aliyundrive;
+                }
                 return null;
             }
 
@@ -98,6 +115,10 @@ public class PanSouTest {
                 return new Editor() {
                     @Override
                     public Editor putString(String key, @Nullable String value) {
+                        if (key.equals("aliyundrive")) {
+                            FileWriter writer = new FileWriter(new File("src/test/resources/aliyundrive.json"));
+                            writer.write(value);
+                        }
                         return this;
                     }
 
@@ -183,7 +204,43 @@ public class PanSouTest {
     public void playerContent() throws Exception {
         String content = pansou.detailContent(Arrays.asList("/s/KeksNqYkc48pdqJwZTQ1TzW05V7sj"));
         Result result = new Gson().fromJson(content, Result.class);
-        String id = result.getList().get(0).getVodPlayUrl().split("#")[0].split("\\$")[1];
-        System.out.println(pansou.playerContent("原畫", id, null));
+        String id = result.getList().get(0).getVodPlayUrl().split("#")[182].split("\\$")[1];
+//        System.out.println(pansou.playerContent("原畫", id, null));
+        content = pansou.playerContent("超清", id, null);
+        System.out.println(content);
+        String url = new Gson().fromJson(content, JsonObject.class).get("url").getAsString();
+        if (url.startsWith("http://127.0.0.1")) {
+            Map<String, String> params = StringUtil.getParameter(url, "?");
+            Object[] rs = Proxy.proxy(params);
+            int code = (int) rs[0];
+            String mime = (String) rs[1];
+            InputStream stream = rs[2] != null ? (InputStream) rs[2] : null;
+            BufferedReader bReader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+            StringBuilder sb = new StringBuilder();
+            String s = "";
+            while ((s = bReader.readLine()) != null) {
+                sb.append(s + "\n");
+            }
+            bReader.close();
+        }
+    }
+
+    @Test
+    public void previewUrl() throws Exception {
+        String url = "http://127.0.0.1:9978/proxy?do=ali&type=sub&file_id=647753fa170d4809f69746dba8d8ee081d411c45";
+        if (url.startsWith("http://127.0.0.1")) {
+            Map<String, String> params = StringUtil.getParameter(url, "?");
+            Object[] rs = Proxy.proxy(params);
+            int code = (int) rs[0];
+            String mime = (String) rs[1];
+            InputStream stream = rs[2] != null ? (InputStream) rs[2] : null;
+            BufferedReader bReader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+            StringBuilder sb = new StringBuilder();
+            String s = "";
+            while ((s = bReader.readLine()) != null) {
+                sb.append(s + "\n");
+            }
+            bReader.close();
+        }
     }
 }

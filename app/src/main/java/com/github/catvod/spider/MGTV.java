@@ -45,7 +45,7 @@ public class MGTV extends Spider {
 
     protected HashMap<String, String> getHeaders(String url) {
         HashMap<String, String> headers = new HashMap<>();
-        headers.put("referer","https://so.mgtv.com");
+        headers.put("referer", "https://so.mgtv.com");
         headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
         return headers;
     }
@@ -62,8 +62,8 @@ public class MGTV extends Spider {
             for (int i = 0; i < data.length(); i++) {
                 JSONObject cate = data.optJSONObject(i);
                 JSONObject c = new JSONObject();
-                c.put("type_name",cate.optString("channelName"));
-                c.put("type_id",cate.optString("channelId"));
+                c.put("type_name", cate.optString("channelName"));
+                c.put("type_id", cate.optString("channelId"));
                 classes.put(c);
             }
             JSONObject result = new JSONObject();
@@ -82,9 +82,9 @@ public class MGTV extends Spider {
                     JSONObject vod = list.optJSONObject(i);
                     String title = vod.optString("title");
                     String cover = vod.optString("imgUrlH");
-                    cover=fixUrl(url,cover);
+                    cover = fixUrl(url, cover);
                     String remark = vod.optString("updateInfo");
-                    String id = "https://pcweb.api.mgtv.com/episode/list?size=5000&video_id="+vod.optString("playPartId");
+                    String id = "https://pcweb.api.mgtv.com/episode/list?page=1&size=50&video_id=" + vod.optString("playPartId");
                     JSONObject v = new JSONObject();
                     v.put("vod_id", id);
                     v.put("vod_name", title);
@@ -118,9 +118,9 @@ public class MGTV extends Spider {
                     JSONObject vod = list.optJSONObject(i);
                     String title = vod.optString("title");
                     String cover = vod.optString("imgUrlH");
-                    cover=fixUrl(url,cover);
+                    cover = fixUrl(url, cover);
                     String remark = vod.optString("updateInfo");
-                    String id = "https://pcweb.api.mgtv.com/episode/list?size=5000&video_id="+vod.optString("playPartId");
+                    String id = "https://pcweb.api.mgtv.com/episode/list?page=1&size=50&video_id=" + vod.optString("playPartId");
                     JSONObject v = new JSONObject();
                     v.put("vod_id", id);
                     v.put("vod_name", title);
@@ -142,8 +142,8 @@ public class MGTV extends Spider {
     @Override
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) {
         try {
-            String url = "https://pianku.api.mgtv.com/rider/list/msite/v2?platform=msite&channelId="+tid+"&pn="+pg+"&chargeInfo=&sort=c2";
-            if(extend != null) {
+            String url = "https://pianku.api.mgtv.com/rider/list/msite/v2?platform=msite&channelId=" + tid + "&pn=" + pg + "&chargeInfo=&sort=c2";
+            if (extend != null) {
                 Set<String> keys = extend.keySet();
                 for (String key : keys) {
                     String val = extend.get(key).trim();
@@ -163,12 +163,12 @@ public class MGTV extends Spider {
                     JSONObject vod = list.optJSONObject(i);
                     String title = vod.optString("title");
                     String cover = vod.optString("img");
-                    cover=fixUrl(url,cover);
+                    cover = fixUrl(url, cover);
                     String remark = vod.optString("updateInfo");
-                    remark = remark.equals("")?vod.optString("subtitle"):remark;
-                    String id = "https://pcweb.api.mgtv.com/episode/list?size=5000&video_id="+vod.optString("playPartId");
+                    remark = remark.equals("") ? vod.optString("subtitle") : remark;
+                    String id = "https://pcweb.api.mgtv.com/episode/list?page=1&size=50&video_id=" + vod.optString("playPartId");
                     JSONObject v = new JSONObject();
-                    v.put("vod_id", id+"#"+cover);
+                    v.put("vod_id", id + "#" + cover);
                     v.put("vod_name", title);
                     v.put("vod_pic", cover);
                     v.put("vod_remarks", remark);
@@ -203,8 +203,8 @@ public class MGTV extends Spider {
 //                vod = dataObject.optJSONArray("epsodelist").optJSONObject(0);
 //            }
             vodList.put("vod_id", ids.get(0));
-            vodList.put("vod_name",vod.optString("title"));
-            vodList.put("vod_pic",fixUrl(url,ids.get(0).split("#")[1]));
+            vodList.put("vod_name", vod.optString("title"));
+            vodList.put("vod_pic", fixUrl(url, ids.get(0).split("#")[1]));
             vodList.put("type_name", "");
             vodList.put("vod_year", "");
             vodList.put("vod_area", "");
@@ -212,15 +212,23 @@ public class MGTV extends Spider {
             vodList.put("vod_actor", "");
             vodList.put("vod_director", "");
             vodList.put("vod_content", vod.optString("desc"));
-            JSONArray playerList = dataObject.optJSONArray("list");
-            if (playerList == null) {
-                playerList = new JSONArray();
-                playerList.put(dataObject);
-            }
+            JSONArray playerList = new JSONArray();
             List<String> plays = new ArrayList<>();
-            for (int i = 0; i < playerList.length(); i++) {
-                JSONObject epsode = playerList.optJSONObject(i);
-                plays.add(epsode.optString("t4")+"$"+epsode.optString("url"));
+            if (dataObject.optJSONArray("list") != null) {
+                int currentPage = dataObject.optInt("current_page");
+                int totalPage = dataObject.optInt("total_page");
+                do {
+                    currentPage++;
+                    playerList = dataObject.optJSONArray("list");
+                    for (int i = 0; i < playerList.length(); i++) {
+                        JSONObject epsode = playerList.optJSONObject(i);
+                        plays.add(epsode.optString("t4") + "$" + epsode.optString("url"));
+                    }
+                    jsonObject = new JSONObject(OkHttpUtil.string(url.replace("page=1", "page=" + currentPage), getHeaders(url.replace("page=1", "page=" + currentPage))));
+                    dataObject = jsonObject.optJSONObject("data");
+                } while (currentPage <= totalPage);
+            } else {
+                plays.add(dataObject.optString("t4") + "$" + dataObject.optString("url"));
             }
             vodList.put("vod_play_from", "mgtv");
             vodList.put("vod_play_url", join("#", plays));
@@ -267,7 +275,7 @@ public class MGTV extends Spider {
             try {
                 result.put("parse", 1);
                 result.put("playUrl", "");
-                result.put("url", siteUrl+id);
+                result.put("url", siteUrl + id);
                 return result.toString();
             } catch (Exception ee) {
                 SpiderDebug.log(ee);
@@ -282,7 +290,7 @@ public class MGTV extends Spider {
     @Override
     public String searchContent(String key, boolean quick) {
         try {
-            String url = "https://mobileso.bz.mgtv.com/pc/search/v1?q="+key+"&pn=1&pc=5000&size=5000";
+            String url = "https://mobileso.bz.mgtv.com/pc/search/v1?q=" + key + "&pn=1&pc=50&size=50";
             String srr = OkHttpUtil.string(url, getHeaders(url));
             JSONObject dataObject = new JSONObject(srr);
             JSONArray jsonArray = dataObject.optJSONObject("data").optJSONArray("contents");
@@ -292,15 +300,15 @@ public class MGTV extends Spider {
                 JSONObject v = new JSONObject();
                 JSONArray sourceList = vObj.optJSONArray("sourceList");
                 JSONArray yearList = vObj.optJSONArray("yearList");
-                if(sourceList != null||yearList!=null) {
-                    sourceList = sourceList == null?vObj.optJSONArray("yearList").optJSONObject(0).optJSONArray("sourceList"):sourceList;
+                if (sourceList != null || yearList != null) {
+                    sourceList = sourceList == null ? vObj.optJSONArray("yearList").optJSONObject(0).optJSONArray("sourceList") : sourceList;
                 } else {
                     sourceList = new JSONArray();
                 }
-                for (int j=0;j<sourceList.length();j++) {
+                for (int j = 0; j < sourceList.length(); j++) {
                     JSONObject source = sourceList.optJSONObject(j);
-                    if (source.optString("source").equals("")||source.optString("source").equals("imgo")) {
-                        v.put("vod_id", "https://pcweb.api.mgtv.com/episode/list?size=5000&video_id="+source.optString("vid")+"#"+vObj.optString("pic"));
+                    if (source.optString("source").equals("") || source.optString("source").equals("imgo")) {
+                        v.put("vod_id", "https://pcweb.api.mgtv.com/episode/list?page=1&size=50&video_id=" + source.optString("vid") + "#" + vObj.optString("pic"));
                         v.put("vod_name", vObj.optString("title"));
                         v.put("vod_pic", vObj.optString("pic"));
                         v.put("vod_remarks", vObj.optString("score"));

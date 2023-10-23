@@ -42,7 +42,7 @@ public class AppYsV2 extends Spider {
 
     @Override
     public void init(Context context, String extend) {
-        super.init(context, extend);
+        //super.init(context, extend);
         try {
             extInfos = extend.split("###");
         } catch (Throwable th) {

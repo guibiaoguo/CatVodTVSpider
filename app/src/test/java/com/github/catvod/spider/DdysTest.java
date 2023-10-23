@@ -63,16 +63,18 @@ public class DdysTest {
 
     @Test
     public void playerContent() throws Exception {
-        System.out.println(ddys.homeContent(true));
-        System.out.println(ddys.detailContent(Arrays.asList("the-good-bad-mother")));
-        System.out.println(ddys.playerContent("","https://ddys.mov/v/kr_drama/The_Good_Bad_Mother/The_Good_Bad_Mother_S01E14.mp4?ddrkey=te0yCfHR7aD%2Fo|https://ddys.mov/subddr//v/kr_drama/The_Good_Bad_Mother/The_Good_Bad_Mother_S01E14.ddr",new ArrayList<>()));
+        String content = ddys.detailContent(Arrays.asList("loki"));
+        System.out.println(content);
+        Result result = new Gson().fromJson(content, Result.class);
+        String id = result.getList().get(0).getVodPlayUrl().split("#")[0].split("\\$")[1];
+        System.out.println(ddys.playerContent("",id,new ArrayList<>()));
     }
 
     @Test
     public void searchContent() throws Exception {
-        String content = ddys.searchContent("宝可梦",false);
+        String content = ddys.searchContent("蜘蛛侠",false);
         System.out.println(content);
-        Assert.assertTrue(content.contains("宝可梦"));
+        Assert.assertTrue(content.contains("蜘蛛侠"));
         Result result = new Gson().fromJson(content, Result.class);
         Assert.assertTrue(result.getList().size() > 0);
     }

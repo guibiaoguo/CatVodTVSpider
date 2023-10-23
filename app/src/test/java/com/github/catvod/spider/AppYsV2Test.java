@@ -36,7 +36,7 @@ public class AppYsV2Test {
 
     @Test
     public void init() {
-        appysv2.init(null, "https://www.naifei.life/api.php/v1.vod");
+        appysv2.init(null, "http://app.qianju.cc/api.php/v1.vod/types");
 //        appysv2.init(null, "http://slapibf.com/api.php/provide/vod/");
     }
 
@@ -110,7 +110,7 @@ public class AppYsV2Test {
 
     @Test
     public void desc() {
-        String content = OkHttpUtil.string("https://app.bl210.com/api.php/v1.vod");
+        String content = OkHttpUtil.string("http://app.qianju.cc/api.php/v1.vod");
         JsonObject jsonObject = new Gson().fromJson(content, JsonObject.class);
         System.out.println(content);
     }

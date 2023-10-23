@@ -23,6 +23,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import cn.hutool.core.io.file.FileReader;
+import cn.hutool.core.io.file.FileWriter;
+
 @RunWith(MockitoJUnitRunner.class)
 public class AhhhhfsTest {
 
@@ -44,7 +47,9 @@ public class AhhhhfsTest {
     @Test
     public void init() {
         Proxy.port = 9978;
-//        when(mMockContext.getString(R.string.app_name)).thenReturn(FAKE_STRING);
+        FileReader fileReader = new FileReader("aliyundrive.json");
+        String aliyundrive = fileReader.readString();
+        //        when(mMockContext.getString(R.string.app_name)).thenReturn(FAKE_STRING);
         when(mMockContext.getPackageName()).thenReturn("com.github.androidunittest");
 //        when(mMockContext.getApplicationContext()).thenReturn(new Application());
 //        PowerMockito.mockStatic(Looper.class);
@@ -58,6 +63,9 @@ public class AhhhhfsTest {
             @Nullable
             @Override
             public String getString(String key, @Nullable String defValue) {
+                if (key.equals("aliyundrive")) {
+                    return aliyundrive;
+                }
                 return null;
             }
 
@@ -97,6 +105,10 @@ public class AhhhhfsTest {
                 return new Editor() {
                     @Override
                     public Editor putString(String key, @Nullable String value) {
+                        if (key.equals("aliyundrive")) {
+                            FileWriter writer = new FileWriter("aliyundrive.json");
+                            writer.write(value);
+                        }
                         return this;
                     }
 
@@ -179,8 +191,7 @@ public class AhhhhfsTest {
 
     @Test
     public void categoryContent() throws Exception {
-        System.out.println(ahhhhfs.categoryContent("comic" +
-                "","1",true,new HashMap<>()));
+        System.out.println(ahhhhfs.categoryContent("movie","1",true,new HashMap<>()));
     }
 
     @Test

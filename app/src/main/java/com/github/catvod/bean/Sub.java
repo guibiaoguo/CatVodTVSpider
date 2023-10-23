@@ -57,4 +57,12 @@ public class Sub {
     public String getUrl() {
         return url;
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getExt() {
+        return ext;
+    }
 }

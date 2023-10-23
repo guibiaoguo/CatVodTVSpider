@@ -610,7 +610,7 @@ public class AnalyzeRule {
         private void splitRegex(String ruleStr) {
             int start = 0;
             String tmp;
-            String[] ruleStrArray = StrUtil.split(ruleStr, "##");
+            String[] ruleStrArray = StrUtil.split(ruleStr, "##").toArray(new String[]{});
             Matcher regexMatcher = regexPattern.matcher(ruleStrArray[0]);
 
             if (regexMatcher.find()) {

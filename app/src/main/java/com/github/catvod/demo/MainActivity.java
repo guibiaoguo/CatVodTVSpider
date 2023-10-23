@@ -8,6 +8,7 @@ package com.github.catvod.demo;
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 
@@ -17,10 +18,28 @@ import com.github.catvod.crawler.Spider;
 import com.github.catvod.spider.Dm84;
 import com.github.catvod.spider.Init;
 import com.github.catvod.spider.Proxy;
+import com.github.catvod.spider.WebDAV;
+import com.github.catvod.utils.StringUtil;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
+import org.apache.commons.lang3.StringUtils;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 //import com.github.tvbox.quickjs.QuickJSContext;
 
 
 public class MainActivity extends Activity {
+
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
@@ -52,10 +71,33 @@ public class MainActivity extends Activity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Spider qq = new Dm84();
-                qq.init(MainActivity.this.getApplicationContext());
+                Spider spider = new WebDAV();
+                spider.init(MainActivity.this.getApplicationContext(),"https://gitlab.com/mao4284120/js/-/raw/main/sub/webdav.json");
                 try {
-                    System.out.println(qq.homeContent(true));
+                    JsonObject jsonObject = null;
+                    String content = null;
+                    String tid = null;
+                    content = spider.homeContent(true);
+                    Log.d(TAG,content);
+                    jsonObject = new Gson().fromJson(content, JsonObject.class);
+                    Log.d(TAG,jsonObject.getAsJsonArray("class").toString());
+                    tid = jsonObject.getAsJsonArray("class").get(0).getAsJsonObject().get("type_id").getAsString();
+                    content = spider.homeVideoContent();
+                    Log.d(TAG,content);
+                    if (StringUtils.isNotEmpty(content)) {
+                        jsonObject = new Gson().fromJson(content, JsonObject.class);
+                        Log.d(TAG, jsonObject.getAsJsonArray("list").toString());
+                    }
+                    content = spider.categoryContent("本地/2.足球小将 两季全 [中配]/足球小将(2001) [中配]/","1",true,new HashMap<>());
+                    Log.d(TAG,content);
+                    jsonObject = new Gson().fromJson(content, JsonObject.class);
+                    Log.d(TAG,jsonObject.getAsJsonArray("list").toString());
+                    content = spider.detailContent(Arrays.asList(jsonObject.getAsJsonArray("list").get(0).getAsJsonObject().get("vod_id").getAsString()));
+                    Log.d(TAG,content);
+                    jsonObject = new Gson().fromJson(content, JsonObject.class);
+                    Log.d(TAG,jsonObject.getAsJsonArray("list").toString());
+                    content = spider.playerContent("",jsonObject.getAsJsonArray("list").get(0).getAsJsonObject().get("vod_play_url").getAsString().split("#")[0].split("\\$")[1],new ArrayList<>());
+                    Log.d(TAG,content);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

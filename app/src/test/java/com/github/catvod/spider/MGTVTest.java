@@ -53,12 +53,12 @@ public class MGTVTest {
 
     @Test
     public void categoryContent() throws Exception {
-        System.out.println(mgtv.categoryContent("2","1",true,new HashMap<>()));
+        System.out.println(mgtv.categoryContent("50","1",true,new HashMap<>()));
     }
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(mgtv.detailContent(Arrays.asList("https://pcweb.api.mgtv.com/episode/list?size=5000&video_id=18588590#http://3img.hitv.com/preview/sp_images/2023/04/03/202304031713207326601.jpg")));
+        System.out.println(mgtv.detailContent(Arrays.asList("https://pcweb.api.mgtv.com/episode/list?page=1&size=50&video_id=19885801#http://0img.hitv.com/preview/sp_images/2021/10/20/202110201750276742438.jpg")));
     }
 
     @Test
