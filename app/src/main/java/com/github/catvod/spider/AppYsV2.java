@@ -204,6 +204,23 @@ public class AppYsV2 extends Spider {
                         videos.put(v);
                     }
                 }
+                if (videos.length() == 0) {
+                    json = desc(OkHttpUtil.string(apiUrl, getHeaders(url)), (byte) 1);
+                    obj = new JSONObject(json);
+                    for (int i = 0; i < obj.optJSONObject("data").optJSONArray("list").length(); i++) {
+                        JSONObject vObj = obj.optJSONObject("data").optJSONArray("list").optJSONObject(i);
+                        String vid = vObj.optString("vod_id");
+                        if (ids.contains(vid))
+                            continue;
+                        ids.add(vid);
+                        JSONObject v = new JSONObject();
+                        v.put("vod_id", vid);
+                        v.put("vod_name", vObj.optString("vod_name"));
+                        v.put("vod_pic", vObj.optString("vod_pic"));
+                        v.put("vod_remarks", vObj.optString("vod_remarks"));
+                        videos.put(v);
+                    }
+                }
             }
             JSONObject result = new JSONObject();
             result.put("list", videos);

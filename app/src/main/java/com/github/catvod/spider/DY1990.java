@@ -146,7 +146,7 @@ public class DY1990 extends Spider {
                         type_name = text.nextElementSibling().text();
                         break;
                     case "年份：":
-                        vod_year = text.nextElementSibling().text();
+                        vod_year = text.nextElementSibling()== null?"":text.nextElementSibling().text();
                         break;
                     case "地区：":
                         vod_area = text.nextElementSibling().text();

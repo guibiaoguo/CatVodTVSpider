@@ -6,8 +6,11 @@ import android.text.TextUtils;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Misc;
+import com.github.catvod.utils.StringUtil;
 import com.github.catvod.utils.okhttp.OKCallBack;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -359,12 +362,14 @@ public class XBiubiu extends Spider {
             JSONArray videos = new JSONArray();
             if (ssmoshiJson) {
                 JSONObject data = new JSONObject(webContent);
-                JSONArray vodArray = data.getJSONArray("list");
+                String jslist = getRuleVal("jslist","list");
+                JSONArray vodArray = data.optJSONArray(jslist);
                 for (int j = 0; j < vodArray.length(); j++) {
                     JSONObject vod = vodArray.getJSONObject(j);
                     String name = vod.optString(getRuleVal("jsname")).trim();
                     String id = vod.optString(getRuleVal("jsid")).trim();
                     String pic = vod.optString(getRuleVal("jspic")).trim();
+                    String remark = vod.optString(getRuleVal("jsremark"));
                     pic = Misc.fixUrl(webUrl, pic);
                     String link = getRuleVal("sousuohouzhui") + id;
                     link = getRuleVal("ssljqianzhui").isEmpty() ? (link + getRuleVal("ssljhouzhui")) : ("x:" + getRuleVal("ssljqianzhui")) + link + getRuleVal("ssljhouzhui");
@@ -372,7 +377,7 @@ public class XBiubiu extends Spider {
                     v.put("vod_id", name + "$$$" + pic + "$$$" + link);
                     v.put("vod_name", name);
                     v.put("vod_pic", pic);
-                    v.put("vod_remarks", "");
+                    v.put("vod_remarks", remark);
                     videos.put(v);
                 }
             } else {
@@ -432,11 +437,12 @@ public class XBiubiu extends Spider {
                 try {
                     if (ext.startsWith("http")) {
                         String json = OkHttpUtil.string(ext, null);
-                        rule = new JSONObject(json);
+                        rule = new JSONObject(new GsonBuilder().setLenient().create().fromJson(json, JsonObject.class).toString());
                     } else {
                         rule = new JSONObject(ext);
                     }
                 } catch (JSONException e) {
+                    SpiderDebug.log(e);
                 }
             }
         }
@@ -459,7 +465,7 @@ public class XBiubiu extends Spider {
             protected void onResponse(String response) {
             }
         };
-        OkHttpUtil.post(OkHttpUtil.defaultClient(), webUrl, callBack);
+        OkHttpUtil.post(OkHttpUtil.defaultClient(), webUrl, StringUtil.getParameter(webUrl,"?"), callBack);
         return callBack.getResult().replaceAll("\r|\n", "");
     }
 

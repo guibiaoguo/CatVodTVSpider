@@ -18,6 +18,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import cn.hutool.core.util.StrUtil;
+
 
 /**
  * bill
@@ -193,7 +195,8 @@ public class MGTV extends Spider {
     @Override
     public String detailContent(List<String> ids) {
         try {
-            String url = ids.get(0).split("#")[0];
+            List<String> vids = StrUtil.split(ids.get(0),"#");
+            String url = vids.get(0);
             String srr = OkHttpUtil.string(url, getHeaders(url));
             JSONObject jsonObject = new JSONObject(srr);
             JSONObject dataObject = jsonObject.optJSONObject("data");
@@ -204,7 +207,7 @@ public class MGTV extends Spider {
 //            }
             vodList.put("vod_id", ids.get(0));
             vodList.put("vod_name", vod.optString("title"));
-            vodList.put("vod_pic", fixUrl(url, ids.get(0).split("#")[1]));
+            vodList.put("vod_pic", fixUrl(url, vids.get(1)));
             vodList.put("type_name", "");
             vodList.put("vod_year", "");
             vodList.put("vod_area", "");
@@ -301,16 +304,24 @@ public class MGTV extends Spider {
                 JSONArray sourceList = vObj.optJSONArray("sourceList");
                 JSONArray yearList = vObj.optJSONArray("yearList");
                 if (sourceList != null || yearList != null) {
-                    sourceList = sourceList == null ? vObj.optJSONArray("yearList").optJSONObject(0).optJSONArray("sourceList") : sourceList;
+                    sourceList = sourceList == null ? yearList.optJSONObject(0).optJSONArray("sourceList") : sourceList;
                 } else {
                     sourceList = new JSONArray();
                 }
                 for (int j = 0; j < sourceList.length(); j++) {
                     JSONObject source = sourceList.optJSONObject(j);
                     if (source.optString("source").equals("") || source.optString("source").equals("imgo")) {
-                        v.put("vod_id", "https://pcweb.api.mgtv.com/episode/list?page=1&size=50&video_id=" + source.optString("vid") + "#" + vObj.optString("pic"));
-                        v.put("vod_name", vObj.optString("title"));
-                        v.put("vod_pic", vObj.optString("pic"));
+                        String id = "https://pcweb.api.mgtv.com/episode/list?page=1&size=50&video_id=" + source.optString("vid");
+                        String pic = source.optString("pic");
+                        String name = source.optString("title");
+                        if (StrUtil.isEmpty(name)) {
+                            name = source.optJSONArray("videoList").optJSONObject(0).optString("title");
+                            pic = source.optJSONArray("videoList").optJSONObject(0).optString("pic");
+                        }
+                        id = id + "#" + pic;
+                        v.put("vod_id",id);
+                        v.put("vod_name", name);
+                        v.put("vod_pic", pic);
                         v.put("vod_remarks", vObj.optString("score"));
                         videos.put(v);
                     }

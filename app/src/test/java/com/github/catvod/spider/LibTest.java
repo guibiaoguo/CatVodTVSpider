@@ -62,9 +62,9 @@ public class LibTest {
 
     @Test
     public void searchContent() throws Exception {
-        String content = spider.searchContent("宝可梦",false);
+        String content = spider.searchContent("火影",false);
         System.out.println(content);
-        Assert.assertTrue(content.contains("宝可梦"));
+        Assert.assertTrue(content.contains("火影"));
         Result result = new Gson().fromJson(content, Result.class);
         Assert.assertTrue(result.getList().size() > 0);
     }

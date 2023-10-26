@@ -7,6 +7,7 @@ import com.github.catvod.crawler.Spider;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,13 +15,18 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import cn.hutool.core.util.StrUtil;
+
 public class LocalFile extends Spider {
+
+    private String sdcard;
 
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> hashMap) {
         try {
 
             File file = new File(tid);
             File[] list = file.listFiles();
+            Arrays.sort(list, (a, b) -> a.getName().compareTo(b.getName()));
             JSONArray jSONArray2 = new JSONArray();
             for (File f : list) {
                 String filename = f.getName();
@@ -100,7 +106,14 @@ public class LocalFile extends Spider {
             // type_flag 是扩展字段，目前可取值0、1、2，该字段不存在时表示正常模式
             newCls.put("type_flag", "1"); // 1、列表形式的文件夹 2、缩略图 0或者不存在表示正常模式
             classes.put(newCls);
-
+            if (StrUtil.isNotEmpty(sdcard)) {
+                newCls = new JSONObject();
+                newCls.put("type_id", sdcard);
+                newCls.put("type_name", "外置文件");
+                // type_flag 是扩展字段，目前可取值0、1、2，该字段不存在时表示正常模式
+                newCls.put("type_flag", "1"); // 1、列表形式的文件夹 2、缩略图 0或者不存在表示正常模式
+                classes.put(newCls);
+            }
             JSONArray jSONArray3 = new JSONArray();
 
             JSONObject jSONObject4 = new JSONObject();
@@ -117,6 +130,14 @@ public class LocalFile extends Spider {
 
     public void init(Context context) {
         LocalFile.super.init(context);
+        File[] files = context.getExternalFilesDirs(null);
+        if (files.length>1) {
+            File file = files[1].getParentFile();
+            while (file.listFiles() != null) {
+                sdcard = file.getAbsolutePath();
+                file = file.getParentFile();
+            }
+        }
     }
 
     public String playerContent(String str, String str2, List<String> list) {

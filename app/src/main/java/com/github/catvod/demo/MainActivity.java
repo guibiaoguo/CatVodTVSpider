@@ -17,11 +17,14 @@ import com.github.catvod.crawler.Spider;
 //import com.github.catvod.js.SpiderJS;
 import com.github.catvod.spider.Dm84;
 import com.github.catvod.spider.Init;
+import com.github.catvod.spider.Local;
 import com.github.catvod.spider.Proxy;
 import com.github.catvod.spider.WebDAV;
 import com.github.catvod.utils.StringUtil;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -74,6 +77,13 @@ public class MainActivity extends Activity {
                 Spider spider = new WebDAV();
                 spider.init(MainActivity.this.getApplicationContext(),"https://gitlab.com/mao4284120/js/-/raw/main/sub/webdav.json");
                 try {
+                    Spider local = new Local();
+                    local.init(MainActivity.this.getApplicationContext(),"");
+                    String home = local.homeContent(true);
+                    Log.d(TAG, home);
+                    JsonArray classes = JsonParser.parseString(home).getAsJsonObject().getAsJsonArray("class");
+                    String category = local.categoryContent(classes.get(classes.size()-1).getAsJsonObject().get("type_id").getAsString(),"1",false,null);
+                    Log.d(TAG, category);
                     JsonObject jsonObject = null;
                     String content = null;
                     String tid = null;

@@ -21,6 +21,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -129,7 +130,7 @@ public class UpYunTest {
                     @Override
                     public Editor putString(String key, @Nullable String value) {
                         if (key.equals("aliyundrive")) {
-                            FileWriter writer = new FileWriter("aliyundrive.json");
+                            FileWriter writer = new FileWriter(new File("src/test/resources/aliyundrive.json"));
                             writer.write(value);
                         }
                         return this;

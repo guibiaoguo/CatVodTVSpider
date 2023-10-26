@@ -96,7 +96,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
     //junit 打包删除
-    testImplementation group: 'org.json', name: 'json', version: '20190722'
+    testImplementation group: 'org.json', name: 'json', version: '20231013'
     testImplementation 'org.bouncycastle:bcprov-jdk15to18:1.68'
 
 }

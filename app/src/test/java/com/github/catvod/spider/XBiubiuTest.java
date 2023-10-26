@@ -1,20 +1,23 @@
 package com.github.catvod.spider;
 
-import com.github.catvod.bean.Class;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
 
+import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -55,7 +58,7 @@ public class XBiubiuTest {
 
     @Test
     public void init() {
-        xbiubiu.init(null, "http://9xi4o.tk/sub/biubiu/%E9%9F%A9%E5%89%A7%E5%9C%A8%E7%BA%BF.json");
+        xbiubiu.init(null, "https://freed.yuanhsing.cf/TVBox/MaooXB2/奇优影院（不支持搜）.json");
     }
 
     @Test
@@ -68,48 +71,96 @@ public class XBiubiuTest {
         System.out.println(xbiubiu.searchContent("火影",false));
     }
 
+//    @Test
+//    public void testXBiubiu() {
+//        String content = OkHttpUtil.string("https://gitlab.com/mao4284120/js/-/raw/main/212757.json");
+//        JsonObject jsonObject = new Gson().fromJson(content, JsonObject.class);
+//        JsonArray jsonArray = jsonObject.getAsJsonArray("sites");
+//        JsonArray bad = new JsonArray();
+//        JsonArray good = new JsonArray();
+//        for (JsonElement jsonElement : jsonArray) {
+//            String api = jsonElement.getAsJsonObject().get("api").getAsString();
+//            if (api.equals("csp_XBiubiu")) {
+//                try {
+//                    String ext = jsonElement.getAsJsonObject().get("ext").getAsString();
+//                    xbiubiu = new XBiubiu();
+//                    xbiubiu.init(null, ext);
+//                    String home = xbiubiu.homeContent(true);
+//                    List<Class> classes = new Gson().fromJson(home, Result.class).getClasses();
+//                    if (classes == null || classes.size() == 0) {
+//                        throw new Exception("分类是空的");
+//                    }
+//                    System.out.println(xbiubiu.homeVideoContent());
+//                    String cate = xbiubiu.categoryContent(classes.get(0).getTypeId(),"1",true, new HashMap<>());
+//                    List<Vod> vods = new Gson().fromJson(cate, Result.class).getList();
+//                    if (vods == null || vods.size() == 0) {
+//                        throw new Exception("列表是空的");
+//                    }
+//                    String detail = xbiubiu.detailContent(Arrays.asList(vods.get(0).getVodId()));
+//                    List<Vod> vodDetails = new Gson().fromJson(detail, Result.class).getList();
+//                    if (vodDetails == null || vodDetails.size() == 0) {
+//                        throw new Exception("内容时空的");
+//                    }
+//                    System.out.println(xbiubiu.playerContent("", vodDetails.get(0).getVodPlayUrl().split("#")[0].split("\\$")[1],null));
+//                    System.out.println(xbiubiu.searchContent("火影", false));
+//                    good.add(jsonElement);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    bad.add(jsonElement);
+//                }
+//            }
+//        }
+//
+//        System.out.println(bad.toString());
+//        System.out.println("**************************************************");
+//        System.out.println(good.toString());
+//    }
+
     @Test
-    public void testXBiubiu() {
-        String content = OkHttpUtil.string("https://gitlab.com/mao4284120/js/-/raw/main/212757.json");
-        JsonObject jsonObject = new Gson().fromJson(content, JsonObject.class);
-        JsonArray jsonArray = jsonObject.getAsJsonArray("sites");
-        JsonArray bad = new JsonArray();
-        JsonArray good = new JsonArray();
-        for (JsonElement jsonElement : jsonArray) {
-            String api = jsonElement.getAsJsonObject().get("api").getAsString();
-            if (api.equals("csp_XBiubiu")) {
-                try {
-                    String ext = jsonElement.getAsJsonObject().get("ext").getAsString();
-                    xbiubiu = new XBiubiu();
-                    xbiubiu.init(null, ext);
-                    String home = xbiubiu.homeContent(true);
-                    List<Class> classes = new Gson().fromJson(home, Result.class).getClasses();
-                    if (classes == null || classes.size() == 0) {
-                        throw new Exception("分类是空的");
-                    }
-                    System.out.println(xbiubiu.homeVideoContent());
-                    String cate = xbiubiu.categoryContent(classes.get(0).getTypeId(),"1",true, new HashMap<>());
-                    List<Vod> vods = new Gson().fromJson(cate, Result.class).getList();
-                    if (vods == null || vods.size() == 0) {
-                        throw new Exception("列表是空的");
-                    }
-                    String detail = xbiubiu.detailContent(Arrays.asList(vods.get(0).getVodId()));
-                    List<Vod> vodDetails = new Gson().fromJson(detail, Result.class).getList();
-                    if (vodDetails == null || vodDetails.size() == 0) {
-                        throw new Exception("内容时空的");
-                    }
-                    System.out.println(xbiubiu.playerContent("", vodDetails.get(0).getVodPlayUrl().split("#")[0].split("\\$")[1],null));
-                    System.out.println(xbiubiu.searchContent("火影", false));
-                    good.add(jsonElement);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    bad.add(jsonElement);
+    public void spider() {
+        try {
+            Class cls = null;
+            cls = Class.forName("com.github.catvod.spider.XBiubiu" );
+            Spider spider = (Spider) cls.newInstance();
+            spider.init(null,"https://gitlab.com/mao4284120/js/-/raw/main/sub/奇优影院(ns)1.json");
+            String home = spider.homeContent(true);
+            System.out.println(home);
+            String homeVideo = spider.homeVideoContent();
+            System.out.println(homeVideo);
+            JsonObject homeJson = JsonParser.parseString(home).getAsJsonObject();
+            String tid = "";
+            JsonArray classes = homeJson.getAsJsonArray("class");
+            if (classes.size() > 3) {
+                tid = classes.get(3).getAsJsonObject().get("type_id").getAsString();
+            } else {
+                tid = classes.get(classes.size() -1).getAsJsonObject().get("type_id").getAsString();
+            }
+            String categoryContent = spider.categoryContent(tid,"1",false,null);
+            System.out.println(categoryContent);
+            JsonObject jsonCategory = JsonParser.parseString(categoryContent).getAsJsonObject();
+            String vid = jsonCategory.getAsJsonArray("list").get(0).getAsJsonObject().get("vod_id").getAsString();
+            String detailContent = spider.detailContent(Arrays.asList(vid));
+            System.out.println(detailContent);
+            JsonObject jsonDetail = JsonParser.parseString(detailContent).getAsJsonObject();
+            JsonElement playUrl = jsonDetail.getAsJsonArray("list").get(0).getAsJsonObject().get("vod_play_url");
+            String playContent = spider.playerContent("",playUrl.getAsString().split("#")[0].split("\\$")[1],new ArrayList<>());
+            System.out.println(playContent);
+            String[] keys = new String[]{"宝可梦","蜘蛛","巨乳"};
+            JsonObject jsonSearch = null;
+            for (String key:keys) {
+                String searchContent = spider.searchContent(key,false);
+                if (StringUtils.isEmpty(searchContent)) {
+                    jsonSearch = new JsonObject();
+                } else {
+                    jsonSearch = JsonParser.parseString(searchContent).getAsJsonObject();
+                }
+                SpiderDebug.log(jsonSearch.toString());
+                if (jsonSearch.has("list") && jsonSearch.getAsJsonArray("list").size() >0) {
+                    break;
                 }
             }
+        } catch (Exception e) {
+            SpiderDebug.log(e);
         }
-
-        System.out.println(bad.toString());
-        System.out.println("**************************************************");
-        System.out.println(good.toString());
     }
 }

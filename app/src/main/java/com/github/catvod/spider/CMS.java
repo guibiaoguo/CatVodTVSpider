@@ -8,6 +8,7 @@ import com.github.catvod.bean.Filter;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
+import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Misc;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
@@ -20,7 +21,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
 
 public class CMS extends Spider {
 
@@ -47,6 +47,7 @@ public class CMS extends Spider {
         List<Class> classes = new ArrayList<>();
         LinkedHashMap<String, List<Filter>> filters = null;
         String content = OkHttpUtil.string(api);
+        SpiderDebug.log(content);
         if (type.equals("0")) {
             Element element = Jsoup.parse(content, Parser.xmlParser());
             for (Element ele : element.selectFirst("class").children()) {
@@ -88,6 +89,7 @@ public class CMS extends Spider {
             url = url + "?" + TextUtils.join("&",params.entrySet());
         }
         String content = OkHttpUtil.string(url);
+        SpiderDebug.log(content);
         if (type.equals("0")) {
             Element element = Jsoup.parse(content, Parser.xmlParser());
             for (Element video : element.select("video")) {
@@ -133,6 +135,7 @@ public class CMS extends Spider {
         int pagesize = 50;
         int pagecount = 1;
         String content = OkHttpUtil.string(url);
+        SpiderDebug.log(content);
         if (type.equals("0")) {
             Element element = Jsoup.parse(content, Parser.xmlParser());
             pagesize = Integer.parseInt(element.select("list").attr("pagesize"));
@@ -173,6 +176,7 @@ public class CMS extends Spider {
             url = url + "?" + TextUtils.join("&",params.entrySet());
         }
         String content = OkHttpUtil.string(url);
+        SpiderDebug.log(content);
         Vod vod = new Vod();
         if (type.equals("0")) {
             Element element = Jsoup.parse(content, Parser.xmlParser());
@@ -224,6 +228,7 @@ public class CMS extends Spider {
             url = url + "?" + TextUtils.join("&",params.entrySet());
         }
         String content = OkHttpUtil.string(url);
+        SpiderDebug.log(content);
         if (type.equals("0")) {
             Element element = Jsoup.parse(content, Parser.xmlParser());
             for (Element video : element.select("video")) {

@@ -8,6 +8,7 @@ import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.Misc;
+import com.github.catvod.utils.StringUtil;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.json.JSONArray;
@@ -573,45 +574,29 @@ public class Lib extends Spider {
         return headers;
     }
 
+    /**
+     * 搜索
+     *
+     * @param key 搜素关键字
+     * @param quick 是否播放页的快捷搜索
+     */
     @Override
     public String searchContent(String key, boolean quick) {
-        try {
-            String url = "https://shitu.paodekuaiweixinqun.com/search?q=site%3Alibvio.me%2Fdetail+" + URLEncoder.encode(key);
-            Document docs = Jsoup.parse(OkHttpUtil.string(url, sHeaders()));
-            JSONObject result = new JSONObject();
-            JSONArray videos = new JSONArray();
-            JSONObject v = new JSONObject();
-            Elements list = docs.select("div.NJo7tc div.yuRUbf");
-            for (int i = 0; i < list.size(); i++) {
-                Element doc = list.get(i);
-                String sourceName = doc.select("div.yuRUbf a h3").text();
-                if (sourceName.contains(key)) {
-                    String list1 = doc.select("div.yuRUbf a").attr("href");
-                    Document link = Jsoup.parse(OkHttpUtil.string(list1, getHeaders(url)));
-                    Matcher matcher = regexVid.matcher(list1);
-                    Elements data = link.select("p.data");
-                    if (matcher.find()) {
-
-                        String group = matcher.group(1);
-                        String cover = link.select("div.stui-content__thumb a img").attr("data-original");
-                        String title = link.select("div.stui-content__detail h1").text();
-                        Pattern rms = Pattern.compile("更新：(\\S+)");
-                        String remark = doReplaceRegex(rms, data.get(3).text());
-
-                        v.put("vod_name", title);
-                        v.put("vod_remarks", remark);
-                        v.put("vod_id", group);
-                        v.put("vod_pic", cover);
-                        videos.put(v);
-                    }
-                }
-            }
-            result.put("list", videos);
-            return result.toString();
-        } catch (Exception e) {
-            SpiderDebug.log(e);
+        List<Vod> list = new ArrayList<>();
+        String url = siteUrl + "/search/-------------.html?wd=" + StringUtil.encode(key) + "&submit=";
+        Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
+        Elements elements = doc.select("div.stui-vodlist__box");
+        for (Element vod : elements) {
+                String name = vod.select("a").attr("title");
+                String img = vod.select("a").attr("data-original");
+                String remark = vod.select("a .pic-text").text();
+                Matcher matcher = regexVid.matcher(vod.select("a").attr("href"));
+                if (!matcher.find())
+                    continue;
+                String id = matcher.group(1);
+            list.add(new Vod(id, name, img, remark));
         }
-        return "";
+        return Result.string(list);
     }
 
     private static String doReplaceRegex(Pattern pattern, String src) {

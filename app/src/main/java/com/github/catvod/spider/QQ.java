@@ -25,11 +25,14 @@ import org.jsoup.select.Elements;
 //import org.mozilla.javascript.Scriptable;
 
 import java.net.URLEncoder;
+import java.sql.Struct;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import cn.hutool.core.util.StrUtil;
 
 
 /**
@@ -421,6 +424,9 @@ public class QQ extends Spider {
         JsonArray itemList = jsonObject.getAsJsonObject("data").getAsJsonArray("smartboxItemList");
         for (JsonElement jsonElement : itemList) {
             String id = jsonElement.getAsJsonObject().getAsJsonObject("basicDoc").get("id").getAsString();
+            if (StrUtil.isEmpty(id)) {
+                continue;
+            }
             String name = jsonElement.getAsJsonObject().getAsJsonObject("basicDoc").get("docname").getAsString();
             String img = jsonElement.getAsJsonObject().getAsJsonObject("videoInfo").get("imgUrl").getAsString();
             String remark = jsonElement.getAsJsonObject().getAsJsonObject("videoInfo").get("typeName").getAsString();

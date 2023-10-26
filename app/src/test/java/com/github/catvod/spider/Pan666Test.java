@@ -20,6 +20,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -108,7 +109,7 @@ public class Pan666Test {
                     @Override
                     public Editor putString(String key, @Nullable String value) {
                         if (key.equals("aliyundrive")) {
-                            FileWriter writer = new FileWriter("aliyundrive.json");
+                            FileWriter writer = new FileWriter(new File("src/test/resources/aliyundrive.json"));
                             writer.write(value);
                         }
                         return this;
@@ -193,8 +194,8 @@ public class Pan666Test {
 
     @Test
     public void categoryContent() throws Exception {
-        System.out.println(pan666.categoryContent("comic" +
-                "","1",true,new HashMap<>()));
+//        System.out.println(pan666.categoryContent("video","1",true,new HashMap<>()));
+        System.out.println(pan666.categoryContent("https://www.aliyundrive.com/s/ec2adJPDWeU/folder/653a96a950ad52103d1244a0922bb2f44506c79d","1",true,new HashMap<>()));
     }
 
     @Test

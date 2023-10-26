@@ -19,6 +19,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -106,7 +108,7 @@ public class YunPan1Test {
                     @Override
                     public Editor putString(String key, @Nullable String value) {
                         if (key.equals("aliyundrive")) {
-                            FileWriter writer = new FileWriter("aliyundrive.json");
+                            FileWriter writer = new FileWriter(new File("src/test/resources/aliyundrive.json"));
                             writer.write(value);
                         }
                         return this;
@@ -201,5 +203,11 @@ public class YunPan1Test {
         Assert.assertTrue(content.contains("宝可梦"));
         Result result = new Gson().fromJson(content, Result.class);
         Assert.assertTrue(result.getList().size() > 0);
+    }
+
+    @Test
+    public void detailContent() throws Exception {
+//        System.out.println(upyun.detailContent(Arrays.asList("https://www.aliyundrive.com/s/dCTAQ2TUf1n/folder/645ba82aedd0ace5aa644c1e9a8a3943ede23597")));
+        System.out.println(yunpan1.detailContent(Arrays.asList("https://www.aliyundrive.com/s/Ww2yRgrsQ2C/folder/64544fe8c5bb130c4e90418ebcc7e109f1eb143c")));
     }
 }

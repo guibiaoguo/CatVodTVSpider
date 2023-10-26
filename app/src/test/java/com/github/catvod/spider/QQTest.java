@@ -83,9 +83,9 @@ public class QQTest {
 
     @Test
     public void searchContent() throws Exception {
-        String content = qq.searchContent("宝可梦",false);
+        String content = qq.searchContent("问心",false);
         System.out.println(content);
-        Assert.assertTrue(content.contains("宝可梦"));
+        Assert.assertTrue(content.contains("问心"));
         Result result = new Gson().fromJson(content, Result.class);
         Assert.assertTrue(result.getList().size() > 0);
     }

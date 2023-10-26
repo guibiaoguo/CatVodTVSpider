@@ -1,21 +1,24 @@
 package com.github.catvod.spider;
 
-import com.github.catvod.bean.Class;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
 
+import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +39,7 @@ public class AppYsV2Test {
 
     @Test
     public void init() {
-        appysv2.init(null, "http://app.qianju.cc/api.php/v1.vod/types");
+        appysv2.init(null, "https://www.69mj.com/api.php/v1.vod");
 //        appysv2.init(null, "http://slapibf.com/api.php/provide/vod/");
     }
 
@@ -61,14 +64,18 @@ public class AppYsV2Test {
 
     @Test
     public void detailContent() throws Exception {
-        String detail = appysv2.detailContent(Arrays.asList("106"));
+        String detail = appysv2.detailContent(Arrays.asList("115437"));
         Result result = new Gson().fromJson(detail, Result.class);
         System.out.println(detail);
     }
 
     @Test
     public void searchContent() throws Exception {
-        System.out.println(appysv2.searchContent("火影", false));
+        String content = appysv2.searchContent("宝可梦",false);
+        System.out.println(content);
+        Assert.assertTrue(content.contains("宝可梦"));
+        Result result = new Gson().fromJson(content, Result.class);
+        Assert.assertTrue(result.getList().size() > 0);
     }
 
     @Test
@@ -76,37 +83,6 @@ public class AppYsV2Test {
         System.out.println(appysv2.playerContent("", "https://www.kuaizi.tv/vodplay/17748-1-1/", null));
     }
 
-    @Test
-    public void getCateUrl() {
-    }
-
-    @Test
-    public void getCateFilterUrlPrefix() {
-    }
-
-    @Test
-    public void getCateFilterUrlSuffix() {
-    }
-
-    @Test
-    public void getFilterTypes() {
-    }
-
-    @Test
-    public void getRecommendUrl() {
-    }
-
-    @Test
-    public void getPlayUrlPrefix() {
-    }
-
-    @Test
-    public void manualVideoCheck() {
-    }
-
-    @Test
-    public void isVideoFormat() {
-    }
 
     @Test
     public void desc() {
@@ -115,47 +91,95 @@ public class AppYsV2Test {
         System.out.println(content);
     }
 
+//    @Test
+//    public void testAppYSV2() {
+//        String content = OkHttpUtil.string("https://gitlab.com/mao4284120/js/-/raw/main/212757_bad.json");
+//        JsonObject jsonObject = new Gson().fromJson(content, JsonObject.class);
+//        JsonArray jsonArray = jsonObject.getAsJsonArray("sites");
+//        JsonArray bad = new JsonArray();
+//        JsonArray good = new JsonArray();
+//        for (JsonElement jsonElement : jsonArray) {
+//            String api = jsonElement.getAsJsonObject().get("api").getAsString();
+//            if (api.equals("csp_AppYsV2")) {
+//                try {
+//                    String ext = jsonElement.getAsJsonObject().get("ext").getAsString();
+//                    appysv2.init(null, ext);
+//                    String home = appysv2.homeContent(true);
+//                    List<Class> classes = new Gson().fromJson(home, Result.class).getClasses();
+//                    if (classes == null || classes.size() == 0) {
+//                        throw new Exception("分类是空的");
+//                    }
+//                    System.out.println(appysv2.homeVideoContent());
+//                    String cate = appysv2.categoryContent(classes.get(0).getTypeId(),"1",true, new HashMap<>());
+//                    List<Vod> vods = new Gson().fromJson(cate, Result.class).getList();
+//                    if (vods == null || vods.size() == 0) {
+//                        throw new Exception("列表是空的");
+//                    }
+//                    String detail = appysv2.detailContent(Arrays.asList(vods.get(0).getVodId()));
+//                    List<Vod> vodDetails = new Gson().fromJson(detail, Result.class).getList();
+//                    if (vodDetails == null || vodDetails.size() == 0) {
+//                        throw new Exception("内容时空的");
+//                    }
+//                    System.out.println(appysv2.playerContent("", vodDetails.get(0).getVodPlayUrl().split("#")[0].split("\\$")[1],null));
+//                    System.out.println(appysv2.searchContent("火影", false));
+//                    good.add(jsonElement);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    bad.add(jsonElement);
+//                }
+//            }
+//        }
+//
+//        System.out.println(bad.toString());
+//        System.out.println("**************************************************");
+//        System.out.println(good.toString());
+//    }
+
     @Test
-    public void testAppYSV2() {
-        String content = OkHttpUtil.string("https://gitlab.com/mao4284120/js/-/raw/main/212757_bad.json");
-        JsonObject jsonObject = new Gson().fromJson(content, JsonObject.class);
-        JsonArray jsonArray = jsonObject.getAsJsonArray("sites");
-        JsonArray bad = new JsonArray();
-        JsonArray good = new JsonArray();
-        for (JsonElement jsonElement : jsonArray) {
-            String api = jsonElement.getAsJsonObject().get("api").getAsString();
-            if (api.equals("csp_AppYsV2")) {
-                try {
-                    String ext = jsonElement.getAsJsonObject().get("ext").getAsString();
-                    appysv2.init(null, ext);
-                    String home = appysv2.homeContent(true);
-                    List<Class> classes = new Gson().fromJson(home, Result.class).getClasses();
-                    if (classes == null || classes.size() == 0) {
-                        throw new Exception("分类是空的");
-                    }
-                    System.out.println(appysv2.homeVideoContent());
-                    String cate = appysv2.categoryContent(classes.get(0).getTypeId(),"1",true, new HashMap<>());
-                    List<Vod> vods = new Gson().fromJson(cate, Result.class).getList();
-                    if (vods == null || vods.size() == 0) {
-                        throw new Exception("列表是空的");
-                    }
-                    String detail = appysv2.detailContent(Arrays.asList(vods.get(0).getVodId()));
-                    List<Vod> vodDetails = new Gson().fromJson(detail, Result.class).getList();
-                    if (vodDetails == null || vodDetails.size() == 0) {
-                        throw new Exception("内容时空的");
-                    }
-                    System.out.println(appysv2.playerContent("", vodDetails.get(0).getVodPlayUrl().split("#")[0].split("\\$")[1],null));
-                    System.out.println(appysv2.searchContent("火影", false));
-                    good.add(jsonElement);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    bad.add(jsonElement);
+    public void spider() {
+        try {
+            Class cls = null;
+            cls = Class.forName("com.github.catvod.spider.AppYsV2" );
+            Spider spider = (Spider) cls.newInstance();
+            spider.init(null,"http://175.178.7.35:2020/api.php/Sntv/vod/");
+            String home = spider.homeContent(true);
+            System.out.println(home);
+            String homeVideo = spider.homeVideoContent();
+            System.out.println(homeVideo);
+            JsonObject homeJson = JsonParser.parseString(home).getAsJsonObject();
+            String tid = "";
+            JsonArray classes = homeJson.getAsJsonArray("class");
+            if (classes.size() > 3) {
+                tid = classes.get(3).getAsJsonObject().get("type_id").getAsString();
+            } else {
+                tid = classes.get(classes.size() -1).getAsJsonObject().get("type_id").getAsString();
+            }
+            String categoryContent = spider.categoryContent(tid,"1",false,null);
+            System.out.println(categoryContent);
+            JsonObject jsonCategory = JsonParser.parseString(categoryContent).getAsJsonObject();
+            String vid = jsonCategory.getAsJsonArray("list").get(0).getAsJsonObject().get("vod_id").getAsString();
+            String detailContent = spider.detailContent(Arrays.asList(vid));
+            System.out.println(detailContent);
+            JsonObject jsonDetail = JsonParser.parseString(detailContent).getAsJsonObject();
+            JsonElement playUrl = jsonDetail.getAsJsonArray("list").get(0).getAsJsonObject().get("vod_play_url");
+            String playContent = spider.playerContent("",playUrl.getAsString().split("#")[0].split("\\$")[1],new ArrayList<>());
+            System.out.println(playContent);
+            String[] keys = new String[]{"宝可梦","蜘蛛","巨乳"};
+            JsonObject jsonSearch = null;
+            for (String key:keys) {
+                String searchContent = spider.searchContent(key,false);
+                if (StringUtils.isEmpty(searchContent)) {
+                    jsonSearch = new JsonObject();
+                } else {
+                    jsonSearch = JsonParser.parseString(searchContent).getAsJsonObject();
+                }
+                SpiderDebug.log(jsonSearch.toString());
+                if (jsonSearch.has("list") && jsonSearch.getAsJsonArray("list").size() >0) {
+                    break;
                 }
             }
+        } catch (Exception e) {
+            SpiderDebug.log(e);
         }
-
-        System.out.println(bad.toString());
-        System.out.println("**************************************************");
-        System.out.println(good.toString());
     }
 }

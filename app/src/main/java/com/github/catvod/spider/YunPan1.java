@@ -15,6 +15,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -33,12 +34,12 @@ import cn.hutool.core.util.StrUtil;
  */
 public class YunPan1 extends Ali {
 
-    private static final Pattern AliPLink = Pattern.compile("(https://www.aliyundrive.com/s/[^\"]+)");
+    private static final Pattern AliPLink = Pattern.compile("href=\"(https://www.aliyundrive.com/s/[^\"]+)");
     public static Pattern Folder = Pattern.compile("www.aliyundrive.com/s/([^/]+)(/folder/([^/]+))?");
 
     public static String siteUrl = "https://yunpan1.cc";
 
-    private String classConfig = "[{\"type_name\":\"影视\",\"type_id\":\"video1\"},{\"type_name\":\"动漫\",\"type_id\":\"cartoon\"}]";
+    private String classConfig = "[{\"type_name\":\"影视\",\"type_id\":\"video1\",\"type_flag\":\"1\"},{\"type_name\":\"动漫\",\"type_id\":\"cartoon\",\"type_flag\":\"1\"}]";
 
     @Override
     public void init(Context context,String extend) {
@@ -63,6 +64,13 @@ public class YunPan1 extends Ali {
         return headers;
     }
 
+    public HashMap<String, String> getHeader() {
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("User-Agent", Utils.CHROME);
+        headers.put("Referer", "https://www.aliyundrive.com/");
+        return headers;
+    }
+
     @Override
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) throws Exception {
         String type = extend.containsKey("type") ? extend.get("type") : tid;
@@ -79,6 +87,8 @@ public class YunPan1 extends Ali {
                 Vod vod = new Vod(StrUtil.format("https://www.aliyundrive.com/s/{}/folder/{}",shareId,file.getFileId()),file.getName(),"https://www.lgstatic.com/i/image2/M01/15/7E/CgoB5lysLXCADg6ZAABapAHUnQM321.jpg","", file.getType());
                 if (file.getType().equals("file")) {
                     vod.setVodId(StrUtil.format("https://www.aliyundrive.com/s/{}/folder/{}",shareId,file.getParentFileId()));
+                } else {
+                    vod.setVodPic("http://img1.3png.com/281e284a670865a71d91515866552b5f172b.png");
                 }
                 list.add(vod);
             }
@@ -106,25 +116,32 @@ public class YunPan1 extends Ali {
                     if (included.getAsJsonObject().get("id").getAsString().equals(postId) && included.getAsJsonObject().get("type").getAsString().equals("posts")) {
                         String contentHtml = included.getAsJsonObject().getAsJsonObject("attributes").get("contentHtml").getAsString();
                         Matcher matcher = AliPLink.matcher(contentHtml);
-                        if (matcher.find()) {
+                        while (matcher.find()) {
                             id = matcher.group(1);
+                            Vod vod = new Vod(id,title,img,remark);
+                            Map<String, Object> data = new HashMap<>();
+                            Matcher fmatcher = Folder.matcher(id);
+                            if (!fmatcher.find()) {
+                                continue;
+                            }
+                            data.put("share_id", fmatcher.group(1));
+                            String json = OkHttpUtil.postJson("https://api.aliyundrive.com/adrive/v3/share_link/get_share_by_anonymous", new Gson().toJson(data), getHeader());
+                            JsonObject object = JsonParser.parseString(json).getAsJsonObject();
+                            if (object.has("code") && object.get("code").getAsString().contains("ShareLink")) {
+                                continue;
+                            }
+                            JsonArray fileInfos = object.getAsJsonArray("file_infos");
+                            if (object.has("code") && object.get("code").getAsString().equals("TooManyRequests") || fileInfos != null &&fileInfos.size() > 0 && fileInfos.get(0).getAsJsonObject().get("type").getAsString().equals("folder")) {
+                                vod.setVodPic("http://img1.3png.com/281e284a670865a71d91515866552b5f172b.png");
+                                vod.setVodTag("folder");
+                            } else {
+                                vod.setVodTag("file");
+                            }
+                            list.add(vod);
                         }
                         break;
                     }
                 }
-                Vod vod = new Vod(id,title,img,remark);
-                Map<String, Object> data = new HashMap<>();
-                Matcher matcher = Folder.matcher(id);
-                if (!matcher.find()) {
-                    continue;
-                }
-                data.put("share_id", matcher.group(1));
-                String json = OkHttpUtil.postJson("https://api.aliyundrive.com/adrive/v3/share_link/get_share_by_anonymous", new Gson().toJson(data), API.get().getHeader());
-                JsonArray fileInfos = new Gson().fromJson(json, JsonObject.class).getAsJsonArray("file_infos");
-                if (fileInfos != null &&fileInfos.size() > 0 && fileInfos.get(0).getAsJsonObject().get("type").getAsString().equals("folder")) {
-                    vod.setVodTag("folder");
-                }
-                list.add(vod);
             }
         }
         return Result.string(list);

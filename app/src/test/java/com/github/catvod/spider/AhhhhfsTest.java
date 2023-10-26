@@ -19,6 +19,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -106,7 +108,7 @@ public class AhhhhfsTest {
                     @Override
                     public Editor putString(String key, @Nullable String value) {
                         if (key.equals("aliyundrive")) {
-                            FileWriter writer = new FileWriter("aliyundrive.json");
+                            FileWriter writer = new FileWriter(new File("src/test/resources/aliyundrive.json"));
                             writer.write(value);
                         }
                         return this;
@@ -194,6 +196,7 @@ public class AhhhhfsTest {
         System.out.println(ahhhhfs.categoryContent("movie","1",true,new HashMap<>()));
     }
 
+
     @Test
     public void searchContent() throws Exception {
         String content = ahhhhfs.searchContent("风暴",false);
@@ -201,5 +204,20 @@ public class AhhhhfsTest {
         Assert.assertTrue(content.contains("风暴"));
         Result result = new Gson().fromJson(content, Result.class);
         Assert.assertTrue(result.getList().size() > 0);
+    }
+
+    @Test
+    public void detailContent() throws Exception {
+        System.out.println(ahhhhfs.detailContent(Arrays.asList("https://www.abskoop.com/49405/")));
+    }
+
+    @Test
+    public void playerContent() throws Exception {
+        String content = ahhhhfs.detailContent(Arrays.asList("https://www.abskoop.com/49405/"));
+        Result result = new Gson().fromJson(content, Result.class);
+        String id = result.getList().get(0).getVodPlayUrl().split("#")[0].split("\\$")[1];
+//        System.out.println(pansou.playerContent("原畫", id, null));
+        content = ahhhhfs.playerContent("超清", id, null);
+        System.out.println(content);
     }
 }

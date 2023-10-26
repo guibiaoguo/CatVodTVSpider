@@ -1,5 +1,7 @@
 package com.github.catvod.utils;
 
+import com.github.catvod.crawler.SpiderDebug;
+
 import org.json.JSONObject;
 
 import java.security.NoSuchAlgorithmException;
@@ -10,14 +12,17 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 
 public class AES {
 
     public static Cipher createCipher(String algorithm) throws NoSuchPaddingException, NoSuchAlgorithmException {
         //测试打开
-//        return SecureUtil.createCipher(algorithm);
-        return Cipher.getInstance(algorithm);
+        if (StrUtil.containsAnyIgnoreCase(System.getProperty("os.name"),"Android","Linux"))
+            return Cipher.getInstance(algorithm);
+        else
+            return SecureUtil.createCipher(algorithm);
     }
     public static String rightPadding(String key, String replace, int Length) {
         String strReturn = "";
@@ -73,12 +78,16 @@ public class AES {
     }
 
     public static byte[] toBytes(String src) {
-        int l = src.length() / 2;
-        byte[] ret = new byte[l];
-        for (int i = 0; i < l; i++) {
-            ret[i] = Integer.valueOf(src.substring(i * 2, i * 2 + 2), 16).byteValue();
+        try {
+            int l = src.length() / 2;
+            byte[] ret = new byte[l];
+            for (int i = 0; i < l; i++) {
+                ret[i] = Integer.valueOf(src.substring(i * 2, i * 2 + 2), 16).byteValue();
+            }
+            return ret;
+        } catch (Exception e) {
+            return Base64.decode(src,Base64.NO_WRAP);
         }
-        return ret;
     }
 
 }

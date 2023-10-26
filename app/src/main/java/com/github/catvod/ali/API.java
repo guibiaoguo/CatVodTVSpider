@@ -391,9 +391,9 @@ public class API {
     }
 
     private String getParentFileId(String fileId, JSONObject shareInfo) throws Exception {
-        JSONArray array = shareInfo.getJSONArray("file_infos");
+        JSONArray array = shareInfo.optJSONArray("file_infos");
         if (!TextUtils.isEmpty(fileId)) return fileId;
-        if (array.length() == 0) return "";
+        if (array == null || array.length() == 0) return "";
         JSONObject fileInfo = array.getJSONObject(0);
         if (fileInfo.getString("type").equals("folder")) return fileInfo.getString("file_id");
         if (fileInfo.getString("type").equals("file") && fileInfo.getString("category").equals("video")) return "root";

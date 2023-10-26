@@ -21,19 +21,33 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import cn.hutool.core.util.StrUtil;
+
 public class Local extends Spider {
 
     private SimpleDateFormat format;
 
+    private String sdcard;
+
     @Override
     public void init(Context context, String extend) {
         format = new SimpleDateFormat("yyyyy/MM/dd HH:mm:ss", Locale.getDefault());
+        File[] files = context.getExternalFilesDirs(null);
+        if (files.length>1) {
+          File file = files[1].getParentFile();
+          while (file.listFiles() != null) {
+              sdcard = file.getAbsolutePath();
+              file = file.getParentFile();
+          }
+        }
     }
 
     @Override
     public String homeContent(boolean filter) throws Exception {
         List<Class> classes = new ArrayList<>();
         classes.add(new Class(Environment.getExternalStorageDirectory().getAbsolutePath(), "本地文件", "1"));
+        if (StrUtil.isNotEmpty(sdcard))
+            classes.add(new Class(sdcard, "外置文件", "1"));
         File[] files = new File("/storage").listFiles();
         if (files == null) return Result.string(classes, new ArrayList<>());
         List<String> exclude = Arrays.asList("emulated", "sdcard", "self");

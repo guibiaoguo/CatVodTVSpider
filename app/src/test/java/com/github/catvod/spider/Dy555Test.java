@@ -31,7 +31,7 @@ public class Dy555Test {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(dy555.detailContent(Arrays.asList("425288")));
+        System.out.println(dy555.detailContent(Arrays.asList("445342")));
     }
 
     @Test
@@ -84,6 +84,6 @@ public class Dy555Test {
 
     @Test
     public void categoryContent() throws Exception {
-        System.out.println(dy555.categoryContent("124","1",true,new HashMap<>()));
+        System.out.println(dy555.categoryContent("3","1",true,new HashMap<>()));
     }
 }

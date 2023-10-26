@@ -28,6 +28,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -37,6 +40,8 @@ import java.util.Set;
 
 import cn.hutool.core.io.file.FileReader;
 import cn.hutool.core.io.file.FileWriter;
+import cn.hutool.core.lang.JarClassLoader;
+import cn.hutool.core.util.ClassLoaderUtil;
 import cn.hutool.core.util.StrUtil;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -109,7 +114,7 @@ public class CatVodTest {
                     @Override
                     public Editor putString(String key, @Nullable String value) {
                         if (key.equals("aliyundrive")) {
-                            FileWriter writer = new FileWriter("aliyundrive.json");
+                            FileWriter writer = new FileWriter(new File("src/test/resources/aliyundrive.json"));
                             writer.write(value);
                         }
                         return this;
@@ -183,9 +188,19 @@ public class CatVodTest {
     public void catvod() throws Exception {
         String cc = OkHttpUtil.string("https://gitlab.com/mao4284120/js/-/raw/main/212757.json");
         JsonArray good = new JsonArray();
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        for (JsonElement jsonElement : gson.fromJson(cc, JsonObject.class).getAsJsonArray("sites")) {
+        Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
+        JsonArray sites =  gson.fromJson(cc, JsonObject.class).getAsJsonArray("sites");
+        FileReader fileReader = new FileReader("result.json");
+        cc = fileReader.readString();
+        sites = JsonParser.parseString(fileReader.readString()).getAsJsonArray();
+        for (JsonElement jsonElement : sites) {
             JsonObject object = jsonElement.getAsJsonObject();
+            if (!object.has("exception")) {
+                good.add(object);
+                continue;
+            } else {
+                object.remove("exception");
+            }
             String type = object.get("type").getAsString();
             String api = object.get("api").getAsString();
             String name = object.get("name").getAsString();
@@ -215,15 +230,54 @@ public class CatVodTest {
                         spider.init(mMockContext,extend);
                     }
                     String homeContent = spider.homeContent(true);
+                    JsonObject homeJson = null;
                     if (StringUtils.isEmpty(homeContent)) {
-                        exceptions.add("homeContent is null");
-                        continue;
+                        homeJson = new JsonObject();
+                    } else {
+                        homeJson = JsonParser.parseString(homeContent).getAsJsonObject();
                     }
-                    JsonObject homeJson = gson.fromJson(homeContent, JsonObject.class);
                     Log.d(TAG,homeJson.toString());
                     if (homeJson.getAsJsonArray("class")==null || homeJson.getAsJsonArray("class").size() == 0) {
-                        exceptions.add("homeContent is null");
-                        continue;
+                        String searchContent = spider.searchContent("宝可梦",false);
+                        JsonObject jsonSearch = null;
+                        if (StringUtils.isEmpty(searchContent)) {
+                            jsonSearch = new JsonObject();
+                        } else {
+                            jsonSearch = JsonParser.parseString(searchContent).getAsJsonObject();
+                        }
+                        Log.d(TAG,jsonSearch.toString());
+                        if (jsonSearch.getAsJsonArray("list")==null || jsonSearch.getAsJsonArray("list").size() == 0) {
+                            exceptions.add("Search is null");
+                            exceptions.add("homeContent is null");
+                            continue;
+                        } else {
+                            String vid = jsonSearch.getAsJsonArray("list").get(0).getAsJsonObject().get("vod_id").getAsString();
+                            String detailContent = spider.detailContent(Arrays.asList(vid));
+                            if (StringUtils.isEmpty(detailContent)) {
+                                exceptions.add("detail is null");
+                                continue;
+                            }
+                            JsonObject jsonDetail = gson.fromJson(detailContent, JsonObject.class);
+                            Log.d(TAG,jsonDetail.toString());
+                            if (jsonDetail.getAsJsonArray("list")==null || jsonDetail.getAsJsonArray("list").size() == 0) {
+                                exceptions.add("detail is null");
+                                continue;
+                            }
+                            if (api.equals("csp_Eighteen")) {
+                                continue;
+                            }
+                            JsonElement playUrl = jsonDetail.getAsJsonArray("list").get(0).getAsJsonObject().get("vod_play_url");
+                            if (playUrl == null || StringUtils.isEmpty(playUrl.getAsString())) {
+                                exceptions.add("vod_play_url is null");
+                                continue;
+                            }
+                            String playContent = spider.playerContent("",playUrl.getAsString().split("#")[0].split("\\$")[1],new ArrayList<>());
+                            if (StringUtils.isEmpty(playContent)){
+                                exceptions.add("play is null");
+                                continue;
+                            }
+                            Log.d(TAG,gson.toJson(gson.fromJson(playContent, JsonObject.class)));
+                        }
                     }
                     tid = homeJson.getAsJsonArray("class").get(homeJson.getAsJsonArray("class").size()-1).getAsJsonObject().get("type_id").getAsString();
                     String homeVideoContent = spider.homeVideoContent();
@@ -232,18 +286,18 @@ public class CatVodTest {
                         homeVideoJson = gson.fromJson(homeVideoContent, JsonObject.class);
                         Log.d(TAG, homeVideoJson.toString());
                     } else {
-                        exceptions.add("homeVideo is null");
                         homeVideoJson = new JsonObject();
                     }
                     if (!((homeVideoJson.has("list") && homeVideoJson.getAsJsonArray("list").size() > 0) || (homeJson.has("list") && homeJson.getAsJsonArray("list").size() > 0))) {
                         exceptions.add("homeVideo is null");
                     }
                     String categoryContent = spider.categoryContent(tid,"1",false,new HashMap<>());
+                    JsonObject jsonCategory = null;
                     if (StringUtils.isEmpty(categoryContent)) {
-                        exceptions.add("category is null");
-                        continue;
+                        jsonCategory = new JsonObject();
+                    } else {
+                        jsonCategory = JsonParser.parseString(categoryContent).getAsJsonObject();
                     }
-                    JsonObject jsonCategory = gson.fromJson(categoryContent, JsonObject.class);
                     Log.d(TAG,jsonCategory.toString());
                     if (jsonCategory.getAsJsonArray("list")==null || jsonCategory.getAsJsonArray("list").size() == 0) {
                         exceptions.add("category is null");
@@ -275,8 +329,13 @@ public class CatVodTest {
                         continue;
                     }
                     Log.d(TAG,gson.toJson(gson.fromJson(playContent, JsonObject.class)));
-                    String searchContent = spider.searchContent("宝可梦",false);
-                    JsonObject jsonSearch = gson.fromJson(searchContent, JsonObject.class);
+                    String searchContent = spider.searchContent("蜘蛛",false);
+                    JsonObject jsonSearch = null;
+                    if (StringUtils.isEmpty(searchContent)) {
+                        jsonSearch = new JsonObject();
+                    } else {
+                        jsonSearch = JsonParser.parseString(searchContent).getAsJsonObject();
+                    }
                     Log.d(TAG,jsonSearch.toString());
                     if (jsonSearch.getAsJsonArray("list")==null || jsonSearch.getAsJsonArray("list").size() == 0) {
                         exceptions.add("Search is null");
@@ -296,8 +355,8 @@ public class CatVodTest {
             }
         }
         Log.d(TAG,new GsonBuilder().setPrettyPrinting().create().toJson(good));
-        FileWriter fileWriter = new FileWriter("result.json");
-        fileWriter.write(new GsonBuilder().setPrettyPrinting().create().toJson(good));
+        FileWriter writer = new FileWriter(new File("src/test/resources/result.json"));
+        writer.write(gson.toJson(good));
     }
 
     @Test
@@ -306,12 +365,22 @@ public class CatVodTest {
             Class cls = null;
             cls = Class.forName("com.github.catvod.spider.CMS" );
             Spider spider = (Spider) cls.newInstance();
-            spider.init(mMockContext,"https://91suying.com/inc/api.php$$0");
+            spider.init(mMockContext,"https://caiji.semaozy.net/inc/apijson_vod.php$$1");
             String home = spider.homeContent(true);
             System.out.println(home);
             String homeVideo = spider.homeVideoContent();
+            System.out.println(homeVideo);
             JsonObject homeJson = JsonParser.parseString(home).getAsJsonObject();
-            String tid = homeJson.getAsJsonArray("class").get(0).getAsJsonObject().get("type_id").getAsString();
+            String tid = "";
+            JsonArray classes = homeJson.getAsJsonArray("class");
+            if (classes == null) {
+                tid = "31";
+            }
+            else if (classes.size() > 3) {
+                tid = classes.get(3).getAsJsonObject().get("type_id").getAsString();
+            } else {
+                tid = classes.get(classes.size() -1).getAsJsonObject().get("type_id").getAsString();
+            }
             String categoryContent = spider.categoryContent(tid,"1",false,null);
             System.out.println(categoryContent);
             JsonObject jsonCategory = JsonParser.parseString(categoryContent).getAsJsonObject();
@@ -322,10 +391,37 @@ public class CatVodTest {
             JsonElement playUrl = jsonDetail.getAsJsonArray("list").get(0).getAsJsonObject().get("vod_play_url");
             String playContent = spider.playerContent("",playUrl.getAsString().split("#")[0].split("\\$")[1],new ArrayList<>());
             System.out.println(playContent);
-            String searchContent = spider.searchContent("宝可梦",false);
-            System.out.println(searchContent);
+            String[] keys = new String[]{"宝可梦","蜘蛛","巨乳"};
+            JsonObject jsonSearch = null;
+            for (String key:keys) {
+                String searchContent = spider.searchContent(key,false);
+                if (StringUtils.isEmpty(searchContent)) {
+                    jsonSearch = new JsonObject();
+                } else {
+                    jsonSearch = JsonParser.parseString(searchContent).getAsJsonObject();
+                }
+                Log.d(TAG,jsonSearch.toString());
+                if (jsonSearch.has("list") && jsonSearch.getAsJsonArray("list").size() >0) {
+                    break;
+                }
+            }
         } catch (Exception e) {
             SpiderDebug.log(e);
         }
+    }
+
+    @Test
+    public void loadResult() {
+        Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
+        FileReader fileReader = new FileReader("result.json");
+        String aliyundrive = fileReader.readString();
+        JsonArray jsonArray = JsonParser.parseString(fileReader.readString()).getAsJsonArray();
+        FileWriter writer = new FileWriter(new File("src/test/resources/result.json"));
+        writer.write(gson.toJson(jsonArray));
+    }
+
+    @Test
+    public void loadMsg() {
+        System.out.println(System.getProperty("os.name"));
     }
 }

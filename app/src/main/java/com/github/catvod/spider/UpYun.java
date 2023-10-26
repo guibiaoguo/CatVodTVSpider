@@ -6,6 +6,8 @@ import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.bean.upyun.Data;
 import com.github.catvod.bean.upyun.Item;
+import com.github.catvod.crawler.SpiderDebug;
+import com.github.catvod.utils.AES;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 
@@ -37,6 +39,6 @@ public class UpYun extends Ali {
     }
 
     private String decode(String data) throws Exception {
-        return com.github.catvod.utils.AES.CBC(data,"qq1920520460qqzz","qq1920520460qqzz");
+        return AES.CBC(data,"qq1920520460qqzz","qq1920520460qqzz");
     }
 }

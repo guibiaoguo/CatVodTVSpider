@@ -10,7 +10,7 @@ import java.io.FileOutputStream;
 
 import dalvik.system.DexClassLoader;
 
-public class JarLoader {
+public class    JarLoader {
     private DexClassLoader classLoader = null;
 
     /**

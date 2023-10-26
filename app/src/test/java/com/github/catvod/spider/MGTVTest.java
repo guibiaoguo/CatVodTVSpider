@@ -58,7 +58,7 @@ public class MGTVTest {
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(mgtv.detailContent(Arrays.asList("https://pcweb.api.mgtv.com/episode/list?page=1&size=50&video_id=19885801#http://0img.hitv.com/preview/sp_images/2021/10/20/202110201750276742438.jpg")));
+        System.out.println(mgtv.detailContent(Arrays.asList("https://pcweb.api.mgtv.com/episode/list?page=1&size=50&video_id=19911436#https://0img.hitv.com/preview/sp_images/2023/10/16/yule/469967/19911436/20231016185244229.jpg_220x123.jpg")));
     }
 
     @Test
@@ -68,9 +68,9 @@ public class MGTVTest {
 
     @Test
     public void searchContent() throws Exception {
-        String content = mgtv.searchContent("宝可梦",false);
+        String content = mgtv.searchContent("月升",false);
         System.out.println(content);
-        Assert.assertTrue(content.contains("宝可梦"));
+        Assert.assertTrue(content.contains("问心"));
         Result result = new Gson().fromJson(content, Result.class);
         Assert.assertTrue(result.getList().size() > 0);
     }

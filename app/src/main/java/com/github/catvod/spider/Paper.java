@@ -10,12 +10,14 @@ import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.bean.ali.Item;
 import com.github.catvod.bean.paper.Data;
+import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Utils;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
@@ -94,6 +96,13 @@ public class Paper extends Ali {
         return Result.string(list);
     }
 
+    public HashMap<String, String> getHeader() {
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("User-Agent", Utils.CHROME);
+        headers.put("Referer", "https://www.aliyundrive.com/");
+        return headers;
+    }
+
     @Override
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) throws JSONException {
         String type = extend.containsKey("type") ? extend.get("type") : tid;
@@ -115,6 +124,8 @@ public class Paper extends Ali {
                 Vod vod = new Vod(StrUtil.format("https://www.aliyundrive.com/s/{}/folder/{}",shareId,file.getFileId()),file.getName(),"https://www.lgstatic.com/i/image2/M01/15/7E/CgoB5lysLXCADg6ZAABapAHUnQM321.jpg","", file.getType());
                 if (file.getType().equals("file")) {
                     vod.setVodId(StrUtil.format("https://www.aliyundrive.com/s/{}/folder/{}",shareId,file.getParentFileId()));
+                } else {
+                    vod.setVodPic("http://img1.3png.com/281e284a670865a71d91515866552b5f172b.png");
                 }
                 list.add(vod);
             }
@@ -125,10 +136,17 @@ public class Paper extends Ali {
                 Vod vod = item.getVod();
                 Map<String, Object> data = new HashMap<>();
                 data.put("share_id", item.getKey());
-                String json = OkHttpUtil.postJson("https://api.aliyundrive.com/adrive/v3/share_link/get_share_by_anonymous", new Gson().toJson(data), API.get().getHeader());
-                JsonArray fileInfos = new Gson().fromJson(json, JsonObject.class).getAsJsonArray("file_infos");
-                if (fileInfos != null && fileInfos.size() > 0 && fileInfos.get(0).getAsJsonObject().get("type").getAsString().equals("folder")) {
+                String json = OkHttpUtil.postJson("https://api.aliyundrive.com/adrive/v3/share_link/get_share_by_anonymous", new Gson().toJson(data), getHeader());
+                JsonObject object = JsonParser.parseString(json).getAsJsonObject();
+                if (object.has("code") && object.get("code").getAsString().contains("ShareLink")) {
+                    continue;
+                }
+                JsonArray fileInfos = object.getAsJsonArray("file_infos");
+                if (object.has("code") && object.get("code").getAsString().equals("TooManyRequests") || fileInfos != null &&fileInfos.size() > 0 && fileInfos.get(0).getAsJsonObject().get("type").getAsString().equals("folder")) {
+                    vod.setVodPic("http://img1.3png.com/281e284a670865a71d91515866552b5f172b.png");
                     vod.setVodTag("folder");
+                } else {
+                    vod.setVodTag("file");
                 }
                 list.add(vod);
             }
@@ -161,17 +179,21 @@ public class Paper extends Ali {
         return Result.string(list);
     }
 
-    private String getToken() throws JSONException {
-        if (TextUtils.isEmpty(token) || new Date().compareTo(date) > 0) {
-            Map<String, String> params = new HashMap<>();
-            params.put("action", "get_token");
-            params.put("from", "web");
-            String content = OkHttpUtil.post(api, params, getHeaders());
-            JSONObject object = new JSONObject(content);
-            if (object.getBoolean("success")) {
-                token = object.getString("data");
-                date = new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000);
+    private String getToken() {
+        try {
+            if (TextUtils.isEmpty(token) || new Date().compareTo(date) > 0) {
+                Map<String, String> params = new HashMap<>();
+                params.put("action", "get_token");
+                params.put("from", "web");
+                String content = OkHttpUtil.post(api, params, getHeaders());
+                JSONObject object = new JSONObject(content);
+                if (object.getBoolean("success")) {
+                    token = object.getString("data");
+                    date = new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000);
+                }
             }
+        } catch (Exception e) {
+            SpiderDebug.log(e);
         }
         return token;
     }
