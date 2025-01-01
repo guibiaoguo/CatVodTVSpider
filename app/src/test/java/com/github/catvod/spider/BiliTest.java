@@ -1,63 +1,61 @@
 package com.github.catvod.spider;
 
-import static org.junit.Assert.*;
-
+import com.github.catvod.RemoteServer;
 import com.github.catvod.crawler.Spider;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+public class BiliTest extends SpiderTest {
 
-public class BiliTest {
-
-    private Spider bili;
+    private RemoteServer remoteServer;
 
     @Before
     public void setUp() throws Exception {
-        bili = new Bili();
+        remoteServer = new RemoteServer();
+        Proxy.port = 9978;
         init();
     }
 
     @After
     public void tearDown() throws Exception {
+        remoteServer.stop();
     }
 
-    @Test
+    Spider bili = null;
     public void init() {
-        bili.init(null, "https://download.kstore.space/download/4907/jcsq/js/我的哔哩.json");
+        bili = new Bili();
+        super.init(bili,"{\"json\":\"https://gitlab.com/mao4284120/gao/-/raw/master/json/bili.json\",\"type\":\"帕梅拉#太极拳#广场舞#演唱会\",\"cookie\":\"\"}");
     }
 
     @Test
     public void homeContent() throws Exception {
-        System.out.println(bili.homeContent(true));
+        super.homeContent(false);
     }
 
     @Test
     public void homeVideoContent() throws Exception {
-        System.out.println(bili.homeVideoContent());
+        super.homeVideoContent();
     }
 
     @Test
     public void categoryContent() throws Exception {
-        System.out.println(bili.categoryContent("電影", "1", true, new HashMap()));
+        super.categoryContent();
     }
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(bili.detailContent(Arrays.asList("BV1A84y127t9@619571245")));
-    }
-
-    @Test
-    public void searchContent() throws Exception {
-        System.out.println(bili.searchContent("火影", true));
+        super.detailContent();
     }
 
     @Test
     public void playerContent() throws Exception {
-        System.out.println(bili.playerContent("", "577093762+1296645526+32:16+清晰 480P:流畅 360P", null));
+        super.playerContent();
+    }
+
+    @Test
+    public void searchContent() throws Exception {
+        super.searchContent("柯南");
     }
 }

@@ -44,7 +44,7 @@ import okhttp3.Response;
 
 
 
-
+@Deprecated
 public class Bdys01 extends Spider {
     private static final String siteUrl = "https://www.bdys01.com";
     private static final String siteHost = "www.bdys01.com";

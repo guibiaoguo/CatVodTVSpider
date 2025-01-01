@@ -1,15 +1,16 @@
 package com.github.catvod.spider;
 
+import android.content.Context;
 import android.text.TextUtils;
 
 import com.github.catvod.bean.Class;
 import com.github.catvod.bean.Filter;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
+import com.github.catvod.parser.NetworkUtils;
 import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.StringUtil;
 import com.github.catvod.crawler.Spider;
-import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.CipherUtil;
 import com.github.catvod.utils.Trans;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
@@ -32,15 +33,18 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import cn.hutool.core.util.StrUtil;
+
 /* loaded from: classes.dex */
 public class Bttoo extends Spider {
 
-    private final String siteUrl = "https://www.bttwo.net";
+    private String siteUrl = "https://www.bttwo.net";
+    private String siteHost = "www.bttwo.net";
     private final String filterConfig = "{\"Movie\":[{\"key\":0,\"name\":\"分类\",\"value\":[{\"n\":\"全部\",\"v\":\"\"},{\"n\":\"喜剧片\",\"v\":\"xjp\"},{\"n\":\"动作片\",\"v\":\"dzp\"},{\"n\":\"爱情片\",\"v\":\"aqp\"},{\"n\":\"科幻片\",\"v\":\"khp\"},{\"n\":\"恐怖片\",\"v\":\"kbp\"},{\"n\":\"惊悚片\",\"v\":\"jsp\"},{\"n\":\"战争片\",\"v\":\"zzp\"},{\"n\":\"剧情片\",\"v\":\"jqp\"}]}],\"Tv\":[{\"key\":0,\"name\":\"分类\",\"value\":[{\"n\":\"全部\",\"v\":\"\"},{\"n\":\"美剧\",\"v\":\"oumei\"},{\"n\":\"韩剧\",\"v\":\"hanju\"},{\"n\":\"日剧\",\"v\":\"riju\"},{\"n\":\"泰剧\",\"v\":\"yataiju\"},{\"n\":\"网剧\",\"v\":\"wangju\"},{\"n\":\"台剧\",\"v\":\"taiju\"},{\"n\":\"国产\",\"v\":\"neidi\"},{\"n\":\"港剧\",\"v\":\"tvbgj\"}]}],\"Zy\":[{\"key\":0,\"name\":\"分类\",\"value\":[{\"n\":\"全部\",\"v\":\"\"},{\"n\":\"国综\",\"v\":\"guozong\"},{\"n\":\"韩综\",\"v\":\"hanzong\"},{\"n\":\"美综\",\"v\":\"meizong\"}]}],\"Dm\":[{\"key\":0,\"name\":\"分类\",\"value\":[{\"n\":\"全部\",\"v\":\"\"},{\"n\":\"动画\",\"v\":\"donghua\"},{\"n\":\"日漫\",\"v\":\"riman\"},{\"n\":\"国漫\",\"v\":\"guoman\"},{\"n\":\"美漫\",\"v\":\"meiman\"}]}],\"qita\":[{\"key\":0,\"name\":\"分类\",\"value\":[{\"n\":\"全部\",\"v\":\"\"},{\"n\":\"纪录片\",\"v\":\"Jlp\"},{\"n\":\"经典片\",\"v\":\"Jdp\"},{\"n\":\"经典剧\",\"v\":\"Jdj\"},{\"n\":\"网大电影\",\"v\":\"wlp\"},{\"n\":\"国产老电影\",\"v\":\"laodianying\"}]}]}";
     private final Pattern regexCategory = Pattern.compile("^/(\\S+)");
-    private final Pattern regexVid = Pattern.compile("https://www.bttwo.net/movie/(\\d+).html");
-    private final Pattern regexPlay = Pattern.compile("https://www.bttwo.net/v_play/(\\S+).html");
-    private final Pattern regexPage = Pattern.compile("https://www.bttwo.net/\\S+/page/(\\d+)");
+    private final Pattern regexVid = Pattern.compile( "/movie/(\\d+).html");
+    private final Pattern regexPlay = Pattern.compile( "/v_play/(\\S+).html");
+    private final Pattern regexPage = Pattern.compile( "\\S+/page/(\\d+)");
     private final Pattern o = Pattern.compile("=\"(.*?)\";var");
     private final Pattern F = Pattern.compile("parse\\(\"(.*?)\"\\);var iv");
     private final Pattern Cp = Pattern.compile("iv=md5\\.enc\\.Utf8\\.parse\\((.*?)\\);var decrypted");
@@ -55,6 +59,32 @@ public class Bttoo extends Spider {
         }
         hashMap.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
         return hashMap;
+    }
+    @Override
+    public void init(Context context) {
+        setSiteUrl("https://bttwo.vip");
+    }
+    @Override
+    public void init(Context context,String extend) {
+        super.init(context);
+        setSiteUrl(extend);
+    }
+    public void setSiteUrl(String extend) {
+        if (StrUtil.isEmpty(extend)) {
+            extend = "https://bttwo.vip";
+        }
+        String content = OkHttpUtil.string(extend);
+        Document document = Jsoup.parse(content);
+        for(Element element:document.select(".content-top li")) {
+            String site = element.select("a").attr("href");
+            System.out.println("两个BT：" + site);
+            String subContent = OkHttpUtil.string(site);
+            if (StrUtil.isNotEmpty(subContent) && !subContent.contains("Loading......")) {
+                siteUrl = site;
+                siteHost = NetworkUtils.INSTANCE.getSubDomain(siteUrl);
+                break;
+            }
+        }
     }
 
     /**
@@ -326,7 +356,7 @@ public class Bttoo extends Spider {
     @Override
     public String searchContent(String key, boolean quick) {
         List<Vod> list = new ArrayList<>();
-        String url = siteUrl + "/xssearch?q=" + StringUtil.encode(key) + "&f=_all&p=1";
+        String url = siteUrl + "/xssssearch?q=" + StringUtil.encode(key) + "&f=_all&p=1";
         Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders(url)));
         for (Element element : doc.select("div.mi_ne_kd > ul > li")) {
             String name = element.selectFirst("h3.dytit > a").text();

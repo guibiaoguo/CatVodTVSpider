@@ -1,7 +1,6 @@
 package com.github.catvod.spider;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Base64;
@@ -39,6 +38,7 @@ import okhttp3.Response;
 /**
  * Author: @SDL
  */
+@Deprecated
 public class Kmys extends Spider {
     private String apiDomain = "";
     private String staticDomain = "";
@@ -50,14 +50,14 @@ public class Kmys extends Spider {
     @Override
     public void init(Context context) {
         super.init(context);
-        SharedPreferences sharedPreferences = context.getSharedPreferences("sp_Kmys", Context.MODE_PRIVATE);
+//        SharedPreferences sharedPreferences = context.getSharedPreferences("sp_Kmys", Context.MODE_PRIVATE);
         try {
-            device = sharedPreferences.getString("device", null);
+//            device = sharedPreferences.getString("device", null);
         } catch (Throwable th) {
         } finally {
             if (device == null) {
                 device = Misc.MD5(UUID.randomUUID().toString(), Misc.CharsetUTF8).toLowerCase();
-                sharedPreferences.edit().putString("device", device).commit();
+//                sharedPreferences.edit().putString("device", device).commit();
             }
         }
     }

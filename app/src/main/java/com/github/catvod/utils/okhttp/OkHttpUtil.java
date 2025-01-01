@@ -1,6 +1,5 @@
 package com.github.catvod.utils.okhttp;
 
-import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Utils;
 
@@ -174,7 +173,24 @@ public class OkHttpUtil {
     }
 
     public static String postJson(String url, String json, Map<String, String> header) {
+        return postJson(url,json,header,null);
+    }
+    public static String postJson(String url, String json, Map<String, String> header, Map<String, List<String>> respHeaderMap) {
         OKCallBack<String> okCallBack = new OKCallBack.OKCallBackString() {
+
+            @Override
+            public String onParseResponse(Call call, Response response) {
+                try {
+                    if (respHeaderMap != null) {
+                        respHeaderMap.clear();
+                        respHeaderMap.putAll(response.headers().toMultimap());
+                    }
+                    return response.body().string();
+                } catch (IOException e) {
+                    SpiderDebug.log(e);
+                    return "";
+                }
+            }
             /**
              * @param call 回调
              * @param e 错误信息
@@ -199,7 +215,7 @@ public class OkHttpUtil {
     public static String postJson(String url, String json) {
         HashMap<String, String> headers = new HashMap<>();
         headers.put("User-Agent", Utils.CHROME);
-        return postJson(url,json,headers);
+        return postJson(url,json,headers,null);
     }
 
     public static String string(String url) {

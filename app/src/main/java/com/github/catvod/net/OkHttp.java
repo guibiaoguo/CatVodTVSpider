@@ -20,7 +20,8 @@ public class OkHttp {
     public static final String GET = "GET";
 
     private final OkHttpClient noRedirect;
-    private final OkHttpClient client;
+    private OkHttpClient client;
+    private ProxySelector selector;
 
     private static class Loader {
         static volatile OkHttp INSTANCE = new OkHttp();
@@ -30,17 +31,30 @@ public class OkHttp {
         return Loader.INSTANCE;
     }
 
+    public void setProxy(String proxy) {
+        ProxySelector.setDefault(selector());
+        selector().setProxy(proxy);
+        client = null;
+    }
+
+    public static ProxySelector selector() {
+        if (get() == null) return new ProxySelector();
+        if (get().selector != null) return get().selector;
+        return get().selector = new ProxySelector();
+    }
+
     public OkHttp() {
         client = getBuilder().build();
         noRedirect = client.newBuilder().followRedirects(false).followSslRedirects(false).build();
     }
 
     public static OkHttpClient.Builder getBuilder() {
-        return new OkHttpClient.Builder().dns(safeDns()).readTimeout(30, TimeUnit.SECONDS).writeTimeout(30, TimeUnit.SECONDS).connectTimeout(30, TimeUnit.SECONDS).hostnameVerifier(com.github.catvod.net.SSLSocketFactoryCompat.hostnameVerifier).sslSocketFactory(new com.github.catvod.net.SSLSocketFactoryCompat(), SSLSocketFactoryCompat.trustAllCert);
+        return new OkHttpClient.Builder().proxySelector(selector()).dns(safeDns()).readTimeout(30, TimeUnit.SECONDS).writeTimeout(30, TimeUnit.SECONDS).connectTimeout(30, TimeUnit.SECONDS).hostnameVerifier(com.github.catvod.net.SSLSocketFactoryCompat.hostnameVerifier).sslSocketFactory(new com.github.catvod.net.SSLSocketFactoryCompat(), SSLSocketFactoryCompat.trustAllCert);
     }
 
     public static OkHttpClient client() {
-        return get().client;
+        if (get().client != null) return get().client;
+        return get().client = getBuilder().build();
     }
 
     private static OkHttpClient noRedirect() {
@@ -49,7 +63,11 @@ public class OkHttp {
 
     public static Dns safeDns() {
         try {
-            return (Dns) Spider.class.getMethod("safeDns").invoke(null);
+            Dns dns = (Dns) Spider.class.getMethod("safeDns").invoke(null);
+            if (dns == null) {
+                return Dns.SYSTEM;
+            }
+            return dns;
         } catch (Exception e) {
             return Dns.SYSTEM;
         }
@@ -111,6 +129,9 @@ public class OkHttp {
         return new OkRequest(POST, url, json, header).execute(client());
     }
 
+    public static String post(String url, String json, Map<String, String> header) {
+        return new OkRequest(POST, url, json, header).execute(client());
+    }
     public static void cancel(Object tag) {
         for (Call call : client().dispatcher().queuedCalls()) {
             if (tag.equals(call.request().tag())) {

@@ -8,7 +8,8 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.List;
 
-public class Class {
+public class
+Class {
 
     @SerializedName("type_id")
     private String typeId;

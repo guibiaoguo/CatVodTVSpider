@@ -1,80 +1,49 @@
 package com.github.catvod.spider;
 
-import static org.junit.Assert.*;
-
-import com.github.catvod.bean.Result;
 import com.github.catvod.crawler.Spider;
-import com.google.gson.Gson;
 
-import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+@Deprecated
+@Ignore
+public class CokemvTest extends SpiderTest {
 
-public class CokemvTest {
-
-    private Spider cokemv;
-
+    Spider cokemv = null;
     @Before
-    public void setUp() throws Exception {
-        cokemv = new Cokemv();
-        init();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-    }
-
-    @Test
     public void init() {
-        cokemv.init(null);
-    }
-
-    @Test
-    public void getHeaders() {
+        cokemv = new Cokemv();
+        super.init(cokemv,"");
     }
 
     @Test
     public void homeContent() throws Exception {
-        String content = cokemv.homeContent(true);
-        System.out.println(content);
-        Result result = new Gson().fromJson(content, Result.class);
-        Assert.assertTrue(result.getClasses().size()>0);
-        Assert.assertTrue(result.getList().isEmpty() || result.getList().size() > 0);
+        super.homeContent(false);
     }
+
     @Test
     public void homeVideoContent() throws Exception {
-        String content = cokemv.homeVideoContent();
-        System.out.println(content);
-        Result result = new Gson().fromJson(content, Result.class);
-        Assert.assertTrue(result.getList().isEmpty() || result.getList().size() > 0);
+        super.homeVideoContent();
     }
 
     @Test
     public void categoryContent() throws Exception {
-        System.out.println(cokemv.categoryContent("2","1",true,new HashMap()));
+        super.categoryContent();;
     }
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(cokemv.detailContent(Arrays.asList("5042")));
+        super.detailContent();
     }
 
     @Test
     public void playerContent() throws Exception {
-        System.out.println(cokemv.playerContent("","5042-1-1",null));
+        super.playerContent();
     }
 
     @Test
     public void searchContent() throws Exception {
-        String content = cokemv.searchContent("宝可梦",false);
-        System.out.println(content);
-        Assert.assertTrue(content.contains("宝可梦"));
-        Result result = new Gson().fromJson(content, Result.class);
-        Assert.assertTrue(result.getList().size() > 0);
+        super.searchContent("柯南");
     }
 }

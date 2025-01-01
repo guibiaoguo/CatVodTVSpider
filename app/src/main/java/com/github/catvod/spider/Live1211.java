@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+@Deprecated
 public class Live1211 extends Spider {
 
     private static final String host = "http://live.yj1211.work";

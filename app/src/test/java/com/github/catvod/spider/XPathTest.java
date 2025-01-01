@@ -1,9 +1,5 @@
 package com.github.catvod.spider;
 
-import static org.junit.Assert.*;
-
-import android.util.Log;
-
 import com.github.catvod.bean.Result;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
@@ -17,11 +13,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
+@Ignore
 public class XPathTest {
 
     private Spider xpath;

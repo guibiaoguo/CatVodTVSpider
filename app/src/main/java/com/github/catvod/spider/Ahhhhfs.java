@@ -3,64 +3,80 @@ package com.github.catvod.spider;
 import android.content.Context;
 import android.text.TextUtils;
 
-import com.github.catvod.ali.API;
 import com.github.catvod.bean.Class;
+import com.github.catvod.bean.Filter;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
-import com.github.catvod.bean.ali.Item;
+import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.StringUtil;
 import com.github.catvod.utils.Utils;
-import com.github.catvod.utils.okhttp.OkHttpUtil;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
-import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
-import org.jsoup.select.Elements;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import cn.hutool.core.util.ReUtil;
-import cn.hutool.core.util.StrUtil;
 
 /**
  * @author ColaMint & FongMi
  */
-public class Ahhhhfs extends Ali {
+public class Ahhhhfs extends NetworkDrive {
 
-    private static final Pattern AliPLink = Pattern.compile("(https://www.aliyundrive.com/s/[^\"]+)");
     public static Pattern Folder = Pattern.compile("www.aliyundrive.com/s/([^/]+)(/folder/([^/]+))?");
 
-    public static String siteUrl = "https://www.abskoop.com";
+    public static String siteUrl = "https://www.xbwpys.com";
 
     private String classConfig = "[{\"type_name\":\"影视\",\"type_id\":\"movie\"}]";
 
+    private final Pattern regexCategory = Pattern.compile("(/category/[^/]+)");
+    private final Pattern regexVid = Pattern.compile("(/\\d+/)$");
+
+    private static final Pattern AliPLink = Pattern.compile("(https://www.ali(pan|yundrive).com/s/[^\"]+)");
+
+    private static final Pattern QuarkPLink = Pattern.compile("(https://pan.quark.cn/s/[^\"]+)");
+    private static final Pattern UcPLink = Pattern.compile("(https://drive.uc.cn/s/[^\"]+)");
+
     @Override
-    public void init(Context context,String extend) {
-        super.init(context,extend);  
+    public void init(Context context, String extend) {
+        super.init(context, extend);
     }
 
     @Override
     public String homeContent(boolean filter) throws Exception {
         List<Vod> list = new ArrayList<>();
-        List<Class> classes = Class.arrayFrom(classConfig);
-        return Result.string(classes,list);
+        List<Class> classes = new ArrayList<>();
+        LinkedHashMap<String, List<Filter>> filters = null;
+        Document doc = Jsoup.parse(OkHttp.string(siteUrl, getHeaders()));
+        for (Element element : doc.select(".section-cat-navbtn a:gt(0)")) {
+            String name = element.text();
+            Matcher mather = regexCategory.matcher(element.attr("href"));
+            if (!mather.find())
+                continue;
+            // 把分类的id和名称取出来加到列表里
+            String id = mather.group(1).trim();
+            classes.add(new Class(id, name));
+        }
+        for (Element element : doc.select(".post-item")) {
+            String name = element.select("a").attr("title");
+            String img = element.select("a").attr("data-bg");
+            String remark = element.select(".entry-desc").text();
+            Matcher matcher = regexVid.matcher(element.select("a").attr("href"));
+            if (!matcher.find())
+                continue;
+            String id = matcher.group(1);
+            list.add(new Vod(id, name, img, remark));
+        }
+        return Result.string(classes, list, filters);
     }
 
     @Override
     public String homeVideoContent() throws Exception {
-        return categoryContent("movie","1",false,new HashMap<>());
+        return categoryContent("/category/movie-1/", "1", false, new HashMap<>());
     }
 
     private HashMap<String, String> getHeaders() {
@@ -73,75 +89,40 @@ public class Ahhhhfs extends Ali {
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) throws Exception {
         String type = extend.containsKey("type") ? extend.get("type") : tid;
         List<Vod> list = new ArrayList<>();
-        if (StringUtils.contains(tid,"aliyundrive.com")) {
-            Map<String,Object> body = new HashMap<>();
-            String shareId = ReUtil.get(pattern, tid,1);
-            String fileId = ReUtil.get(pattern, tid, 3);
-            fileId = StrUtil.isNotEmpty(fileId)? fileId: "root";
-            API.get().setShareId(shareId);
-            String result = API.get().getList(fileId);
-            Item item = Item.objectFrom(result);
-            for (Item file:item.getItems()) {
-                Vod vod = new Vod(StrUtil.format("https://www.aliyundrive.com/s/{}/folder/{}",shareId,file.getFileId()),file.getName(),"https://www.lgstatic.com/i/image2/M01/15/7E/CgoB5lysLXCADg6ZAABapAHUnQM321.jpg","", file.getType());
-                if (file.getType().equals("file")) {
-                    vod.setVodId(StrUtil.format("https://www.aliyundrive.com/s/{}/folder/{}",shareId,file.getParentFileId()));
-                }
-                list.add(vod);
-            }
-        } else {
-            String result = OkHttpUtil.string(siteUrl + "/welfare/"+type+"/page/"+pg+"/", getHeaders());
+
+            String result = OkHttp.string(siteUrl  + type + "/page/" + pg + "/", getHeaders());
             Document doc = Jsoup.parse(result);
-            for (Element element:doc.select(".item-list")) {
-                String title = element.select("h2 a").attr("title");
-                String remark = element.select("time").attr("datetime");
+            for (Element element : doc.select(".post-item")) {
+                String name = element.select("a").attr("title");
                 String img = element.select("a").attr("data-bg");
-                String id = element.select("a").attr("href");
-//                String contentHtml = OkHttpUtil.string(id,getHeaders());
-//                Matcher matcher = AliPLink.matcher(contentHtml);
-//                if (matcher.find()) {
-//                    id = matcher.group(1);
-//                } else {
-//                    continue;
-//                }
-//                Vod vod = new Vod(id,title,img,remark);
-//                Map<String, Object> data = new HashMap<>();
-//                matcher = Folder.matcher(id);
-//                if (!matcher.find()) {
-//                    continue;
-//                }
-//                data.put("share_id", matcher.group(1));
-//                String json = OkHttpUtil.postJson("https://api.aliyundrive.com/adrive/v3/share_link/get_share_by_anonymous", new Gson().toJson(data), API.get().getHeader());
-//                JsonArray fileInfos = new Gson().fromJson(json, JsonObject.class).getAsJsonArray("file_infos");
-//                if (fileInfos != null &&fileInfos.size() > 0 && fileInfos.get(0).getAsJsonObject().get("type").getAsString().equals("folder")) {
-//                    vod.setVodTag("folder");
-//                }
-//                list.add(vod);
-                list.add(new Vod(id,title,img,remark));
+                String remark = element.select(".entry-desc").text();
+                Matcher matcher = regexVid.matcher(element.select("a").attr("href"));
+                if (!matcher.find())
+                    continue;
+                String id = matcher.group(1);
+                list.add(new Vod(id, name, img, remark));
             }
-        }
+
         return Result.string(list);
     }
 
     @Override
     public String detailContent(List<String> ids) throws Exception {
         String vodId = ids.get(0);
-        String content = OkHttpUtil.string(vodId, getHeaders());
-        Document doc = Jsoup.parse (content);
+        String content = OkHttp.string(siteUrl+vodId, getHeaders());
+        Document doc = Jsoup.parse(content);
         Vod item = new Vod();
         item.setVodId(vodId);
         item.setVodName(doc.select("p img").attr("title"));
         item.setVodPic(doc.select("p img").attr("src"));
         item.setVodContent(doc.select("p").get(2).text());
-        Matcher matcher = AliPLink.matcher(content);
-        if (matcher.find()) {
-            String id = matcher.group(1);
-            String detailContent = super.detailContent(Arrays.asList(id));
-            Result detail = new Gson().fromJson(detailContent, Result.class);
-            if (!detail.getList().isEmpty()) {
-                Vod vod = detail.getList().get(0);
-                item.setVodPlayFrom(vod.getVodPlayFrom());
-                item.setVodPlayUrl(vod.getVodPlayUrl());
-            }
+        List<String> shareLinks = doc.select("p:contains(网盘)>a").eachAttr("data-clipboard-text");
+        for (int i = 0; i < shareLinks.size(); i++) shareLinks.set(i, shareLinks.get(i).trim());
+        if (AliPLink.matcher(content).find() || QuarkPLink.matcher(content).find() || UcPLink.matcher(content).find()) {
+            String detail = super.detailContent(Arrays.asList(content));
+            Result result = Result.objectFrom(detail);
+            item.setVodPlayFrom(result.getList().get(0).getVodPlayFrom());
+            item.setVodPlayUrl(result.getList().get(0).getVodPlayUrl());
         }
 //        item.setVodPlayFrom(super.detailContentVodPlayFrom(shareLinks));
 //        item.setVodPlayUrl(super.detailContentVodPlayUrl(shareLinks));
@@ -153,7 +134,7 @@ public class Ahhhhfs extends Ali {
                 item.setVodDirector(TextUtils.join(",", title.substring(4).split("/")));
             } else if (title.contains("主演")) {
                 item.setVodActor(TextUtils.join(",", title.substring(4).split("/")));
-            } else if (title.contains("年代")||title.contains("日期")) {
+            } else if (title.contains("年代") || title.contains("日期")) {
                 item.setVodYear(e.text().split(":")[1]);
             } else if (title.contains("地区")) {
                 item.setVodArea(title.split(":")[1]);
@@ -169,23 +150,19 @@ public class Ahhhhfs extends Ali {
     @Override
     public String searchContent(String key, boolean quick) throws Exception {
         List<Vod> list = new ArrayList<>();
-        String result = OkHttpUtil.string(siteUrl + "?cat=13&s="+ StringUtil.encode(key), getHeaders());
+        String result = OkHttp.string(siteUrl + "?cat=13&s=" + StringUtil.encode(key), getHeaders());
         Document doc = Jsoup.parse(result);
-        for (Element element:doc.select(".item-list")) {
-            String title = element.select("h2 a").attr("title");
-            String remark = element.select("time").attr("datetime");
+        for (Element element : doc.select(".post-item")) {
+            String name = element.select("a").attr("title");
             String img = element.select("a").attr("data-bg");
-            String id = element.select("a").attr("href");
-            String contentHtml = OkHttpUtil.string(id,getHeaders());
-            Matcher matcher = AliPLink.matcher(contentHtml);
-            if (matcher.find()) {
-                id = matcher.group(1);
-            } else {
+            String remark = element.select(".entry-desc").text();
+            Matcher matcher = regexVid.matcher(element.select("a").attr("href"));
+            if (!matcher.find())
                 continue;
-            }
-            Vod vod = new Vod(id,title,img,remark);
-            list.add(vod);
+            String id = matcher.group(1);
+            list.add(new Vod(id, name, img, remark));
         }
         return Result.string(list);
     }
+
 }

@@ -14,6 +14,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import org.apache.commons.lang3.StringUtils;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -28,6 +30,18 @@ import java.util.Arrays;
 @RunWith(AndroidJUnit4.class)
 public class ExampleInstrumentedTest {
     Spider spider;
+    private RemoteServer remoteServer;
+
+    @Before
+    public void setUp() throws Exception {
+        remoteServer = new RemoteServer();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        remoteServer.stop();
+    }
+
     @Test
     public void useAppContext() throws Exception {
         // Context of the app under test.

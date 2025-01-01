@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 
 import cn.hutool.core.util.StrUtil;
 
+@Deprecated
 public class DY1990 extends Spider {
 
     private static String siteUrl="https://dy1990.com/";

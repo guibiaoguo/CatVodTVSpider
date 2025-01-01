@@ -20,7 +20,7 @@ import org.jsoup.nodes.Element;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
+@Deprecated
 public class Eighteen extends Spider {
 
     private final String url = "https://maa1830.com/zh/";

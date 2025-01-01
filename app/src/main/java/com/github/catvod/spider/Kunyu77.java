@@ -16,6 +16,7 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+@Deprecated
 /* loaded from: classes.dex */
 public class Kunyu77 extends Spider {
 

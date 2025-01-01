@@ -26,6 +26,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+@Deprecated
 public class EEEDY extends Spider {
 
     private static String siteUrl = "https://www.3edy.com";

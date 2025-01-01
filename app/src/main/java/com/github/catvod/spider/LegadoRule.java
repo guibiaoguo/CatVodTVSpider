@@ -35,7 +35,7 @@ public class LegadoRule {
     @SerializedName("type_id")
     private String typeId;
     /**
-     * 分类类型
+     * 分类类型 {folder,file}
      */
     @SerializedName("type_flag")
     private String typeFlag;

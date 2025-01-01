@@ -207,7 +207,7 @@ public class MGTV extends Spider {
 //            }
             vodList.put("vod_id", ids.get(0));
             vodList.put("vod_name", vod.optString("title"));
-            vodList.put("vod_pic", fixUrl(url, vids.get(1)));
+//            vodList.put("vod_pic", fixUrl(url, vids.get(1)));
             vodList.put("type_name", "");
             vodList.put("vod_year", "");
             vodList.put("vod_area", "");
@@ -293,7 +293,7 @@ public class MGTV extends Spider {
     @Override
     public String searchContent(String key, boolean quick) {
         try {
-            String url = "https://mobileso.bz.mgtv.com/pc/search/v1?q=" + key + "&pn=1&pc=50&size=50";
+            String url = "https://mobileso.bz.mgtv.com/pc/search/v2?allowedRC=1&src=mgtv&did=5b74d471-b244-4ef8-83d5-39c063b93b5d&timestamp=2024-12-25T13%3A18%3A50Z&signVersion=1&signNonce=de3f3c72d3c94958b31a87fd3f8ea43e&q="+URLEncoder.encode(key,"utf-8")+"&pn=1&pc=10&uid=&corr=1&_support=10000000&signature=8606e3cd470cf4b066153791f29eb3ef";
             String srr = OkHttpUtil.string(url, getHeaders(url));
             JSONObject dataObject = new JSONObject(srr);
             JSONArray jsonArray = dataObject.optJSONObject("data").optJSONArray("contents");
@@ -315,14 +315,15 @@ public class MGTV extends Spider {
                         String pic = source.optString("pic");
                         String name = source.optString("title");
                         if (StrUtil.isEmpty(name)) {
-                            name = source.optJSONArray("videoList").optJSONObject(0).optString("title");
+                            JSONObject object  = source.optJSONArray("videoList").optJSONObject(0);
+                            name = object.optString("subtitle") + " " + object.optString("title");
                             pic = source.optJSONArray("videoList").optJSONObject(0).optString("pic");
                         }
-                        id = id + "#" + pic;
+//                        id = id + "#" + pic;
                         v.put("vod_id",id);
-                        v.put("vod_name", name);
+                        v.put("vod_name", vObj.optString("title"));
                         v.put("vod_pic", pic);
-                        v.put("vod_remarks", vObj.optString("score"));
+                        v.put("vod_remarks", name);
                         videos.put(v);
                     }
                 }

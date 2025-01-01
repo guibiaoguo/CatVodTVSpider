@@ -101,7 +101,7 @@ public class QQ extends Spider {
             if (classes.length() > 0)
                 result.put("class", classes);
             else
-                result.put("class",new JSONObject(classConfig));
+                result.put("class",new JSONArray(classConfig));
             try {
                 doc = Jsoup.parse(srr);
                 // 取首页推荐视频列表

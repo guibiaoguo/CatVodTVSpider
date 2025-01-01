@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
+import com.github.catvod.utils.StringUtil;
 import com.github.catvod.utils.Utils;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
@@ -11,7 +12,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -58,8 +58,9 @@ public class PanSou extends Ali {
         for (Map.Entry<String, String> entry : types.entrySet()) {
             String typeId = entry.getKey();
             String typeName = entry.getValue();
-            String url = siteUrl + "/search?k=" + URLEncoder.encode(key) + "&t=" + typeId;
-            Elements items = Jsoup.parse(OkHttpUtil.string(url,getHeaders(""))).select("van-row > a");
+            String url = siteUrl + "/search?k=" + StringUtil.encode(key) + "&t=" + typeId;
+            String content = OkHttpUtil.string(url,getHeaders(""));
+            Elements items = Jsoup.parse(content).select("van-row > a");
             for (Element item : items) {
                 String title = item.selectFirst("template").text().trim();
                 if (!title.contains(key)) continue;

@@ -17,6 +17,7 @@ import org.json.JSONObject;
 
 import cn.hutool.core.util.StrUtil;
 
+@Deprecated
 public class LocalFile extends Spider {
 
     private String sdcard;

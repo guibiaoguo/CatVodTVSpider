@@ -3,7 +3,6 @@ package com.github.catvod.spider;
 import android.content.Context;
 import android.text.TextUtils;
 
-import com.github.catvod.ali.API;
 import com.github.catvod.bean.Class;
 import com.github.catvod.bean.Filter;
 import com.github.catvod.bean.Result;
@@ -69,9 +68,9 @@ public class Legado extends Spider {
     private void fetchRule() {
         if (StrUtil.isNotEmpty(ext) && StrUtil.startWith(ext, "http")) {
             String ruleStr = OkHttpUtil.string(ext, null);
-            rule = new GsonBuilder().disableHtmlEscaping().create().fromJson(ruleStr, LegadoRule.class);
+            rule = new GsonBuilder().disableHtmlEscaping().setLenient().create().fromJson(ruleStr, LegadoRule.class);
         } else {
-            rule = new GsonBuilder().disableHtmlEscaping().create().fromJson(ext, LegadoRule.class);
+            rule = new GsonBuilder().disableHtmlEscaping().setLenient().create().fromJson(ext, LegadoRule.class);
         }
     }
 

@@ -15,8 +15,7 @@ import com.github.catvod.crawler.Spider;
 import com.github.catvod.utils.Trans;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+
 import com.google.gson.reflect.TypeToken;
 
 import org.jsoup.Jsoup;
@@ -36,6 +35,7 @@ import java.util.regex.Pattern;
 
 import cn.hutool.core.util.StrUtil;
 
+@Deprecated
 public class Cokemv extends Spider {
     private String siteUrl = "https://cokemv.co";
     private String siteHost = "cokemv.co";

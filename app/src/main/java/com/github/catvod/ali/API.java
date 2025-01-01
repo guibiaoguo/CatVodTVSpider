@@ -22,7 +22,6 @@ import com.github.catvod.crawler.SpiderDebug;
 
 import com.github.catvod.spider.Init;
 import com.github.catvod.spider.Proxy;
-import com.github.catvod.utils.Prefers;
 import com.github.catvod.utils.QRCode;
 import com.github.catvod.utils.Trans;
 import com.github.catvod.utils.Utils;
@@ -40,11 +39,16 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Executors;
@@ -52,7 +56,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
+import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
+
 import cn.hutool.core.util.StrUtil;
 
 public class API {
@@ -64,6 +70,7 @@ public class API {
     private String shareToken = "";
     private final Auth auth;
     private String shareId;
+    private String sharePwd;
 
     public String getList(String fileId) {
         JSONObject body = new JSONObject();
@@ -90,23 +97,37 @@ public class API {
 
     private API() {
         this.lock = new ReentrantLock(true);
-        this.auth = Auth.objectFrom(Prefers.getString("aliyundrive"));
+        this.auth = Auth.objectFrom("aliyun");
     }
 
     public void setRefreshToken(String token) {
-        if (StrUtil.isEmpty(token)) {
-            auth.clean();
-        }
-        else if (StrUtil.isNotEmpty(token) && auth.getRefreshToken().isEmpty()) {
+        if (StrUtil.isNotEmpty(token) && TextUtils.isEmpty(auth.getRefreshToken())) {
             auth.setRefreshToken(token);
+            auth.save("aliyun");
+        } else {
+            try {
+                String expire = auth.getExpireTime();
+                long expireTime = new SimpleDateFormat("yyyy-MM-dd").parse(expire).getTime();
+                long lastTime = new Date().getTime();
+                if ((lastTime - expireTime)/3600/24/30/1000 > 30) {
+                    auth.setRefreshToken(token);
+                    auth.save("aliyun");
+                }
+            }catch (Exception e) {
+
+            }
         }
     }
 
-    public void setShareId(String shareId) {
+    public void setShareId(String shareId,String sharePwd) {
         this.shareId = shareId;
+        this.sharePwd = sharePwd;
         refreshShareToken();
     }
 
+    public void setShareId(String shareId) {
+        setShareId(shareId,"");
+    }
     public HashMap<String, String> getHeader() {
         HashMap<String, String> headers = new HashMap<>();
         headers.put("User-Agent", Utils.CHROME);
@@ -193,38 +214,6 @@ public class API {
             SpiderDebug.log("refreshAccessToken...");
             JSONObject body = new JSONObject();
             String token = auth.getRefreshToken();
-            if (StrUtil.isEmpty(token)) {
-                SpiderDebug.log("refreshAccessToken...共享token");
-                String roblox = Prefers.getString("roblox");
-                SpiderDebug.log(roblox);
-                if (StrUtil.isEmpty(roblox) || roblox.equals("null")) {
-                    SpiderDebug.log("请求共享token");
-                    Map<String, String> header = getHeader();
-                    header.put("Referer", "arsenal");
-                    String result = OkHttpUtil.string("https://video.t4tv.hz.cz/roblox", header);
-                    if (StrUtil.isEmpty(result)) {
-                        refreshOpenToken();
-                    }
-                    JSONObject object = new JSONObject(result);
-                    auth.setUserId(object.getString("user_id"));
-                    auth.setDriveId(object.getString("drive_id"));
-                    auth.setRefreshTokenOpen(object.getString("open_refresh_token"));
-                    auth.setAccessTokenOpen(object.getString("open_access_token"));
-                    auth.setAccessToken(object.getString("ali_access_token"));
-                    Prefers.put("roblox", result);
-                } else {
-                    JSONObject object = new JSONObject(roblox);
-                    auth.setUserId(object.getString("user_id"));
-                    auth.setDriveId(object.getString("drive_id"));
-                    auth.setRefreshTokenOpen(object.getString("open_refresh_token"));
-                    auth.setAccessTokenOpen(object.getString("open_access_token"));
-                    auth.setAccessToken(object.getString("ali_access_token"));
-                    if ((System.currentTimeMillis() - DateUtil.parse(new JSONObject(roblox).optString("current_time"),"yyyy-MM-dd hh:mm:ss").getTime() > 7200 * 1000)) {
-                        Prefers.put("roblox", "");
-                    }
-                }
-                return true;
-            }
             if (token.startsWith("http")) token = OkHttpUtil.string(token).replaceAll("[^A-Za-z0-9]", "");
             body.put("refresh_token", token);
             body.put("grant_type", "refresh_token");
@@ -234,8 +223,10 @@ public class API {
             auth.setDeviceId(object.getString("device_id"));
             auth.setDriveId(object.getString("default_drive_id"));
             auth.setRefreshToken(object.getString("refresh_token"));
+            auth.setExpireTime(object.getString("expire_time"));
             auth.setAccessToken(object.getString("token_type") + " " + object.getString("access_token"));
             oauthRequest();
+            auth.save("aliyun");
             return true;
         } catch (Exception e) {
             SpiderDebug.log(e);
@@ -284,7 +275,7 @@ public class API {
             Log.e("DDD", object.toString());
             auth.setRefreshTokenOpen(object.optString("refresh_token"));
             auth.setAccessTokenOpen(object.optString("token_type") + " " + object.optString("access_token"));
-            auth.save();
+            auth.save("aliyun");
             return true;
         } catch (Exception e) {
             SpiderDebug.log(e);
@@ -297,7 +288,7 @@ public class API {
             SpiderDebug.log("refreshShareToken...");
             JSONObject body = new JSONObject();
             body.put("share_id", shareId);
-            body.put("share_pwd", "");
+            body.put("share_pwd", sharePwd);
             JSONObject object = new JSONObject(post("v2/share_link/get_share_token", body));
             shareToken = object.getString("share_token");
             return true;
@@ -324,7 +315,7 @@ public class API {
             body.put("refreshToken", auth.getRefreshToken());
             JSONObject object = new JSONObject(sign("users/v1/users/device/create_session", body.toString(), false));
             if (!object.getBoolean("success")) throw new Exception(object.toString());
-            auth.save();
+            auth.save("aliyun");
             return true;
         } catch (Exception e) {
             auth.setSignature("");
@@ -341,16 +332,27 @@ public class API {
         List<Item> files = new ArrayList<>();
         LinkedHashMap<String, List<String>> subMap = new LinkedHashMap<>();
         listFiles(new Item(getParentFileId(fileId, object)), files, subMap);
-        List<String> playFrom = Arrays.asList("原畫", "超清", "高清");
+        List<String> playFrom = Arrays.asList("阿里雲盤原畫", "阿里雲盤超清", "阿里雲盤高清");
         List<String> episode = new ArrayList<>();
         List<String> playUrl = new ArrayList<>();
-        for (Item file : files) episode.add(Trans.get(file.getDisplayName()) + "$" + file.getFileId() + findSubs(file.getName(), subMap));
+        for (Item file : files) episode.add(Trans.get(file.getDisplayName()) + "$" + shareId + "***" + sharePwd + "," +file.getFileId() + findSubs(file.getName(), subMap));
         for (int i = 0; i < playFrom.size(); i++) playUrl.add(TextUtils.join("#", episode));
         Vod vod = new Vod();
         vod.setVodId(url);
         vod.setVodContent(url);
-        vod.setVodPic(object.getString("avatar"));
-        vod.setVodName(object.getString("share_name"));
+        vod.setVodPic(files.get(0).getThumbnail());
+        String[] tids = url.split(",");
+        if (tids.length > 1) {
+            String wd = tids[1];
+            wd = wd.replaceAll("(?:（|\\(|\\[|【|\\.mp4|\\.mkv|\\.avi|\\.MP4|\\.MKV|\\.AVI)", "");
+            wd = wd.replaceAll("(?:：|\\:|）|\\)|\\]|】|\\.)", " ");
+            int len = wd.length();
+            int finalLen = len >= 36 ? 36 : len;
+            wd = wd.substring(0, finalLen).trim();
+            vod.setVodName(wd);
+        } else {
+            vod.setVodName(object.optString("share_name"));
+        }
         vod.setVodPlayUrl(TextUtils.join("$$$", playUrl));
         vod.setVodPlayFrom(TextUtils.join("$$$", playFrom));
         vod.setTypeName("阿里雲盤");
@@ -392,8 +394,9 @@ public class API {
 
     private String getParentFileId(String fileId, JSONObject shareInfo) throws Exception {
         JSONArray array = shareInfo.optJSONArray("file_infos");
+        Integer fileCount = shareInfo.optInt("file_count");
         if (!TextUtils.isEmpty(fileId)) return fileId;
-        if (array == null || array.length() == 0) return "";
+        if (array == null || array.length() == 0) return "root";
         JSONObject fileInfo = array.getJSONObject(0);
         if (fileInfo.getString("type").equals("folder")) return fileInfo.getString("file_id");
         if (fileInfo.getString("type").equals("file") && fileInfo.getString("category").equals("video")) return "root";
@@ -401,6 +404,9 @@ public class API {
     }
 
     private String findSubs(String name, Map<String, List<String>> subMap) {
+        if (name.lastIndexOf(".") == -1) {
+            return "";
+        }
         name = name.substring(0, name.lastIndexOf("."));
         List<String> subs = subMap.get(name);
         if (subs != null && subs.size() > 0) return combineSubs(subs);

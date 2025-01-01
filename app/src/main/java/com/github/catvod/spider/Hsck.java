@@ -3,11 +3,14 @@ package com.github.catvod.spider;
 import android.content.Context;
 import android.net.Uri;
 
+import com.github.catvod.parser.NetworkUtils;
 import com.github.catvod.parser.RuleAnalyzer;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Base64;
+import com.github.catvod.utils.Json;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
+import com.google.gson.JsonObject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
@@ -29,53 +32,47 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cn.hutool.core.util.StrUtil;
+
 /**
  * 黄色仓库
  */
 public class Hsck extends Spider {
 
-    private static final String siteUrl = "https://hsck.us";
-    private static final String siteHost = "hsck.us";
+    private static String siteUrl = "https://hsck.us";
+    private static String siteHost = "hsck.us";
 
     protected JSONObject playerConfig = new JSONObject();
     protected JSONObject filterConfig;
-    protected String domain;
+
     protected String ext;
 
     @Override
     public void init(Context context) {
-        super.init(context);
-        try {
-            domain = getDomain();
-        } catch (Exception e) {
-            SpiderDebug.log(e);
-        }
+        this.ext = "https://www.seedmm.help";
+        setSiteUrl("");
     }
 
     @Override
     public void init(Context context, String extend) {
-        //super.init(context, extend);
-        try {
-            domain = getDomain();
-        } catch (Exception e) {
-            SpiderDebug.log(e);
-        }
-        this.ext = extend;
+        JsonObject exts = Json.safeObject(extend);
+        setSiteUrl(exts.has("host") ? exts.get("host").getAsString() : "");
+        this.ext = exts.has("ext")?exts.get("ext").getAsString():"https://www.seedmm.help";
     }
 
-    protected String getDomain() {
-        try {
-            String ext = "https://sanic.guibiaoguo.ml/proxy/https://laotou.fqxsw.top:8899/?u=" + siteUrl + "&p=/";
-            Map<String, List<String>> respHeaders = new TreeMap<>();
-            String content = OkHttpUtil.stringNoRedirect(ext, getHeaders(ext), respHeaders);
-            String redLoc = OkHttpUtil.getRedirectLocation(respHeaders);
-            return "https://sanic.guibiaoguo.ml/proxy/"+ URLDecoder.decode(redLoc,"utf-8");
-        } catch (Exception e) {
-            return siteUrl;
+    public void setSiteUrl(String extend) {
+        if (StrUtil.isEmpty(extend)) {
+            extend = "https://888kkkz.com:8899";
         }
+        String ext = extend + "/?u=https://hsck.us&p=/";
+        Map<String, List<String>> respHeaders = new TreeMap<>();
+        OkHttpUtil.stringNoRedirect(ext, getHeaders(), respHeaders);
+        String redLoc = OkHttpUtil.getRedirectLocation(respHeaders);
+        siteUrl = redLoc;
+        siteHost = NetworkUtils.INSTANCE.getSubDomain(siteUrl);
     }
 
-    protected HashMap<String, String> getHeaders(String url) {
+    protected HashMap<String, String> getHeaders() {
         HashMap<String, String> headers = new HashMap<>();
         headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
         return headers;
@@ -90,8 +87,7 @@ public class Hsck extends Spider {
     @Override
     public String homeContent(boolean filter) {
         try {
-            String url = domain;
-            String srr = OkHttpUtil.string(url,getHeaders(url));
+            String srr = OkHttpUtil.string(siteUrl, getHeaders());
             Document doc = Jsoup.parse(srr);
             JSONArray classes = new JSONArray();
             for (Element cls : doc.select("ul[class='stui-header__menu clearfix']>li:gt(0)")) {
@@ -99,7 +95,7 @@ public class Hsck extends Spider {
                 String id = cls.selectFirst("a").attr("href");
                 Pattern pattern = Pattern.compile("/vodtype/(\\w+).html");
                 Matcher matcher = pattern.matcher(id);
-                if(matcher.find()) {
+                if (matcher.find()) {
                     c.put("type_name", cls.selectFirst("a").text());
                     c.put("type_id", matcher.group(1));
                     classes.put(c);
@@ -118,7 +114,7 @@ public class Hsck extends Spider {
                     Element vod = list.get(i);
                     String title = vod.selectFirst("h4>a").text();
                     String cover = vod.selectFirst("a").attr("data-original");
-                    cover = fixUrl(url, cover);
+                    cover = fixUrl(siteUrl, cover);
                     String remark = vod.selectFirst(".stui-vodlist__thumb").text();
                     String id = vod.selectFirst("h4>a").attr("href");
                     JSONObject v = new JSONObject();
@@ -142,8 +138,7 @@ public class Hsck extends Spider {
     @Override
     public String homeVideoContent() {
         try {
-            String url = domain;
-            String srr = OkHttpUtil.string(url,getHeaders(url));
+            String srr = OkHttpUtil.string(siteUrl, getHeaders());
             Document doc = Jsoup.parse(srr);
             JSONObject result = new JSONObject();
             try {
@@ -154,7 +149,7 @@ public class Hsck extends Spider {
                     Element vod = list.get(i);
                     String title = vod.selectFirst("h4>a").text();
                     String cover = vod.selectFirst("a").attr("data-original");
-                    cover = fixUrl(url, cover);
+                    cover = fixUrl(siteUrl, cover);
                     String remark = vod.selectFirst(".stui-vodlist__thumb").text();
                     String id = vod.selectFirst("h4>a").attr("href");
                     JSONObject v = new JSONObject();
@@ -187,7 +182,7 @@ public class Hsck extends Spider {
     @Override
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) {
         try {
-            String url = domain + "/vodtype/" + tid + "-" + pg + ".html";
+            String url = siteUrl + "/vodtype/" + tid + "-" + pg + ".html";
             if (extend != null) {
                 Set<String> keys = extend.keySet();
                 for (String key : keys) {
@@ -197,7 +192,7 @@ public class Hsck extends Spider {
                     url += "&" + key + "=" + URLEncoder.encode(val);
                 }
             }
-            String srr = OkHttpUtil.string(url, getHeaders(url));
+            String srr = OkHttpUtil.string(url, getHeaders());
             JSONObject result = new JSONObject();
             try {
                 Document doc = Jsoup.parse(srr);
@@ -251,8 +246,8 @@ public class Hsck extends Spider {
     @Override
     public String detailContent(List<String> ids) {
         try {
-            String url = domain + ids.get(0).split("#")[0];
-            String srr = OkHttpUtil.string(url, getHeaders(url));
+            String url = siteUrl + ids.get(0).split("#")[0];
+            String srr = OkHttpUtil.string(url, getHeaders());
             Document doc = Jsoup.parse(srr);
             String title = doc.selectFirst(".stui-warp-content h3").text();
             Pattern pattern = Pattern.compile("([a-zA-z-0-9_]*)");
@@ -260,9 +255,9 @@ public class Hsck extends Spider {
             String key = "";
             if (matcher.find()) {
                 key = matcher.group(1);
-                key = key.replaceAll("_","-");
+                key = key.replaceAll("_", "-");
             }
-            String srr_key = OkHttpUtil.string(ext + "/" + key, getHeaders(ext));
+            String srr_key = OkHttpUtil.string(ext + "/" + key, getHeaders());
             Document doc_key = Jsoup.parse(srr_key);
             Element movie = doc_key.selectFirst(".movie");
             JSONObject vodList = new JSONObject();
@@ -281,11 +276,11 @@ public class Hsck extends Spider {
                 vodList.put("vod_pic", fixUrl(url, ext + movie.selectFirst(".bigImage").attr("href")));
                 Element info = movie.selectFirst(".info");
                 vodList.put("type_name", info.selectFirst("p.header~p").text());
-                vodList.put("vod_year", info.select("p").get(1).text().replace("發行日期:",""));
+                vodList.put("vod_year", info.select("p").get(1).text().replace("發行日期:", ""));
                 vodList.put("vod_area", "日本");
                 vodList.put("vod_remarks", info.select("p").get(2).text());
-                vodList.put("vod_actor", info.selectFirst(".star-show~ul")!=null?info.selectFirst(".star-show~ul").text():"");
-                vodList.put("vod_director", info.select("p").get(3).text().replace("導演:",""));
+                vodList.put("vod_actor", info.selectFirst(".star-show~ul") != null ? info.selectFirst(".star-show~ul").text() : "");
+                vodList.put("vod_director", info.select("p").get(3).text().replace("導演:", ""));
                 vodList.put("vod_content", info.text());
             }
 
@@ -301,10 +296,10 @@ public class Hsck extends Spider {
                 if (player.has("encrypt")) {
                     int encrypt = player.getInt("encrypt");
                     if (encrypt == 1) {
-                        videoUrlTmp = URLDecoder.decode(videoUrlTmp,"utf-8");
+                        videoUrlTmp = URLDecoder.decode(videoUrlTmp, "utf-8");
                     } else if (encrypt == 2) {
                         videoUrlTmp = new String(Base64.decode(videoUrlTmp, Base64.DEFAULT));
-                        videoUrlTmp = URLDecoder.decode(videoUrlTmp,"utf-8");
+                        videoUrlTmp = URLDecoder.decode(videoUrlTmp, "utf-8");
                     }
                 }
                 plays.add("1080P$" + videoUrlTmp);
@@ -369,11 +364,11 @@ public class Hsck extends Spider {
     @Override
     public String searchContent(String key, boolean quick) {
         try {
-            String url = domain + "/vodsearch/" + key + "----------1---.html";
+            String url = siteUrl + "/vodsearch/" + key + "----------1---.html";
             JSONArray videos = new JSONArray();
             RuleAnalyzer ruleAnalyzes = new RuleAnalyzer("", true);
             //设置平衡组为代码平衡
-            String[] rules = StringUtils.split("1:5",":");
+            String[] rules = StringUtils.split("1:5", ":");
             int start = 1;
             int end = 1;
             int step = 1;
@@ -392,7 +387,7 @@ public class Hsck extends Spider {
             for (int i = start; i <= end; i = i + step) {
                 url = url.replace("{scPg}", i + "");
                 try {
-                    String s = OkHttpUtil.string(url,getHeaders(url));
+                    String s = OkHttpUtil.string(url, getHeaders());
                     Document doc = Jsoup.parse(s);
                     Elements elements = doc.select(".stui-vodlist>li");
                     for (Element element : elements) {

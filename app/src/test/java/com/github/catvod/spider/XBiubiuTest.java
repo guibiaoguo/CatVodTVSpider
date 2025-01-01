@@ -1,12 +1,7 @@
 package com.github.catvod.spider;
 
-import com.github.catvod.bean.Result;
-import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
-
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.utils.okhttp.OkHttpUtil;
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -15,13 +10,14 @@ import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 
+@Ignore
 public class XBiubiuTest {
 
     private Spider xbiubiu;

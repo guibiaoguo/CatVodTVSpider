@@ -1,8 +1,7 @@
 package com.github.catvod.utils;
 
-import com.github.catvod.crawler.SpiderDebug;
-
-import org.json.JSONObject;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.AlgorithmParameterSpec;
@@ -26,15 +25,15 @@ public class AES {
     }
     public static String rightPadding(String key, String replace, int Length) {
         String strReturn = "";
-        String strtemp = "";
+        StringBuilder strtemp = new StringBuilder();
         int curLength = key .trim().length();
-        if (key  != null && curLength > Length) {
+        if (curLength > Length) {
             strReturn = key .trim().substring(0, Length);
-        } else if (key  != null && curLength == Length) {
+        } else if (curLength == Length) {
             strReturn = key .trim();
         } else {
             for (int i = 0; i < (Length - curLength); i++) {
-                strtemp = strtemp + replace;
+                strtemp.append(replace);
             }
             strReturn = key .trim() + strtemp;
         }
@@ -70,7 +69,15 @@ public class AES {
 
     public static boolean isJson(String content) {
         try {
-            new JSONObject(content);
+            if (content == null) {
+                return false;
+            }
+            content = content.trim();
+            if (content.startsWith("{") && content.endsWith("}"))
+                return true;
+            if (content.startsWith("[") && content.endsWith("]"))
+                return true;
+            new GsonBuilder().setLenient().create().fromJson(content, JsonObject.class);
             return true;
         } catch (Exception e) {
             return false;

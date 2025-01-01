@@ -1,60 +1,46 @@
 package com.github.catvod.spider;
 
-import static org.junit.Assert.*;
-
-import com.github.catvod.bean.Result;
 import com.github.catvod.crawler.Spider;
-import com.google.gson.Gson;
-
-import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+public class Anime1Test extends SpiderTest {
 
-public class Anime1Test {
-
-    Spider anime1;
-
+    Spider anime1 = null;
     @Before
-    public void setUp() throws Exception {
+    public void init() {
         anime1 = new Anime1();
-        anime1.init(null);
-    }
-
-    @After
-    public void tearDown() throws Exception {
+        super.init(anime1,"");
     }
 
     @Test
     public void homeContent() throws Exception {
-        String content = anime1.homeContent(true);
-        System.out.println(content);
-        Result result = new Gson().fromJson(content, Result.class);
-        Assert.assertTrue(result.getClasses().size()>0);
-        Assert.assertTrue(result.getList().isEmpty() || result.getList().size() > 0);
+        super.homeContent(false);
+    }
+
+    @Test
+    public void homeVideoContent() throws Exception {
+        super.homeVideoContent();
     }
 
     @Test
     public void categoryContent() throws Exception {
-        System.out.println(anime1.categoryContent("0","1",true,new HashMap<>()));
+        super.categoryContent();;
     }
 
     @Test
     public void detailContent() throws Exception {
-        System.out.println(anime1.detailContent(Arrays.asList("1307")));
+        super.detailContent();
     }
 
     @Test
     public void playerContent() throws Exception {
-        System.out.println(anime1.playerContent("","",new ArrayList<>()));
+        super.playerContent();
     }
 
     @Test
     public void searchContent() throws Exception {
-        System.out.println(anime1.searchContent("火影",false));
+        super.homeContent(false);
+        super.searchContent("柯南");
     }
 }

@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 
 import cn.hutool.core.util.StrUtil;
 
+@Deprecated
 public class If101 extends Spider {
     private static final String siteUrl = "https://olvod.vip";
     private static final String siteHost = "olvod.vip";

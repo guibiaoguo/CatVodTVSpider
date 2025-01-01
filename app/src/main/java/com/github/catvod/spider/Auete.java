@@ -32,6 +32,7 @@ import java.util.regex.Pattern;
 
 import cn.hutool.core.util.StrUtil;
 
+@Deprecated
 public class Auete extends Spider {
     private static String siteUrl = "https://haozhansou.com";
     private static String siteHost = "haozhansou.com";

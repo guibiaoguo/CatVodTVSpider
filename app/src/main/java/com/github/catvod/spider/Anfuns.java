@@ -8,7 +8,6 @@ import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.json.JSONArray;
@@ -19,7 +18,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,14 +25,12 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import cn.hutool.core.util.StrUtil;
 
 public class Anfuns extends Spider {
-    private static final String siteUrl = "https://www.anfuns.cc";
-    private static final String siteHost = "www.anfuns.cc";
+    private static final String siteUrl = "https://www.anfuns.org";
+    private static final String siteHost = "www.anfuns.org";
     private JSONObject filterConfig;
     private String cookie="";
     private String referer="";
@@ -85,7 +81,7 @@ public class Anfuns extends Spider {
 
     protected void getCookie(){
         cookie="";
-        String cookieurl="https://www.anfuns.cc/verify/index.html";
+        String cookieurl=siteUrl + "/verify/index.html";
         Map<String, List<String>> cookies = new HashMap<>();
         OkHttpUtil.string(cookieurl,getHeaders(cookieurl,""),cookies);
         for( Map.Entry<String, List<String>> entry : cookies.entrySet() ){
@@ -178,6 +174,9 @@ public class Anfuns extends Spider {
                         url=url.replace("{"+key+"}", value);
                     }
                 }
+            }
+            if (!filter) {
+                url = siteUrl + "/type/" + tid + "-" + pg + ".html";
             }
             for (int i=0 ;i<2;i++) {
                 if (url.contains("{year}")) {
@@ -278,93 +277,95 @@ public class Anfuns extends Spider {
     public String playerContent(String flag, String id, List<String> vipFlags) {
         try {
             String url = siteUrl + id ;
-            String htmlplay = OkHttpUtil.string(url, getHeaders(url,referer));
-            Document doc = Jsoup.parse(htmlplay);
-            Elements allScript = doc.select("script");
-            JSONObject result = new JSONObject();
-            String urlreq="";
-            for (int i = 0; i < allScript.size(); i++) {
-                String scContent = allScript.get(i).toString();
-                if (scContent.contains("var player_aaaa=")) {
-                    int start = scContent.indexOf("{");
-                    int end = scContent.lastIndexOf("}") + 1;
-                    String urltmp = scContent.substring(start, end);
-                    JSONObject urltmpobj = new JSONObject(urltmp);
-                    String urlraw = urltmpobj.getString("url");
-                    String urlnext= urltmpobj.optString("link_next");
-                    urlreq = new String(Base64.decode(urlraw.getBytes(), Base64.DEFAULT));
-                    urlreq = urlreq.replaceAll("%(?![0-9a-fA-F]{2})", "%25");
-                    urlreq = URLDecoder.decode(urlreq);
-                    if(urlreq.contains("yanm")){
-                        urlreq = "https://api.peizq.online/play/anfuns.php?url="+urlreq+"&next=//www.anfuns.cc"+urlnext;
-                    } else {
-                        if(urlreq.contains("%u")){
-                            start = urlreq.indexOf("%u");
-                            end = urlreq.lastIndexOf("%u")+6;
-                            String urlreqtmp =urlreq.substring(start,end);
-                            String urlreqtmps = urlreq.substring(0,start);
-                            String urlreqtmpe = urlreq.substring(end,urlreq.length());
-                            urlreqtmp = urlreqtmp.replace("%","\\");
-                            Pattern pattern = Pattern.compile("(\\\\u(\\w{4}))");
-                            Matcher matcher = pattern.matcher(urlreqtmp);
-                            while (matcher.find()) {
-                                String unicodeFull = matcher.group(1);
-                                String unicodeNum = matcher.group(2);
-                                char singleChar = (char) Integer.parseInt(unicodeNum, 16);
-                                urlreqtmp = urlreqtmp.replace(unicodeFull, singleChar + "");
-                            }
-                            urlreq = urlreqtmps+urlreqtmp+urlreqtmpe;
-                        }
-                        if (!isVideoFormat(urlreq)) {
-                            urlreq = urlreq + "&next=//www.anfuns.cc" + urlnext;
-                        }
-                    }
-                    break;
-                }
-            }
+//            String htmlplay = OkHttpUtil.string(url, getHeaders(url,referer));
+//            Document doc = Jsoup.parse(htmlplay);
+//            Elements allScript = doc.select("script");
+//            JSONObject result = new JSONObject();
+//            String urlreq="";
+//            for (int i = 0; i < allScript.size(); i++) {
+//                String scContent = allScript.get(i).toString();
+//                if (scContent.contains("var player_aaaa=")) {
+//                    int start = scContent.indexOf("{");
+//                    int end = scContent.lastIndexOf("}") + 1;
+//                    String urltmp = scContent.substring(start, end);
+//                    JSONObject urltmpobj = new JSONObject(urltmp);
+//                    String urlraw = urltmpobj.getString("url");
+//                    String urlnext= urltmpobj.optString("link_next");
+//                    urlreq = new String(Base64.decode(urlraw.getBytes(), Base64.DEFAULT));
+//                    urlreq = urlreq.replaceAll("%(?![0-9a-fA-F]{2})", "%25");
+//                    urlreq = URLDecoder.decode(urlreq);
+//                    if(urlreq.contains("yanm")){
+//                        urlreq = "https://api.peizq.online/play/anfuns.php?url="+urlreq+"&next=//www.anfuns.cc"+urlnext;
+//                    } else {
+//                        if(urlreq.contains("%u")){
+//                            start = urlreq.indexOf("%u");
+//                            end = urlreq.lastIndexOf("%u")+6;
+//                            String urlreqtmp =urlreq.substring(start,end);
+//                            String urlreqtmps = urlreq.substring(0,start);
+//                            String urlreqtmpe = urlreq.substring(end,urlreq.length());
+//                            urlreqtmp = urlreqtmp.replace("%","\\");
+//                            Pattern pattern = Pattern.compile("(\\\\u(\\w{4}))");
+//                            Matcher matcher = pattern.matcher(urlreqtmp);
+//                            while (matcher.find()) {
+//                                String unicodeFull = matcher.group(1);
+//                                String unicodeNum = matcher.group(2);
+//                                char singleChar = (char) Integer.parseInt(unicodeNum, 16);
+//                                urlreqtmp = urlreqtmp.replace(unicodeFull, singleChar + "");
+//                            }
+//                            urlreq = urlreqtmps+urlreqtmp+urlreqtmpe;
+//                        }
+//                        if (!isVideoFormat(urlreq)) {
+//                            urlreq = urlreq + "&next=//www.anfuns.cc" + urlnext;
+//                        }
+//                    }
+//                    break;
+//                }
+//            }
+//
+//            if(urlreq.contains("yanm")){
+//                String htmlyanm = OkHttpUtil.string(urlreq, getHeaders2(urlreq,"ref:https://www.anfuns.cc/"));
+//                Document docyanm = Jsoup.parse(htmlyanm);
+//                Elements allScriptyanm = docyanm.select("script");
+//                String urlreqyanm="";
+//                for (int i = 0; i < allScriptyanm.size(); i++) {
+//                    String scContent = allScriptyanm.get(i).toString();
+//                    if (scContent.contains("var config =")) {
+//                        int start = scContent.indexOf("getrandom('")+11;
+//                        int end = scContent.indexOf("'),") ;
+//                        String getrandom = scContent.substring(start,end);
+//                        String getrandomb64 = new String(Base64.decode(getrandom.substring(8,getrandom.length()).getBytes(), Base64.DEFAULT));
+//                        String urlreqyanmtmp = URLDecoder.decode(getrandomb64.substring(8,getrandomb64.length()-8));
+//                        Map<String, List<String>> respHeaders = new HashMap<>();
+//                        OkHttpUtil.stringNoRedirect(urlreqyanmtmp, getHeaders2(urlreqyanmtmp,"origin:https://api.peizq.online"), respHeaders);
+//                        String redirect = OkHttpUtil.getRedirectLocation(respHeaders);
+//                        String m3u8raw = OkHttpUtil.string(redirect, getHeaders2(redirect,"origin:https://api.peizq.online"));
+//                        start = m3u8raw.indexOf("/hls/");
+//                        String m3ubrawf1tmp =m3u8raw.substring(start,start+200);
+//                        end = m3ubrawf1tmp.indexOf("#EXTINF");
+//                        String m3ubrawf1req="https://fata.peizq.online"+m3ubrawf1tmp.substring(0,end);
+//                        OkHttpUtil.stringNoRedirect(m3ubrawf1req, getHeaders2(m3ubrawf1req,"origin:https://api.peizq.online"), respHeaders);
+//                        String m3ubrawf1 = OkHttpUtil.getRedirectLocation(respHeaders);
+//                        m3u8raw = m3u8raw.replace(m3u8raw.substring(start,start+end),m3ubrawf1);
+//                        String realm3u8b64= Base64.encodeToString(m3u8raw.getBytes(), 2);
+//                        result.put("url", "data:application/vnd.apple.mpegurl;base64,"+realm3u8b64);
+//                        result.put("header", new JSONObject(getHeaders2(m3ubrawf1,"origin:https://api.peizq.online")).toString());
+//                        break;
+//                    }
+//                }
+//           } else if (isVideoFormat(urlreq)) {
+//                result.put("url", urlreq);
+//            } else {
+//                Map<String, List<String>> respHeaders = new HashMap<>();
+//                OkHttpUtil.stringNoRedirect(urlreq, getHeaders2(urlreq,""), respHeaders);
+//                String redirect = OkHttpUtil.getRedirectLocation(respHeaders);
+//                result.put("url", redirect);
+//                result.put("header", getHeaders2(redirect,"").toString());
+//            }
 
-            if(urlreq.contains("yanm")){
-                String htmlyanm = OkHttpUtil.string(urlreq, getHeaders2(urlreq,"ref:https://www.anfuns.cc/"));
-                Document docyanm = Jsoup.parse(htmlyanm);
-                Elements allScriptyanm = docyanm.select("script");
-                String urlreqyanm="";
-                for (int i = 0; i < allScriptyanm.size(); i++) {
-                    String scContent = allScriptyanm.get(i).toString();
-                    if (scContent.contains("var config =")) {
-                        int start = scContent.indexOf("getrandom('")+11;
-                        int end = scContent.indexOf("'),") ;
-                        String getrandom = scContent.substring(start,end);
-                        String getrandomb64 = new String(Base64.decode(getrandom.substring(8,getrandom.length()).getBytes(), Base64.DEFAULT));
-                        String urlreqyanmtmp = URLDecoder.decode(getrandomb64.substring(8,getrandomb64.length()-8));
-                        Map<String, List<String>> respHeaders = new HashMap<>();
-                        OkHttpUtil.stringNoRedirect(urlreqyanmtmp, getHeaders2(urlreqyanmtmp,"origin:https://api.peizq.online"), respHeaders);
-                        String redirect = OkHttpUtil.getRedirectLocation(respHeaders);
-                        String m3u8raw = OkHttpUtil.string(redirect, getHeaders2(redirect,"origin:https://api.peizq.online"));
-                        start = m3u8raw.indexOf("/hls/");
-                        String m3ubrawf1tmp =m3u8raw.substring(start,start+200);
-                        end = m3ubrawf1tmp.indexOf("#EXTINF");
-                        String m3ubrawf1req="https://fata.peizq.online"+m3ubrawf1tmp.substring(0,end);
-                        OkHttpUtil.stringNoRedirect(m3ubrawf1req, getHeaders2(m3ubrawf1req,"origin:https://api.peizq.online"), respHeaders);
-                        String m3ubrawf1 = OkHttpUtil.getRedirectLocation(respHeaders);
-                        m3u8raw = m3u8raw.replace(m3u8raw.substring(start,start+end),m3ubrawf1);
-                        String realm3u8b64= Base64.encodeToString(m3u8raw.getBytes(), 2);
-                        result.put("url", "data:application/vnd.apple.mpegurl;base64,"+realm3u8b64);
-                        result.put("header", new JSONObject(getHeaders2(m3ubrawf1,"origin:https://api.peizq.online")).toString());
-                        break;
-                    }
-                }
-           } else if (isVideoFormat(urlreq)) {
-                result.put("url", urlreq);
-            } else {
-                Map<String, List<String>> respHeaders = new HashMap<>();
-                OkHttpUtil.stringNoRedirect(urlreq, getHeaders2(urlreq,""), respHeaders);
-                String redirect = OkHttpUtil.getRedirectLocation(respHeaders);
-                result.put("url", redirect);
-                result.put("header", getHeaders2(redirect,"").toString());
-            }
-            result.put("parse", 0);
-            result.put("playUrl", "");
-            return result.toString();
+//            result.put("parse", 0);
+//            result.put("playUrl", "");
+//            return result.toString();
+            return Result.get().url(url).page().string();
         } catch (Exception e) {
             SpiderDebug.log(e);
         }
@@ -387,7 +388,7 @@ public class Anfuns extends Spider {
     @Override
     public String searchContent(String key, boolean quick) {
         try {
-            String url = "https://www.anfuns.cc/search.html?wd="+URLEncoder.encode(key)+"&submit=";
+            String url = siteUrl + "/search.html?wd="+URLEncoder.encode(key)+"&submit=";
             Document doc = Jsoup.parse(OkHttpUtil.string(url,getHeaders(url,referer)));
             referer=url;
             JSONObject result = new JSONObject();

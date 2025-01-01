@@ -41,6 +41,7 @@ import cn.hutool.core.util.StrUtil;
 /**
  * @author ColaMint & FongMi
  */
+@Deprecated
 public class Paper extends Ali {
 
     private final String siteUrl = "https://gitcafe.net/alipaper/";

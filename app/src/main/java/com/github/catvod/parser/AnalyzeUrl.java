@@ -3,16 +3,16 @@ package com.github.catvod.parser;
 import android.text.TextUtils;
 
 import com.github.catvod.script.IFunction;
-//import com.github.catvod.script.JsExtensions;
+import com.github.catvod.script.JsExtensions;
 //import com.github.catvod.script.quickjs.QuickJSScriptEngine;
 import com.github.catvod.utils.StringUtil;
 import com.github.catvod.utils.okhttp.OKCallBack;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
 import com.google.gson.Gson;
 import com.github.catvod.script.Bindings;
-//import com.github.catvod.script.ScriptEngine;
+import com.github.catvod.script.ScriptEngine;
 import com.github.catvod.script.SimpleBindings;
-//import com.github.catvod.script.rhino.RhinoScriptEngine;
+import com.github.catvod.script.rhino.RhinoScriptEngine;
 import com.google.gson.GsonBuilder;
 //import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
@@ -35,7 +35,7 @@ import okhttp3.Call;
 import okhttp3.Headers;
 import okhttp3.Response;
 
-public class AnalyzeUrl implements IFunction {
+public class AnalyzeUrl extends JsExtensions implements IFunction {
 
     public static Gson gson = new GsonBuilder()
             .registerTypeAdapter(new TypeToken<Map<String,Object>>(){}.getType(),new DataTypeAdapter())
@@ -155,14 +155,14 @@ public class AnalyzeUrl implements IFunction {
     }
 
     private Object evalJS(String rule, Object result) {
-//        Bindings bindings = new SimpleBindings();
-//        ScriptEngine scriptEngine = new RhinoScriptEngine(bindings);
-//        bindings.put("java", this);
-//        bindings.put("result", result);
-//        bindings.put("baseUrl", baseUrl);
-//        bindings.put("page",page);
-//        bindings.put("key",key);
-//        result = scriptEngine.eval(rule, bindings);
+        Bindings bindings = new SimpleBindings();
+        ScriptEngine scriptEngine = new RhinoScriptEngine(bindings);
+        bindings.put("java", this);
+        bindings.put("result", result);
+        bindings.put("baseUrl", baseUrl);
+        bindings.put("page",page);
+        bindings.put("key",key);
+        result = scriptEngine.eval(rule, bindings);
 //        try {
 //            bindings = new SimpleBindings();
 //            bindings.put("java", this);

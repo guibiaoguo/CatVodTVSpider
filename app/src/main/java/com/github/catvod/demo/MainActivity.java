@@ -1,44 +1,21 @@
 package com.github.catvod.demo;
 
-//import static org.junit.Assert.assertArrayEquals;
-//import static org.junit.Assert.assertEquals;
-//import static org.junit.Assert.assertNotNull;
-//import static org.junit.Assert.assertTrue;
-
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+
 import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 
+import com.github.catvod.bean.Result;
 import com.github.catvod.crawler.Spider;
-//import com.github.catvod.js.JSEngine;
-//import com.github.catvod.js.SpiderJS;
-import com.github.catvod.spider.Dm84;
 import com.github.catvod.spider.Init;
-import com.github.catvod.spider.Local;
 import com.github.catvod.spider.Proxy;
-import com.github.catvod.spider.WebDAV;
-import com.github.catvod.utils.StringUtil;
+import com.github.catvod.spider.Quark;
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
-import org.apache.commons.lang3.StringUtils;
-
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-//import com.github.tvbox.quickjs.QuickJSContext;
-
 
 public class MainActivity extends Activity {
 
@@ -68,49 +45,87 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         verifyStoragePermissions(this);
+        //CryptDesManager.init(this.getApplicationContext());
         super.onCreate(savedInstanceState);
         Init.init(this.getApplicationContext());
         Proxy.port = 9988;
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Spider spider = new WebDAV();
-                spider.init(MainActivity.this.getApplicationContext(),"https://gitlab.com/mao4284120/js/-/raw/main/sub/webdav.json");
                 try {
-                    Spider local = new Local();
-                    local.init(MainActivity.this.getApplicationContext(),"");
-                    String home = local.homeContent(true);
-                    Log.d(TAG, home);
-                    JsonArray classes = JsonParser.parseString(home).getAsJsonObject().getAsJsonArray("class");
-                    String category = local.categoryContent(classes.get(classes.size()-1).getAsJsonObject().get("type_id").getAsString(),"1",false,null);
-                    Log.d(TAG, category);
-                    JsonObject jsonObject = null;
-                    String content = null;
-                    String tid = null;
-                    content = spider.homeContent(true);
-                    Log.d(TAG,content);
-                    jsonObject = new Gson().fromJson(content, JsonObject.class);
-                    Log.d(TAG,jsonObject.getAsJsonArray("class").toString());
-                    tid = jsonObject.getAsJsonArray("class").get(0).getAsJsonObject().get("type_id").getAsString();
-                    content = spider.homeVideoContent();
-                    Log.d(TAG,content);
-                    if (StringUtils.isNotEmpty(content)) {
-                        jsonObject = new Gson().fromJson(content, JsonObject.class);
-                        Log.d(TAG, jsonObject.getAsJsonArray("list").toString());
+                    Spider quark = new Quark();
+                    quark.init(null,"{\n" +
+                            "    \"quarkCookie\": \"ctoken=DMGSO0SeLnZaW5GxMkZWEqeH; b-user-id=558ee96b-57cd-0ad8-5647-54e744310f32; b-user-id=558ee96b-57cd-0ad8-5647-54e744310f32; grey-id=207bbafb-ee84-6304-71c6-2c87a953c238; grey-id.sig=oXd9CUlHV0l1wFJtBelHaAayjDkopwKXmhQgm4KIC3g; isQuark=false; isQuark.sig=DWPHMZYiiwQ-v58AbcP-rBdSIpzO8ZnrD67BdJuPatU; _UP_A4A_11_=wb96c19ecb584966b6e247a14f717ef6; __pus=1fa116795c4a151f736b380e7d7ed024AAStvJHfbGf/khGWKnmT7b+cSkc2fgsEXAcpAY6ffbgLGZVNK9mNyRA3PGARGGKCu4fU0b/FMlPPtxmRaUUflpw8; __kp=80a85e90-baf0-11ef-b679-6b3483afe36e; __kps=AAS7zqWk7TuDYriSEoVJ1bp8; __ktd=lWBRguyv6qMHpHCFD/XNJw==; __uid=AAS7zqWk7TuDYriSEoVJ1bp8; isg=BLa2e-3-zV-SQbk7tFRYkzEZB-y41_oRU0bYJyCUExk0Y1z9iGSGIdhQfz8PS_Ip; tfstk=goG-RNv9EnxlPrVMZQ90xd-Wv58mfKbrzXo5t6V3qKiYc2TzK2wlOW3K4JGo-7ZIDPiEtbvPFkELSPaIZ3FWJB3I5u1otLyC9oaUAe57VrwbSyklFuZQcoauNJkuxuqL92o9ohAMs4uzT5tMjCbrOl0Q_as7dMVXGPFLPNXoC33zTWtco69M64osnR0ZdWTYGy48RWw5FoTYJPEQOuwCcta_ckNIAJZfcPUNVywQFoTY8oZQOWiIlblCykb7v6HH_pY5VeSifchYy8Eskd5C9ZZcjo07D61Q2zeRH4ZAO6Gxnf5Qru9NokPu44a-YC5zNJHIZSGWcBNsQmhLC5pHz53xnA2-H31LmbqYKbwAVTaTwuesN-Q164yIHjFoNHWZoqE7BSDD3323w0Hab8920D3YqDG8hgK0xA0mN-n6msnUpvGuGbtX6g-isfFIJGqT-TTvk9WUFrrnzbyRMjqHmrEMotXFL-44klYvk9WUFrzYjEAcL9y0u; __wpkreporterwid_=8964776e-cb75-4aad-b4ac-122dd3400362; __itrace_wid=ece7efbd-a4a6-457b-3fde-c436d290d4dd; __puus=6d917126657a7d03c68e5813a67a5a78AAQzhRqXW9rOjF8slesTk96nrMriQXji1cFWcMPB3zs3KADkpMmTEelQ3o6pLfFxDvjvR1gbiklmtkKUmkx9gu17O6KZBuPfWlr1wJ+LonlYafVMqQJFaJsDQeznhNfsQaUqd9hCCBLD2RYTa56saDfQGg9jikcSPdLxHN5eiHnRUmqKv9zJcfyGVvPd/TASIq4Wf2Cy62VHm4XuTalA1kc3\",\n" +
+                            "    \"ucCookie\": \"ctoken=X6BYxED9SZs6yaa5RnewezPl;UDRIVE_TRANSFER_SESS=OSjfjvdvVB3kri7vp2BXpO8zFvKwBAY2kk7eicfA9iHBFdDlZmavQoQFtAIzHJAJpvRLxnA1WG5tE8EU31eST-NYT4dbsN7NzUzg34WXSuarlikSXqoKdjzUSJZcOUGOImIMdzM9_a_5kvwUbvDjqeBPcIYXAoW1NOPJBhqTXQxCMbt0PYA_P1VjIwGY3J_U;b-user-id=3ed1488d-3207-7c00-3376-3f7f989b736b;__itrace_wid=98b4fbc6-14b2-4f8c-1b91-bc57f8479ab3;_UP_A4A_11_=wb96c1ac386a49f99e490a90b1f9ef73;_UP_D_=pc;__pus=b979be0a5641760f21c0e723014965afAASObhQXtVSCAcyBhzsyJKXxewITkO1bDgIuACDfCKUllKY5GDa4f+aWj7itRpY3e8MqZlnMKE1A4kF6hRw3re3/;__kp=5b85f210-c164-11ef-9cb3-0f60c39d6897;__kps=AATLhwUilIHGTwYKwMW3DU1v;__ktd=Nq3OwP4vgnSQCtkVXW2xAw==;__uid=AATLhwUilIHGTwYKwMW3DU1v;_UP_28A_52_=519;tfstk=gGdKIN9k4DkHez5mtXMGqJ1PnjY-iQLUXH8bZgj3FhK9qUThF6fuwLI9kBXSYUxO23YPABbhxatJjG5lxBvHeyR9D7VnYv87w_fSmmcmiezFa_imQNSUEM7y5ggGdqVz2pfSmmcMgVG_n_tH--t3BFsNJy_WVJgO1wj_OaNCPlgOzG15Ras51G_5RuwCV3TsWaS1V_1WNSrf4jjLwL0CJ1yIbTF7NCQddvTCf7_w6wBdcet0N7TfJ9IXRGo4srNCHH6JaqF9Xpte91Xxf2C6BHRRnQqI5_65ftdH5qef2pYD9tIzlIAYbDZc71eKWVezU9_N4qLfSoGZuLQOmVAzU8WHwNImWVezU9_NWi0ae8yPKFC..;__puus=5fb84c8dbb4ad005551429ae62f3d500AASbj1IE64pGLm6yFzN+3sUq4rZGkJMMcxJDtJCEOTiwNq47YtSP+27tgb8FOfzNPRM7ejMoV+n4Ct4DIs396Pl40ciBTRfQKxd1G4W9qb8Cm97WONRr696DFSsjly2FZNBeMC7feJGuPmCr4GqzK981r+97d5iiZshsEaIywqvUNGwBfTrBgqDno6YLAbHpMtA=\",\n" +
+                            "    \"token\": \"2379914361074eb4a77f1d8eadd56f2e\",\n" +
+                            "    \"quarkClasses\":[\n" +
+                            "        {\n" +
+                            "            \"type_name\":\"经典剧集\",\n" +
+                            "            \"type_id\":\"047991d5955e/e8ea50e04bb3480db0f1ee9f3155d49b\",\n" +
+                            "            \"type_flag\":\"home\"\n" +
+                            "        },\n" +
+                            "        {\n" +
+                            "            \"type_name\":\"短剧162g\",\n" +
+                            "            \"type_id\":\"432b5cd3a225\"\n" +
+                            "        }\n" +
+                            "    ]\n" +
+                            "}");
+                    String content = quark.homeContent(true);
+                    Log.d(TAG, content);
+                    Result result = new Gson().fromJson(content, Result.class);
+                    if (result.getList().isEmpty()) {
+                        content = quark.homeVideoContent();
+                        Log.d(TAG,content);
+                        result = new Gson().fromJson(content, Result.class);
                     }
-                    content = spider.categoryContent("本地/2.足球小将 两季全 [中配]/足球小将(2001) [中配]/","1",true,new HashMap<>());
+                    String id = result.getList().get(0).getVodId();
+                    content = quark.detailContent(Arrays.asList(id));
                     Log.d(TAG,content);
-                    jsonObject = new Gson().fromJson(content, JsonObject.class);
-                    Log.d(TAG,jsonObject.getAsJsonArray("list").toString());
-                    content = spider.detailContent(Arrays.asList(jsonObject.getAsJsonArray("list").get(0).getAsJsonObject().get("vod_id").getAsString()));
-                    Log.d(TAG,content);
-                    jsonObject = new Gson().fromJson(content, JsonObject.class);
-                    Log.d(TAG,jsonObject.getAsJsonArray("list").toString());
-                    content = spider.playerContent("",jsonObject.getAsJsonArray("list").get(0).getAsJsonObject().get("vod_play_url").getAsString().split("#")[0].split("\\$")[1],new ArrayList<>());
-                    Log.d(TAG,content);
+                    result = new Gson().fromJson(content, Result.class);
+                    id = result.getList().get(0).getVodPlayUrl().split("#")[0].split("\\$")[1];
+                    Log.d(TAG, quark.playerContent("原畫", id, null));
+                    Log.d(TAG, quark.playerContent("高清", id, null));
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+
                 }
+//                String ccontent = OkHttpUtil.string("https://wb.pigqq.com/BookFiles/Html/658/657139/3834372.html");
+//                Spider spider = new WebDAV();
+//                spider.init(MainActivity.this.getApplicationContext(),"https://gitlab.com/mao4284120/js/-/raw/main/sub/webdav.json");
+//                try {
+//                    Spider local = new Local();
+//                    local.init(MainActivity.this.getApplicationContext(),"");
+//                    String home = local.homeContent(true);
+//                    Log.d(TAG, home);
+//                    JsonArray classes = JsonParser.parseString(home).getAsJsonObject().getAsJsonArray("class");
+//                    String category = local.categoryContent(classes.get(classes.size()-1).getAsJsonObject().get("type_id").getAsString(),"1",false,null);
+//                    Log.d(TAG, category);
+//                    JsonObject jsonObject = null;
+//                    String content = null;
+//                    String tid = null;
+//                    content = spider.homeContent(true);
+//                    Log.d(TAG,content);
+//                    jsonObject = new Gson().fromJson(content, JsonObject.class);
+//                    Log.d(TAG,jsonObject.getAsJsonArray("class").toString());
+//                    tid = jsonObject.getAsJsonArray("class").get(0).getAsJsonObject().get("type_id").getAsString();
+//                    content = spider.homeVideoContent();
+//                    Log.d(TAG,content);
+//                    if (StringUtils.isNotEmpty(content)) {
+//                        jsonObject = new Gson().fromJson(content, JsonObject.class);
+//                        Log.d(TAG, jsonObject.getAsJsonArray("list").toString());
+//                    }
+//                    content = spider.categoryContent("本地/2.足球小将 两季全 [中配]/足球小将(2001) [中配]/","1",true,new HashMap<>());
+//                    Log.d(TAG,content);
+//                    jsonObject = new Gson().fromJson(content, JsonObject.class);
+//                    Log.d(TAG,jsonObject.getAsJsonArray("list").toString());
+//                    content = spider.detailContent(Arrays.asList(jsonObject.getAsJsonArray("list").get(0).getAsJsonObject().get("vod_id").getAsString()));
+//                    Log.d(TAG,content);
+//                    jsonObject = new Gson().fromJson(content, JsonObject.class);
+//                    Log.d(TAG,jsonObject.getAsJsonArray("list").toString());
+//                    content = spider.playerContent("",jsonObject.getAsJsonArray("list").get(0).getAsJsonObject().get("vod_play_url").getAsString().split("#")[0].split("\\$")[1],new ArrayList<>());
+//                    Log.d(TAG,content);
+//                } catch (Exception e) {
+//                    throw new RuntimeException(e);
+//                }
             }
         }).start();
 //        new Thread(new Runnable() {
@@ -226,12 +241,12 @@ public class MainActivity extends Activity {
 //                        }
 //                        spiderT.init(Init.context().getApplicationContext(), ext);
 //                        String home = spiderT.homeContent(true);
-//                        System.out.println(home);
+//                        Log.d(TAG, home);
 //                        List<Class> classes = new Gson().fromJson(home, Result.class).getClasses();
 //                        if (classes == null || classes.size() == 0) {
 //                            throw new Exception("分类是空的");
 //                        }
-//                        System.out.println(spiderT.homeVideoContent());
+//                        Log.d(TAG, spiderT.homeVideoContent());
 //                        String cate = spiderT.categoryContent(classes.get(0).getTypeId(), "1", true, new HashMap<>());
 //                        List<Vod> vods = new Gson().fromJson(cate, Result.class).getList();
 //                        if (vods == null || vods.size() == 0) {
@@ -242,8 +257,8 @@ public class MainActivity extends Activity {
 //                        if (vodDetails == null || vodDetails.size() == 0) {
 //                            throw new Exception("内容时空的");
 //                        }
-//                        System.out.println(spiderT.playerContent("", vodDetails.get(0).getVodPlayUrl().split("#")[0].split("\\$")[1], null));
-//                        System.out.println(spiderT.searchContent("火影", false));
+//                        Log.d(TAG, spiderT.playerContent("", vodDetails.get(0).getVodPlayUrl().split("#")[0].split("\\$")[1], null));
+//                        Log.d(TAG, spiderT.searchContent("火影", false));
 //                        good.add(jsonElement);
 //                    } catch (Exception e) {
 //                        e.printStackTrace();
@@ -251,30 +266,30 @@ public class MainActivity extends Activity {
 //                    }
 //                }
 //
-//                System.out.println(new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create().toJson(bad));
+//                Log.d(TAG, new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create().toJson(bad));
 //                FileUtil.writeString(Init.context().getExternalFilesDir("bad.json").getAbsolutePath(),new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create().toJson(bad),"utf-8");
 //                FileUtil.writeString(Init.context().getExternalFilesDir("good.json").getAbsolutePath(),new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create().toJson(good),"utf-8");
-//                System.out.println("**************************************************");
-//                System.out.println(new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create().toJson(good));
+//                Log.d(TAG, "**************************************************");
+//                Log.d(TAG, new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create().toJson(good));
 //                Console.log("****************************测试爬虫结束************************************************");
 //                Console.log("****************************js模块测试开始************************************************");
 //                Spider spiderjs = new SpiderJS("鸭奈飞","https://weixine.net/js/lib/drpy2.min.js","https://weixine.net/js/yanaifei.js");
 //                try {
 //                    spiderjs.init(null, "");
 //                    String jscontent = spiderjs.homeContent(true);
-//                    System.out.println(jscontent);
-//                    System.out.println(spiderjs.homeVideoContent());
+//                    Log.d(TAG, jscontent);
+//                    Log.d(TAG, spiderjs.homeVideoContent());
 //                    Result jsresult = new Gson().fromJson(jscontent, Result.class);
 //                    jscontent = spiderjs.categoryContent(jsresult.getClasses().get(0).getTypeId(), "1", true, new HashMap<>());
 //                    Console.log(jscontent);
 //                    jsresult = new Gson().fromJson(jscontent, Result.class);
 //                    String jsid = jsresult.getList().get(3).getVodId();
 //                    jscontent = spiderjs.detailContent(Arrays.asList(jsid));
-//                    System.out.println(jscontent);
+//                    Log.d(TAG, jscontent);
 //                    jsresult = new Gson().fromJson(jscontent, Result.class);
 //                    jsid = jsresult.getList().get(0).getVodPlayUrl().split("#")[0].split("\\$")[1];
 //                    jscontent = spiderjs.playerContent("原畫", jsid, new ArrayList<>());
-//                    System.out.println(jscontent);
+//                    Log.d(TAG, jscontent);
 //                } catch (Exception e) {
 //
 //                }
@@ -323,18 +338,18 @@ public class MainActivity extends Activity {
 //                jsResult = jsTest.getString("@js:java"+".HmacBase64(\"123456789\",\"HmacSHA256\",\"12345789\")");
 //                assertEquals("gB2uYNHXcCB+Ye9Nlz0LhGp8f+9ef9HZNuZ/O7TVfFE=",jsResult);
 //                jsResult = jsTest.getString("@js:java"+".ajax(\"https://gitcafe.net/tool/alipaper/,{\\\"method\\\":\\\"POST\\\",\\\"body\\\":\\\"action=viewcat&num=1&cat=hyds\\\"}\")");
-//                System.out.println(jsResult);
+//                Log.d(TAG, jsResult);
 //                assertTrue(StrUtil.containsIgnoreCase(jsResult,"success"));
 //                jsResult = jsTest.getString("@js:urlList=['https://www.huangdizhijia.com/novel/408.html','https://www.huangdizhijia.com/novel/406.html','https://www.huangdizhijia.com/novel/407.html'];strResponses=java.ajaxAll(urlList);list=[];for(var i=0;i<strResponses.size();i++){content=strResponses.get(i).body();java.log(content);list.push(content);};list");
 //                assertTrue(StrUtil.containsIgnoreCase(jsResult,"皇帝之家"));
 //                jsResult = jsTest.getString("@js:java"+".get(\"https://m.huangdizhijia.com\",{'referer':'https://m.huangdizhijia.com'}).body();");
-//                System.out.println(jsResult);
+//                Log.d(TAG, jsResult);
 //                assertTrue(StrUtil.containsIgnoreCase(jsResult,"皇帝之家"));
 //                jsResult = jsTest.getString("@js:java"+".head(\"https://m.huangdizhijia.com\",{'referer':'https://m.huangdizhijia.com'});");
-//                System.out.println(jsResult);
+//                Log.d(TAG, jsResult);
 //                assertTrue(StrUtil.containsIgnoreCase(jsResult,"Content-Type"));
 //                jsResult = jsTest.getString("@js:java"+".post(\"https://m.huangdizhijia.com/index.php?action=search\", \"keyword=我的\", {}).body()");
-//                System.out.println(jsResult);
+//                Log.d(TAG, jsResult);
 //                assertTrue(StrUtil.containsIgnoreCase(jsResult,"我的"));
 //                jsResult = jsTest.getString("@js:bytes=java"+".strToBytes(\"123456789\");java.put('bytes',bytes);");
 //                byte[] bytes = (byte[]) jsTest.get("bytes");
@@ -378,7 +393,7 @@ public class MainActivity extends Activity {
 //                jsResult = jsTest.getString("@js:java"+".timeFormatUTC(1685640744701,\"yyyy\",8)");
 //                assertEquals("2023",jsResult);
 //                jsResult = jsTest.getString("@js:java"+".timeFormat(1685640744701)");
-//                System.out.println(jsResult);
+//                Log.d(TAG, jsResult);
 //                jsResult = jsTest.getString("@js:java"+".encodeURI(\"中文\")");
 //                assertEquals("%E4%B8%AD%E6%96%87",jsResult);
 //                jsResult = jsTest.getString("@js:java"+".encodeURI(\"test中文天海翼\",\"GBK\")");
@@ -398,7 +413,7 @@ public class MainActivity extends Activity {
 //                jsResult = jsTest.getString("@js:java"+".split(\"ssni-545.mp4\",'.').length");
 //                assertEquals("2",jsResult);
 //                jsResult = jsTest.getString("@js:java"+".writeFile(\"ssni.mp4\",'AV')");
-//                System.out.println(jsResult);
+//                Log.d(TAG, jsResult);
 ////                assertEquals("545",jsResult);
 //                jsResult = jsTest.getString("@js:java"+".readFile(\"/ssni.mp4\")");
 //                assertEquals("AV",jsResult);
@@ -408,12 +423,12 @@ public class MainActivity extends Activity {
 //
 ////                QuickJSContext context = QuickJSContext.create();
 ////                Object result_reder = context.evaluate("var a = 1 + 2;a");
-////                System.out.println(result_reder);
+////                Log.d(TAG, result_reder);
 //                AnalyzeRule js = new AnalyzeRule();
 //                js.setContent("");
-//                System.out.println(js.getString("@js:java.format('https://m.huangdizhi.com/{}/{}.html','book',400);"));
+//                Log.d(TAG, js.getString("@js:java.format('https://m.huangdizhi.com/{}/{}.html','book',400);"));
 //                String result_reader = js.getString("@js:content=java.ajax('https://m.huangdizhijia.com');java.log(content);content");
-//                System.out.println(result_reader);
+//                Log.d(TAG, result_reader);
 //                SpiderDebug.log(js.getString("@js:java.strToBytes('123456789')"));
 ////                Context cx = Context.enter();
 ////                cx.setOptimizationLevel(-1);
@@ -426,7 +441,7 @@ public class MainActivity extends Activity {
 //////                    } catch (IOException e) {
 //////                        throw new RuntimeException(e);
 //////                    }
-////                    System.out.println(str + "=" + Context.toNumber(result));
+////                    Log.d(TAG, str + "=" + Context.toNumber(result));
 ////                } finally {
 ////                    Context.exit();
 ////                }
@@ -439,15 +454,15 @@ public class MainActivity extends Activity {
 ////                bindings.put("baseUrl","https://www.baidu.com");
 ////                bindings.put("source","www.google.com");
 ////                Object result = scriptEngine.eval(jsstr, bindings);
-////                System.out.println(result);
+////                Log.d(TAG, result);
 ////                Init.init(MainActivity.this.getApplicationContext());
-////                System.out.println(Init.context().getCacheDir().getAbsolutePath());
-////                System.out.println(Init.context().getFilesDir().getAbsolutePath());
+////                Log.d(TAG, Init.context().getCacheDir().getAbsolutePath());
+////                Log.d(TAG, Init.context().getFilesDir().getAbsolutePath());
 ////                Spider qq = new QQ();
 ////                qq.init(null);
 //////                qq.init(MainActivity.this.getApplicationContext(), "43073a876e9f4d6c906f1d7df92af59a");
 ////                try {
-////                    System.out.println(qq.detailContent(Arrays.asList("mzc002009ktefn0")));
+////                    Log.d(TAG, qq.detailContent(Arrays.asList("mzc002009ktefn0")));
 //////                    SpiderDebug.log(qq.homeContent(true));
 //////                    SpiderDebug.log(qq.homeVideoContent());
 //////                    SpiderDebug.log(qq.categoryContent("tv", "1", false, null));
@@ -478,27 +493,27 @@ public class MainActivity extends Activity {
 ////                    SpiderDebug.log(qq.detailContent(Arrays.asList("mzc002009ktefn0")));
 ////                    SpiderDebug.log(qq.searchContent("熊出没", false));
 ////                    SpiderDebug.log(qq.playerContent("qq", "https://v.qq.com/x/cover/mzc00200k1qzwd5/m00468zaiqd.html", Arrays.asList("qq")));
-////                    System.out.println(legado.homeContent(true));
-////                    System.out.println(legado.homeVideoContent());
-////                    System.out.println(legado.categoryContent("https://www.aliyundrive.com/s/bVL7e72NjD4","1",true, new HashMap<>()));
-////                    System.out.println(paper.homeContent(true));
-////                    System.out.println(paper.homeVideoContent());
+////                    Log.d(TAG, legado.homeContent(true));
+////                    Log.d(TAG, legado.homeVideoContent());
+////                    Log.d(TAG, legado.categoryContent("https://www.aliyundrive.com/s/bVL7e72NjD4","1",true, new HashMap<>()));
+////                    Log.d(TAG, paper.homeContent(true));
+////                    Log.d(TAG, paper.homeVideoContent());
 ////                    String content = paper.categoryContent("hyds","1",true,new HashMap<>());
-////                    System.out.println(content);
+////                    Log.d(TAG, content);
 ////                    Result result = new Gson().fromJson(content, Result.class);
 ////                    String id = result.getList().get(0).getVodId();
 ////                    content = paper.detailContent(List.of(id));
-////                    System.out.println(content);
+////                    Log.d(TAG, content);
 ////                    result = new Gson().fromJson(content, Result.class);
 ////                    id = result.getList().get(0).getVodPlayUrl().split("#")[0].split("\\$")[1];
 ////                    content = paper.playerContent("原画",id,new ArrayList<>());
-////                    System.out.println(content);
-//                    System.out.println("*********************************************");
+////                    Log.d(TAG, content);
+//                    Log.d(TAG, "*********************************************");
 //                    Spider spider = new Legado();
 //                    spider.init(null, "https://aria2.guibiaoguo.ml/paper.json");
 //                    content = spider.homeContent(true);
-//                    System.out.println(content);
-//                    System.out.println(spider.homeVideoContent());
+//                    Log.d(TAG, content);
+//                    Log.d(TAG, spider.homeVideoContent());
 //                    result = new Gson().fromJson(content, Result.class);
 //                    content = spider.categoryContent(result.getClasses().get(0).getTypeId(), "1", true, new HashMap<>());
 //                    Console.log(content);
@@ -507,27 +522,27 @@ public class MainActivity extends Activity {
 //                    content = spider.detailContent(Arrays.asList(id));
 ////                    content = spider.detailContent(Arrays.asList("https://www.aliyundrive.com/s/Lvt6XJobogm/folder/637a2afe82dedfde45d5400fb46f47f33ff5b438"));
 ////                    content = spider.detailContent(Arrays.asList("https://www.aliyundrive.com/s/KwUCz4H31JK/folder/619ae206f21fe67ebabb402d9429931729e7c039"));
-//                    System.out.println(content);
+//                    Log.d(TAG, content);
 //                    result = new Gson().fromJson(content, Result.class);
 //                    id = result.getList().get(0).getVodPlayUrl().split("#")[0].split("\\$")[1];
 //                    content = spider.playerContent("原畫", id, new ArrayList<>());
-//                    System.out.println(content);
+//                    Log.d(TAG, content);
 //                    spider = new Legado();
 //                    spider.init(null, "https://aria2.guibiaoguo.ml/ahhfs.json");
 //                    content = spider.homeContent(true);
-//                    System.out.println(content);
-//                    System.out.println(spider.homeVideoContent());
+//                    Log.d(TAG, content);
+//                    Log.d(TAG, spider.homeVideoContent());
 //                    result = new Gson().fromJson(content, Result.class);
 //                    content = spider.categoryContent(result.getClasses().get(0).getTypeId(), "1", true, new HashMap<>());
 //                    Console.log(content);
 //                    result = new Gson().fromJson(content, Result.class);
 //                    id = result.getList().get(3).getVodId();
 //                    content = spider.detailContent(Arrays.asList(id));
-//                    System.out.println(content);
+//                    Log.d(TAG, content);
 //                    result = new Gson().fromJson(content, Result.class);
 //                    id = result.getList().get(0).getVodPlayUrl().split("#")[0].split("\\$")[1];
 //                    content = spider.playerContent("原畫", id, new ArrayList<>());
-//                    System.out.println(content);
+//                    Log.d(TAG, content);
 //                } catch (Exception e) {
 //                    e.printStackTrace();
 //                }

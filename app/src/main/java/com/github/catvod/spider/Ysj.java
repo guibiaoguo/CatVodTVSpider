@@ -1,6 +1,5 @@
 package com.github.catvod.spider;
 
-import android.content.Context;
 import android.text.TextUtils;
 
 import com.github.catvod.bean.Class;
@@ -8,9 +7,8 @@ import com.github.catvod.bean.Filter;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
-
-import com.github.catvod.utils.Utils;
-import com.github.catvod.utils.okhttp.OkHttpUtil;
+import com.github.catvod.net.OkHttp;
+import com.github.catvod.utils.Util;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -23,29 +21,18 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import cn.hutool.core.util.StrUtil;
-
 public class Ysj extends Spider {
 
-    private static String siteUrl = "https://www.lldm.net";
-    private static final String cateUrl = siteUrl + "/index.php/vod/show";
-    private static final String homeUrl = siteUrl + "/index.php/vod/show/id/20.html";
-    private static final String detailUrl = siteUrl + "/index.php/vod/detail/id/";
-    private static final String searchUrl = siteUrl + "/index.php/vod/search.html";
+    private static final String siteUrl = "https://www.dmmiku.com";
+    private static final String cateUrl = "https://www.dmmiku.com/index.php/vod/show";
+    private static final String homeUrl = "https://www.dmmiku.com/index.php/vod/show/id/20.html";
+    private static final String detailUrl = "https://www.dmmiku.com/index.php/vod/detail/id/";
+    private static final String searchUrl = "https://www.dmmiku.com/index.php/vod/search.html";
     private static final String playUrl = "/index.php/vod/play/id/";
-
-    @Override
-    public void init(Context context, String extend) {
-        super.init(context, extend);
-        if (StrUtil.isEmpty(extend)) {
-            extend = "https://www.lldm.net/";
-        }
-        siteUrl = extend;
-    }
 
     private HashMap<String, String> getHeaders() {
         HashMap<String, String> headers = new HashMap<>();
-        headers.put("User-Agent", Utils.CHROME);
+        headers.put("User-Agent", Util.CHROME);
         return headers;
     }
 
@@ -64,7 +51,7 @@ public class Ysj extends Spider {
         List<Class> classes = new ArrayList<>();
         List<Filter> array = new ArrayList<>();
         LinkedHashMap<String, List<Filter>> filters = new LinkedHashMap<>();
-        Document doc = Jsoup.parse (OkHttpUtil.string(homeUrl, getHeaders()));
+        Document doc = Jsoup.parse(OkHttp.string(homeUrl, getHeaders()));
         array.add(getFilter("地區", "area", doc.select("div#hl03").select("a").eachText()));
         array.add(getFilter("年份", "year", doc.select("div#hl04").select("a").eachText()));
         array.add(getFilter("語言", "lang", doc.select("div#hl05").select("a").eachText()));
@@ -86,25 +73,6 @@ public class Ysj extends Spider {
         return Result.string(classes, list, filters);
     }
 
-    /**
-     * 首页最近更新数据 如果上面的homeContent中不包含首页最近更新视频的数据 可以使用这个接口返回
-     *
-     * @return
-     */
-    @Override
-    public String homeVideoContent() throws Exception {
-        List<Vod> list = new ArrayList<>();
-        Document doc = Jsoup.parse (OkHttpUtil.string(homeUrl, getHeaders()));
-        for (Element element : doc.select("li.vodlist_item")) {
-            String id = element.select("a").attr("href").split("/")[5];
-            String name = element.select("a").attr("title");
-            String pic = siteUrl + element.select("a").attr("data-original");
-            String remark = element.select("span.pic_text").text();
-            list.add(new Vod(id, name, pic, remark));
-        }
-        return Result.string(list);
-    }
-
     @Override
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) {
         StringBuilder sb = new StringBuilder(cateUrl);
@@ -116,7 +84,7 @@ public class Ysj extends Spider {
         if (extend.containsKey("year")) sb.append("/year/").append(extend.get("year"));
         if (!pg.equals("1")) sb.append("/page/").append(pg);
         sb.append(".html");
-        Document doc = Jsoup.parse (OkHttpUtil.string(sb.toString(), getHeaders()));
+        Document doc = Jsoup.parse(OkHttp.string(sb.toString(), getHeaders()));
         List<Vod> list = new ArrayList<>();
         for (Element element : doc.select("li.vodlist_item")) {
             String id = element.select("a").attr("href").split("/")[5];
@@ -130,7 +98,7 @@ public class Ysj extends Spider {
 
     @Override
     public String detailContent(List<String> ids) {
-        Document doc = Jsoup.parse (OkHttpUtil.string(detailUrl.concat(ids.get(0)), getHeaders()));
+        Document doc = Jsoup.parse(OkHttp.string(detailUrl.concat(ids.get(0)), getHeaders()));
         String name = doc.select("h2.title").text();
         String pic = siteUrl + doc.select("a.vodlist_thumb").attr("data-original");
         String year = doc.select("li.data").get(0).select("a").get(0).text();
@@ -179,7 +147,7 @@ public class Ysj extends Spider {
     public String searchContent(String key, boolean quick) {
         List<Vod> list = new ArrayList<>();
         String target = searchUrl.concat("?wd=").concat(key).concat("&submit=");
-        Document doc = Jsoup.parse (OkHttpUtil.string(target, getHeaders()));
+        Document doc = Jsoup.parse(OkHttp.string(target, getHeaders()));
         if (doc.html().contains("很抱歉，暂无相关视频")) return Result.string(list);
         for (Element element : doc.select("li.searchlist_item")) {
             String id = element.select("a").attr("href").split("/")[5];

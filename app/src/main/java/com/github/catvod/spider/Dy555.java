@@ -1,14 +1,6 @@
 package com.github.catvod.spider;
 
 
-import static java.lang.System.*;
-
-import cn.hutool.core.util.StrUtil;
-import okhttp3.*;
-import okio.ByteString;
-
-import java.security.spec.AlgorithmParameterSpec;
-import java.util.concurrent.TimeUnit;
 import android.content.Context;
 import android.text.TextUtils;
 
@@ -16,11 +8,13 @@ import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
-
-
 import com.github.catvod.parser.NetworkUtils;
+import com.github.catvod.utils.Base64;
 import com.github.catvod.utils.StringUtil;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,23 +24,28 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.net.URLEncoder;
+import java.security.spec.AlgorithmParameterSpec;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.crypto.spec.SecretKeySpec;
-
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
+import cn.hutool.core.util.StrUtil;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
+import okio.ByteString;
 
 
 
@@ -71,16 +70,17 @@ public class Dy555 extends Spider {
 
     public void setSiteUrl(String extend) {
         if (StrUtil.isEmpty(extend)) {
-            extend = "https://555dy.shop";
+            extend = "https://55mix.wiki";
         }
         String content = OkHttpUtil.string(extend);
         Document document = Jsoup.parse(content);
-        for(Element element:document.select(".btn-down:contains(点击)")) {
-            String site = element.select("a").attr("href");
-            System.out.println("555影视：" + site);
-            String subContent = OkHttpUtil.string(site);
-            if (StrUtil.isNotEmpty(subContent) && !subContent.contains("Loading......")) {
-                siteUrl = site;
+        JsonObject sites = new Gson().fromJson(new String(Base64.decode(document.select("#domainData").attr("data-info"),0)), JsonObject.class);
+        for (Map.Entry<String, JsonElement> site:sites.entrySet()) {
+            System.out.println("555影视：" + site.getValue());
+            String url = "https://"+site.getValue().getAsString();
+            String subContent = OkHttpUtil.string(url +"/index/home.html",getHeaders(url));
+            if (StrUtil.isNotEmpty(subContent) && !subContent.contains("Loading......") && !subContent.contains("Just a moment...")) {
+                siteUrl = "https://" + site.getValue().getAsString();
                 siteHost = NetworkUtils.INSTANCE.getSubDomain(siteUrl);
                 break;
             }
@@ -90,7 +90,7 @@ public class Dy555 extends Spider {
     @Override
     public void init(Context context) {
         super.init(context);
-        setSiteUrl("https://555dy.shop/");
+        setSiteUrl("https://55mix.wiki/");
         try {
             playerConfig = new JSONObject(playerString);
             filterConfig = new JSONObject(filterString);
@@ -122,7 +122,7 @@ public class Dy555 extends Spider {
         if (!TextUtils.isEmpty(refererUrl)) {
             headers.put("Referer", refererUrl);
         }
-        headers.put("Cookie","mx_style=cafb48e084ff51871ea2d6c2690cc7bb; showBtn=true; PHPSESSID=qih5j4f27ifk61k703ubkogh9l; searchneed=ok");
+        headers.put("Cookie","mx_style=cafb48e084ff51871ea2d6c2690cc7bb; cf_clearance=fKp3AORU6n3jQk31wtrjql7do.X26d6hnyFZ0Ojr4fU-1735129777-1.2.1.1-MmRPHVwu2Pfvs9U.gTH9qKLn4r9oIDI_Mpv6JIqqW6h1CgkMfkHqWnGlnojHncY6stLEo7v7uJe7nFhz6X4UL9DSkXi3OHXWdK6KJm.Y3XzvSsZmBdEn54LiCnM7JVe.vsD3SJiMxQKVygBliYLVpcXNOZ2ldHYzbOOh_dtuvs2G5DsmmIE.91a6SNd_VSLdJaTpx257itHA63Xd5GOU0yHcN1BJ0p33jipCbGdAQcde1k_uJwDX4oQlCAfayRHA_wMdmjjP2pnHLESPEQ_ISS_jGP.2BN6yQ5ykLKo_m3mM2hPMsBXrhHzCFfURT9arIvQ6RozK5QHtw6SUw_wpumHWX.67wA3i_2cCH5uBC1Er2g81XXLemZOavhWanlxbd.Bb9Jwka_YJSgHmnY063A; hasVisitedIndex=true; waf-trace=gwZ41CLHm3omKmLT:5nyRrE6p0GfOsj0yRYaNRKu5O9ut0R3NWT5u9tnqquNlU1Acdr++K75HLiTttUnXuH/gB2kTzRalovs3ZqEhPoyqfUSD4tMYmSYzGpk8DiLP0eGTThIZ+mBAhABREVPH2rLeesp9Hav1fHIdPYDA+1aTVBrcHiv4d9p5E54vfQCiKg==; waf-session=tdEpHv+vHQFNMy/B:fGVlpJ2X9SFAO4co5Ey2586FKvvcgPyC+kyUbVNY5n6TK0w4QlU1vdbD6TranBDGGJdPjsljJAY38gDAbiJ21DofWKu8HELxh1SLCWs03UfpL+S6Xgu/mnHG5QBuNkWoUA==");
         headers.put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
         headers.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
         return headers;

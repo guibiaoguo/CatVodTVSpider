@@ -14,11 +14,12 @@ import com.google.gson.GsonBuilder;
 
 import java.io.File;
 import java.io.InputStream;
+
 import java.nio.charset.Charset;
-import java.security.spec.AlgorithmParameterSpec;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -29,6 +30,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.Future;
 
+import javax.crypto.spec.IvParameterSpec;
+
 import cn.hutool.core.codec.Base64;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.lang.Console;
@@ -37,9 +40,11 @@ import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.HexUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
+import cn.hutool.crypto.KeyUtil;
 import cn.hutool.crypto.asymmetric.AsymmetricCrypto;
 import cn.hutool.crypto.asymmetric.Sign;
 import cn.hutool.crypto.digest.DigestUtil;
+import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
 import cn.hutool.crypto.symmetric.SymmetricCrypto;
 import cn.hutool.crypto.digest.HMac;
 import okhttp3.Headers;
@@ -71,21 +76,21 @@ public abstract class JsExtensions implements JsEncodeUtils {
 
     /**
      * 在js中这样使用
-     * java.createSymmetricCrypto(transformation, key, iv).decrypt(data)
-     * java.createSymmetricCrypto(transformation, key, iv).decryptStr(data)
+     * java.createSymmetricCrypto(algorithm, key, iv).decrypt(data)
+     * java.createSymmetricCrypto(algorithm, key, iv).decryptStr(data)
      * <p>
-     * java.createSymmetricCrypto(transformation, key, iv).encrypt(data)
-     * java.createSymmetricCrypto(transformation, key, iv).encryptBase64(data)
-     * java.createSymmetricCrypto(transformation, key, iv).encryptHex(data)
+     * java.createSymmetricCrypto(algorithm, key, iv).encrypt(data)
+     * java.createSymmetricCrypto(algorithm, key, iv).encryptBase64(data)
+     * java.createSymmetricCrypto(algorithm, key, iv).encryptHex(data)
      *
-     * @param transformation
+     * @param algorithm
      * @param key
      * @param iv
      */
     /* 调用SymmetricCrypto key为null时使用随机密钥*/
     @Override
-    public SymmetricCrypto createSymmetricCrypto(String transformation, byte[] key, byte[] iv) {
-        SymmetricCrypto symmetricCrypto = new SymmetricCrypto(transformation, key);
+    public SymmetricCrypto createSymmetricCrypto(String algorithm, byte[] key, byte[] iv) {
+        SymmetricCrypto symmetricCrypto = new SymmetricCrypto(algorithm, KeyUtil.generateKey(algorithm, key),new IvParameterSpec(iv));
 //        if (iv != null && iv.length > 0) {
 //            return symmetricCrypto.setParams(new AlgorithmParameterSpec);
 //        }
@@ -273,6 +278,7 @@ public abstract class JsExtensions implements JsEncodeUtils {
     }
 
     public StrResponse get(Object url, Map<String, String> headers) {
+        //Jsoup.connect(url.toString()).execute().bodyAsBytes();
         return get(url,headers, "utf-8");
     }
     /**

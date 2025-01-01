@@ -32,9 +32,10 @@ public class Item {
     private double size;
     @SerializedName("parent")
     private String parent;
-
     @SerializedName("parent_file_id")
     private String parentFileId;
+    @SerializedName("thumbnail")
+    private String thumbnail;
 
     public static Item objectFrom(String str) {
         return new Gson().fromJson(str, Item.class);
@@ -95,5 +96,9 @@ public class Item {
 
     public String getParentFileId() {
         return parentFileId;
+    }
+
+    public String getThumbnail() {
+        return thumbnail;
     }
 }

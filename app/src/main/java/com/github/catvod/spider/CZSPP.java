@@ -81,7 +81,7 @@ public class CZSPP extends Spider {
             String site = element.select("a").attr("href");
             System.out.println("厂长资源：" + site);
             String subContent = OkHttpUtil.string(site);
-            if (StrUtil.isNotEmpty(subContent) && !subContent.contains("Loading......") && !subContent.contains("Just a moment...")) {
+            if (StrUtil.isNotEmpty(subContent) && !subContent.contains("Loading......") && !subContent.contains("Just a moment...") && !subContent.contains("导航页")) {
                 siteUrl = site;
                 siteHost = NetworkUtils.INSTANCE.getSubDomain(siteUrl);
                 break;

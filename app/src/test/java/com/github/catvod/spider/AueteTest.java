@@ -1,6 +1,5 @@
 package com.github.catvod.spider;
 
-import static org.junit.Assert.*;
 
 import com.github.catvod.bean.Result;
 import com.github.catvod.crawler.Spider;
@@ -9,12 +8,14 @@ import com.google.gson.Gson;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 
+@Deprecated
+@Ignore
 public class AueteTest {
 
     private Spider auete;

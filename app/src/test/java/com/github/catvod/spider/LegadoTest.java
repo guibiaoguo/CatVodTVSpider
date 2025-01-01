@@ -19,12 +19,17 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import cn.hutool.core.io.file.FileReader;
+import cn.hutool.core.io.file.FileWriter;
+
 @RunWith(MockitoJUnitRunner.class)
 public class LegadoTest {
 
@@ -132,7 +137,10 @@ public class LegadoTest {
 
     @Test
     public void init1() {
-//        when(mMockContext.getString(R.string.app_name)).thenReturn(FAKE_STRING);
+        Proxy.port = 9978;
+        FileReader fileReader = new FileReader("aliyundrive.json");
+        String aliyundrive = fileReader.readString();
+        //        when(mMockContext.getString(R.string.app_name)).thenReturn(FAKE_STRING);
         when(mMockContext.getPackageName()).thenReturn("com.github.androidunittest");
 //        when(mMockContext.getApplicationContext()).thenReturn(new Application());
 //        PowerMockito.mockStatic(Looper.class);
@@ -146,6 +154,9 @@ public class LegadoTest {
             @Nullable
             @Override
             public String getString(String key, @Nullable String defValue) {
+                if (key.equals("aliyundrive")) {
+                    return aliyundrive;
+                }
                 return null;
             }
 
@@ -185,6 +196,10 @@ public class LegadoTest {
                 return new Editor() {
                     @Override
                     public Editor putString(String key, @Nullable String value) {
+                        if (key.equals("aliyundrive")) {
+                            FileWriter writer = new FileWriter(new File("src/test/resources/aliyundrive.json"));
+                            writer.write(value);
+                        }
                         return this;
                     }
 

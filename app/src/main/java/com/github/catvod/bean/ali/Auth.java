@@ -2,9 +2,11 @@ package com.github.catvod.bean.ali;
 
 import android.text.TextUtils;
 
-import com.github.catvod.utils.Prefers;
+import com.github.catvod.utils.Path;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+
+import java.util.Date;
 
 public class Auth {
 
@@ -25,7 +27,15 @@ public class Auth {
     @SerializedName("driveId")
     private String driveId;
 
+    @SerializedName("expireTime")
+    private String expireTime;
+
+    @SerializedName("last_update_time")
+    private long lastUpdateTime;
     public static Auth objectFrom(String str) {
+        if (str.endsWith("aliyun")) {
+            str = Path.read(Path.tv(str));
+        }
         Auth item = new Gson().fromJson(str, Auth.class);
         return item == null ? new Auth() : item;
     }
@@ -106,7 +116,16 @@ public class Auth {
         setSignature("");
     }
 
-    public void save() {
-        Prefers.put("aliyundrive", new Gson().toJson(this));
+    public void save(String name) {
+        this.lastUpdateTime = new Date().getTime();
+        Path.write(Path.tv(name),new Gson().toJson(this));
+    }
+
+    public void setExpireTime(String expireTime) {
+        this.expireTime = expireTime;
+    }
+
+    public String getExpireTime() {
+        return expireTime;
     }
 }

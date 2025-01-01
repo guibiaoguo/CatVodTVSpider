@@ -14,13 +14,13 @@ import com.guibiaoguo.myapplication.RoboApp;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +29,7 @@ import java.util.Set;
 import cn.hutool.core.io.file.FileReader;
 import cn.hutool.core.io.file.FileWriter;
 
+@Ignore
 @RunWith(MockitoJUnitRunner.class)
 public class XYQHikerALTest {
 

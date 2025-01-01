@@ -53,8 +53,12 @@ public class Proxy extends Spider {
                     break;
                 case "ali":
                     return Ali.vod(params);
-                case "push":
-                    return PushAgent.vod(params);
+                case "quark":
+                    return Quark.vod(params);
+                case "uc":
+                    return UC.vod(params);
+//                case "push":
+//                    return Push.vod(params);
                 case "webdav":
                     return WebDAV.vod(params);
                 case "ddys":

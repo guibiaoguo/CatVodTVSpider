@@ -1,5 +1,6 @@
 package com.github.catvod.bean;
 
+import com.github.catvod.utils.Util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -11,6 +12,7 @@ import org.json.JSONObject;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +33,10 @@ public class Result {
     private String format;
     @SerializedName("danmaku")
     private String danmaku;
+    @SerializedName("click")
+    private String click;
+    @SerializedName("msg")
+    private String msg;
     @SerializedName("url")
     private Object url;
     @SerializedName("subs")
@@ -70,6 +76,10 @@ public class Result {
         return Result.get().classes(classes).filters(filters).string();
     }
 
+    public static String string(List<Class> classes, JsonElement filters) {
+        return Result.get().classes(classes).filters(filters).string();
+    }
+
     public static String string(List<Class> classes, JSONObject filters) {
         return Result.get().classes(classes).filters(filters).string();
     }
@@ -84,6 +94,14 @@ public class Result {
 
     public static String string(Vod item) {
         return Result.get().vod(item).string();
+    }
+
+    public static String error(String msg) {
+        return Result.get().vod(Collections.emptyList()).msg(msg).string();
+    }
+
+    public static String notify(String msg) {
+        return Result.get().msg(msg).string();
     }
 
     public static Result get() {
@@ -130,6 +148,13 @@ public class Result {
         return this;
     }
 
+    public Result chrome() {
+        Map<String, String> header = new HashMap<>();
+        header.put("User-Agent", Util.CHROME);
+        header(header);
+        return this;
+    }
+
     public Result parse() {
         this.parse = 1;
         return this;
@@ -157,6 +182,16 @@ public class Result {
 
     public Result danmaku(String danmaku) {
         this.danmaku = danmaku;
+        return this;
+    }
+
+    public Result click(String click) {
+        this.click = click;
+        return this;
+    }
+
+    public Result msg(String msg) {
+        this.msg = msg;
         return this;
     }
 
@@ -232,5 +267,9 @@ public class Result {
 
     public LinkedHashMap<String, List<Filter>> getFilters() {
         return filters;
+    }
+
+    public Object getUrl() {
+        return url;
     }
 }

@@ -23,6 +23,7 @@ import java.util.Set;
 /**
  * Author: @SDL
  */
+@Deprecated
 public class Kunyu79 extends Spider {
     private static final String siteUrl = "http://api.tyun77.cn";
 

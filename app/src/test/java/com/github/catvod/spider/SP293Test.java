@@ -1,56 +1,49 @@
 package com.github.catvod.spider;
 
-import static org.junit.Assert.*;
-
 import com.github.catvod.crawler.Spider;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
-public class SP293Test {
+@Deprecated
+@Ignore
+public class SP293Test extends SpiderTest {
 
-    private Spider sp293;
-
-    @Test
-    public void categoryContent() {
+    Spider sp293 = null;
+    @Before
+    public void init() {
+        sp293 = new SP293();
+        super.init(sp293,"");
     }
 
     @Test
-    public void detailContent() {
-    }
-
-    @Test
-    public void homeContent() {
+    public void homeContent() throws Exception {
+        super.homeContent(false);
     }
 
     @Test
     public void homeVideoContent() throws Exception {
-        System.out.println(sp293.homeVideoContent());
-    }
-
-    @Before
-    public void init() {
-        sp293 = new SP293();
-        sp293.init(null);
+        super.homeVideoContent();
     }
 
     @Test
-    public void isVideoFormat() {
+    public void categoryContent() throws Exception {
+        super.categoryContent();;
     }
 
     @Test
-    public void manualVideoCheck() {
+    public void detailContent() throws Exception {
+        super.detailContent();
     }
 
     @Test
-    public void playerContent() {
+    public void playerContent() throws Exception {
+        super.playerContent();
     }
 
     @Test
-    public void searchContent() {
-    }
-
-    @Test
-    public void testInit() {
+    public void searchContent() throws Exception {
+        super.searchContent("柯南");
     }
 }
